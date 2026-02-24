@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Settings, ChevronLeft, ChevronRight, MessageCircle, Users, Target } from 'lucide-react';
+import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Settings, ChevronLeft, ChevronRight, MessageCircle, Users, Target, Shield, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -16,6 +17,9 @@ const navItems = [
 export default function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { isAdmin, signOut } = useAuth();
+
+  const allItems = isAdmin ? [...navItems, { to: '/admin', icon: Shield, label: 'Administração' }] : navItems;
 
   return (
     <motion.aside
@@ -41,8 +45,8 @@ export default function AppSidebar() {
         </AnimatePresence>
       </div>
 
-      <nav className="flex-1 py-4 px-2 space-y-1">
-        {navItems.map((item) => {
+      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+        {allItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
             <NavLink
@@ -71,6 +75,22 @@ export default function AppSidebar() {
           );
         })}
       </nav>
+
+      <div className="border-t border-sidebar-border">
+        <button
+          onClick={signOut}
+          className="flex items-center gap-3 px-5 py-3 w-full text-sm text-sidebar-foreground hover:text-destructive transition-colors"
+        >
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="whitespace-nowrap">
+                Sair
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
+      </div>
 
       <button
         onClick={() => setCollapsed(!collapsed)}
