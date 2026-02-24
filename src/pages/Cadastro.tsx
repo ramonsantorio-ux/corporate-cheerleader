@@ -67,7 +67,7 @@ export default function Cadastro() {
     f.feedbacks_recebidos > 0 ? Math.round((f.feedbacks_resolvidos / f.feedbacks_recebidos) * 100) : 0;
 
   async function handleCreate() {
-    if (!newData.nome || !newData.email || !newData.cargo || !newData.departamento) {
+    if (!newData.nome || !newData.cargo || !newData.departamento) {
       toast.error('Preencha todos os campos');
       return;
     }
@@ -96,7 +96,7 @@ export default function Cadastro() {
   }
 
   async function handleEdit() {
-    if (!editData.nome || !editData.email || !editData.cargo || !editData.departamento) {
+    if (!editData.nome || !editData.cargo || !editData.departamento) {
       toast.error('Preencha todos os campos');
       return;
     }
