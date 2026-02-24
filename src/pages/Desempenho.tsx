@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Users, ClipboardList, Plus, Calendar, ChevronRight } from 'lucide-react';
+import { Target, Users, ClipboardList, Plus, Calendar, ChevronRight, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -76,7 +76,7 @@ export default function Desempenho() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Gestão de Desempenho</h1>
-          <p className="text-muted-foreground text-sm mt-1">Avaliações 360°, competências e PDI</p>
+          <p className="text-muted-foreground text-sm mt-1">Gestão de metas, competências e PDI</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -99,7 +99,7 @@ export default function Desempenho() {
       {/* Quick access cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { icon: ClipboardList, label: 'Avaliações 360°', desc: 'Avaliar e visualizar avaliações', to: '/desempenho/avaliacoes' },
+          { icon: TrendingUp, label: 'Gestão de Metas', desc: 'Metas individuais e por departamento', to: '/desempenho/avaliacoes' },
           { icon: Target, label: 'Competências', desc: 'Gerenciar competências por ciclo', to: '/desempenho/competencias' },
           { icon: Users, label: 'PDI', desc: 'Planos de desenvolvimento', to: '/desempenho/pdi' },
         ].map((item, i) => (
