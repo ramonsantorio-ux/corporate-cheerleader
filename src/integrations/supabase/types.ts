@@ -162,7 +162,7 @@ export type Database = {
           created_at: string
           data_admissao: string
           departamento: string
-          email: string
+          email: string | null
           feedbacks_recebidos: number
           feedbacks_resolvidos: number
           id: string
@@ -173,7 +173,7 @@ export type Database = {
           created_at?: string
           data_admissao?: string
           departamento: string
-          email: string
+          email?: string | null
           feedbacks_recebidos?: number
           feedbacks_resolvidos?: number
           id?: string
@@ -184,7 +184,7 @@ export type Database = {
           created_at?: string
           data_admissao?: string
           departamento?: string
-          email?: string
+          email?: string | null
           feedbacks_recebidos?: number
           feedbacks_resolvidos?: number
           id?: string
