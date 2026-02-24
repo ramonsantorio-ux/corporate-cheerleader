@@ -87,11 +87,16 @@ export default function Relatorios() {
           </div>
           <div className="space-y-3">
             {[
-              { dept: 'Customer Success', count: 14, pct: 33 },
-              { dept: 'Produto', count: 10, pct: 24 },
-              { dept: 'Segurança', count: 8, pct: 19 },
-              { dept: 'Vendas', count: 6, pct: 14 },
-              { dept: 'RH', count: 4, pct: 10 },
+              { dept: 'Contrato Porto', count: 14, pct: 22 },
+              { dept: 'Contrato Usina', count: 12, pct: 19 },
+              { dept: 'Frotas', count: 10, pct: 16 },
+              { dept: 'Medição', count: 8, pct: 13 },
+              { dept: 'Segurança', count: 6, pct: 10 },
+              { dept: 'CCO', count: 5, pct: 8 },
+              { dept: 'CCM', count: 3, pct: 5 },
+              { dept: 'Manutenção', count: 2, pct: 3 },
+              { dept: 'RH', count: 1, pct: 2 },
+              { dept: 'Financeiro', count: 1, pct: 2 },
             ].map((d) => (
               <div key={d.dept} className="flex items-center gap-4">
                 <span className="text-sm w-40 shrink-0">{d.dept}</span>

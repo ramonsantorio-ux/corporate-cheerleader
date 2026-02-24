@@ -18,12 +18,17 @@ interface Funcionario {
   feedbacksResolvidos: number;
 }
 
+const departamentos = [
+  'Contrato Porto', 'Contrato Usina', 'Frotas', 'Medição',
+  'Segurança', 'CCO', 'CCM', 'Manutenção', 'RH', 'Financeiro',
+];
+
 const mockFuncionarios: Funcionario[] = [
-  { id: '1', nome: 'Maria Silva', email: 'maria@empresa.com', departamento: 'Produto', cargo: 'Product Manager', dataAdmissao: '2023-03-15', feedbacksRecebidos: 8, feedbacksResolvidos: 6 },
-  { id: '2', nome: 'Carlos Mendes', email: 'carlos@empresa.com', departamento: 'Tecnologia', cargo: 'Dev Senior', dataAdmissao: '2022-08-01', feedbacksRecebidos: 12, feedbacksResolvidos: 10 },
-  { id: '3', nome: 'Ana Oliveira', email: 'ana@empresa.com', departamento: 'Atendimento', cargo: 'Analista de Suporte', dataAdmissao: '2024-01-10', feedbacksRecebidos: 5, feedbacksResolvidos: 3 },
-  { id: '4', nome: 'Pedro Santos', email: 'pedro@empresa.com', departamento: 'RH', cargo: 'Coordenador', dataAdmissao: '2021-11-20', feedbacksRecebidos: 15, feedbacksResolvidos: 14 },
-  { id: '5', nome: 'Juliana Costa', email: 'juliana@empresa.com', departamento: 'Processo', cargo: 'Analista de Processos', dataAdmissao: '2023-06-05', feedbacksRecebidos: 7, feedbacksResolvidos: 4 },
+  { id: '1', nome: 'Maria Silva', email: 'maria@empresa.com', departamento: 'CCO', cargo: 'Coordenadora', dataAdmissao: '2023-03-15', feedbacksRecebidos: 8, feedbacksResolvidos: 6 },
+  { id: '2', nome: 'Carlos Mendes', email: 'carlos@empresa.com', departamento: 'Segurança', cargo: 'Analista', dataAdmissao: '2022-08-01', feedbacksRecebidos: 12, feedbacksResolvidos: 10 },
+  { id: '3', nome: 'Ana Oliveira', email: 'ana@empresa.com', departamento: 'RH', cargo: 'Analista de RH', dataAdmissao: '2024-01-10', feedbacksRecebidos: 5, feedbacksResolvidos: 3 },
+  { id: '4', nome: 'Pedro Santos', email: 'pedro@empresa.com', departamento: 'Contrato Porto', cargo: 'Supervisor', dataAdmissao: '2021-11-20', feedbacksRecebidos: 15, feedbacksResolvidos: 14 },
+  { id: '5', nome: 'Juliana Costa', email: 'juliana@empresa.com', departamento: 'Frotas', cargo: 'Coordenadora de Frotas', dataAdmissao: '2023-06-05', feedbacksRecebidos: 7, feedbacksResolvidos: 4 },
 ];
 
 export default function Cadastro() {
@@ -57,11 +62,9 @@ export default function Cadastro() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="Produto">Produto</SelectItem>
-            <SelectItem value="Tecnologia">Tecnologia</SelectItem>
-            <SelectItem value="Atendimento">Atendimento</SelectItem>
-            <SelectItem value="RH">RH</SelectItem>
-            <SelectItem value="Processo">Processo</SelectItem>
+            {departamentos.map((d) => (
+              <SelectItem key={d} value={d}>{d}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Dialog>
@@ -80,11 +83,9 @@ export default function Cadastro() {
                 <Label>Departamento</Label>
                 <Select><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Produto">Produto</SelectItem>
-                    <SelectItem value="Tecnologia">Tecnologia</SelectItem>
-                    <SelectItem value="Atendimento">Atendimento</SelectItem>
-                    <SelectItem value="RH">RH</SelectItem>
-                    <SelectItem value="Processo">Processo</SelectItem>
+                    {departamentos.map((d) => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
