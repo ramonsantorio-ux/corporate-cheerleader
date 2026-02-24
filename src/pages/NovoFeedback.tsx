@@ -90,7 +90,7 @@ export default function NovoFeedback() {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Setor</label>
+            <label className={labelClass}>Departamento</label>
             <select
               value={form.setor}
               onChange={(e) => setForm({ ...form, setor: e.target.value as FeedbackSetor })}
@@ -117,14 +117,13 @@ export default function NovoFeedback() {
         </div>
 
         <div>
-          <label className={labelClass}>Departamento</label>
-          <input
-            type="text"
-            placeholder="Seu departamento"
+          <label className={labelClass}>Observações</label>
+          <textarea
+            placeholder="Observações adicionais..."
             value={form.departamento}
             onChange={(e) => setForm({ ...form, departamento: e.target.value })}
-            className={inputClass}
-            maxLength={50}
+            className={`${inputClass} min-h-[80px] resize-none`}
+            maxLength={500}
           />
         </div>
 
