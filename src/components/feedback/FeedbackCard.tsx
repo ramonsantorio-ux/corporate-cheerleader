@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ThumbsUp, MessageSquare } from 'lucide-react';
-import { Feedback, categoryLabels } from '@/lib/feedbackData';
+import { Feedback, setorLabels } from '@/lib/feedbackData';
 import StatusBadge from './StatusBadge';
 import PriorityBadge from './PriorityBadge';
 
@@ -31,7 +31,7 @@ export default function FeedbackCard({ feedback, index, onClick }: FeedbackCardP
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <StatusBadge status={feedback.status} />
-          <span className="text-xs text-muted-foreground">{categoryLabels[feedback.categoria]}</span>
+          <span className="text-xs text-muted-foreground">{setorLabels[feedback.setor]}</span>
         </div>
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1">

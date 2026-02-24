@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ThumbsUp, MessageSquare, Calendar, User, Building2 } from 'lucide-react';
-import { mockFeedbacks, categoryLabels } from '@/lib/feedbackData';
+import { mockFeedbacks, setorLabels } from '@/lib/feedbackData';
 import StatusBadge from '@/components/feedback/StatusBadge';
 import PriorityBadge from '@/components/feedback/PriorityBadge';
 
@@ -39,7 +39,7 @@ export default function FeedbackDetail() {
           <StatusBadge status={feedback.status} />
           <PriorityBadge priority={feedback.prioridade} />
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {categoryLabels[feedback.categoria]}
+            {setorLabels[feedback.setor]}
           </span>
         </div>
 
