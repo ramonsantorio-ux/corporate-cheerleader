@@ -1,16 +1,18 @@
 import { motion } from 'framer-motion';
-import { ThumbsUp, MessageSquare } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Trash2 } from 'lucide-react';
 import { Feedback, setorLabels } from '@/lib/feedbackData';
 import StatusBadge from './StatusBadge';
 import PriorityBadge from './PriorityBadge';
+import { Button } from '@/components/ui/button';
 
 interface FeedbackCardProps {
   feedback: Feedback;
   index: number;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
-export default function FeedbackCard({ feedback, index, onClick }: FeedbackCardProps) {
+export default function FeedbackCard({ feedback, index, onClick, onDelete }: FeedbackCardProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -23,7 +25,20 @@ export default function FeedbackCard({ feedback, index, onClick }: FeedbackCardP
         <h3 className="text-sm font-semibold group-hover:text-primary transition-colors line-clamp-2">
           {feedback.titulo}
         </h3>
-        <PriorityBadge priority={feedback.prioridade} />
+        <div className="flex items-center gap-1">
+          <PriorityBadge priority={feedback.prioridade} />
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-6 h-6 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              title="Excluir"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{feedback.descricao}</p>
