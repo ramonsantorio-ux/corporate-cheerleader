@@ -83,15 +83,19 @@ export default function Index() {
         transition={{ duration: 0.4, delay: 0.3 }}
         className="glass-card rounded-xl p-5"
       >
-        <h2 className="text-lg font-semibold mb-4">Distribuição por Categoria</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <h2 className="text-lg font-semibold mb-4">Distribuição por Setor</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {[
-            { label: 'Produto', count: 8, pct: 19 },
-            { label: 'Atendimento', count: 12, pct: 29 },
-            { label: 'Processo', count: 6, pct: 14 },
-            { label: 'Tecnologia', count: 10, pct: 24 },
-            { label: 'RH', count: 4, pct: 10 },
-            { label: 'Outro', count: 2, pct: 5 },
+            { label: 'Contrato Porto', count: 8, pct: 19 },
+            { label: 'Contrato Usina', count: 5, pct: 12 },
+            { label: 'Frotas', count: 6, pct: 14 },
+            { label: 'Medição', count: 4, pct: 10 },
+            { label: 'Segurança', count: 7, pct: 17 },
+            { label: 'CCO', count: 3, pct: 7 },
+            { label: 'CCM', count: 2, pct: 5 },
+            { label: 'Manutenção', count: 3, pct: 7 },
+            { label: 'RH', count: 2, pct: 5 },
+            { label: 'Financeiro', count: 2, pct: 5 },
           ].map((cat) => (
             <div key={cat.label} className="text-center p-3 rounded-lg bg-muted/50">
               <p className="text-xl font-bold">{cat.count}</p>

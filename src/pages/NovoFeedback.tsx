@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { categoryLabels, priorityLabels, FeedbackCategory, FeedbackPriority } from '@/lib/feedbackData';
+import { setorLabels, priorityLabels, FeedbackSetor, FeedbackPriority } from '@/lib/feedbackData';
 import { toast } from 'sonner';
 
 export default function NovoFeedback() {
@@ -10,7 +10,7 @@ export default function NovoFeedback() {
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
-    categoria: 'produto' as FeedbackCategory,
+    setor: 'contrato_porto' as FeedbackSetor,
     prioridade: 'media' as FeedbackPriority,
     departamento: '',
     funcionario: '',
@@ -90,13 +90,13 @@ export default function NovoFeedback() {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Categoria</label>
+            <label className={labelClass}>Setor</label>
             <select
-              value={form.categoria}
-              onChange={(e) => setForm({ ...form, categoria: e.target.value as FeedbackCategory })}
+              value={form.setor}
+              onChange={(e) => setForm({ ...form, setor: e.target.value as FeedbackSetor })}
               className={inputClass}
             >
-              {(Object.entries(categoryLabels) as [FeedbackCategory, string][]).map(([k, v]) => (
+              {(Object.entries(setorLabels) as [FeedbackSetor, string][]).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
             </select>

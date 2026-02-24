@@ -1,12 +1,12 @@
 export type FeedbackStatus = 'novo' | 'em_analise' | 'em_andamento' | 'resolvido' | 'arquivado';
 export type FeedbackPriority = 'baixa' | 'media' | 'alta' | 'critica';
-export type FeedbackCategory = 'produto' | 'atendimento' | 'processo' | 'tecnologia' | 'rh' | 'outro';
+export type FeedbackSetor = 'contrato_porto' | 'contrato_usina' | 'frotas' | 'medicao' | 'seguranca' | 'cco' | 'ccm' | 'manutencao' | 'rh' | 'financeiro';
 
 export interface Feedback {
   id: string;
   titulo: string;
   descricao: string;
-  categoria: FeedbackCategory;
+  setor: FeedbackSetor;
   prioridade: FeedbackPriority;
   status: FeedbackStatus;
   autor: string;
@@ -47,13 +47,17 @@ export const priorityColors: Record<FeedbackPriority, string> = {
   critica: 'bg-destructive text-destructive-foreground',
 };
 
-export const categoryLabels: Record<FeedbackCategory, string> = {
-  produto: 'Produto',
-  atendimento: 'Atendimento',
-  processo: 'Processo',
-  tecnologia: 'Tecnologia',
+export const setorLabels: Record<FeedbackSetor, string> = {
+  contrato_porto: 'Contrato Porto',
+  contrato_usina: 'Contrato Usina',
+  frotas: 'Frotas',
+  medicao: 'Medição',
+  seguranca: 'Segurança',
+  cco: 'CCO',
+  ccm: 'CCM',
+  manutencao: 'Manutenção',
   rh: 'RH',
-  outro: 'Outro',
+  financeiro: 'Financeiro',
 };
 
 export const mockFeedbacks: Feedback[] = [
@@ -61,7 +65,7 @@ export const mockFeedbacks: Feedback[] = [
     id: '1',
     titulo: 'Melhorar tempo de resposta do suporte',
     descricao: 'O tempo médio de resposta do suporte técnico está acima de 24h. Clientes estão reclamando da demora.',
-    categoria: 'atendimento',
+    setor: 'cco',
     prioridade: 'alta',
     status: 'em_andamento',
     autor: 'Maria Silva',
@@ -75,7 +79,7 @@ export const mockFeedbacks: Feedback[] = [
     id: '2',
     titulo: 'Implementar autenticação 2FA',
     descricao: 'Necessário implementar autenticação de dois fatores para aumentar a segurança das contas corporativas.',
-    categoria: 'tecnologia',
+    setor: 'seguranca',
     prioridade: 'critica',
     status: 'em_analise',
     autor: 'Carlos Mendes',
@@ -89,7 +93,7 @@ export const mockFeedbacks: Feedback[] = [
     id: '3',
     titulo: 'Novo processo de onboarding',
     descricao: 'Criar um processo de onboarding mais estruturado para novos colaboradores com materiais interativos.',
-    categoria: 'rh',
+    setor: 'rh',
     prioridade: 'media',
     status: 'novo',
     autor: 'Ana Oliveira',
@@ -103,7 +107,7 @@ export const mockFeedbacks: Feedback[] = [
     id: '4',
     titulo: 'Dashboard de métricas em tempo real',
     descricao: 'Disponibilizar dashboard com métricas de vendas e operações atualizadas em tempo real.',
-    categoria: 'produto',
+    setor: 'contrato_porto',
     prioridade: 'alta',
     status: 'em_andamento',
     autor: 'Pedro Santos',
@@ -117,7 +121,7 @@ export const mockFeedbacks: Feedback[] = [
     id: '5',
     titulo: 'Reduzir etapas do fluxo de aprovação',
     descricao: 'O processo atual de aprovação de despesas possui 7 etapas. Sugestão de reduzir para no máximo 3.',
-    categoria: 'processo',
+    setor: 'frotas',
     prioridade: 'media',
     status: 'resolvido',
     autor: 'Juliana Costa',
@@ -131,7 +135,7 @@ export const mockFeedbacks: Feedback[] = [
     id: '6',
     titulo: 'App mobile para equipe de campo',
     descricao: 'Equipe de vendas externa precisa de acesso mobile ao CRM com funcionalidade offline.',
-    categoria: 'tecnologia',
+    setor: 'manutencao',
     prioridade: 'alta',
     status: 'novo',
     autor: 'Roberto Lima',
@@ -145,7 +149,7 @@ export const mockFeedbacks: Feedback[] = [
     id: '7',
     titulo: 'Programa de reconhecimento interno',
     descricao: 'Criar um programa de reconhecimento e premiação para colaboradores com base em feedbacks positivos.',
-    categoria: 'rh',
+    setor: 'financeiro',
     prioridade: 'baixa',
     status: 'arquivado',
     autor: 'Fernanda Alves',
