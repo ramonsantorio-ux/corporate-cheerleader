@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 interface Funcionario {
   id: string;
@@ -23,7 +25,7 @@ const departamentos = [
   'Segurança', 'CCO', 'CCM', 'Manutenção', 'RH', 'Financeiro',
 ];
 
-const mockFuncionarios: Funcionario[] = [
+const initialFuncionarios: Funcionario[] = [
   { id: '1', nome: 'Maria Silva', email: 'maria@empresa.com', departamento: 'CCO', cargo: 'Coordenadora', dataAdmissao: '2023-03-15', feedbacksRecebidos: 8, feedbacksResolvidos: 6 },
   { id: '2', nome: 'Carlos Mendes', email: 'carlos@empresa.com', departamento: 'Segurança', cargo: 'Analista', dataAdmissao: '2022-08-01', feedbacksRecebidos: 12, feedbacksResolvidos: 10 },
   { id: '3', nome: 'Ana Oliveira', email: 'ana@empresa.com', departamento: 'RH', cargo: 'Analista de RH', dataAdmissao: '2024-01-10', feedbacksRecebidos: 5, feedbacksResolvidos: 3 },
@@ -34,8 +36,14 @@ const mockFuncionarios: Funcionario[] = [
 export default function Cadastro() {
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>(initialFuncionarios);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [editData, setEditData] = useState({ id: '', nome: '', email: '', cargo: '', departamento: '' });
+  const [newData, setNewData] = useState({ nome: '', email: '', cargo: '', departamento: '' });
 
-  const filtered = mockFuncionarios.filter((f) => {
+  const filtered = funcionarios.filter((f) => {
     const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
     const matchDept = deptFilter === 'todos' || f.departamento === deptFilter;
     return matchSearch && matchDept;
@@ -43,6 +51,51 @@ export default function Cadastro() {
 
   const getPctResolvido = (f: Funcionario) =>
     f.feedbacksRecebidos > 0 ? Math.round((f.feedbacksResolvidos / f.feedbacksRecebidos) * 100) : 0;
+
+  function handleCreate() {
+    if (!newData.nome || !newData.email || !newData.cargo || !newData.departamento) {
+      toast.error('Preencha todos os campos');
+      return;
+    }
+    const novo: Funcionario = {
+      id: Date.now().toString(),
+      nome: newData.nome,
+      email: newData.email,
+      cargo: newData.cargo,
+      departamento: newData.departamento,
+      dataAdmissao: new Date().toISOString().split('T')[0],
+      feedbacksRecebidos: 0,
+      feedbacksResolvidos: 0,
+    };
+    setFuncionarios([...funcionarios, novo]);
+    setNewData({ nome: '', email: '', cargo: '', departamento: '' });
+    setCreateOpen(false);
+    toast.success('Funcionário cadastrado!');
+  }
+
+  function openEdit(f: Funcionario) {
+    setEditData({ id: f.id, nome: f.nome, email: f.email, cargo: f.cargo, departamento: f.departamento });
+    setEditOpen(true);
+  }
+
+  function handleEdit() {
+    if (!editData.nome || !editData.email || !editData.cargo || !editData.departamento) {
+      toast.error('Preencha todos os campos');
+      return;
+    }
+    setFuncionarios(funcionarios.map(f =>
+      f.id === editData.id ? { ...f, nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento } : f
+    ));
+    setEditOpen(false);
+    toast.success('Funcionário atualizado!');
+  }
+
+  function handleDelete() {
+    if (!deleteId) return;
+    setFuncionarios(funcionarios.filter(f => f.id !== deleteId));
+    setDeleteId(null);
+    toast.success('Funcionário excluído!');
+  }
 
   return (
     <div className="space-y-6">
@@ -67,7 +120,7 @@ export default function Cadastro() {
             ))}
           </SelectContent>
         </Select>
-        <Dialog>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" />Novo Funcionário</Button>
           </DialogTrigger>
@@ -76,12 +129,13 @@ export default function Cadastro() {
               <DialogTitle>Cadastrar Funcionário</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
-              <div className="space-y-2"><Label>Nome completo</Label><Input placeholder="Nome do funcionário" /></div>
-              <div className="space-y-2"><Label>E-mail</Label><Input type="email" placeholder="email@empresa.com" /></div>
-              <div className="space-y-2"><Label>Cargo</Label><Input placeholder="Cargo" /></div>
+              <div className="space-y-2"><Label>Nome completo</Label><Input value={newData.nome} onChange={e => setNewData({ ...newData, nome: e.target.value })} placeholder="Nome do funcionário" /></div>
+              <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={newData.email} onChange={e => setNewData({ ...newData, email: e.target.value })} placeholder="email@empresa.com" /></div>
+              <div className="space-y-2"><Label>Cargo</Label><Input value={newData.cargo} onChange={e => setNewData({ ...newData, cargo: e.target.value })} placeholder="Cargo" /></div>
               <div className="space-y-2">
                 <Label>Departamento</Label>
-                <Select><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <Select value={newData.departamento} onValueChange={v => setNewData({ ...newData, departamento: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                   <SelectContent>
                     {departamentos.map((d) => (
                       <SelectItem key={d} value={d}>{d}</SelectItem>
@@ -89,7 +143,7 @@ export default function Cadastro() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button className="w-full">Cadastrar</Button>
+              <Button className="w-full" onClick={handleCreate}>Cadastrar</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -127,10 +181,60 @@ export default function Cadastro() {
                   <p className="text-xs text-muted-foreground">Evolução</p>
                 </div>
               </div>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" onClick={() => openEdit(f)} title="Editar">
+                  <Edit className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setDeleteId(f.id)} title="Excluir" className="text-destructive hover:text-destructive">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </motion.div>
           );
         })}
       </div>
+
+      {/* Edit dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Funcionário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2"><Label>Nome completo</Label><Input value={editData.nome} onChange={e => setEditData({ ...editData, nome: e.target.value })} /></div>
+            <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={editData.email} onChange={e => setEditData({ ...editData, email: e.target.value })} /></div>
+            <div className="space-y-2"><Label>Cargo</Label><Input value={editData.cargo} onChange={e => setEditData({ ...editData, cargo: e.target.value })} /></div>
+            <div className="space-y-2">
+              <Label>Departamento</Label>
+              <Select value={editData.departamento} onValueChange={v => setEditData({ ...editData, departamento: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                <SelectContent>
+                  {departamentos.map((d) => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="w-full" onClick={handleEdit}>Salvar Alterações</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir funcionário?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O funcionário será removido permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

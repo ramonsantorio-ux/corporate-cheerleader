@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FeedbackCard from '@/components/feedback/FeedbackCard';
-import { mockFeedbacks, Feedback, FeedbackStatus, FeedbackPriority, FeedbackSetor, statusLabels, priorityLabels, setorLabels } from '@/lib/feedbackData';
+import { mockFeedbacks as initialFeedbacks, Feedback, FeedbackStatus, FeedbackPriority, FeedbackSetor, statusLabels, priorityLabels, setorLabels } from '@/lib/feedbackData';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
 
 const departamentos = Object.entries(setorLabels) as [FeedbackSetor, string][];
 
@@ -23,14 +25,16 @@ function getAlertType(fb: Feedback): 'quinzenal' | 'mensal' | null {
 
 export default function Feedbacks() {
   const navigate = useNavigate();
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>(initialFeedbacks);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | 'todos'>('todos');
   const [priorityFilter, setPriorityFilter] = useState<FeedbackPriority | 'todos'>('todos');
   const [showFilters, setShowFilters] = useState(false);
   const [showAlerts, setShowAlerts] = useState(true);
   const [selectedDept, setSelectedDept] = useState<FeedbackSetor | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const filtered = mockFeedbacks.filter((fb) => {
+  const filtered = feedbacks.filter((fb) => {
     const matchSearch = fb.titulo.toLowerCase().includes(search.toLowerCase()) ||
       fb.descricao.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'todos' || fb.status === statusFilter;
@@ -39,22 +43,21 @@ export default function Feedbacks() {
   });
 
   const alertFeedbacks = useMemo(() =>
-    mockFeedbacks.filter(fb => getAlertType(fb) !== null), []
+    feedbacks.filter(fb => getAlertType(fb) !== null), [feedbacks]
   );
 
-  // Department stats
   const deptStats = useMemo(() => {
     return departamentos.map(([key, label]) => {
-      const deptFbs = mockFeedbacks.filter(fb => fb.setor === key);
+      const deptFbs = feedbacks.filter(fb => fb.setor === key);
       const resolved = deptFbs.filter(fb => fb.status === 'resolvido').length;
       const pending = deptFbs.filter(fb => fb.status !== 'resolvido' && fb.status !== 'arquivado').length;
       return { key, label, total: deptFbs.length, resolved, pending };
     }).filter(d => d.total > 0);
-  }, []);
+  }, [feedbacks]);
 
   const selectedDeptPeople = useMemo(() => {
     if (!selectedDept) return [];
-    const peopleFbs = mockFeedbacks.filter(fb => fb.setor === selectedDept);
+    const peopleFbs = feedbacks.filter(fb => fb.setor === selectedDept);
     const byAuthor: Record<string, { nome: string; total: number; resolvidos: number }> = {};
     peopleFbs.forEach(fb => {
       if (!byAuthor[fb.autor]) byAuthor[fb.autor] = { nome: fb.autor, total: 0, resolvidos: 0 };
@@ -62,7 +65,14 @@ export default function Feedbacks() {
       if (fb.status === 'resolvido') byAuthor[fb.autor].resolvidos++;
     });
     return Object.values(byAuthor);
-  }, [selectedDept]);
+  }, [selectedDept, feedbacks]);
+
+  function handleDelete() {
+    if (!deleteId) return;
+    setFeedbacks(feedbacks.filter(fb => fb.id !== deleteId));
+    setDeleteId(null);
+    toast.success('Feedback excluído!');
+  }
 
   return (
     <div className="space-y-4">
@@ -200,6 +210,7 @@ export default function Feedbacks() {
             feedback={fb}
             index={i}
             onClick={() => navigate(`/feedbacks/${fb.id}`)}
+            onDelete={() => setDeleteId(fb.id)}
           />
         ))}
       </div>
@@ -284,6 +295,22 @@ export default function Feedbacks() {
           <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-warning" /> Pendentes</div>
         </div>
       </motion.div>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir feedback?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O feedback será removido permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
