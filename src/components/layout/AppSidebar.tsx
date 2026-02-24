@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Settings, ChevronLeft, ChevronRight, MessageCircle, Users } from 'lucide-react';
+import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Settings, ChevronLeft, ChevronRight, MessageCircle, Users, Target } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/cadastro', icon: Users, label: 'Cadastro' },
   { to: '/feedbacks', icon: List, label: 'Feedbacks' },
   { to: '/novo', icon: MessageSquarePlus, label: 'Novo Feedback' },
+  { to: '/desempenho', icon: Target, label: 'Desempenho' },
   { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
   { to: '/configuracoes', icon: Settings, label: 'Configurações' },
 ];
