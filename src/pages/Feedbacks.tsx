@@ -1,9 +1,25 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FeedbackCard from '@/components/feedback/FeedbackCard';
-import { mockFeedbacks, FeedbackStatus, FeedbackPriority, statusLabels, priorityLabels } from '@/lib/feedbackData';
+import { mockFeedbacks, Feedback, FeedbackStatus, FeedbackPriority, FeedbackSetor, statusLabels, priorityLabels, setorLabels } from '@/lib/feedbackData';
+
+const departamentos = Object.entries(setorLabels) as [FeedbackSetor, string][];
+
+function getDaysSince(dateStr: string) {
+  const now = new Date('2026-02-24');
+  const created = new Date(dateStr);
+  return Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getAlertType(fb: Feedback): 'quinzenal' | 'mensal' | null {
+  if (fb.status === 'resolvido' || fb.status === 'arquivado') return null;
+  const days = getDaysSince(fb.criadoEm);
+  if (days >= 30) return 'mensal';
+  if (days >= 15) return 'quinzenal';
+  return null;
+}
 
 export default function Feedbacks() {
   const navigate = useNavigate();
@@ -11,6 +27,8 @@ export default function Feedbacks() {
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | 'todos'>('todos');
   const [priorityFilter, setPriorityFilter] = useState<FeedbackPriority | 'todos'>('todos');
   const [showFilters, setShowFilters] = useState(false);
+  const [showAlerts, setShowAlerts] = useState(true);
+  const [selectedDept, setSelectedDept] = useState<FeedbackSetor | null>(null);
 
   const filtered = mockFeedbacks.filter((fb) => {
     const matchSearch = fb.titulo.toLowerCase().includes(search.toLowerCase()) ||
@@ -20,16 +38,104 @@ export default function Feedbacks() {
     return matchSearch && matchStatus && matchPriority;
   });
 
+  const alertFeedbacks = useMemo(() =>
+    mockFeedbacks.filter(fb => getAlertType(fb) !== null), []
+  );
+
+  // Department stats
+  const deptStats = useMemo(() => {
+    return departamentos.map(([key, label]) => {
+      const deptFbs = mockFeedbacks.filter(fb => fb.setor === key);
+      const resolved = deptFbs.filter(fb => fb.status === 'resolvido').length;
+      const pending = deptFbs.filter(fb => fb.status !== 'resolvido' && fb.status !== 'arquivado').length;
+      return { key, label, total: deptFbs.length, resolved, pending };
+    }).filter(d => d.total > 0);
+  }, []);
+
+  const selectedDeptPeople = useMemo(() => {
+    if (!selectedDept) return [];
+    const peopleFbs = mockFeedbacks.filter(fb => fb.setor === selectedDept);
+    const byAuthor: Record<string, { nome: string; total: number; resolvidos: number }> = {};
+    peopleFbs.forEach(fb => {
+      if (!byAuthor[fb.autor]) byAuthor[fb.autor] = { nome: fb.autor, total: 0, resolvidos: 0 };
+      byAuthor[fb.autor].total++;
+      if (fb.status === 'resolvido') byAuthor[fb.autor].resolvidos++;
+    });
+    return Object.values(byAuthor);
+  }, [selectedDept]);
+
   return (
     <div className="space-y-4">
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold">Feedbacks</h1>
         <p className="text-muted-foreground text-sm mt-1">Gerencie todos os feedbacks recebidos</p>
       </motion.div>
 
+      {/* Alert banner */}
+      {alertFeedbacks.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card rounded-xl border-l-4 border-l-warning"
+        >
+          <button
+            onClick={() => setShowAlerts(!showAlerts)}
+            className="w-full flex items-center justify-between p-4"
+          >
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Bell className="w-5 h-5 text-warning" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center font-bold">
+                  {alertFeedbacks.length}
+                </span>
+              </div>
+              <span className="text-sm font-semibold">
+                {alertFeedbacks.length} alerta(s) pendente(s)
+              </span>
+            </div>
+            {showAlerts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          <AnimatePresence>
+            {showAlerts && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="px-4 pb-4 space-y-2">
+                  {alertFeedbacks.map(fb => {
+                    const alertType = getAlertType(fb)!;
+                    const days = getDaysSince(fb.criadoEm);
+                    return (
+                      <div
+                        key={fb.id}
+                        onClick={() => navigate(`/feedbacks/${fb.id}`)}
+                        className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors"
+                      >
+                        <AlertCircle className={`w-4 h-4 flex-shrink-0 ${alertType === 'mensal' ? 'text-destructive' : 'text-warning'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{fb.titulo}</p>
+                          <p className="text-xs text-muted-foreground">{fb.autor} · {setorLabels[fb.setor]}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          alertType === 'mensal'
+                            ? 'bg-destructive/10 text-destructive'
+                            : 'bg-warning/10 text-warning'
+                        }`}>
+                          {days} dias · {alertType === 'mensal' ? 'Mensal' : 'Quinzenal'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
+      {/* Search & filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2">
           <Search className="w-4 h-4 text-muted-foreground" />
@@ -104,6 +210,80 @@ export default function Feedbacks() {
           <p className="text-sm">Nenhum feedback encontrado com os filtros aplicados.</p>
         </div>
       )}
+
+      {/* Department tracking chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="glass-card rounded-xl p-6"
+      >
+        <h2 className="font-semibold text-lg mb-4">Acompanhamento por Departamento</h2>
+        <div className="space-y-3">
+          {deptStats.map(dept => {
+            const maxTotal = Math.max(...deptStats.map(d => d.total), 1);
+            const isSelected = selectedDept === dept.key;
+            return (
+              <div key={dept.key}>
+                <button
+                  onClick={() => setSelectedDept(isSelected ? null : dept.key)}
+                  className="w-full text-left"
+                >
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-sm w-32 shrink-0 font-medium">{dept.label}</span>
+                    <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden flex">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(dept.resolved / maxTotal) * 100}%` }}
+                        transition={{ duration: 0.5 }}
+                        className="h-full bg-success"
+                      />
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(dept.pending / maxTotal) * 100}%` }}
+                        transition={{ duration: 0.5 }}
+                        className="h-full bg-warning"
+                      />
+                    </div>
+                    <span className="text-xs w-16 text-right text-muted-foreground">
+                      {dept.resolved}✓ {dept.pending}⏳
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isSelected ? 'rotate-180' : ''}`} />
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {isSelected && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="ml-32 pl-3 mt-2 space-y-2 border-l-2 border-primary/20">
+                        {selectedDeptPeople.length === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2">Sem pessoas neste departamento</p>
+                        ) : (
+                          selectedDeptPeople.map(person => (
+                            <div key={person.nome} className="flex items-center gap-3 py-1.5">
+                              <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="text-sm flex-1">{person.nome}</span>
+                              <span className="text-xs text-muted-foreground">{person.resolvidos}/{person.total} resolvidos</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-success" /> Realizados</div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-warning" /> Pendentes</div>
+        </div>
+      </motion.div>
     </div>
   );
 }
