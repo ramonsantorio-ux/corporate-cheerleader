@@ -1,13 +1,13 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Settings, Users } from 'lucide-react';
+import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Settings, Users, Target } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
   { to: '/cadastro', icon: Users, label: 'Cadastro' },
   { to: '/feedbacks', icon: List, label: 'Feedbacks' },
   { to: '/novo', icon: MessageSquarePlus, label: 'Novo' },
+  { to: '/desempenho', icon: Target, label: 'Desemp.' },
   { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
-  { to: '/configuracoes', icon: Settings, label: 'Config' },
 ];
 
 export default function MobileNav() {

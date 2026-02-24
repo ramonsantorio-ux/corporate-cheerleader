@@ -11,6 +11,10 @@ import NovoFeedback from "./pages/NovoFeedback";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import Cadastro from "./pages/Cadastro";
+import Desempenho from "./pages/Desempenho";
+import Avaliacoes from "./pages/Avaliacoes";
+import Competencias from "./pages/Competencias";
+import PDIPage from "./pages/PDI";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +34,10 @@ const App = () => (
             <Route path="/novo" element={<NovoFeedback />} />
             <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/desempenho" element={<Desempenho />} />
+            <Route path="/desempenho/avaliacoes" element={<Avaliacoes />} />
+            <Route path="/desempenho/competencias" element={<Competencias />} />
+            <Route path="/desempenho/pdi" element={<PDIPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
