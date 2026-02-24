@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Plus, Search, Users, Edit, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Plus, Search, Users, Edit, Trash2, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Funcionario {
   id: string;
@@ -15,9 +16,9 @@ interface Funcionario {
   email: string;
   departamento: string;
   cargo: string;
-  dataAdmissao: string;
-  feedbacksRecebidos: number;
-  feedbacksResolvidos: number;
+  data_admissao: string;
+  feedbacks_recebidos: number;
+  feedbacks_resolvidos: number;
 }
 
 const departamentos = [
@@ -25,23 +26,36 @@ const departamentos = [
   'Segurança', 'CCO', 'CCM', 'Manutenção', 'RH', 'Financeiro',
 ];
 
-const initialFuncionarios: Funcionario[] = [
-  { id: '1', nome: 'Maria Silva', email: 'maria@empresa.com', departamento: 'CCO', cargo: 'Coordenadora', dataAdmissao: '2023-03-15', feedbacksRecebidos: 8, feedbacksResolvidos: 6 },
-  { id: '2', nome: 'Carlos Mendes', email: 'carlos@empresa.com', departamento: 'Segurança', cargo: 'Analista', dataAdmissao: '2022-08-01', feedbacksRecebidos: 12, feedbacksResolvidos: 10 },
-  { id: '3', nome: 'Ana Oliveira', email: 'ana@empresa.com', departamento: 'RH', cargo: 'Analista de RH', dataAdmissao: '2024-01-10', feedbacksRecebidos: 5, feedbacksResolvidos: 3 },
-  { id: '4', nome: 'Pedro Santos', email: 'pedro@empresa.com', departamento: 'Contrato Porto', cargo: 'Supervisor', dataAdmissao: '2021-11-20', feedbacksRecebidos: 15, feedbacksResolvidos: 14 },
-  { id: '5', nome: 'Juliana Costa', email: 'juliana@empresa.com', departamento: 'Frotas', cargo: 'Coordenadora de Frotas', dataAdmissao: '2023-06-05', feedbacksRecebidos: 7, feedbacksResolvidos: 4 },
-];
-
 export default function Cadastro() {
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
-  const [funcionarios, setFuncionarios] = useState<Funcionario[]>(initialFuncionarios);
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editData, setEditData] = useState({ id: '', nome: '', email: '', cargo: '', departamento: '' });
   const [newData, setNewData] = useState({ nome: '', email: '', cargo: '', departamento: '' });
+
+  useEffect(() => {
+    fetchFuncionarios();
+  }, []);
+
+  async function fetchFuncionarios() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('funcionarios')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast.error('Erro ao carregar funcionários');
+      console.error(error);
+    } else {
+      setFuncionarios(data || []);
+    }
+    setLoading(false);
+  }
 
   const filtered = funcionarios.filter((f) => {
     const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
@@ -50,27 +64,30 @@ export default function Cadastro() {
   });
 
   const getPctResolvido = (f: Funcionario) =>
-    f.feedbacksRecebidos > 0 ? Math.round((f.feedbacksResolvidos / f.feedbacksRecebidos) * 100) : 0;
+    f.feedbacks_recebidos > 0 ? Math.round((f.feedbacks_resolvidos / f.feedbacks_recebidos) * 100) : 0;
 
-  function handleCreate() {
+  async function handleCreate() {
     if (!newData.nome || !newData.email || !newData.cargo || !newData.departamento) {
       toast.error('Preencha todos os campos');
       return;
     }
-    const novo: Funcionario = {
-      id: Date.now().toString(),
+    const { error } = await supabase.from('funcionarios').insert({
       nome: newData.nome,
       email: newData.email,
       cargo: newData.cargo,
       departamento: newData.departamento,
-      dataAdmissao: new Date().toISOString().split('T')[0],
-      feedbacksRecebidos: 0,
-      feedbacksResolvidos: 0,
-    };
-    setFuncionarios([...funcionarios, novo]);
+    });
+
+    if (error) {
+      toast.error('Erro ao cadastrar funcionário');
+      console.error(error);
+      return;
+    }
+
     setNewData({ nome: '', email: '', cargo: '', departamento: '' });
     setCreateOpen(false);
     toast.success('Funcionário cadastrado!');
+    fetchFuncionarios();
   }
 
   function openEdit(f: Funcionario) {
@@ -78,23 +95,42 @@ export default function Cadastro() {
     setEditOpen(true);
   }
 
-  function handleEdit() {
+  async function handleEdit() {
     if (!editData.nome || !editData.email || !editData.cargo || !editData.departamento) {
       toast.error('Preencha todos os campos');
       return;
     }
-    setFuncionarios(funcionarios.map(f =>
-      f.id === editData.id ? { ...f, nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento } : f
-    ));
+    const { error } = await supabase.from('funcionarios').update({
+      nome: editData.nome,
+      email: editData.email,
+      cargo: editData.cargo,
+      departamento: editData.departamento,
+    }).eq('id', editData.id);
+
+    if (error) {
+      toast.error('Erro ao atualizar funcionário');
+      console.error(error);
+      return;
+    }
+
     setEditOpen(false);
     toast.success('Funcionário atualizado!');
+    fetchFuncionarios();
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!deleteId) return;
-    setFuncionarios(funcionarios.filter(f => f.id !== deleteId));
+    const { error } = await supabase.from('funcionarios').delete().eq('id', deleteId);
+
+    if (error) {
+      toast.error('Erro ao excluir funcionário');
+      console.error(error);
+      return;
+    }
+
     setDeleteId(null);
     toast.success('Funcionário excluído!');
+    fetchFuncionarios();
   }
 
   return (
@@ -149,50 +185,61 @@ export default function Cadastro() {
         </Dialog>
       </div>
 
-      <div className="grid gap-3">
-        {filtered.map((f, i) => {
-          const pct = getPctResolvido(f);
-          return (
-            <motion.div
-              key={f.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.05 }}
-              className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4"
-            >
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{f.nome}</p>
-                <p className="text-xs text-muted-foreground">{f.cargo} · {f.departamento}</p>
-              </div>
-              <div className="flex items-center gap-6 text-sm">
-                <div className="text-center">
-                  <p className="font-bold">{f.feedbacksRecebidos}</p>
-                  <p className="text-xs text-muted-foreground">Recebidos</p>
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p>Nenhum funcionário encontrado</p>
+        </div>
+      ) : (
+        <div className="grid gap-3">
+          {filtered.map((f, i) => {
+            const pct = getPctResolvido(f);
+            return (
+              <motion.div
+                key={f.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.05 }}
+                className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Users className="w-5 h-5 text-primary" />
                 </div>
-                <div className="text-center">
-                  <p className="font-bold">{f.feedbacksResolvidos}</p>
-                  <p className="text-xs text-muted-foreground">Resolvidos</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{f.nome}</p>
+                  <p className="text-xs text-muted-foreground">{f.cargo} · {f.departamento}</p>
                 </div>
-                <div className="text-center">
-                  <p className={`font-bold ${pct >= 70 ? 'text-green-500' : pct >= 40 ? 'text-yellow-500' : 'text-red-500'}`}>{pct}%</p>
-                  <p className="text-xs text-muted-foreground">Evolução</p>
+                <div className="flex items-center gap-6 text-sm">
+                  <div className="text-center">
+                    <p className="font-bold">{f.feedbacks_recebidos}</p>
+                    <p className="text-xs text-muted-foreground">Recebidos</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="font-bold">{f.feedbacks_resolvidos}</p>
+                    <p className="text-xs text-muted-foreground">Resolvidos</p>
+                  </div>
+                  <div className="text-center">
+                    <p className={`font-bold ${pct >= 70 ? 'text-green-500' : pct >= 40 ? 'text-yellow-500' : 'text-red-500'}`}>{pct}%</p>
+                    <p className="text-xs text-muted-foreground">Evolução</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" onClick={() => openEdit(f)} title="Editar">
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => setDeleteId(f.id)} title="Excluir" className="text-destructive hover:text-destructive">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => openEdit(f)} title="Editar">
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => setDeleteId(f.id)} title="Excluir" className="text-destructive hover:text-destructive">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

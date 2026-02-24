@@ -156,6 +156,42 @@ export type Database = {
           },
         ]
       }
+      funcionarios: {
+        Row: {
+          cargo: string
+          created_at: string
+          data_admissao: string
+          departamento: string
+          email: string
+          feedbacks_recebidos: number
+          feedbacks_resolvidos: number
+          id: string
+          nome: string
+        }
+        Insert: {
+          cargo: string
+          created_at?: string
+          data_admissao?: string
+          departamento: string
+          email: string
+          feedbacks_recebidos?: number
+          feedbacks_resolvidos?: number
+          id?: string
+          nome: string
+        }
+        Update: {
+          cargo?: string
+          created_at?: string
+          data_admissao?: string
+          departamento?: string
+          email?: string
+          feedbacks_recebidos?: number
+          feedbacks_resolvidos?: number
+          id?: string
+          nome?: string
+        }
+        Relationships: []
+      }
       pdi_actions: {
         Row: {
           competency_id: string | null
