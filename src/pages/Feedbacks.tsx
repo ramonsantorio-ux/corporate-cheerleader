@@ -1,16 +1,17 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FeedbackCard from '@/components/feedback/FeedbackCard';
-import { mockFeedbacks as initialFeedbacks, Feedback, FeedbackStatus, FeedbackPriority, FeedbackSetor, statusLabels, priorityLabels, setorLabels } from '@/lib/feedbackData';
+import { Feedback, FeedbackStatus, FeedbackPriority, FeedbackSetor, statusLabels, priorityLabels, setorLabels } from '@/lib/feedbackData';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const departamentos = Object.entries(setorLabels) as [FeedbackSetor, string][];
 
 function getDaysSince(dateStr: string) {
-  const now = new Date('2026-02-24');
+  const now = new Date();
   const created = new Date(dateStr);
   return Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
 }
@@ -25,7 +26,7 @@ function getAlertType(fb: Feedback): 'quinzenal' | 'mensal' | null {
 
 export default function Feedbacks() {
   const navigate = useNavigate();
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>(initialFeedbacks);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | 'todos'>('todos');
   const [priorityFilter, setPriorityFilter] = useState<FeedbackPriority | 'todos'>('todos');
@@ -33,6 +34,34 @@ export default function Feedbacks() {
   const [showAlerts, setShowAlerts] = useState(true);
   const [selectedDept, setSelectedDept] = useState<FeedbackSetor | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchFeedbacks();
+  }, []);
+
+  async function fetchFeedbacks() {
+    const { data, error } = await supabase
+      .from('feedbacks')
+      .select('*')
+      .order('criado_em', { ascending: false });
+
+    if (data) {
+      setFeedbacks(data.map(row => ({
+        id: row.id,
+        titulo: row.titulo,
+        descricao: row.descricao,
+        setor: row.setor as FeedbackSetor,
+        prioridade: row.prioridade as FeedbackPriority,
+        status: row.status as FeedbackStatus,
+        autor: row.autor,
+        departamento: row.departamento,
+        criadoEm: new Date(row.criado_em).toISOString().split('T')[0],
+        atualizadoEm: new Date(row.atualizado_em).toISOString().split('T')[0],
+        votos: row.votos,
+        comentarios: row.comentarios,
+      })));
+    }
+  }
 
   const filtered = feedbacks.filter((fb) => {
     const matchSearch = fb.titulo.toLowerCase().includes(search.toLowerCase()) ||
@@ -67,8 +96,13 @@ export default function Feedbacks() {
     return Object.values(byAuthor);
   }, [selectedDept, feedbacks]);
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!deleteId) return;
+    const { error } = await supabase.from('feedbacks').delete().eq('id', deleteId);
+    if (error) {
+      toast.error('Erro ao excluir feedback.');
+      return;
+    }
     setFeedbacks(feedbacks.filter(fb => fb.id !== deleteId));
     setDeleteId(null);
     toast.success('Feedback excluído!');

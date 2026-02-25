@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { setorLabels, priorityLabels, FeedbackSetor, FeedbackPriority } from '@/lib/feedbackData';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function NovoFeedback() {
   const navigate = useNavigate();
+  const [funcionarios, setFuncionarios] = useState<string[]>([]);
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
@@ -14,20 +16,37 @@ export default function NovoFeedback() {
     prioridade: 'media' as FeedbackPriority,
     departamento: '',
     funcionario: '',
+    pontos_positivos: '',
+    pontos_melhoria: '',
   });
 
-  const funcionarios = [
-    'Maria Silva',
-    'Carlos Mendes',
-    'Ana Oliveira',
-    'Pedro Santos',
-    'Juliana Costa',
-  ];
+  useEffect(() => {
+    supabase.from('funcionarios').select('nome').then(({ data }) => {
+      if (data) setFuncionarios(data.map(f => f.nome));
+    });
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.titulo.trim() || !form.descricao.trim() || !form.funcionario) {
       toast.error('Preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    const { error } = await supabase.from('feedbacks').insert({
+      titulo: form.titulo,
+      descricao: form.descricao,
+      setor: form.setor,
+      prioridade: form.prioridade,
+      autor: form.funcionario,
+      departamento: form.departamento,
+      pontos_positivos: form.pontos_positivos,
+      pontos_melhoria: form.pontos_melhoria,
+      observacoes: form.departamento,
+    });
+
+    if (error) {
+      toast.error('Erro ao enviar feedback.');
       return;
     }
     toast.success('Feedback enviado com sucesso!');
@@ -84,6 +103,28 @@ export default function NovoFeedback() {
             value={form.descricao}
             onChange={(e) => setForm({ ...form, descricao: e.target.value })}
             className={`${inputClass} min-h-[120px] resize-none`}
+            maxLength={1000}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Pontos Positivos</label>
+          <textarea
+            placeholder="Destaque os pontos positivos..."
+            value={form.pontos_positivos}
+            onChange={(e) => setForm({ ...form, pontos_positivos: e.target.value })}
+            className={`${inputClass} min-h-[80px] resize-none`}
+            maxLength={1000}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Pontos de Melhoria</label>
+          <textarea
+            placeholder="Indique os pontos de melhoria..."
+            value={form.pontos_melhoria}
+            onChange={(e) => setForm({ ...form, pontos_melhoria: e.target.value })}
+            className={`${inputClass} min-h-[80px] resize-none`}
             maxLength={1000}
           />
         </div>
