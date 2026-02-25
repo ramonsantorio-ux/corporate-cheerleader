@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/cadastro', icon: Users, label: 'Cadastro' },
+  { to: '/colaboradores', icon: Users, label: 'Colaboradores' },
   { to: '/feedbacks', icon: List, label: 'Feedbacks' },
   { to: '/novo', icon: MessageSquarePlus, label: 'Novo Feedback' },
   { to: '/desempenho', icon: Target, label: 'Desempenho' },
