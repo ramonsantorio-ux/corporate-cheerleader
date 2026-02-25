@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Star, User, UserCheck, MessageSquare, Shield } from 'lucide-react';
+import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,19 @@ export default function FitCulturalSection({ employeeId, employeeName }: Props) 
     fetchScores();
   }
 
+  async function clearScore(criteria: string, stage: string) {
+    const existing = scores.find(s => s.criteria === criteria && s.stage === stage);
+    if (!existing) return;
+
+    await supabase
+      .from('fit_cultural')
+      .delete()
+      .eq('id', existing.id);
+
+    toast({ title: 'Nota removida!' });
+    fetchScores();
+  }
+
   function getStageAvg(stage: string): string {
     const stageScores = scores.filter(s => s.stage === stage && s.score != null);
     if (stageScores.length === 0) return '—';
@@ -125,7 +138,7 @@ export default function FitCulturalSection({ employeeId, employeeName }: Props) 
                 const currentScore = getScore(criteria, stage.key);
                 return (
                   <div key={criteria} className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-foreground flex-1 min-w-0 truncate">{criteria}</span>
+                    <span className="text-sm text-foreground flex-1 min-w-0">{criteria}</span>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map(n => (
                         <button
@@ -143,6 +156,15 @@ export default function FitCulturalSection({ employeeId, employeeName }: Props) 
                           />
                         </button>
                       ))}
+                      {currentScore != null && (
+                        <button
+                          onClick={() => clearScore(criteria, stage.key)}
+                          className="ml-1 p-0.5 rounded hover:bg-muted transition-colors"
+                          title="Limpar nota"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

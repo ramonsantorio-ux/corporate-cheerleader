@@ -23,6 +23,7 @@ import FuncionarioProfile from "./pages/FuncionarioProfile";
 import Reunioes from "./pages/Reunioes";
 import Clima from "./pages/Clima";
 import Ausencias from "./pages/Ausencias";
+import Colaboradores from "./pages/Colaboradores";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ function ProtectedRoutes() {
       <Route element={<AppLayout />}>
         <Route path="/" element={<Index />} />
         <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/colaboradores" element={<Colaboradores />} />
         <Route path="/feedbacks" element={<Feedbacks />} />
         <Route path="/feedbacks/:id" element={<FeedbackDetail />} />
         <Route path="/novo" element={<NovoFeedback />} />
