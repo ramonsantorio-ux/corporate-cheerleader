@@ -5,6 +5,7 @@ import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, 
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
+import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
@@ -195,6 +196,12 @@ export default function FuncionarioProfile() {
             ))}
           </div>
         )}
+      </motion.div>
+
+      {/* FIT Cultural */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+        className="glass-card rounded-xl p-6">
+        <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
       </motion.div>
     </div>
   );
