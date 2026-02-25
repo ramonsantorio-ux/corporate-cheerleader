@@ -163,6 +163,13 @@ export default function PDIPage() {
     return Math.round(pdiActions.reduce((acc, a) => acc + a.progress, 0) / pdiActions.length);
   };
 
+  const careerLevels = [
+    { cargo: 'Encarregado Operacional', requisito: 'Ensino médio completo', order: 1 },
+    { cargo: 'Supervisor de Campo', requisito: 'Curso superior completo ou cursando', order: 2 },
+    { cargo: 'Coordenador Operacional', requisito: 'Curso Superior completo', order: 3 },
+    { cargo: 'Gerente Operacional', requisito: 'Curso Superior completo + 1 especialização na área', order: 4 },
+  ];
+
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
@@ -210,6 +217,24 @@ export default function PDIPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Career progression card */}
+      <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        className="glass-card rounded-xl p-5">
+        <h2 className="text-base font-semibold text-foreground mb-4">Plano de Carreira — Requisitos para Promoção</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {careerLevels.map((level, i) => (
+            <div key={level.cargo} className="relative flex flex-col items-center text-center p-4 rounded-lg border border-border bg-muted/20">
+              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg mb-2">{level.order}</div>
+              <h3 className="font-semibold text-foreground text-sm mb-1">{level.cargo}</h3>
+              <p className="text-xs text-muted-foreground">{level.requisito}</p>
+              {i < careerLevels.length - 1 && (
+                <div className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">→</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </motion.div>
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Carregando...</p>

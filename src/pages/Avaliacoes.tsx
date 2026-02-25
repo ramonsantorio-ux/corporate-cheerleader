@@ -26,7 +26,14 @@ interface Goal {
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 
-const emptyForm = { descricao: '', peso: 0, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
+const emptyForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
+
+const MONTHS = [
+  { value: '01', label: 'Janeiro' }, { value: '02', label: 'Fevereiro' }, { value: '03', label: 'Março' },
+  { value: '04', label: 'Abril' }, { value: '05', label: 'Maio' }, { value: '06', label: 'Junho' },
+  { value: '07', label: 'Julho' }, { value: '08', label: 'Agosto' }, { value: '09', label: 'Setembro' },
+  { value: '10', label: 'Outubro' }, { value: '11', label: 'Novembro' }, { value: '12', label: 'Dezembro' },
+];
 
 export default function Avaliacoes() {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -37,6 +44,7 @@ export default function Avaliacoes() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
   const { toast } = useToast();
 
   useEffect(() => { fetchGoals(); }, []);
@@ -58,6 +66,7 @@ export default function Avaliacoes() {
     setForm({
       descricao: goal.descricao,
       peso: goal.peso,
+      resultado: goal.resultado != null ? String(goal.resultado) : '',
       muito_abaixo: goal.muito_abaixo,
       abaixo: goal.abaixo,
       dentro: goal.dentro,
@@ -82,6 +91,7 @@ export default function Avaliacoes() {
       const { error } = await supabase.from('goals').update({
         descricao: form.descricao,
         peso: form.peso,
+        resultado: form.resultado !== '' ? Number(form.resultado) : null,
         muito_abaixo: form.muito_abaixo,
         abaixo: form.abaixo,
         dentro: form.dentro,
@@ -127,8 +137,15 @@ export default function Avaliacoes() {
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Target className="w-6 h-6 text-primary" /> Gestão de Metas</h1>
           <p className="text-muted-foreground text-sm mt-1">Metas por cargo — Contrato Porto</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button size="sm" onClick={openNew}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Todos os meses" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os meses</SelectItem>
+              {MONTHS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <Filter className="w-4 h-4 text-muted-foreground" />
           <Select value={selectedCargo} onValueChange={setSelectedCargo}>
             <SelectTrigger className="w-[260px]"><SelectValue placeholder="Selecione o cargo" /></SelectTrigger>
@@ -238,7 +255,10 @@ export default function Avaliacoes() {
           <DialogHeader><DialogTitle>{editGoal ? 'Editar Meta' : 'Nova Meta'}</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-2">
             <div><Label>Descrição</Label><Input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></div>
-            <div><Label>Peso (%)</Label><Input type="number" value={form.peso} onChange={e => setForm({ ...form, peso: Number(e.target.value) })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Peso (%)</Label><Input type="number" value={form.peso} onChange={e => setForm({ ...form, peso: Number(e.target.value) })} /></div>
+              <div><Label>Resultado</Label><Input type="number" value={form.resultado} onChange={e => setForm({ ...form, resultado: e.target.value })} placeholder="Ex: 85" /></div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Muito Abaixo</Label><Input value={form.muito_abaixo} onChange={e => setForm({ ...form, muito_abaixo: e.target.value })} /></div>
               <div><Label>Abaixo</Label><Input value={form.abaixo} onChange={e => setForm({ ...form, abaixo: e.target.value })} /></div>
