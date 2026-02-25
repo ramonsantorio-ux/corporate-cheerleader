@@ -39,7 +39,7 @@ export default function AppSidebar() {
               exit={{ opacity: 0 }}
               className="text-sidebar-foreground font-semibold text-sm whitespace-nowrap"
             >
-              FeedbackHub
+              Gestão Porto
             </motion.span>
           )}
         </AnimatePresence>
