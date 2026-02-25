@@ -82,8 +82,8 @@ export default function Competencias() {
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Competências</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerencie competências personalizáveis por ciclo</p>
+          <h1 className="text-2xl font-bold text-foreground">Fit Cultural</h1>
+          <p className="text-muted-foreground text-sm mt-1">Gerencie competências e fit cultural por ciclo</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
