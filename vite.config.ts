@@ -23,9 +23,9 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
       },
       manifest: {
-        name: "FeedbackHub - Controle de Feedbacks",
-        short_name: "FeedbackHub",
-        description: "Sistema empresarial de controle de feedbacks",
+        name: "Gestão Porto - Gestão de Pessoas",
+        short_name: "Gestão Porto",
+        description: "Sistema de gestão de pessoas e feedbacks",
         theme_color: "#1a8a7a",
         background_color: "#f5f7fa",
         display: "standalone",
