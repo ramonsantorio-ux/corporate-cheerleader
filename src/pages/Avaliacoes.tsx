@@ -179,30 +179,30 @@ export default function Avaliacoes() {
           {/* Goals table */}
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="glass-card rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-border">
-              <h2 className="text-base font-semibold text-foreground">Detalhamento das Metas — {selectedCargo}</h2>
+            <div className="p-4 border-b border-border bg-primary/5">
+              <h2 className="text-base font-bold text-foreground">{selectedCargo}</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-muted/50">
-                    <th className="text-left p-3 font-medium text-muted-foreground">Descrição</th>
-                    <th className="text-center p-3 font-medium text-muted-foreground">Peso</th>
-                    <th className="text-center p-3 font-medium text-muted-foreground whitespace-nowrap">Muito Abaixo</th>
-                    <th className="text-center p-3 font-medium text-muted-foreground">Abaixo</th>
-                    <th className="text-center p-3 font-medium text-muted-foreground">Dentro</th>
-                    <th className="text-center p-3 font-medium text-muted-foreground">Acima</th>
-                    <th className="text-center p-3 font-medium text-muted-foreground whitespace-nowrap">Muito Acima</th>
-                    <th className="text-center p-3 font-medium text-muted-foreground">Ações</th>
+                  <tr className="bg-muted/60">
+                    <th className="text-left p-3 font-semibold text-foreground">Descrição</th>
+                    <th className="text-center p-3 font-semibold text-foreground">Peso</th>
+                    <th className="text-center p-3 font-semibold text-foreground">Resultado</th>
+                    <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Abaixo do Esperado</th>
+                    <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Abaixo do Esperado</th>
+                    <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Dentro Esperado (Aceitável)</th>
+                    <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Acima do Esperado</th>
+                    <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Acima do Esperado</th>
+                    <th className="text-center p-3 font-semibold text-foreground">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filtered.map((goal, i) => (
-                    <tr key={goal.id} className={i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}>
+                    <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
                       <td className="p-3 font-medium text-foreground">{goal.descricao}</td>
-                      <td className="p-3 text-center">
-                        <span className="inline-flex items-center justify-center bg-primary/10 text-primary font-semibold rounded-full px-2.5 py-0.5 text-xs">{goal.peso}%</span>
-                      </td>
+                      <td className="p-3 text-center font-semibold text-foreground">{goal.peso}%</td>
+                      <td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
                       <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td>
                       <td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td>
                       <td className="p-3 text-center text-xs text-foreground">{goal.dentro}</td>
@@ -220,14 +220,10 @@ export default function Avaliacoes() {
                       </td>
                     </tr>
                   ))}
-                  <tr className="bg-muted/40 font-semibold">
+                  <tr className="bg-muted/50 font-bold">
                     <td className="p-3 text-foreground">TOTAL</td>
-                    <td className="p-3 text-center">
-                      <span className="inline-flex items-center justify-center bg-primary/20 text-primary font-bold rounded-full px-2.5 py-0.5 text-xs">
-                        {filtered.reduce((s, g) => s + g.peso, 0)}%
-                      </span>
-                    </td>
-                    <td colSpan={6}></td>
+                    <td className="p-3 text-center text-foreground">{filtered.reduce((s, g) => s + g.peso, 0)}%</td>
+                    <td colSpan={7}></td>
                   </tr>
                 </tbody>
               </table>
