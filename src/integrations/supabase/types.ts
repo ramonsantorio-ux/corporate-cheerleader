@@ -246,6 +246,48 @@ export type Database = {
         }
         Relationships: []
       }
+      goals: {
+        Row: {
+          abaixo: string
+          acima: string
+          cargo: string
+          created_at: string
+          dentro: string
+          descricao: string
+          id: string
+          muito_abaixo: string
+          muito_acima: string
+          peso: number
+          resultado: number | null
+        }
+        Insert: {
+          abaixo?: string
+          acima?: string
+          cargo: string
+          created_at?: string
+          dentro?: string
+          descricao: string
+          id?: string
+          muito_abaixo?: string
+          muito_acima?: string
+          peso: number
+          resultado?: number | null
+        }
+        Update: {
+          abaixo?: string
+          acima?: string
+          cargo?: string
+          created_at?: string
+          dentro?: string
+          descricao?: string
+          id?: string
+          muito_abaixo?: string
+          muito_acima?: string
+          peso?: number
+          resultado?: number | null
+        }
+        Relationships: []
+      }
       pdi_actions: {
         Row: {
           competency_id: string | null
