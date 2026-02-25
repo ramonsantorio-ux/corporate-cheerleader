@@ -156,6 +156,41 @@ export type Database = {
           },
         ]
       }
+      employee_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          employee_id: string
+          file_name: string
+          file_url: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type?: string
+          employee_id: string
+          file_name?: string
+          file_url: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          employee_id?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evaluation_cycles: {
         Row: {
           created_at: string
@@ -375,6 +410,8 @@ export type Database = {
           graduacao: string
           id: string
           nome: string
+          pos_graduacao: boolean
+          pos_graduacao_tipo: string
         }
         Insert: {
           cargo: string
@@ -389,6 +426,8 @@ export type Database = {
           graduacao?: string
           id?: string
           nome: string
+          pos_graduacao?: boolean
+          pos_graduacao_tipo?: string
         }
         Update: {
           cargo?: string
@@ -403,6 +442,8 @@ export type Database = {
           graduacao?: string
           id?: string
           nome?: string
+          pos_graduacao?: boolean
+          pos_graduacao_tipo?: string
         }
         Relationships: []
       }

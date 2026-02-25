@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,14 @@ import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
   feedbacks_recebidos: number; feedbacks_resolvidos: number; email: string; data_admissao: string;
+  escolaridade: string; graduacao: string; pos_graduacao: boolean; pos_graduacao_tipo: string;
 }
 
 interface FeedbackItem {
@@ -31,6 +33,10 @@ interface Goal {
   muito_abaixo: string; abaixo: string; dentro: string; acima: string; muito_acima: string;
 }
 
+interface EmployeeDocument {
+  id: string; file_url: string; file_name: string; document_type: string; created_at: string;
+}
+
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
 
@@ -43,9 +49,9 @@ export default function FuncionarioProfile() {
   const [allFuncionarios, setAllFuncionarios] = useState<Funcionario[]>([]);
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Goals CRUD state
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<Goal | null>(null);
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
@@ -58,18 +64,17 @@ export default function FuncionarioProfile() {
       supabase.from('feedbacks').select('id, titulo, status, prioridade, criado_em, gestor').order('criado_em', { ascending: false }),
       supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, email, data_admissao'),
       supabase.from('meetings').select('*').eq('employee_id', id).order('meeting_date', { ascending: false }),
-    ]).then(([funcRes, fbRes, allRes, meetRes]) => {
-      if (funcRes.data) setFunc(funcRes.data as Funcionario);
-      if (fbRes.data) {
-        setFeedbacks(fbRes.data as FeedbackItem[]);
-      }
+      supabase.from('employee_documents').select('*').eq('employee_id', id).order('created_at', { ascending: false }),
+    ]).then(([funcRes, fbRes, allRes, meetRes, docRes]) => {
+      if (funcRes.data) setFunc(funcRes.data as unknown as Funcionario);
+      if (fbRes.data) setFeedbacks(fbRes.data as FeedbackItem[]);
       if (allRes.data) setAllFuncionarios(allRes.data as Funcionario[]);
       if (meetRes.data) setMeetings(meetRes.data as MeetingItem[]);
+      if (docRes.data) setDocuments(docRes.data as unknown as EmployeeDocument[]);
       setLoading(false);
     });
   }, [id]);
 
-  // Fetch goals when func is loaded
   useEffect(() => {
     if (!func) return;
     fetchGoals();
@@ -168,7 +173,6 @@ export default function FuncionarioProfile() {
     return items;
   }, [func, meetings]);
 
-  // Goals chart data
   const pieData = goals.map(g => ({ name: g.descricao, value: g.peso }));
   const barData = goals.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
 
@@ -177,6 +181,7 @@ export default function FuncionarioProfile() {
 
   return (
     <div className="space-y-6">
+      {/* Back + Title */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5" /></Button>
         <div>
@@ -185,32 +190,52 @@ export default function FuncionarioProfile() {
         </div>
       </motion.div>
 
-      {/* Header Card */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-6 flex flex-col sm:flex-row gap-6 items-center">
-        {func.foto_url ? (
-          <img src={func.foto_url} alt={func.nome} className="w-24 h-24 rounded-full object-cover border-4 border-primary/20" />
-        ) : (
-          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-3xl">
-            {func.nome.charAt(0)}
-          </div>
-        )}
-        <div className="flex-1 text-center sm:text-left">
-          <h2 className="text-xl font-bold">{func.nome}</h2>
-          <p className="text-muted-foreground">{func.cargo} · {func.departamento}</p>
-          <p className="text-sm text-muted-foreground mt-1">{func.email || 'Sem e-mail'} · Admissão: {new Date(func.data_admissao).toLocaleDateString('pt-BR')}</p>
-        </div>
-        <div className="text-center">
-          <div className="relative w-20 h-20">
-            <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-              <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
-              <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--primary))" strokeWidth="6"
-                strokeDasharray={`${(score / 100) * 220} 220`} strokeLinecap="round" />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-lg font-bold">{score}</span>
+      {/* Header Card with personal info */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-6">
+        <div className="flex flex-col sm:flex-row gap-6 items-center">
+          {func.foto_url ? (
+            <img src={func.foto_url} alt={func.nome} className="w-24 h-24 rounded-full object-cover border-4 border-primary/20" />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-3xl">
+              {func.nome.charAt(0)}
+            </div>
+          )}
+          <div className="flex-1 text-center sm:text-left">
+            <h2 className="text-xl font-bold">{func.nome}</h2>
+            <p className="text-muted-foreground">{func.cargo} · {func.departamento}</p>
+            <p className="text-sm text-muted-foreground mt-1">{func.email || 'Sem e-mail'} · Admissão: {new Date(func.data_admissao).toLocaleDateString('pt-BR')}</p>
+            {/* Education info */}
+            <div className="flex flex-wrap gap-2 mt-2">
+              {func.escolaridade && (
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                  <GraduationCap className="w-3 h-3" />{func.escolaridade}
+                </span>
+              )}
+              {func.graduacao && (
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-accent/50 text-accent-foreground">
+                  {func.graduacao}
+                </span>
+              )}
+              {func.pos_graduacao && func.pos_graduacao_tipo && (
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-2/20 text-foreground">
+                  Pós: {func.pos_graduacao_tipo}
+                </span>
+              )}
             </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Score Geral</p>
+          <div className="text-center">
+            <div className="relative w-20 h-20">
+              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
+                <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--primary))" strokeWidth="6"
+                  strokeDasharray={`${(score / 100) * 220} 220`} strokeLinecap="round" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold">{score}</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Score Geral</p>
+          </div>
         </div>
       </motion.div>
 
@@ -231,117 +256,9 @@ export default function FuncionarioProfile() {
         ))}
       </div>
 
-      {/* Comparativo */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-        className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Comparativo com Equipe ({func.departamento})</h3>
-        <div className="space-y-3">
-          <div>
-            <div className="flex justify-between text-sm mb-1"><span>{func.nome}</span><span className="font-bold">{pctResolvido}%</span></div>
-            <Progress value={pctResolvido} className="h-3" />
-          </div>
-          <div>
-            <div className="flex justify-between text-sm mb-1"><span>Média da equipe</span><span className="font-bold">{deptAvg}%</span></div>
-            <Progress value={deptAvg} className="h-3" />
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Metas do Cargo — Charts + Table */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-        className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
-          <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
-        </div>
-
-        {goals.length === 0 ? (
-          <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma meta encontrada para o cargo "{func.cargo}".</div>
-        ) : (
-          <>
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="glass-card rounded-xl p-5">
-                <h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4>
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3} label={({ value }) => `${value}%`}>
-                      {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => `${v}%`} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="glass-card rounded-xl p-5">
-                <h4 className="text-base font-semibold mb-4">Peso por Meta</h4>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tickFormatter={v => `${v}%`} />
-                    <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} />
-                    <Tooltip formatter={(v: number) => `${v}%`} />
-                    <Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Goals Table */}
-            <div className="glass-card rounded-xl overflow-hidden">
-              <div className="p-4 border-b border-border bg-primary/5">
-                <h4 className="text-base font-bold">{func.cargo}</h4>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/60">
-                      <th className="text-left p-3 font-semibold text-foreground">Descrição</th>
-                      <th className="text-center p-3 font-semibold text-foreground">Peso</th>
-                      <th className="text-center p-3 font-semibold text-foreground">Resultado</th>
-                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Abaixo</th>
-                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Abaixo</th>
-                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Dentro</th>
-                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Acima</th>
-                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Acima</th>
-                      <th className="text-center p-3 font-semibold text-foreground">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {goals.map((goal, i) => (
-                      <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
-                        <td className="p-3 font-medium text-foreground">{goal.descricao}</td>
-                        <td className="p-3 text-center font-semibold">{goal.peso}%</td>
-                        <td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
-                        <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td>
-                        <td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td>
-                        <td className="p-3 text-center text-xs">{goal.dentro}</td>
-                        <td className="p-3 text-center text-xs text-primary">{goal.acima}</td>
-                        <td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
-                        <td className="p-3 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <button onClick={() => openEditGoal(goal)} className="p-1 text-muted-foreground hover:text-primary transition-colors" title="Editar"><Pencil className="w-4 h-4" /></button>
-                            <button onClick={() => setDeleteGoalId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Excluir"><Trash2 className="w-4 h-4" /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    <tr className="bg-muted/50 font-bold">
-                      <td className="p-3">TOTAL</td>
-                      <td className="p-3 text-center">{goals.reduce((s, g) => s + g.peso, 0)}%</td>
-                      <td colSpan={7}></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-      </motion.div>
-
       {/* Alertas */}
       {pendencias.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
           className="glass-card rounded-xl p-5 border-l-4 border-warning">
           <h3 className="font-semibold flex items-center gap-2 mb-3"><AlertTriangle className="w-5 h-5 text-warning" />Alertas e Pendências</h3>
           <ul className="space-y-1">
@@ -354,35 +271,211 @@ export default function FuncionarioProfile() {
         </motion.div>
       )}
 
-      {/* Timeline de Reuniões */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-        className="glass-card rounded-xl p-6">
-        <h3 className="font-semibold mb-4">Últimas Reuniões 1:1</h3>
-        {meetings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma reunião registrada para este funcionário.</p>
-        ) : (
-          <div className="space-y-3">
-            {meetings.slice(0, 5).map(m => (
-              <div key={m.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                <Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{new Date(m.meeting_date).toLocaleDateString('pt-BR')} — {m.manager_name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{m.notes || 'Sem anotações'}</p>
-                </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>
-                  {m.status === 'completed' ? 'Concluída' : 'Agendada'}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </motion.div>
+      {/* Tabs for organized content */}
+      <Tabs defaultValue="desempenho" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
+          <TabsTrigger value="metas">Metas</TabsTrigger>
+          <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
+          <TabsTrigger value="fit-cultural">Fit Cultural</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos</TabsTrigger>
+        </TabsList>
 
-      {/* FIT Cultural */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-        className="glass-card rounded-xl p-6">
-        <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
-      </motion.div>
+        {/* ===== DESEMPENHO ===== */}
+        <TabsContent value="desempenho" className="space-y-6 mt-4">
+          {/* Comparativo */}
+          <div className="glass-card rounded-xl p-6">
+            <h3 className="font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Comparativo com Equipe ({func.departamento})</h3>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between text-sm mb-1"><span>{func.nome}</span><span className="font-bold">{pctResolvido}%</span></div>
+                <Progress value={pctResolvido} className="h-3" />
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1"><span>Média da equipe</span><span className="font-bold">{deptAvg}%</span></div>
+                <Progress value={deptAvg} className="h-3" />
+              </div>
+            </div>
+          </div>
+
+          {/* Reuniões */}
+          <div className="glass-card rounded-xl p-6">
+            <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Últimas Reuniões 1:1</h3>
+            {meetings.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma reunião registrada para este funcionário.</p>
+            ) : (
+              <div className="space-y-3">
+                {meetings.slice(0, 5).map(m => (
+                  <div key={m.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                    <Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{new Date(m.meeting_date).toLocaleDateString('pt-BR')} — {m.manager_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{m.notes || 'Sem anotações'}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>
+                      {m.status === 'completed' ? 'Concluída' : 'Agendada'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ===== METAS ===== */}
+        <TabsContent value="metas" className="space-y-6 mt-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
+            <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
+          </div>
+
+          {goals.length === 0 ? (
+            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma meta encontrada para o cargo "{func.cargo}".</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="glass-card rounded-xl p-5">
+                  <h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3} label={({ value }) => `${value}%`}>
+                        {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip formatter={(v: number) => `${v}%`} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="glass-card rounded-xl p-5">
+                  <h4 className="text-base font-semibold mb-4">Peso por Meta</h4>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tickFormatter={v => `${v}%`} />
+                      <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} />
+                      <Tooltip formatter={(v: number) => `${v}%`} />
+                      <Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="glass-card rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-border bg-primary/5">
+                  <h4 className="text-base font-bold">{func.cargo}</h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-muted/60">
+                        <th className="text-left p-3 font-semibold text-foreground">Descrição</th>
+                        <th className="text-center p-3 font-semibold text-foreground">Peso</th>
+                        <th className="text-center p-3 font-semibold text-foreground">Resultado</th>
+                        <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Abaixo</th>
+                        <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Abaixo</th>
+                        <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Dentro</th>
+                        <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Acima</th>
+                        <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Acima</th>
+                        <th className="text-center p-3 font-semibold text-foreground">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {goals.map((goal, i) => (
+                        <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
+                          <td className="p-3 font-medium text-foreground">{goal.descricao}</td>
+                          <td className="p-3 text-center font-semibold">{goal.peso}%</td>
+                          <td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
+                          <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td>
+                          <td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td>
+                          <td className="p-3 text-center text-xs">{goal.dentro}</td>
+                          <td className="p-3 text-center text-xs text-primary">{goal.acima}</td>
+                          <td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
+                          <td className="p-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button onClick={() => openEditGoal(goal)} className="p-1 text-muted-foreground hover:text-primary transition-colors" title="Editar"><Pencil className="w-4 h-4" /></button>
+                              <button onClick={() => setDeleteGoalId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Excluir"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      <tr className="bg-muted/50 font-bold">
+                        <td className="p-3">TOTAL</td>
+                        <td className="p-3 text-center">{goals.reduce((s, g) => s + g.peso, 0)}%</td>
+                        <td colSpan={7}></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </TabsContent>
+
+        {/* ===== FEEDBACKS ===== */}
+        <TabsContent value="feedbacks" className="space-y-4 mt-4">
+          <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks</h3>
+          {employeeFeedbacks.length === 0 ? (
+            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum feedback encontrado para este funcionário.</div>
+          ) : (
+            <div className="space-y-3">
+              {employeeFeedbacks.map(fb => (
+                <div key={fb.id} className="glass-card rounded-xl p-4 flex items-center gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm truncate">{fb.titulo}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(fb.criado_em).toLocaleDateString('pt-BR')} · Gestor: {fb.gestor || '—'}
+                    </p>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
+                    fb.status === 'resolvido' ? 'bg-success/10 text-success' :
+                    fb.status === 'em_progresso' ? 'bg-primary/10 text-primary' :
+                    'bg-muted text-muted-foreground'
+                  }`}>
+                    {fb.status === 'resolvido' ? 'Resolvido' : fb.status === 'em_progresso' ? 'Em Progresso' : 'Novo'}
+                  </span>
+                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
+                    fb.prioridade === 'alta' ? 'bg-destructive/10 text-destructive' :
+                    fb.prioridade === 'media' ? 'bg-warning/10 text-warning' :
+                    'bg-muted text-muted-foreground'
+                  }`}>
+                    {fb.prioridade}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ===== FIT CULTURAL ===== */}
+        <TabsContent value="fit-cultural" className="mt-4">
+          <div className="glass-card rounded-xl p-6">
+            <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
+          </div>
+        </TabsContent>
+
+        {/* ===== DOCUMENTOS ===== */}
+        <TabsContent value="documentos" className="space-y-4 mt-4">
+          <h3 className="text-lg font-bold flex items-center gap-2"><FileText className="w-5 h-5 text-primary" />Documentos</h3>
+          {documents.length === 0 ? (
+            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum documento anexado.</div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {documents.map(doc => (
+                <div key={doc.id} className="glass-card rounded-xl p-4 flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{doc.file_name}</p>
+                    <p className="text-xs text-muted-foreground">{doc.document_type} · {new Date(doc.created_at).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-muted transition-colors">
+                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Goal Edit/Create Dialog */}
       <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
