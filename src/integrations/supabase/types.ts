@@ -323,6 +323,44 @@ export type Database = {
         }
         Relationships: []
       }
+      fit_cultural: {
+        Row: {
+          created_at: string
+          criteria: string
+          employee_id: string
+          id: string
+          score: number | null
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criteria: string
+          employee_id: string
+          id?: string
+          score?: number | null
+          stage?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criteria?: string
+          employee_id?: string
+          id?: string
+          score?: number | null
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fit_cultural_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funcionarios: {
         Row: {
           cargo: string
