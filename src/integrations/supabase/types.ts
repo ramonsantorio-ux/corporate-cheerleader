@@ -368,9 +368,11 @@ export type Database = {
           data_admissao: string
           departamento: string
           email: string | null
+          escolaridade: string
           feedbacks_recebidos: number
           feedbacks_resolvidos: number
           foto_url: string | null
+          graduacao: string
           id: string
           nome: string
         }
@@ -380,9 +382,11 @@ export type Database = {
           data_admissao?: string
           departamento: string
           email?: string | null
+          escolaridade?: string
           feedbacks_recebidos?: number
           feedbacks_resolvidos?: number
           foto_url?: string | null
+          graduacao?: string
           id?: string
           nome: string
         }
@@ -392,9 +396,11 @@ export type Database = {
           data_admissao?: string
           departamento?: string
           email?: string | null
+          escolaridade?: string
           feedbacks_recebidos?: number
           feedbacks_resolvidos?: number
           foto_url?: string | null
+          graduacao?: string
           id?: string
           nome?: string
         }

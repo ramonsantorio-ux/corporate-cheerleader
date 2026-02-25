@@ -18,6 +18,8 @@ interface Funcionario {
   departamento: string;
   cargo: string;
   data_admissao: string;
+  escolaridade: string;
+  graduacao: string;
   feedbacks_recebidos: number;
   feedbacks_resolvidos: number;
   foto_url: string;
@@ -26,6 +28,16 @@ interface Funcionario {
 const departamentos = [
   'Contrato Porto', 'Contrato Usina', 'Frotas', 'Medição',
   'Segurança', 'CCO', 'CCM', 'Manutenção', 'RH', 'Financeiro',
+];
+
+const escolaridades = [
+  'Ensino Fundamental',
+  'Ensino Médio',
+  'Ensino Superior Cursando',
+  'Ensino Superior Completo',
+  'Pós-Graduação',
+  'Mestrado',
+  'Doutorado',
 ];
 
 export default function Cadastro() {
@@ -37,8 +49,8 @@ export default function Cadastro() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [editData, setEditData] = useState({ id: '', nome: '', email: '', cargo: '', departamento: '', foto_url: '' });
-  const [newData, setNewData] = useState({ nome: '', email: '', cargo: '', departamento: '' });
+  const [editData, setEditData] = useState({ id: '', nome: '', email: '', cargo: '', departamento: '', foto_url: '', data_admissao: '', escolaridade: '', graduacao: '' });
+  const [newData, setNewData] = useState({ nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '' });
   const [uploading, setUploading] = useState(false);
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [newPhotoPreview, setNewPhotoPreview] = useState('');
@@ -86,7 +98,7 @@ export default function Cadastro() {
 
   async function handleCreate() {
     if (!newData.nome || !newData.cargo || !newData.departamento) {
-      toast.error('Preencha todos os campos');
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     setUploading(true);
@@ -101,13 +113,20 @@ export default function Cadastro() {
       return;
     }
 
-    const { error } = await supabase.from('funcionarios').insert({
+    const insertData: any = {
       nome: newData.nome,
       email: newData.email,
       cargo: newData.cargo,
       departamento: newData.departamento,
+      escolaridade: newData.escolaridade,
+      graduacao: newData.graduacao,
       foto_url,
-    });
+    };
+    if (newData.data_admissao) {
+      insertData.data_admissao = newData.data_admissao;
+    }
+
+    const { error } = await supabase.from('funcionarios').insert(insertData);
 
     setUploading(false);
     if (error) {
@@ -115,7 +134,7 @@ export default function Cadastro() {
       return;
     }
 
-    setNewData({ nome: '', email: '', cargo: '', departamento: '' });
+    setNewData({ nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '' });
     setNewPhotoFile(null);
     setNewPhotoPreview('');
     setCreateOpen(false);
@@ -124,7 +143,17 @@ export default function Cadastro() {
   }
 
   function openEdit(f: Funcionario) {
-    setEditData({ id: f.id, nome: f.nome, email: f.email, cargo: f.cargo, departamento: f.departamento, foto_url: f.foto_url || '' });
+    setEditData({
+      id: f.id,
+      nome: f.nome,
+      email: f.email,
+      cargo: f.cargo,
+      departamento: f.departamento,
+      foto_url: f.foto_url || '',
+      data_admissao: f.data_admissao || '',
+      escolaridade: f.escolaridade || '',
+      graduacao: f.graduacao || '',
+    });
     setEditPhotoFile(null);
     setEditPhotoPreview(f.foto_url || '');
     setEditOpen(true);
@@ -132,7 +161,7 @@ export default function Cadastro() {
 
   async function handleEdit() {
     if (!editData.nome || !editData.cargo || !editData.departamento) {
-      toast.error('Preencha todos os campos');
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     setUploading(true);
@@ -147,13 +176,20 @@ export default function Cadastro() {
       return;
     }
 
-    const { error } = await supabase.from('funcionarios').update({
+    const updateData: any = {
       nome: editData.nome,
       email: editData.email,
       cargo: editData.cargo,
       departamento: editData.departamento,
+      escolaridade: editData.escolaridade,
+      graduacao: editData.graduacao,
       foto_url,
-    }).eq('id', editData.id);
+    };
+    if (editData.data_admissao) {
+      updateData.data_admissao = editData.data_admissao;
+    }
+
+    const { error } = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
 
     setUploading(false);
     if (error) {
@@ -195,6 +231,53 @@ export default function Cadastro() {
     }
   }
 
+  const FormFields = ({ data, setData }: { data: typeof newData; setData: (d: typeof newData) => void }) => (
+    <>
+      <div className="space-y-2">
+        <Label>Nome completo</Label>
+        <Input value={data.nome} onChange={e => setData({ ...data, nome: e.target.value })} placeholder="Nome do funcionário" />
+      </div>
+      <div className="space-y-2">
+        <Label>Data de Admissão</Label>
+        <Input type="date" value={data.data_admissao} onChange={e => setData({ ...data, data_admissao: e.target.value })} />
+      </div>
+      <div className="space-y-2">
+        <Label>Escolaridade</Label>
+        <Select value={data.escolaridade} onValueChange={v => setData({ ...data, escolaridade: v })}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            {escolaridades.map((e) => (
+              <SelectItem key={e} value={e}>{e}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Graduação</Label>
+        <Input value={data.graduacao} onChange={e => setData({ ...data, graduacao: e.target.value })} placeholder="Ex: Engenharia Civil, Administração..." />
+      </div>
+      <div className="space-y-2">
+        <Label>Cargo</Label>
+        <Input value={data.cargo} onChange={e => setData({ ...data, cargo: e.target.value })} placeholder="Cargo" />
+      </div>
+      <div className="space-y-2">
+        <Label>E-mail</Label>
+        <Input type="email" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} placeholder="email@empresa.com" />
+      </div>
+      <div className="space-y-2">
+        <Label>Departamento</Label>
+        <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            {departamentos.map((d) => (
+              <SelectItem key={d} value={d}>{d}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </>
+  );
+
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -222,7 +305,7 @@ export default function Cadastro() {
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" />Novo Funcionário</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Cadastrar Funcionário</DialogTitle>
             </DialogHeader>
@@ -244,20 +327,7 @@ export default function Cadastro() {
                 )}
                 <p className="text-xs text-muted-foreground">Foto (opcional)</p>
               </div>
-              <div className="space-y-2"><Label>Nome completo</Label><Input value={newData.nome} onChange={e => setNewData({ ...newData, nome: e.target.value })} placeholder="Nome do funcionário" /></div>
-              <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={newData.email} onChange={e => setNewData({ ...newData, email: e.target.value })} placeholder="email@empresa.com" /></div>
-              <div className="space-y-2"><Label>Cargo</Label><Input value={newData.cargo} onChange={e => setNewData({ ...newData, cargo: e.target.value })} placeholder="Cargo" /></div>
-              <div className="space-y-2">
-                <Label>Departamento</Label>
-                <Select value={newData.departamento} onValueChange={v => setNewData({ ...newData, departamento: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>
-                    {departamentos.map((d) => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <FormFields data={newData} setData={setNewData} />
               <Button className="w-full" onClick={handleCreate} disabled={uploading}>
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Cadastrar
@@ -332,7 +402,7 @@ export default function Cadastro() {
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Funcionário</DialogTitle>
           </DialogHeader>
@@ -354,20 +424,7 @@ export default function Cadastro() {
               )}
               <button onClick={() => editFileRef.current?.click()} className="text-xs text-primary hover:underline">Alterar foto</button>
             </div>
-            <div className="space-y-2"><Label>Nome completo</Label><Input value={editData.nome} onChange={e => setEditData({ ...editData, nome: e.target.value })} /></div>
-            <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={editData.email} onChange={e => setEditData({ ...editData, email: e.target.value })} /></div>
-            <div className="space-y-2"><Label>Cargo</Label><Input value={editData.cargo} onChange={e => setEditData({ ...editData, cargo: e.target.value })} /></div>
-            <div className="space-y-2">
-              <Label>Departamento</Label>
-              <Select value={editData.departamento} onValueChange={v => setEditData({ ...editData, departamento: v })}>
-                <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                <SelectContent>
-                  {departamentos.map((d) => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormFields data={editData} setData={setEditData as any} />
             <Button className="w-full" onClick={handleEdit} disabled={uploading}>
               {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Salvar Alterações
