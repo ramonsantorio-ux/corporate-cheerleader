@@ -1,155 +1,156 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, CheckCircle2, Clock, Search } from 'lucide-react';
+import { Target, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 
-interface Evaluation {
+interface Goal {
   id: string;
-  cycle_id: string;
-  evaluator_name: string;
-  evaluator_role: string;
-  evaluated_name: string;
-  status: string;
-  created_at: string;
-  completed_at: string | null;
+  cargo: string;
+  descricao: string;
+  peso: number;
+  resultado: number | null;
+  muito_abaixo: string;
+  abaixo: string;
+  dentro: string;
+  acima: string;
+  muito_acima: string;
 }
 
-interface Cycle {
-  id: string;
-  name: string;
-}
-
-const roleLabels: Record<string, string> = {
-  self: 'Autoavaliação',
-  manager: 'Gestor',
-  peer: 'Par',
-  subordinate: 'Subordinado',
-};
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 
 export default function Avaliacoes() {
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ cycle_id: '', evaluator_name: '', evaluator_role: 'self', evaluated_name: '' });
-  const { toast } = useToast();
+  const [cargos, setCargos] = useState<string[]>([]);
+  const [selectedCargo, setSelectedCargo] = useState<string>('');
 
   useEffect(() => {
-    Promise.all([fetchEvaluations(), fetchCycles()]);
+    fetchGoals();
   }, []);
 
-  async function fetchEvaluations() {
-    const { data } = await supabase.from('evaluations').select('*').order('created_at', { ascending: false });
-    if (data) setEvaluations(data as Evaluation[]);
+  async function fetchGoals() {
+    const { data } = await supabase.from('goals').select('*').order('peso', { ascending: false });
+    if (data) {
+      const typed = data as Goal[];
+      setGoals(typed);
+      const uniqueCargos = [...new Set(typed.map(g => g.cargo))];
+      setCargos(uniqueCargos);
+      if (uniqueCargos.length > 0 && !selectedCargo) setSelectedCargo(uniqueCargos[0]);
+    }
     setLoading(false);
   }
 
-  async function fetchCycles() {
-    const { data } = await supabase.from('evaluation_cycles').select('id, name');
-    if (data) setCycles(data as Cycle[]);
-  }
+  const filtered = goals.filter(g => g.cargo === selectedCargo);
 
-  async function createEvaluation() {
-    if (!form.cycle_id || !form.evaluator_name || !form.evaluated_name) {
-      toast({ title: 'Preencha todos os campos', variant: 'destructive' });
-      return;
-    }
-    const { error } = await supabase.from('evaluations').insert([form]);
-    if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Avaliação criada!' });
-      setDialogOpen(false);
-      setForm({ cycle_id: '', evaluator_name: '', evaluator_role: 'self', evaluated_name: '' });
-      fetchEvaluations();
-    }
-  }
-
-  const filtered = evaluations.filter(e =>
-    e.evaluator_name.toLowerCase().includes(search.toLowerCase()) ||
-    e.evaluated_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const pieData = filtered.map(g => ({ name: g.descricao, value: g.peso }));
+  const barData = filtered.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Gestão de Metas</h1>
-          <p className="text-muted-foreground text-sm mt-1">Metas individuais e por departamento</p>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Target className="w-6 h-6 text-primary" /> Gestão de Metas</h1>
+          <p className="text-muted-foreground text-sm mt-1">Metas por cargo — Contrato Porto</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Nova Avaliação</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Criar Avaliação</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div>
-                <Label>Ciclo</Label>
-                <Select value={form.cycle_id} onValueChange={v => setForm({ ...form, cycle_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o ciclo" /></SelectTrigger>
-                  <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Avaliador</Label><Input value={form.evaluator_name} onChange={e => setForm({ ...form, evaluator_name: e.target.value })} placeholder="Nome do avaliador" /></div>
-              <div>
-                <Label>Tipo de Avaliação</Label>
-                <Select value={form.evaluator_role} onValueChange={v => setForm({ ...form, evaluator_role: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(roleLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div><Label>Avaliado</Label><Input value={form.evaluated_name} onChange={e => setForm({ ...form, evaluated_name: e.target.value })} placeholder="Nome do avaliado" /></div>
-              <Button onClick={createEvaluation} className="w-full">Criar Avaliação</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <Select value={selectedCargo} onValueChange={setSelectedCargo}>
+            <SelectTrigger className="w-[260px]"><SelectValue placeholder="Selecione o cargo" /></SelectTrigger>
+            <SelectContent>
+              {cargos.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </motion.div>
-
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome..." className="pl-10" />
-      </div>
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Carregando...</p>
       ) : filtered.length === 0 ? (
-        <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma avaliação encontrada.</div>
+        <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma meta encontrada para este cargo.</div>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((ev, i) => (
-            <motion.div key={ev.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-              className="glass-card rounded-xl p-4 flex items-center justify-between"
-            >
-              <div>
-                <h3 className="font-medium text-foreground">{ev.evaluated_name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  Avaliador: {ev.evaluator_name} · <span className="capitalize">{roleLabels[ev.evaluator_role]}</span>
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {ev.status === 'completed' ? (
-                  <span className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-medium">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Concluída
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 font-medium">
-                    <Clock className="w-3.5 h-3.5" /> Pendente
-                  </span>
-                )}
-              </div>
+        <>
+          {/* Charts row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pie chart - peso distribution */}
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="glass-card rounded-xl p-5">
+              <h2 className="text-base font-semibold text-foreground mb-4">Distribuição de Pesos</h2>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3} label={({ name, value }) => `${value}%`}>
+                    {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => `${v}%`} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
             </motion.div>
-          ))}
-        </div>
+
+            {/* Bar chart */}
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="glass-card rounded-xl p-5">
+              <h2 className="text-base font-semibold text-foreground mb-4">Peso por Meta</h2>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tickFormatter={v => `${v}%`} />
+                  <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} />
+                  <Tooltip formatter={(v: number) => `${v}%`} />
+                  <Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </motion.div>
+          </div>
+
+          {/* Goals table */}
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            className="glass-card rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border">
+              <h2 className="text-base font-semibold text-foreground">Detalhamento das Metas — {selectedCargo}</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="text-left p-3 font-medium text-muted-foreground">Descrição</th>
+                    <th className="text-center p-3 font-medium text-muted-foreground">Peso</th>
+                    <th className="text-center p-3 font-medium text-muted-foreground whitespace-nowrap">Muito Abaixo</th>
+                    <th className="text-center p-3 font-medium text-muted-foreground">Abaixo</th>
+                    <th className="text-center p-3 font-medium text-muted-foreground">Dentro</th>
+                    <th className="text-center p-3 font-medium text-muted-foreground">Acima</th>
+                    <th className="text-center p-3 font-medium text-muted-foreground whitespace-nowrap">Muito Acima</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((goal, i) => (
+                    <tr key={goal.id} className={i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}>
+                      <td className="p-3 font-medium text-foreground">{goal.descricao}</td>
+                      <td className="p-3 text-center">
+                        <span className="inline-flex items-center justify-center bg-primary/10 text-primary font-semibold rounded-full px-2.5 py-0.5 text-xs">{goal.peso}%</span>
+                      </td>
+                      <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td>
+                      <td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td>
+                      <td className="p-3 text-center text-xs text-foreground">{goal.dentro}</td>
+                      <td className="p-3 text-center text-xs text-primary">{goal.acima}</td>
+                      <td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-muted/40 font-semibold">
+                    <td className="p-3 text-foreground">TOTAL</td>
+                    <td className="p-3 text-center">
+                      <span className="inline-flex items-center justify-center bg-primary/20 text-primary font-bold rounded-full px-2.5 py-0.5 text-xs">
+                        {filtered.reduce((s, g) => s + g.peso, 0)}%
+                      </span>
+                    </td>
+                    <td colSpan={5}></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </>
       )}
     </div>
   );
