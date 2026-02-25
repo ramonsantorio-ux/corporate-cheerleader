@@ -16,14 +16,46 @@ interface FitScore {
 }
 
 const CRITERIA = [
-  'Comprometimento',
-  'Trabalho em Equipe',
-  'Comunicação',
-  'Proatividade',
-  'Ética e Integridade',
-  'Adaptabilidade',
-  'Foco em Resultados',
-  'Liderança',
+  {
+    label: 'Preocupação com a empresa como um todo',
+    desc: 'Pratico senso de dono, se preocupa com a performance de outros setores, coopera com seus pares e colegas de equipe',
+  },
+  {
+    label: 'Postura voltada ao desenvolvimento da equipe',
+    desc: 'Estimula o crescimento da equipe, realiza feedbacks',
+  },
+  {
+    label: 'Proporciona um ambiente de trabalho saudável',
+    desc: 'Pratica um diálogo aberto, transparente e respeitador',
+  },
+  {
+    label: 'Proporciona um ambiente de trabalho inclusivo',
+    desc: 'Sem discriminação de qualquer natureza',
+  },
+  {
+    label: 'Possui atitudes/práticas alinhadas as questões voltadas a saúde, segurança e meio ambiente',
+    desc: 'Demonstra no dia a dia a preocupação com temos voltados a saúde, segurança e meio ambiente',
+  },
+  {
+    label: 'Utiliza de forma racional os recursos da empresa',
+    desc: 'Tem preocupação com desperdícios de qualquer que seja a natureza',
+  },
+  {
+    label: 'Atua com princípios éticos',
+    desc: 'Não compactua com corrupção, uso indevido de recursos da empresa, apropriação indevida de qualquer natureza',
+  },
+  {
+    label: 'Atua de forma alinhada com os 3 C\'s da empresa',
+    desc: 'Disciplina com horário, com as demandas, com os valores, com os compromissos assumidos',
+  },
+  {
+    label: 'Desenvolvimento pessoal/profissional',
+    desc: 'Realiza cursos, seminários e especializações pessoais/profissionais',
+  },
+  {
+    label: 'Busca do desenvolvimento do negócio de forma sustentável',
+    desc: 'Atitudes voltadas ao bem estar geral incluindo a comunidade, parceiros e sociedade em geral',
+  },
 ];
 
 const STAGES = [
@@ -133,38 +165,43 @@ export default function FitCulturalSection({ employeeId, employeeName }: Props) 
               </div>
             </div>
 
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-4">
               {CRITERIA.map(criteria => {
-                const currentScore = getScore(criteria, stage.key);
+                const currentScore = getScore(criteria.label, stage.key);
                 return (
-                  <div key={criteria} className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-foreground flex-1 min-w-0">{criteria}</span>
-                    <div className="flex items-center gap-1">
-                      {[1, 2, 3, 4, 5].map(n => (
-                        <button
-                          key={n}
-                          onClick={() => setScore(criteria, stage.key, n)}
-                          className="transition-all"
-                          title={`Nota ${n}`}
-                        >
-                          <Star
-                            className={`w-5 h-5 transition-colors ${
-                              currentScore != null && n <= currentScore
-                                ? 'text-primary fill-primary'
-                                : 'text-muted-foreground/30'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                      {currentScore != null && (
-                        <button
-                          onClick={() => clearScore(criteria, stage.key)}
-                          className="ml-1 p-0.5 rounded hover:bg-muted transition-colors"
-                          title="Limpar nota"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-                        </button>
-                      )}
+                  <div key={criteria.label} className="space-y-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-foreground">{criteria.label}</span>
+                        <p className="text-xs text-muted-foreground mt-0.5">{criteria.desc}</p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                        {[1, 2, 3, 4, 5].map(n => (
+                          <button
+                            key={n}
+                            onClick={() => setScore(criteria.label, stage.key, n)}
+                            className="transition-all"
+                            title={`Nota ${n}`}
+                          >
+                            <Star
+                              className={`w-5 h-5 transition-colors ${
+                                currentScore != null && n <= currentScore
+                                  ? 'text-primary fill-primary'
+                                  : 'text-muted-foreground/30'
+                              }`}
+                            />
+                          </button>
+                        ))}
+                        {currentScore != null && (
+                          <button
+                            onClick={() => clearScore(criteria.label, stage.key)}
+                            className="ml-1 p-0.5 rounded hover:bg-muted transition-colors"
+                            title="Limpar nota"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
