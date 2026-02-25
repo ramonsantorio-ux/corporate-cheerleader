@@ -100,7 +100,7 @@ export default function Desempenho() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { icon: TrendingUp, label: 'Gestão de Metas', desc: 'Metas individuais e por departamento', to: '/desempenho/avaliacoes' },
-          { icon: Target, label: 'Competências', desc: 'Gerenciar competências por ciclo', to: '/desempenho/competencias' },
+          { icon: Target, label: 'Fit Cultural', desc: 'Gerenciar competências e fit cultural', to: '/desempenho/competencias' },
           { icon: Users, label: 'PDI', desc: 'Planos de desenvolvimento', to: '/desempenho/pdi' },
         ].map((item, i) => (
           <motion.div key={item.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
