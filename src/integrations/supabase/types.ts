@@ -164,6 +164,7 @@ export type Database = {
           criado_em: string
           departamento: string
           descricao: string
+          gestor: string | null
           id: string
           observacoes: string | null
           pontos_melhoria: string | null
@@ -181,6 +182,7 @@ export type Database = {
           criado_em?: string
           departamento?: string
           descricao: string
+          gestor?: string | null
           id?: string
           observacoes?: string | null
           pontos_melhoria?: string | null
@@ -198,6 +200,7 @@ export type Database = {
           criado_em?: string
           departamento?: string
           descricao?: string
+          gestor?: string | null
           id?: string
           observacoes?: string | null
           pontos_melhoria?: string | null
@@ -219,6 +222,7 @@ export type Database = {
           email: string | null
           feedbacks_recebidos: number
           feedbacks_resolvidos: number
+          foto_url: string | null
           id: string
           nome: string
         }
@@ -230,6 +234,7 @@ export type Database = {
           email?: string | null
           feedbacks_recebidos?: number
           feedbacks_resolvidos?: number
+          foto_url?: string | null
           id?: string
           nome: string
         }
@@ -241,6 +246,7 @@ export type Database = {
           email?: string | null
           feedbacks_recebidos?: number
           feedbacks_resolvidos?: number
+          foto_url?: string | null
           id?: string
           nome?: string
         }

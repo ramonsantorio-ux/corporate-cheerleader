@@ -5,10 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import { setorLabels, priorityLabels, FeedbackSetor, FeedbackPriority } from '@/lib/feedbackData';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function NovoFeedback() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [funcionarios, setFuncionarios] = useState<string[]>([]);
+  const [gestorName, setGestorName] = useState('');
   const [form, setForm] = useState({
     titulo: '',
     descricao: '',
@@ -24,7 +27,13 @@ export default function NovoFeedback() {
     supabase.from('funcionarios').select('nome').then(({ data }) => {
       if (data) setFuncionarios(data.map(f => f.nome));
     });
-  }, []);
+    // Get logged user name for gestor field
+    if (user?.id) {
+      supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
+        if (data) setGestorName(data.full_name || user.email || '');
+      });
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,12 +52,28 @@ export default function NovoFeedback() {
       pontos_positivos: form.pontos_positivos,
       pontos_melhoria: form.pontos_melhoria,
       observacoes: form.departamento,
+      gestor: gestorName,
     });
 
     if (error) {
       toast.error('Erro ao enviar feedback.');
+      console.error(error);
       return;
     }
+
+    // Update feedbacks_recebidos for the employee
+    const { data: funcData } = await supabase
+      .from('funcionarios')
+      .select('id, feedbacks_recebidos')
+      .eq('nome', form.funcionario)
+      .single();
+
+    if (funcData) {
+      await supabase.from('funcionarios').update({
+        feedbacks_recebidos: funcData.feedbacks_recebidos + 1,
+      }).eq('id', funcData.id);
+    }
+
     toast.success('Feedback enviado com sucesso!');
     navigate('/feedbacks');
   };
@@ -70,6 +95,17 @@ export default function NovoFeedback() {
         onSubmit={handleSubmit}
         className="glass-card rounded-xl p-6 space-y-5"
       >
+        <div>
+          <label className={labelClass}>Gestor Responsável</label>
+          <input
+            type="text"
+            value={gestorName}
+            readOnly
+            className={`${inputClass} opacity-70 cursor-not-allowed`}
+          />
+          <p className="text-xs text-muted-foreground mt-1">Preenchido automaticamente com o usuário logado</p>
+        </div>
+
         <div>
           <label className={labelClass}>Título *</label>
           <input

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Plus, Search, Users, Edit, Trash2, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -19,6 +19,7 @@ interface Funcionario {
   data_admissao: string;
   feedbacks_recebidos: number;
   feedbacks_resolvidos: number;
+  foto_url: string;
 }
 
 const departamentos = [
@@ -34,8 +35,15 @@ export default function Cadastro() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [editData, setEditData] = useState({ id: '', nome: '', email: '', cargo: '', departamento: '' });
+  const [editData, setEditData] = useState({ id: '', nome: '', email: '', cargo: '', departamento: '', foto_url: '' });
   const [newData, setNewData] = useState({ nome: '', email: '', cargo: '', departamento: '' });
+  const [uploading, setUploading] = useState(false);
+  const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
+  const [newPhotoPreview, setNewPhotoPreview] = useState('');
+  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState('');
+  const newFileRef = useRef<HTMLInputElement>(null);
+  const editFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchFuncionarios();
@@ -50,9 +58,8 @@ export default function Cadastro() {
 
     if (error) {
       toast.error('Erro ao carregar funcionários');
-      console.error(error);
     } else {
-      setFuncionarios(data || []);
+      setFuncionarios((data || []) as Funcionario[]);
     }
     setLoading(false);
   }
@@ -66,32 +73,58 @@ export default function Cadastro() {
   const getPctResolvido = (f: Funcionario) =>
     f.feedbacks_recebidos > 0 ? Math.round((f.feedbacks_resolvidos / f.feedbacks_recebidos) * 100) : 0;
 
+  async function uploadPhoto(file: File): Promise<string> {
+    const ext = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from('avatars').upload(fileName, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+    return data.publicUrl;
+  }
+
   async function handleCreate() {
     if (!newData.nome || !newData.cargo || !newData.departamento) {
       toast.error('Preencha todos os campos');
       return;
     }
+    setUploading(true);
+    let foto_url = '';
+    try {
+      if (newPhotoFile) {
+        foto_url = await uploadPhoto(newPhotoFile);
+      }
+    } catch {
+      toast.error('Erro ao enviar foto');
+      setUploading(false);
+      return;
+    }
+
     const { error } = await supabase.from('funcionarios').insert({
       nome: newData.nome,
       email: newData.email,
       cargo: newData.cargo,
       departamento: newData.departamento,
+      foto_url,
     });
 
+    setUploading(false);
     if (error) {
       toast.error('Erro ao cadastrar funcionário');
-      console.error(error);
       return;
     }
 
     setNewData({ nome: '', email: '', cargo: '', departamento: '' });
+    setNewPhotoFile(null);
+    setNewPhotoPreview('');
     setCreateOpen(false);
     toast.success('Funcionário cadastrado!');
     fetchFuncionarios();
   }
 
   function openEdit(f: Funcionario) {
-    setEditData({ id: f.id, nome: f.nome, email: f.email, cargo: f.cargo, departamento: f.departamento });
+    setEditData({ id: f.id, nome: f.nome, email: f.email, cargo: f.cargo, departamento: f.departamento, foto_url: f.foto_url || '' });
+    setEditPhotoFile(null);
+    setEditPhotoPreview(f.foto_url || '');
     setEditOpen(true);
   }
 
@@ -100,20 +133,34 @@ export default function Cadastro() {
       toast.error('Preencha todos os campos');
       return;
     }
+    setUploading(true);
+    let foto_url = editData.foto_url;
+    try {
+      if (editPhotoFile) {
+        foto_url = await uploadPhoto(editPhotoFile);
+      }
+    } catch {
+      toast.error('Erro ao enviar foto');
+      setUploading(false);
+      return;
+    }
+
     const { error } = await supabase.from('funcionarios').update({
       nome: editData.nome,
       email: editData.email,
       cargo: editData.cargo,
       departamento: editData.departamento,
+      foto_url,
     }).eq('id', editData.id);
 
+    setUploading(false);
     if (error) {
       toast.error('Erro ao atualizar funcionário');
-      console.error(error);
       return;
     }
 
     setEditOpen(false);
+    setEditPhotoFile(null);
     toast.success('Funcionário atualizado!');
     fetchFuncionarios();
   }
@@ -121,16 +168,29 @@ export default function Cadastro() {
   async function handleDelete() {
     if (!deleteId) return;
     const { error } = await supabase.from('funcionarios').delete().eq('id', deleteId);
-
     if (error) {
       toast.error('Erro ao excluir funcionário');
-      console.error(error);
       return;
     }
-
     setDeleteId(null);
     toast.success('Funcionário excluído!');
     fetchFuncionarios();
+  }
+
+  function handleNewFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewPhotoFile(file);
+      setNewPhotoPreview(URL.createObjectURL(file));
+    }
+  }
+
+  function handleEditFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditPhotoFile(file);
+      setEditPhotoPreview(URL.createObjectURL(file));
+    }
   }
 
   return (
@@ -165,6 +225,23 @@ export default function Cadastro() {
               <DialogTitle>Cadastrar Funcionário</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
+              {/* Photo upload */}
+              <div className="flex flex-col items-center gap-2">
+                <input ref={newFileRef} type="file" accept="image/*" className="hidden" onChange={handleNewFileChange} />
+                {newPhotoPreview ? (
+                  <div className="relative">
+                    <img src={newPhotoPreview} alt="Preview" className="w-20 h-20 rounded-full object-cover border-2 border-primary/20" />
+                    <button onClick={() => { setNewPhotoFile(null); setNewPhotoPreview(''); }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => newFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+                    <Camera className="w-6 h-6 text-muted-foreground" />
+                  </button>
+                )}
+                <p className="text-xs text-muted-foreground">Foto (opcional)</p>
+              </div>
               <div className="space-y-2"><Label>Nome completo</Label><Input value={newData.nome} onChange={e => setNewData({ ...newData, nome: e.target.value })} placeholder="Nome do funcionário" /></div>
               <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={newData.email} onChange={e => setNewData({ ...newData, email: e.target.value })} placeholder="email@empresa.com" /></div>
               <div className="space-y-2"><Label>Cargo</Label><Input value={newData.cargo} onChange={e => setNewData({ ...newData, cargo: e.target.value })} placeholder="Cargo" /></div>
@@ -179,7 +256,10 @@ export default function Cadastro() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button className="w-full" onClick={handleCreate}>Cadastrar</Button>
+              <Button className="w-full" onClick={handleCreate} disabled={uploading}>
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Cadastrar
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -206,9 +286,13 @@ export default function Cadastro() {
                 transition={{ duration: 0.3, delay: i * 0.05 }}
                 className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4"
               >
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Users className="w-5 h-5 text-primary" />
-                </div>
+                {f.foto_url ? (
+                  <img src={f.foto_url} alt={f.nome} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border-2 border-primary/20" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-primary font-bold text-sm">{f.nome.charAt(0)}</span>
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{f.nome}</p>
                   <p className="text-xs text-muted-foreground">{f.cargo} · {f.departamento}</p>
@@ -223,7 +307,7 @@ export default function Cadastro() {
                     <p className="text-xs text-muted-foreground">Resolvidos</p>
                   </div>
                   <div className="text-center">
-                    <p className={`font-bold ${pct >= 70 ? 'text-green-500' : pct >= 40 ? 'text-yellow-500' : 'text-red-500'}`}>{pct}%</p>
+                    <p className={`font-bold ${pct >= 70 ? 'text-success' : pct >= 40 ? 'text-warning' : 'text-destructive'}`}>{pct}%</p>
                     <p className="text-xs text-muted-foreground">Evolução</p>
                   </div>
                 </div>
@@ -248,6 +332,23 @@ export default function Cadastro() {
             <DialogTitle>Editar Funcionário</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
+            {/* Photo upload in edit */}
+            <div className="flex flex-col items-center gap-2">
+              <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={handleEditFileChange} />
+              {editPhotoPreview ? (
+                <div className="relative">
+                  <img src={editPhotoPreview} alt="Preview" className="w-20 h-20 rounded-full object-cover border-2 border-primary/20" />
+                  <button onClick={() => { setEditPhotoFile(null); setEditPhotoPreview(''); setEditData({ ...editData, foto_url: '' }); }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button onClick={() => editFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors">
+                  <Camera className="w-6 h-6 text-muted-foreground" />
+                </button>
+              )}
+              <button onClick={() => editFileRef.current?.click()} className="text-xs text-primary hover:underline">Alterar foto</button>
+            </div>
             <div className="space-y-2"><Label>Nome completo</Label><Input value={editData.nome} onChange={e => setEditData({ ...editData, nome: e.target.value })} /></div>
             <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={editData.email} onChange={e => setEditData({ ...editData, email: e.target.value })} /></div>
             <div className="space-y-2"><Label>Cargo</Label><Input value={editData.cargo} onChange={e => setEditData({ ...editData, cargo: e.target.value })} /></div>
@@ -262,7 +363,10 @@ export default function Cadastro() {
                 </SelectContent>
               </Select>
             </div>
-            <Button className="w-full" onClick={handleEdit}>Salvar Alterações</Button>
+            <Button className="w-full" onClick={handleEdit} disabled={uploading}>
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Salvar Alterações
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
