@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -12,16 +12,18 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
+import { statusLabels, statusColors, priorityLabels, priorityColors, FeedbackStatus, FeedbackPriority } from '@/lib/feedbackData';
 import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
   feedbacks_recebidos: number; feedbacks_resolvidos: number; email: string; data_admissao: string;
   escolaridade: string; graduacao: string; pos_graduacao: boolean; pos_graduacao_tipo: string;
+  turno: string; letra: string; encarregado_id: string | null;
 }
 
 interface FeedbackItem {
-  id: string; titulo: string; status: string; prioridade: string; criado_em: string; gestor: string;
+  id: string; titulo: string; status: string; prioridade: string; criado_em: string; gestor: string; autor: string;
 }
 
 interface MeetingItem {
@@ -40,6 +42,8 @@ interface EmployeeDocument {
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
 
+const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'ADM' };
+
 export default function FuncionarioProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -51,6 +55,9 @@ export default function FuncionarioProfile() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [encarregadoNome, setEncarregadoNome] = useState('');
 
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<Goal | null>(null);
@@ -61,12 +68,21 @@ export default function FuncionarioProfile() {
     if (!id) return;
     Promise.all([
       supabase.from('funcionarios').select('*').eq('id', id).single(),
-      supabase.from('feedbacks').select('id, titulo, status, prioridade, criado_em, gestor').order('criado_em', { ascending: false }),
+      supabase.from('feedbacks').select('id, titulo, status, prioridade, criado_em, gestor, autor').order('criado_em', { ascending: false }),
       supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, email, data_admissao'),
       supabase.from('meetings').select('*').eq('employee_id', id).order('meeting_date', { ascending: false }),
       supabase.from('employee_documents').select('*').eq('employee_id', id).order('created_at', { ascending: false }),
     ]).then(([funcRes, fbRes, allRes, meetRes, docRes]) => {
-      if (funcRes.data) setFunc(funcRes.data as unknown as Funcionario);
+      if (funcRes.data) {
+        const f = funcRes.data as unknown as Funcionario;
+        setFunc(f);
+        // Fetch encarregado name
+        if (f.encarregado_id) {
+          supabase.from('funcionarios').select('nome').eq('id', f.encarregado_id).single().then(({ data }) => {
+            if (data) setEncarregadoNome((data as any).nome);
+          });
+        }
+      }
       if (fbRes.data) setFeedbacks(fbRes.data as FeedbackItem[]);
       if (allRes.data) setAllFuncionarios(allRes.data as Funcionario[]);
       if (meetRes.data) setMeetings(meetRes.data as MeetingItem[]);
@@ -84,6 +100,27 @@ export default function FuncionarioProfile() {
     if (!func) return;
     const { data } = await supabase.from('goals').select('*').eq('cargo', func.cargo).order('peso', { ascending: false });
     if (data) setGoals(data as Goal[]);
+  }
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !func) return;
+    setUploadingPhoto(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from('avatars').upload(fileName, file);
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const newUrl = urlData.publicUrl;
+      const { error: updateErr } = await supabase.from('funcionarios').update({ foto_url: newUrl }).eq('id', func.id);
+      if (updateErr) throw updateErr;
+      setFunc({ ...func, foto_url: newUrl });
+      toast({ title: 'Foto atualizada!' });
+    } catch {
+      toast({ title: 'Erro ao atualizar foto', variant: 'destructive' });
+    }
+    setUploadingPhoto(false);
   }
 
   function openNewGoal() {
@@ -139,7 +176,10 @@ export default function FuncionarioProfile() {
 
   const employeeFeedbacks = useMemo(() => {
     if (!func) return [];
-    return feedbacks.filter(f => f.titulo?.toLowerCase().includes(func.nome.toLowerCase()));
+    return feedbacks.filter(f =>
+      f.autor?.toLowerCase() === func.nome.toLowerCase() ||
+      f.titulo?.toLowerCase().includes(func.nome.toLowerCase())
+    );
   }, [feedbacks, func]);
 
   const score = useMemo(() => {
@@ -179,6 +219,8 @@ export default function FuncionarioProfile() {
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
   if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
 
+  const turnoDisplay = func.turno ? (turnoLabels[func.turno] || func.turno) : null;
+
   return (
     <div className="space-y-6">
       {/* Back + Title */}
@@ -193,18 +235,33 @@ export default function FuncionarioProfile() {
       {/* Header Card with personal info */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-6">
         <div className="flex flex-col sm:flex-row gap-6 items-center">
-          {func.foto_url ? (
-            <img src={func.foto_url} alt={func.nome} className="w-24 h-24 rounded-full object-cover border-4 border-primary/20" />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-3xl">
-              {func.nome.charAt(0)}
-            </div>
-          )}
+          {/* Profile photo with change button */}
+          <div className="relative group">
+            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+            {func.foto_url ? (
+              <img src={func.foto_url} alt={func.nome} className="w-24 h-24 rounded-full object-cover border-4 border-primary/20" />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-3xl">
+                {func.nome.charAt(0)}
+              </div>
+            )}
+            <button
+              onClick={() => photoInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+            >
+              {uploadingPhoto ? (
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+              ) : (
+                <Camera className="w-6 h-6 text-white" />
+              )}
+            </button>
+          </div>
           <div className="flex-1 text-center sm:text-left">
             <h2 className="text-xl font-bold">{func.nome}</h2>
             <p className="text-muted-foreground">{func.cargo} · {func.departamento}</p>
             <p className="text-sm text-muted-foreground mt-1">{func.email || 'Sem e-mail'} · Admissão: {new Date(func.data_admissao).toLocaleDateString('pt-BR')}</p>
-            {/* Education info */}
+            {/* Education + Shift info */}
             <div className="flex flex-wrap gap-2 mt-2">
               {func.escolaridade && (
                 <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
@@ -219,6 +276,16 @@ export default function FuncionarioProfile() {
               {func.pos_graduacao && func.pos_graduacao_tipo && (
                 <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-2/20 text-foreground">
                   Pós: {func.pos_graduacao_tipo}
+                </span>
+              )}
+              {turnoDisplay && (
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-3/20 text-foreground">
+                  <Briefcase className="w-3 h-3" />Turno: {turnoDisplay}
+                </span>
+              )}
+              {encarregadoNome && (
+                <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-4/20 text-foreground">
+                  <Users className="w-3 h-3" />Enc.: {encarregadoNome}
                 </span>
               )}
             </div>
@@ -283,7 +350,6 @@ export default function FuncionarioProfile() {
 
         {/* ===== DESEMPENHO ===== */}
         <TabsContent value="desempenho" className="space-y-6 mt-4">
-          {/* Comparativo */}
           <div className="glass-card rounded-xl p-6">
             <h3 className="font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Comparativo com Equipe ({func.departamento})</h3>
             <div className="space-y-3">
@@ -298,7 +364,6 @@ export default function FuncionarioProfile() {
             </div>
           </div>
 
-          {/* Reuniões */}
           <div className="glass-card rounded-xl p-6">
             <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Últimas Reuniões 1:1</h3>
             {meetings.length === 0 ? (
@@ -413,35 +478,34 @@ export default function FuncionarioProfile() {
 
         {/* ===== FEEDBACKS ===== */}
         <TabsContent value="feedbacks" className="space-y-4 mt-4">
-          <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks</h3>
+          <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
           {employeeFeedbacks.length === 0 ? (
             <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum feedback encontrado para este funcionário.</div>
           ) : (
             <div className="space-y-3">
-              {employeeFeedbacks.map(fb => (
-                <div key={fb.id} className="glass-card rounded-xl p-4 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm truncate">{fb.titulo}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(fb.criado_em).toLocaleDateString('pt-BR')} · Gestor: {fb.gestor || '—'}
-                    </p>
+              {employeeFeedbacks.map(fb => {
+                const status = fb.status as FeedbackStatus;
+                const priority = fb.prioridade as FeedbackPriority;
+                return (
+                  <div key={fb.id} className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => navigate(`/feedbacks/${fb.id}`)}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{fb.titulo}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(fb.criado_em).toLocaleDateString('pt-BR')} · Gestor: {fb.gestor || '—'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || 'bg-muted text-muted-foreground'}`}>
+                        {statusLabels[status] || fb.status}
+                      </span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[priority] || 'bg-muted text-muted-foreground'}`}>
+                        {priorityLabels[priority] || fb.prioridade}
+                      </span>
+                    </div>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
-                    fb.status === 'resolvido' ? 'bg-success/10 text-success' :
-                    fb.status === 'em_progresso' ? 'bg-primary/10 text-primary' :
-                    'bg-muted text-muted-foreground'
-                  }`}>
-                    {fb.status === 'resolvido' ? 'Resolvido' : fb.status === 'em_progresso' ? 'Em Progresso' : 'Novo'}
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
-                    fb.prioridade === 'alta' ? 'bg-destructive/10 text-destructive' :
-                    fb.prioridade === 'media' ? 'bg-warning/10 text-warning' :
-                    'bg-muted text-muted-foreground'
-                  }`}>
-                    {fb.prioridade}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </TabsContent>

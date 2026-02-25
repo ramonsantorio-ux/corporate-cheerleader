@@ -403,15 +403,18 @@ export type Database = {
           data_admissao: string
           departamento: string
           email: string | null
+          encarregado_id: string | null
           escolaridade: string
           feedbacks_recebidos: number
           feedbacks_resolvidos: number
           foto_url: string | null
           graduacao: string
           id: string
+          letra: string
           nome: string
           pos_graduacao: boolean
           pos_graduacao_tipo: string
+          turno: string
         }
         Insert: {
           cargo: string
@@ -419,15 +422,18 @@ export type Database = {
           data_admissao?: string
           departamento: string
           email?: string | null
+          encarregado_id?: string | null
           escolaridade?: string
           feedbacks_recebidos?: number
           feedbacks_resolvidos?: number
           foto_url?: string | null
           graduacao?: string
           id?: string
+          letra?: string
           nome: string
           pos_graduacao?: boolean
           pos_graduacao_tipo?: string
+          turno?: string
         }
         Update: {
           cargo?: string
@@ -435,17 +441,28 @@ export type Database = {
           data_admissao?: string
           departamento?: string
           email?: string | null
+          encarregado_id?: string | null
           escolaridade?: string
           feedbacks_recebidos?: number
           feedbacks_resolvidos?: number
           foto_url?: string | null
           graduacao?: string
           id?: string
+          letra?: string
           nome?: string
           pos_graduacao?: boolean
           pos_graduacao_tipo?: string
+          turno?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "funcionarios_encarregado_id_fkey"
+            columns: ["encarregado_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       goals: {
         Row: {
