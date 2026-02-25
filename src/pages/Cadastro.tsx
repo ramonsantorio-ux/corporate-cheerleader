@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X, Eye, FileUp, FileText } from 'lucide-react';
+import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X, Eye, FileUp, FileText, Download, Upload } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -67,6 +68,7 @@ export default function Cadastro() {
     escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '',
   });
   const [uploading, setUploading] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [newPhotoPreview, setNewPhotoPreview] = useState('');
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
@@ -77,6 +79,108 @@ export default function Cadastro() {
   const editFileRef = useRef<HTMLInputElement>(null);
   const docFileRef = useRef<HTMLInputElement>(null);
   const editDocFileRef = useRef<HTMLInputElement>(null);
+  const importFileRef = useRef<HTMLInputElement>(null);
+
+  function downloadTemplate() {
+    const templateData = [
+      {
+        Nome: 'João da Silva',
+        Email: 'joao@empresa.com',
+        Cargo: 'Encarregado Operacional',
+        Departamento: 'Contrato Porto',
+        'Data Admissão': '2024-01-15',
+        Escolaridade: 'Ensino Superior Completo',
+        Graduação: 'Engenharia Civil',
+        'Pós-Graduação': 'Não',
+        'Tipo Pós-Graduação': '',
+      },
+      {
+        Nome: 'Maria Santos',
+        Email: 'maria@empresa.com',
+        Cargo: 'Motorista',
+        Departamento: 'Frotas',
+        'Data Admissão': '2023-06-10',
+        Escolaridade: 'Ensino Médio',
+        Graduação: '',
+        'Pós-Graduação': 'Não',
+        'Tipo Pós-Graduação': '',
+      },
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const colWidths = [
+      { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 },
+      { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 25 },
+    ];
+    ws['!cols'] = colWidths;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
+    XLSX.writeFile(wb, 'modelo_cadastro_funcionarios.xlsx');
+  }
+
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws);
+
+      if (rows.length === 0) {
+        toast.error('Planilha vazia');
+        setImporting(false);
+        return;
+      }
+
+      const records = rows.map(row => ({
+        nome: String(row['Nome'] || '').trim(),
+        email: String(row['Email'] || '').trim(),
+        cargo: String(row['Cargo'] || '').trim(),
+        departamento: String(row['Departamento'] || '').trim(),
+        data_admissao: String(row['Data Admissão'] || row['Data Admissao'] || '').trim() || undefined,
+        escolaridade: String(row['Escolaridade'] || '').trim(),
+        graduacao: String(row['Graduação'] || row['Graduacao'] || '').trim(),
+        pos_graduacao: String(row['Pós-Graduação'] || row['Pos-Graduacao'] || '').toLowerCase() === 'sim',
+        pos_graduacao_tipo: String(row['Tipo Pós-Graduação'] || row['Tipo Pos-Graduacao'] || '').trim(),
+      })).filter(r => r.nome && r.cargo && r.departamento);
+
+      if (records.length === 0) {
+        toast.error('Nenhum registro válido encontrado. Verifique se as colunas Nome, Cargo e Departamento estão preenchidas.');
+        setImporting(false);
+        return;
+      }
+
+      const toInsert = records.map(r => {
+        const obj: any = {
+          nome: r.nome,
+          email: r.email,
+          cargo: r.cargo,
+          departamento: r.departamento,
+          escolaridade: r.escolaridade,
+          graduacao: r.graduacao,
+          pos_graduacao: r.pos_graduacao,
+          pos_graduacao_tipo: r.pos_graduacao_tipo,
+        };
+        if (r.data_admissao) obj.data_admissao = r.data_admissao;
+        return obj;
+      });
+
+      const { error } = await supabase.from('funcionarios').insert(toInsert);
+      if (error) {
+        toast.error('Erro ao importar: ' + error.message);
+      } else {
+        toast.success(`${records.length} funcionário(s) importado(s) com sucesso!`);
+        fetchFuncionarios();
+      }
+    } catch (err) {
+      toast.error('Erro ao ler o arquivo. Verifique o formato.');
+    }
+
+    setImporting(false);
+    if (importFileRef.current) importFileRef.current.value = '';
+  }
 
   useEffect(() => {
     fetchFuncionarios();
@@ -435,6 +539,16 @@ export default function Cadastro() {
             ))}
           </SelectContent>
         </Select>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={downloadTemplate} title="Baixar modelo de planilha">
+            <Download className="w-4 h-4 mr-2" />Modelo
+          </Button>
+          <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
+          <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={importing} title="Importar planilha">
+            {importing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+            Importar
+          </Button>
+        </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" />Novo Funcionário</Button>
