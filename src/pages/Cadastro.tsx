@@ -27,6 +27,9 @@ interface Funcionario {
   feedbacks_recebidos: number;
   feedbacks_resolvidos: number;
   foto_url: string;
+  turno: string;
+  letra: string;
+  encarregado_id: string | null;
 }
 
 const departamentos = [
@@ -42,6 +45,14 @@ const escolaridades = [
   'Pós-Graduação',
   'Mestrado',
   'Doutorado',
+];
+
+const TURNOS = [
+  { value: 'dia_a', label: 'Dia A' },
+  { value: 'dia_b', label: 'Dia B' },
+  { value: 'noite_a', label: 'Noite A' },
+  { value: 'noite_b', label: 'Noite B' },
+  { value: 'adm', label: 'ADM' },
 ];
 
 const CARGOS_COM_DOCUMENTOS = ['motorista', 'operador de equipamentos', 'operador de mini'];
@@ -62,10 +73,12 @@ export default function Cadastro() {
   const [editData, setEditData] = useState({
     id: '', nome: '', email: '', cargo: '', departamento: '', foto_url: '',
     data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '',
+    turno: '', letra: '', encarregado_id: '' as string,
   });
   const [newData, setNewData] = useState({
     nome: '', email: '', cargo: '', departamento: '', data_admissao: '',
     escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '',
+    turno: '', letra: '', encarregado_id: '' as string,
   });
   const [uploading, setUploading] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -81,6 +94,9 @@ export default function Cadastro() {
   const editDocFileRef = useRef<HTMLInputElement>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
 
+  // Encarregados list for dropdown
+  const encarregados = funcionarios.filter(f => f.cargo.toLowerCase().includes('encarregado'));
+
   function downloadTemplate() {
     const templateData = [
       {
@@ -93,6 +109,7 @@ export default function Cadastro() {
         Graduação: 'Engenharia Civil',
         'Pós-Graduação': 'Não',
         'Tipo Pós-Graduação': '',
+        Turno: 'Dia A',
       },
       {
         Nome: 'Maria Santos',
@@ -104,17 +121,28 @@ export default function Cadastro() {
         Graduação: '',
         'Pós-Graduação': 'Não',
         'Tipo Pós-Graduação': '',
+        Turno: 'Noite B',
       },
     ];
     const ws = XLSX.utils.json_to_sheet(templateData);
     const colWidths = [
       { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 },
-      { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 25 },
+      { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
     ];
     ws['!cols'] = colWidths;
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
     XLSX.writeFile(wb, 'modelo_cadastro_funcionarios.xlsx');
+  }
+
+  function parseTurno(raw: string): string {
+    const lower = raw.toLowerCase().trim();
+    if (lower === 'adm' || lower === 'administrativo') return 'adm';
+    if (lower.includes('dia') && lower.includes('a')) return 'dia_a';
+    if (lower.includes('dia') && lower.includes('b')) return 'dia_b';
+    if (lower.includes('noite') && lower.includes('a')) return 'noite_a';
+    if (lower.includes('noite') && lower.includes('b')) return 'noite_b';
+    return '';
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -144,6 +172,7 @@ export default function Cadastro() {
         graduacao: String(row['Graduação'] || row['Graduacao'] || '').trim(),
         pos_graduacao: String(row['Pós-Graduação'] || row['Pos-Graduacao'] || '').toLowerCase() === 'sim',
         pos_graduacao_tipo: String(row['Tipo Pós-Graduação'] || row['Tipo Pos-Graduacao'] || '').trim(),
+        turno: parseTurno(String(row['Turno'] || '')),
       })).filter(r => r.nome && r.cargo && r.departamento);
 
       if (records.length === 0) {
@@ -162,6 +191,7 @@ export default function Cadastro() {
           graduacao: r.graduacao,
           pos_graduacao: r.pos_graduacao,
           pos_graduacao_tipo: r.pos_graduacao_tipo,
+          turno: r.turno,
         };
         if (r.data_admissao) obj.data_admissao = r.data_admissao;
         return obj;
@@ -254,10 +284,15 @@ export default function Cadastro() {
       graduacao: newData.graduacao,
       pos_graduacao: newData.pos_graduacao,
       pos_graduacao_tipo: newData.pos_graduacao_tipo,
+      turno: newData.turno,
+      letra: newData.letra,
       foto_url,
     };
     if (newData.data_admissao) {
       insertData.data_admissao = newData.data_admissao;
+    }
+    if (newData.encarregado_id) {
+      insertData.encarregado_id = newData.encarregado_id;
     }
 
     const { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
@@ -286,7 +321,7 @@ export default function Cadastro() {
     }
 
     setUploading(false);
-    setNewData({ nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '' });
+    setNewData({ nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: '' });
     setNewPhotoFile(null);
     setNewPhotoPreview('');
     setDocFiles([]);
@@ -308,6 +343,9 @@ export default function Cadastro() {
       graduacao: f.graduacao || '',
       pos_graduacao: f.pos_graduacao || false,
       pos_graduacao_tipo: f.pos_graduacao_tipo || '',
+      turno: f.turno || '',
+      letra: f.letra || '',
+      encarregado_id: f.encarregado_id || '',
     });
     setEditPhotoFile(null);
     setEditPhotoPreview(f.foto_url || '');
@@ -341,6 +379,9 @@ export default function Cadastro() {
       graduacao: editData.graduacao,
       pos_graduacao: editData.pos_graduacao,
       pos_graduacao_tipo: editData.pos_graduacao_tipo,
+      turno: editData.turno,
+      letra: editData.letra,
+      encarregado_id: editData.encarregado_id || null,
       foto_url,
     };
     if (editData.data_admissao) {
@@ -476,6 +517,37 @@ export default function Cadastro() {
         </Select>
       </div>
 
+      {/* Turno / Escala */}
+      <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
+        <Label className="text-sm font-semibold">Turno / Escala</Label>
+        <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v })}>
+          <SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger>
+          <SelectContent>
+            {TURNOS.map(t => (
+              <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Encarregado */}
+      {encarregados.length > 0 && (
+        <div className="space-y-2">
+          <Label>Encarregado (Supervisor)</Label>
+          <Select value={data.encarregado_id} onValueChange={v => setData({ ...data, encarregado_id: v })}>
+            <SelectTrigger><SelectValue placeholder="Selecione o encarregado" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum</SelectItem>
+              {encarregados.map(enc => (
+                <SelectItem key={enc.id} value={enc.id}>
+                  {enc.nome} {enc.turno ? `(${TURNOS.find(t => t.value === enc.turno)?.label || enc.turno})` : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {/* Document upload for specific roles */}
       {cargoNeedsDocs(data.cargo) && (
         <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
@@ -597,6 +669,7 @@ export default function Cadastro() {
         <div className="grid gap-3">
           {filtered.map((f, i) => {
             const pct = getPctResolvido(f);
+            const turnoLabel = TURNOS.find(t => t.value === f.turno)?.label;
             return (
               <motion.div
                 key={f.id}
@@ -614,7 +687,10 @@ export default function Cadastro() {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{f.nome}</p>
-                  <p className="text-xs text-muted-foreground">{f.cargo} · {f.departamento}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {f.cargo} · {f.departamento}
+                    {turnoLabel && <span className="ml-1">· {turnoLabel}</span>}
+                  </p>
                 </div>
                 <div className="flex items-center gap-6 text-sm">
                   <div className="text-center">
