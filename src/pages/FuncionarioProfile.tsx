@@ -1,7 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,14 +26,30 @@ interface MeetingItem {
   id: string; meeting_date: string; manager_name: string; notes: string; status: string;
 }
 
+interface Goal {
+  id: string; cargo: string; descricao: string; peso: number; resultado: number | null;
+  muito_abaixo: string; abaixo: string; dentro: string; acima: string; muito_acima: string;
+}
+
+const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
+const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
+
 export default function FuncionarioProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [func, setFunc] = useState<Funcionario | null>(null);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [allFuncionarios, setAllFuncionarios] = useState<Funcionario[]>([]);
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Goals CRUD state
+  const [goalDialogOpen, setGoalDialogOpen] = useState(false);
+  const [editGoal, setEditGoal] = useState<Goal | null>(null);
+  const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
+  const [goalForm, setGoalForm] = useState(emptyGoalForm);
 
   useEffect(() => {
     if (!id) return;
@@ -39,7 +61,6 @@ export default function FuncionarioProfile() {
     ]).then(([funcRes, fbRes, allRes, meetRes]) => {
       if (funcRes.data) setFunc(funcRes.data as Funcionario);
       if (fbRes.data) {
-        const filtered = (fbRes.data as FeedbackItem[]).filter(f => f.gestor === funcRes.data?.nome || f.titulo?.includes(funcRes.data?.nome || ''));
         setFeedbacks(fbRes.data as FeedbackItem[]);
       }
       if (allRes.data) setAllFuncionarios(allRes.data as Funcionario[]);
@@ -47,6 +68,69 @@ export default function FuncionarioProfile() {
       setLoading(false);
     });
   }, [id]);
+
+  // Fetch goals when func is loaded
+  useEffect(() => {
+    if (!func) return;
+    fetchGoals();
+  }, [func]);
+
+  async function fetchGoals() {
+    if (!func) return;
+    const { data } = await supabase.from('goals').select('*').eq('cargo', func.cargo).order('peso', { ascending: false });
+    if (data) setGoals(data as Goal[]);
+  }
+
+  function openNewGoal() {
+    setEditGoal(null);
+    setGoalForm(emptyGoalForm);
+    setGoalDialogOpen(true);
+  }
+
+  function openEditGoal(goal: Goal) {
+    setEditGoal(goal);
+    setGoalForm({
+      descricao: goal.descricao, peso: goal.peso,
+      resultado: goal.resultado != null ? String(goal.resultado) : '',
+      muito_abaixo: goal.muito_abaixo, abaixo: goal.abaixo,
+      dentro: goal.dentro, acima: goal.acima, muito_acima: goal.muito_acima,
+    });
+    setGoalDialogOpen(true);
+  }
+
+  async function saveGoal() {
+    if (!goalForm.descricao || !goalForm.peso) {
+      toast({ title: 'Preencha descrição e peso', variant: 'destructive' }); return;
+    }
+    if (editGoal) {
+      const { error } = await supabase.from('goals').update({
+        descricao: goalForm.descricao, peso: goalForm.peso,
+        resultado: goalForm.resultado !== '' ? Number(goalForm.resultado) : null,
+        muito_abaixo: goalForm.muito_abaixo, abaixo: goalForm.abaixo,
+        dentro: goalForm.dentro, acima: goalForm.acima, muito_acima: goalForm.muito_acima,
+      }).eq('id', editGoal.id);
+      if (error) { toast({ title: 'Erro ao salvar', variant: 'destructive' }); return; }
+      toast({ title: 'Meta atualizada!' });
+    } else {
+      const { error } = await supabase.from('goals').insert([{
+        cargo: func!.cargo, descricao: goalForm.descricao, peso: goalForm.peso,
+        muito_abaixo: goalForm.muito_abaixo, abaixo: goalForm.abaixo,
+        dentro: goalForm.dentro, acima: goalForm.acima, muito_acima: goalForm.muito_acima,
+      }]);
+      if (error) { toast({ title: 'Erro ao criar', variant: 'destructive' }); return; }
+      toast({ title: 'Meta criada!' });
+    }
+    setGoalDialogOpen(false);
+    fetchGoals();
+  }
+
+  async function confirmDeleteGoal() {
+    if (!deleteGoalId) return;
+    await supabase.from('goals').delete().eq('id', deleteGoalId);
+    setDeleteGoalId(null);
+    toast({ title: 'Meta excluída' });
+    fetchGoals();
+  }
 
   const employeeFeedbacks = useMemo(() => {
     if (!func) return [];
@@ -83,6 +167,10 @@ export default function FuncionarioProfile() {
     if (meetings.length === 0) items.push('Nenhuma reunião 1:1 registrada');
     return items;
   }, [func, meetings]);
+
+  // Goals chart data
+  const pieData = goals.map(g => ({ name: g.descricao, value: g.peso }));
+  const barData = goals.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
 
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
   if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
@@ -159,9 +247,101 @@ export default function FuncionarioProfile() {
         </div>
       </motion.div>
 
+      {/* Metas do Cargo — Charts + Table */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+        className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
+          <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
+        </div>
+
+        {goals.length === 0 ? (
+          <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma meta encontrada para o cargo "{func.cargo}".</div>
+        ) : (
+          <>
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="glass-card rounded-xl p-5">
+                <h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3} label={({ value }) => `${value}%`}>
+                      {pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: number) => `${v}%`} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="glass-card rounded-xl p-5">
+                <h4 className="text-base font-semibold mb-4">Peso por Meta</h4>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" tickFormatter={v => `${v}%`} />
+                    <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} />
+                    <Tooltip formatter={(v: number) => `${v}%`} />
+                    <Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Goals Table */}
+            <div className="glass-card rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-border bg-primary/5">
+                <h4 className="text-base font-bold">{func.cargo}</h4>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/60">
+                      <th className="text-left p-3 font-semibold text-foreground">Descrição</th>
+                      <th className="text-center p-3 font-semibold text-foreground">Peso</th>
+                      <th className="text-center p-3 font-semibold text-foreground">Resultado</th>
+                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Abaixo</th>
+                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Abaixo</th>
+                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Dentro</th>
+                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Acima</th>
+                      <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Acima</th>
+                      <th className="text-center p-3 font-semibold text-foreground">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {goals.map((goal, i) => (
+                      <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
+                        <td className="p-3 font-medium text-foreground">{goal.descricao}</td>
+                        <td className="p-3 text-center font-semibold">{goal.peso}%</td>
+                        <td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
+                        <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td>
+                        <td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td>
+                        <td className="p-3 text-center text-xs">{goal.dentro}</td>
+                        <td className="p-3 text-center text-xs text-primary">{goal.acima}</td>
+                        <td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
+                        <td className="p-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button onClick={() => openEditGoal(goal)} className="p-1 text-muted-foreground hover:text-primary transition-colors" title="Editar"><Pencil className="w-4 h-4" /></button>
+                            <button onClick={() => setDeleteGoalId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Excluir"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-muted/50 font-bold">
+                      <td className="p-3">TOTAL</td>
+                      <td className="p-3 text-center">{goals.reduce((s, g) => s + g.peso, 0)}%</td>
+                      <td colSpan={7}></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </motion.div>
+
       {/* Alertas */}
       {pendencias.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
           className="glass-card rounded-xl p-5 border-l-4 border-warning">
           <h3 className="font-semibold flex items-center gap-2 mb-3"><AlertTriangle className="w-5 h-5 text-warning" />Alertas e Pendências</h3>
           <ul className="space-y-1">
@@ -175,7 +355,7 @@ export default function FuncionarioProfile() {
       )}
 
       {/* Timeline de Reuniões */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
         className="glass-card rounded-xl p-6">
         <h3 className="font-semibold mb-4">Últimas Reuniões 1:1</h3>
         {meetings.length === 0 ? (
@@ -199,10 +379,46 @@ export default function FuncionarioProfile() {
       </motion.div>
 
       {/* FIT Cultural */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
         className="glass-card rounded-xl p-6">
         <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
       </motion.div>
+
+      {/* Goal Edit/Create Dialog */}
+      <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{editGoal ? 'Editar Meta' : 'Nova Meta'}</DialogTitle></DialogHeader>
+          <div className="space-y-3 pt-2">
+            <div><Label>Descrição</Label><Input value={goalForm.descricao} onChange={e => setGoalForm({ ...goalForm, descricao: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Peso (%)</Label><Input type="number" value={goalForm.peso} onChange={e => setGoalForm({ ...goalForm, peso: Number(e.target.value) })} /></div>
+              <div><Label>Resultado</Label><Input type="number" value={goalForm.resultado} onChange={e => setGoalForm({ ...goalForm, resultado: e.target.value })} placeholder="Ex: 85" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Muito Abaixo</Label><Input value={goalForm.muito_abaixo} onChange={e => setGoalForm({ ...goalForm, muito_abaixo: e.target.value })} /></div>
+              <div><Label>Abaixo</Label><Input value={goalForm.abaixo} onChange={e => setGoalForm({ ...goalForm, abaixo: e.target.value })} /></div>
+              <div><Label>Dentro</Label><Input value={goalForm.dentro} onChange={e => setGoalForm({ ...goalForm, dentro: e.target.value })} /></div>
+              <div><Label>Acima</Label><Input value={goalForm.acima} onChange={e => setGoalForm({ ...goalForm, acima: e.target.value })} /></div>
+              <div className="col-span-2"><Label>Muito Acima</Label><Input value={goalForm.muito_acima} onChange={e => setGoalForm({ ...goalForm, muito_acima: e.target.value })} /></div>
+            </div>
+            <Button onClick={saveGoal} className="w-full">{editGoal ? 'Salvar' : 'Criar'}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Goal Delete Confirmation */}
+      <AlertDialog open={!!deleteGoalId} onOpenChange={open => !open && setDeleteGoalId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir meta?</AlertDialogTitle>
+            <AlertDialogDescription>Essa ação não pode ser desfeita.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteGoal}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
