@@ -19,6 +19,10 @@ import PDIPage from "./pages/PDI";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import FuncionarioProfile from "./pages/FuncionarioProfile";
+import Reunioes from "./pages/Reunioes";
+import Clima from "./pages/Clima";
+import Ausencias from "./pages/Ausencias";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +53,10 @@ function ProtectedRoutes() {
         <Route path="/desempenho/avaliacoes" element={<Avaliacoes />} />
         <Route path="/desempenho/competencias" element={<Competencias />} />
         <Route path="/desempenho/pdi" element={<PDIPage />} />
+        <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
+        <Route path="/reunioes" element={<Reunioes />} />
+        <Route path="/clima" element={<Clima />} />
+        <Route path="/ausencias" element={<Ausencias />} />
         <Route path="/admin" element={<Admin />} />
       </Route>
       <Route path="*" element={<NotFound />} />

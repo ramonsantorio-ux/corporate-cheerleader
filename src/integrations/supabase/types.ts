@@ -14,6 +14,116 @@ export type Database = {
   }
   public: {
     Tables: {
+      absences: {
+        Row: {
+          created_at: string
+          employee_id: string
+          end_date: string
+          id: string
+          reason: string | null
+          start_date: string
+          status: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          end_date: string
+          id?: string
+          reason?: string | null
+          start_date: string
+          status?: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          end_date?: string
+          id?: string
+          reason?: string | null
+          start_date?: string
+          status?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absences_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      climate_responses: {
+        Row: {
+          comment: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          score: number
+          survey_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          score: number
+          survey_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          score?: number
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "climate_responses_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "climate_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "climate_surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      climate_surveys: {
+        Row: {
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
+      }
       competencies: {
         Row: {
           created_at: string
@@ -293,6 +403,47 @@ export type Database = {
           resultado?: number | null
         }
         Relationships: []
+      }
+      meetings: {
+        Row: {
+          action_items: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          manager_name: string
+          meeting_date: string
+          notes: string | null
+          status: string
+        }
+        Insert: {
+          action_items?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          manager_name: string
+          meeting_date?: string
+          notes?: string | null
+          status?: string
+        }
+        Update: {
+          action_items?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          manager_name?: string
+          meeting_date?: string
+          notes?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pdi_actions: {
         Row: {

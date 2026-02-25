@@ -96,7 +96,8 @@ export default function Index() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: i * 0.04 }}
-                className="glass-card rounded-xl p-4 text-center hover:shadow-md transition-shadow"
+                className="glass-card rounded-xl p-4 text-center hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate(`/funcionario/${func.id}`)}
               >
                 {func.foto_url ? (
                   <img

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X } from 'lucide-react';
+import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X, Eye } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -28,6 +29,7 @@ const departamentos = [
 ];
 
 export default function Cadastro() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -312,6 +314,9 @@ export default function Cadastro() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="icon" onClick={() => navigate(`/funcionario/${f.id}`)} title="Ver perfil">
+                    <Eye className="w-4 h-4" />
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => openEdit(f)} title="Editar">
                     <Edit className="w-4 h-4" />
                   </Button>
