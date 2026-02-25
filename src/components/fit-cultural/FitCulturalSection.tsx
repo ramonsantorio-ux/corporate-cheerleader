@@ -133,6 +133,14 @@ export default function FitCulturalSection({ employeeId, employeeName }: Props) 
 
   if (loading) return <p className="text-sm text-muted-foreground">Carregando FIT Cultural...</p>;
 
+  const SCORE_COLUMNS = [
+    { value: 1, label: 'Muito abaixo', short: '(1)' },
+    { value: 2, label: 'Abaixo', short: '(2)' },
+    { value: 3, label: 'Dentro do esperado', short: '(3)' },
+    { value: 4, label: 'Acima do esperado', short: '(4)' },
+    { value: 5, label: 'Muito acima do esperado', short: '(5)' },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -142,7 +150,7 @@ export default function FitCulturalSection({ employeeId, employeeName }: Props) 
         <p className="text-sm text-muted-foreground mt-1">Avaliação de competências comportamentais em 4 etapas</p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-8">
         {STAGES.map((stage, si) => (
           <motion.div
             key={stage.key}
@@ -165,47 +173,62 @@ export default function FitCulturalSection({ employeeId, employeeName }: Props) 
               </div>
             </div>
 
-            <div className="p-4 space-y-4">
-              {CRITERIA.map(criteria => {
-                const currentScore = getScore(criteria.label, stage.key);
-                return (
-                  <div key={criteria.label} className="space-y-1">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <span className="text-sm font-medium text-foreground">{criteria.label}</span>
-                        <p className="text-xs text-muted-foreground mt-0.5">{criteria.desc}</p>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
-                        {[1, 2, 3, 4, 5].map(n => (
-                          <button
-                            key={n}
-                            onClick={() => setScore(criteria.label, stage.key, n)}
-                            className="transition-all"
-                            title={`Nota ${n}`}
-                          >
-                            <Star
-                              className={`w-5 h-5 transition-colors ${
-                                currentScore != null && n <= currentScore
-                                  ? 'text-primary fill-primary'
-                                  : 'text-muted-foreground/30'
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-left p-3 font-semibold text-foreground min-w-[280px]">Critério</th>
+                    {SCORE_COLUMNS.map(col => (
+                      <th key={col.value} className="p-2 text-center font-medium text-foreground min-w-[90px]">
+                        <div className="text-xs leading-tight">{col.label}</div>
+                        <div className="text-[10px] text-muted-foreground">{col.short}</div>
+                      </th>
+                    ))}
+                    <th className="p-2 text-center w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {CRITERIA.map((criteria, ci) => {
+                    const currentScore = getScore(criteria.label, stage.key);
+                    return (
+                      <tr key={criteria.label} className={`border-b border-border/50 ${ci % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                        <td className="p-3">
+                          <span className="font-medium text-foreground">{criteria.label}</span>
+                          <p className="text-xs text-muted-foreground mt-0.5">{criteria.desc}</p>
+                        </td>
+                        {SCORE_COLUMNS.map(col => (
+                          <td key={col.value} className="p-2 text-center">
+                            <button
+                              onClick={() => setScore(criteria.label, stage.key, col.value)}
+                              className={`w-8 h-8 rounded-full border-2 transition-all mx-auto flex items-center justify-center ${
+                                currentScore === col.value
+                                  ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-md'
+                                  : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
                               }`}
-                            />
-                          </button>
+                              title={`${col.label} ${col.short}`}
+                            >
+                              {currentScore === col.value && (
+                                <span className="text-xs font-bold">{col.value}</span>
+                              )}
+                            </button>
+                          </td>
                         ))}
-                        {currentScore != null && (
-                          <button
-                            onClick={() => clearScore(criteria.label, stage.key)}
-                            className="ml-1 p-0.5 rounded hover:bg-muted transition-colors"
-                            title="Limpar nota"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                        <td className="p-2 text-center">
+                          {currentScore != null && (
+                            <button
+                              onClick={() => clearScore(criteria.label, stage.key)}
+                              className="p-1 rounded hover:bg-muted transition-colors"
+                              title="Limpar nota"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </motion.div>
         ))}
