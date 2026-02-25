@@ -156,6 +156,60 @@ export type Database = {
           },
         ]
       }
+      feedbacks: {
+        Row: {
+          atualizado_em: string
+          autor: string
+          comentarios: number
+          criado_em: string
+          departamento: string
+          descricao: string
+          id: string
+          observacoes: string | null
+          pontos_melhoria: string | null
+          pontos_positivos: string | null
+          prioridade: string
+          setor: string
+          status: string
+          titulo: string
+          votos: number
+        }
+        Insert: {
+          atualizado_em?: string
+          autor: string
+          comentarios?: number
+          criado_em?: string
+          departamento?: string
+          descricao: string
+          id?: string
+          observacoes?: string | null
+          pontos_melhoria?: string | null
+          pontos_positivos?: string | null
+          prioridade?: string
+          setor: string
+          status?: string
+          titulo: string
+          votos?: number
+        }
+        Update: {
+          atualizado_em?: string
+          autor?: string
+          comentarios?: number
+          criado_em?: string
+          departamento?: string
+          descricao?: string
+          id?: string
+          observacoes?: string | null
+          pontos_melhoria?: string | null
+          pontos_positivos?: string | null
+          prioridade?: string
+          setor?: string
+          status?: string
+          titulo?: string
+          votos?: number
+        }
+        Relationships: []
+      }
       funcionarios: {
         Row: {
           cargo: string

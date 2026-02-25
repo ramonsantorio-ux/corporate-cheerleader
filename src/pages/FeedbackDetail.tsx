@@ -1,14 +1,46 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ThumbsUp, MessageSquare, Calendar, User, Building2 } from 'lucide-react';
-import { mockFeedbacks, setorLabels } from '@/lib/feedbackData';
+import { setorLabels, FeedbackSetor } from '@/lib/feedbackData';
 import StatusBadge from '@/components/feedback/StatusBadge';
 import PriorityBadge from '@/components/feedback/PriorityBadge';
+import { supabase } from '@/integrations/supabase/client';
+
+interface FeedbackRow {
+  id: string;
+  titulo: string;
+  descricao: string;
+  setor: string;
+  prioridade: string;
+  status: string;
+  autor: string;
+  departamento: string;
+  pontos_positivos: string | null;
+  pontos_melhoria: string | null;
+  votos: number;
+  comentarios: number;
+  criado_em: string;
+  atualizado_em: string;
+}
 
 export default function FeedbackDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const feedback = mockFeedbacks.find((fb) => fb.id === id);
+  const [feedback, setFeedback] = useState<FeedbackRow | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase.from('feedbacks').select('*').eq('id', id).single().then(({ data }) => {
+      setFeedback(data as FeedbackRow | null);
+      setLoading(false);
+    });
+  }, [id]);
+
+  if (loading) {
+    return <div className="text-center py-20 text-muted-foreground">Carregando...</div>;
+  }
 
   if (!feedback) {
     return (
@@ -20,6 +52,8 @@ export default function FeedbackDetail() {
       </div>
     );
   }
+
+  const setor = feedback.setor as FeedbackSetor;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -36,15 +70,29 @@ export default function FeedbackDetail() {
         className="glass-card rounded-xl p-6 space-y-4"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={feedback.status} />
-          <PriorityBadge priority={feedback.prioridade} />
+          <StatusBadge status={feedback.status as any} />
+          <PriorityBadge priority={feedback.prioridade as any} />
           <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {setorLabels[feedback.setor]}
+            {setorLabels[setor] || feedback.setor}
           </span>
         </div>
 
         <h1 className="text-xl font-bold">{feedback.titulo}</h1>
         <p className="text-sm text-muted-foreground leading-relaxed">{feedback.descricao}</p>
+
+        {feedback.pontos_positivos && (
+          <div>
+            <h3 className="text-sm font-semibold text-success mb-1">Pontos Positivos</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">{feedback.pontos_positivos}</p>
+          </div>
+        )}
+
+        {feedback.pontos_melhoria && (
+          <div>
+            <h3 className="text-sm font-semibold text-warning mb-1">Pontos de Melhoria</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">{feedback.pontos_melhoria}</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-border">
           <div className="flex items-center gap-2 text-sm">
@@ -57,7 +105,7 @@ export default function FeedbackDetail() {
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="w-4 h-4 text-muted-foreground" />
-            <span>{feedback.criadoEm}</span>
+            <span>{new Date(feedback.criado_em).toISOString().split('T')[0]}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <ThumbsUp className="w-4 h-4 text-muted-foreground" />
