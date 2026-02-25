@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X, Eye } from 'lucide-react';
+import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X, Eye, FileUp, FileText } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,6 +21,8 @@ interface Funcionario {
   data_admissao: string;
   escolaridade: string;
   graduacao: string;
+  pos_graduacao: boolean;
+  pos_graduacao_tipo: string;
   feedbacks_recebidos: number;
   feedbacks_resolvidos: number;
   foto_url: string;
@@ -40,6 +43,12 @@ const escolaridades = [
   'Doutorado',
 ];
 
+const CARGOS_COM_DOCUMENTOS = ['motorista', 'operador de equipamentos', 'operador de mini'];
+
+function cargoNeedsDocs(cargo: string) {
+  return CARGOS_COM_DOCUMENTOS.some(c => cargo.toLowerCase().includes(c));
+}
+
 export default function Cadastro() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -49,15 +58,25 @@ export default function Cadastro() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [editData, setEditData] = useState({ id: '', nome: '', email: '', cargo: '', departamento: '', foto_url: '', data_admissao: '', escolaridade: '', graduacao: '' });
-  const [newData, setNewData] = useState({ nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '' });
+  const [editData, setEditData] = useState({
+    id: '', nome: '', email: '', cargo: '', departamento: '', foto_url: '',
+    data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '',
+  });
+  const [newData, setNewData] = useState({
+    nome: '', email: '', cargo: '', departamento: '', data_admissao: '',
+    escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '',
+  });
   const [uploading, setUploading] = useState(false);
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [newPhotoPreview, setNewPhotoPreview] = useState('');
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState('');
+  const [docFiles, setDocFiles] = useState<File[]>([]);
+  const [editDocFiles, setEditDocFiles] = useState<File[]>([]);
   const newFileRef = useRef<HTMLInputElement>(null);
   const editFileRef = useRef<HTMLInputElement>(null);
+  const docFileRef = useRef<HTMLInputElement>(null);
+  const editDocFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchFuncionarios();
@@ -96,6 +115,15 @@ export default function Cadastro() {
     return data.publicUrl;
   }
 
+  async function uploadDocument(file: File): Promise<{ url: string; name: string }> {
+    const ext = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from('documentos').upload(fileName, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from('documentos').getPublicUrl(fileName);
+    return { url: data.publicUrl, name: file.name };
+  }
+
   async function handleCreate() {
     if (!newData.nome || !newData.cargo || !newData.departamento) {
       toast.error('Preencha todos os campos obrigatórios');
@@ -120,23 +148,44 @@ export default function Cadastro() {
       departamento: newData.departamento,
       escolaridade: newData.escolaridade,
       graduacao: newData.graduacao,
+      pos_graduacao: newData.pos_graduacao,
+      pos_graduacao_tipo: newData.pos_graduacao_tipo,
       foto_url,
     };
     if (newData.data_admissao) {
       insertData.data_admissao = newData.data_admissao;
     }
 
-    const { error } = await supabase.from('funcionarios').insert(insertData);
+    const { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
 
-    setUploading(false);
     if (error) {
       toast.error('Erro ao cadastrar funcionário');
+      setUploading(false);
       return;
     }
 
-    setNewData({ nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '' });
+    // Upload documents if any
+    if (docFiles.length > 0 && inserted) {
+      try {
+        for (const file of docFiles) {
+          const { url, name } = await uploadDocument(file);
+          await supabase.from('employee_documents').insert({
+            employee_id: inserted.id,
+            file_url: url,
+            file_name: name,
+            document_type: 'habilitacao',
+          });
+        }
+      } catch {
+        toast.error('Erro ao enviar documentos');
+      }
+    }
+
+    setUploading(false);
+    setNewData({ nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '' });
     setNewPhotoFile(null);
     setNewPhotoPreview('');
+    setDocFiles([]);
     setCreateOpen(false);
     toast.success('Funcionário cadastrado!');
     fetchFuncionarios();
@@ -153,9 +202,12 @@ export default function Cadastro() {
       data_admissao: f.data_admissao || '',
       escolaridade: f.escolaridade || '',
       graduacao: f.graduacao || '',
+      pos_graduacao: f.pos_graduacao || false,
+      pos_graduacao_tipo: f.pos_graduacao_tipo || '',
     });
     setEditPhotoFile(null);
     setEditPhotoPreview(f.foto_url || '');
+    setEditDocFiles([]);
     setEditOpen(true);
   }
 
@@ -183,6 +235,8 @@ export default function Cadastro() {
       departamento: editData.departamento,
       escolaridade: editData.escolaridade,
       graduacao: editData.graduacao,
+      pos_graduacao: editData.pos_graduacao,
+      pos_graduacao_tipo: editData.pos_graduacao_tipo,
       foto_url,
     };
     if (editData.data_admissao) {
@@ -190,6 +244,23 @@ export default function Cadastro() {
     }
 
     const { error } = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
+
+    // Upload new documents if any
+    if (editDocFiles.length > 0) {
+      try {
+        for (const file of editDocFiles) {
+          const { url, name } = await uploadDocument(file);
+          await supabase.from('employee_documents').insert({
+            employee_id: editData.id,
+            file_url: url,
+            file_name: name,
+            document_type: 'habilitacao',
+          });
+        }
+      } catch {
+        toast.error('Erro ao enviar documentos');
+      }
+    }
 
     setUploading(false);
     if (error) {
@@ -199,6 +270,7 @@ export default function Cadastro() {
 
     setEditOpen(false);
     setEditPhotoFile(null);
+    setEditDocFiles([]);
     toast.success('Funcionário atualizado!');
     fetchFuncionarios();
   }
@@ -231,7 +303,22 @@ export default function Cadastro() {
     }
   }
 
-  const FormFields = ({ data, setData }: { data: typeof newData; setData: (d: typeof newData) => void }) => (
+  function handleDocFilesChange(e: React.ChangeEvent<HTMLInputElement>, isEdit = false) {
+    const files = Array.from(e.target.files || []);
+    if (isEdit) {
+      setEditDocFiles(prev => [...prev, ...files]);
+    } else {
+      setDocFiles(prev => [...prev, ...files]);
+    }
+  }
+
+  const FormFields = ({ data, setData, docs, setDocs, docRef }: {
+    data: typeof newData;
+    setData: (d: typeof newData) => void;
+    docs: File[];
+    setDocs: React.Dispatch<React.SetStateAction<File[]>>;
+    docRef: React.RefObject<HTMLInputElement>;
+  }) => (
     <>
       <div className="space-y-2">
         <Label>Nome completo</Label>
@@ -257,6 +344,15 @@ export default function Cadastro() {
         <Input value={data.graduacao} onChange={e => setData({ ...data, graduacao: e.target.value })} placeholder="Ex: Engenharia Civil, Administração..." />
       </div>
       <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Possui Pós-Graduação?</Label>
+          <Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} />
+        </div>
+        {data.pos_graduacao && (
+          <Input value={data.pos_graduacao_tipo} onChange={e => setData({ ...data, pos_graduacao_tipo: e.target.value })} placeholder="Qual pós-graduação?" className="mt-2" />
+        )}
+      </div>
+      <div className="space-y-2">
         <Label>Cargo</Label>
         <Input value={data.cargo} onChange={e => setData({ ...data, cargo: e.target.value })} placeholder="Cargo" />
       </div>
@@ -275,6 +371,44 @@ export default function Cadastro() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Document upload for specific roles */}
+      {cargoNeedsDocs(data.cargo) && (
+        <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
+          <Label className="flex items-center gap-2">
+            <FileUp className="w-4 h-4 text-primary" />
+            Documentos (CNH, Certificados, etc.)
+          </Label>
+          <input
+            ref={docRef}
+            type="file"
+            accept=".pdf,image/*"
+            multiple
+            className="hidden"
+            onChange={e => handleDocFilesChange(e, docs === editDocFiles)}
+          />
+          <Button type="button" variant="outline" size="sm" onClick={() => docRef.current?.click()} className="w-full">
+            <FileUp className="w-4 h-4 mr-2" />Anexar PDF ou Foto
+          </Button>
+          {docs.length > 0 && (
+            <div className="space-y-1 mt-2">
+              {docs.map((f, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm p-1.5 bg-background rounded">
+                  <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                  <span className="truncate flex-1">{f.name}</span>
+                  <button onClick={() => {
+                    const updated = [...docs];
+                    updated.splice(i, 1);
+                    setDocs(updated);
+                  }} className="text-destructive hover:text-destructive/80">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </>
   );
 
@@ -310,7 +444,6 @@ export default function Cadastro() {
               <DialogTitle>Cadastrar Funcionário</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
-              {/* Photo upload */}
               <div className="flex flex-col items-center gap-2">
                 <input ref={newFileRef} type="file" accept="image/*" className="hidden" onChange={handleNewFileChange} />
                 {newPhotoPreview ? (
@@ -327,7 +460,7 @@ export default function Cadastro() {
                 )}
                 <p className="text-xs text-muted-foreground">Foto (opcional)</p>
               </div>
-              <FormFields data={newData} setData={setNewData} />
+              <FormFields data={newData} setData={setNewData} docs={docFiles} setDocs={setDocFiles} docRef={docFileRef as React.RefObject<HTMLInputElement>} />
               <Button className="w-full" onClick={handleCreate} disabled={uploading}>
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Cadastrar
@@ -407,7 +540,6 @@ export default function Cadastro() {
             <DialogTitle>Editar Funcionário</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            {/* Photo upload in edit */}
             <div className="flex flex-col items-center gap-2">
               <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={handleEditFileChange} />
               {editPhotoPreview ? (
@@ -424,7 +556,7 @@ export default function Cadastro() {
               )}
               <button onClick={() => editFileRef.current?.click()} className="text-xs text-primary hover:underline">Alterar foto</button>
             </div>
-            <FormFields data={editData} setData={setEditData as any} />
+            <FormFields data={editData} setData={setEditData as any} docs={editDocFiles} setDocs={setEditDocFiles} docRef={editDocFileRef as React.RefObject<HTMLInputElement>} />
             <Button className="w-full" onClick={handleEdit} disabled={uploading}>
               {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Salvar Alterações
