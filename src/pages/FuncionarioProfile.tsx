@@ -182,13 +182,37 @@ export default function FuncionarioProfile() {
     );
   }, [feedbacks, func]);
 
+  const [fitScores, setFitScores] = useState<{ criteria: string; stage: string; score: number | null }[]>([]);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase.from('fit_cultural').select('criteria, stage, score').eq('employee_id', id).then(({ data }) => {
+      if (data) setFitScores(data as any);
+    });
+  }, [id]);
+
+  const scoreFit = useMemo(() => {
+    const scored = fitScores.filter(s => s.score != null);
+    if (scored.length === 0) return 0;
+    const avg = scored.reduce((sum, s) => sum + (s.score || 0), 0) / scored.length;
+    return Math.round((avg / 5) * 100);
+  }, [fitScores]);
+
+  const scoreMeta = useMemo(() => {
+    if (goals.length === 0) return 0;
+    const withResult = goals.filter(g => g.resultado != null);
+    if (withResult.length === 0) return 0;
+    const totalPeso = withResult.reduce((s, g) => s + g.peso, 0);
+    const weighted = withResult.reduce((s, g) => s + (g.resultado! * g.peso / 100), 0);
+    return Math.min(Math.round((weighted / totalPeso) * 100), 100);
+  }, [goals]);
+
   const score = useMemo(() => {
-    if (!func) return 0;
-    const resolRate = func.feedbacks_recebidos > 0 ? (func.feedbacks_resolvidos / func.feedbacks_recebidos) * 50 : 25;
-    const meetingBonus = Math.min(meetings.length * 5, 25);
-    const feedbackBonus = Math.min(func.feedbacks_recebidos * 2, 25);
-    return Math.min(Math.round(resolRate + meetingBonus + feedbackBonus), 100);
-  }, [func, meetings]);
+    if (scoreFit === 0 && scoreMeta === 0) return 0;
+    if (scoreFit === 0) return scoreMeta;
+    if (scoreMeta === 0) return scoreFit;
+    return Math.round((scoreFit + scoreMeta) / 2);
+  }, [scoreFit, scoreMeta]);
 
   const deptAvg = useMemo(() => {
     if (!func) return 0;
@@ -290,18 +314,26 @@ export default function FuncionarioProfile() {
               )}
             </div>
           </div>
-          <div className="text-center">
-            <div className="relative w-20 h-20">
-              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
-                <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--primary))" strokeWidth="6"
-                  strokeDasharray={`${(score / 100) * 220} 220`} strokeLinecap="round" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold">{score}</span>
+          <div className="flex gap-4">
+            {[
+              { label: 'Score Geral', value: score, color: 'hsl(var(--primary))' },
+              { label: 'FIT Cultural', value: scoreFit, color: 'hsl(var(--chart-2))' },
+              { label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' },
+            ].map(s => (
+              <div key={s.label} className="text-center">
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 80 80">
+                    <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
+                    <circle cx="40" cy="40" r="35" fill="none" stroke={s.color} strokeWidth="6"
+                      strokeDasharray={`${(s.value / 100) * 220} 220`} strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm font-bold">{s.value}</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">{s.label}</p>
               </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Score Geral</p>
+            ))}
           </div>
         </div>
       </motion.div>
