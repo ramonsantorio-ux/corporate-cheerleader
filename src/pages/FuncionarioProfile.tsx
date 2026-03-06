@@ -182,13 +182,37 @@ export default function FuncionarioProfile() {
     );
   }, [feedbacks, func]);
 
+  const [fitScores, setFitScores] = useState<{ criteria: string; stage: string; score: number | null }[]>([]);
+
+  useEffect(() => {
+    if (!id) return;
+    supabase.from('fit_cultural').select('criteria, stage, score').eq('employee_id', id).then(({ data }) => {
+      if (data) setFitScores(data as any);
+    });
+  }, [id]);
+
+  const scoreFit = useMemo(() => {
+    const scored = fitScores.filter(s => s.score != null);
+    if (scored.length === 0) return 0;
+    const avg = scored.reduce((sum, s) => sum + (s.score || 0), 0) / scored.length;
+    return Math.round((avg / 5) * 100);
+  }, [fitScores]);
+
+  const scoreMeta = useMemo(() => {
+    if (goals.length === 0) return 0;
+    const withResult = goals.filter(g => g.resultado != null);
+    if (withResult.length === 0) return 0;
+    const totalPeso = withResult.reduce((s, g) => s + g.peso, 0);
+    const weighted = withResult.reduce((s, g) => s + (g.resultado! * g.peso / 100), 0);
+    return Math.min(Math.round((weighted / totalPeso) * 100), 100);
+  }, [goals]);
+
   const score = useMemo(() => {
-    if (!func) return 0;
-    const resolRate = func.feedbacks_recebidos > 0 ? (func.feedbacks_resolvidos / func.feedbacks_recebidos) * 50 : 25;
-    const meetingBonus = Math.min(meetings.length * 5, 25);
-    const feedbackBonus = Math.min(func.feedbacks_recebidos * 2, 25);
-    return Math.min(Math.round(resolRate + meetingBonus + feedbackBonus), 100);
-  }, [func, meetings]);
+    if (scoreFit === 0 && scoreMeta === 0) return 0;
+    if (scoreFit === 0) return scoreMeta;
+    if (scoreMeta === 0) return scoreFit;
+    return Math.round((scoreFit + scoreMeta) / 2);
+  }, [scoreFit, scoreMeta]);
 
   const deptAvg = useMemo(() => {
     if (!func) return 0;
