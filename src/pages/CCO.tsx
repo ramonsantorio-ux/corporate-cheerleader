@@ -252,6 +252,11 @@ export default function CCO() {
     return matchSearch && matchFilter;
   });
 
+  // Group fleet by categoria
+  const fleetPorto = filteredFleet.filter(f => f.categoria === 'porto');
+  const fleetTpm = filteredFleet.filter(f => f.categoria === 'porto_tpm');
+  const fleetReserva = filteredFleet.filter(f => f.categoria === 'reserva');
+
   // --- CHART DATA ---
   const maintByType: Record<string, number> = {};
   const maintByEquip: Record<string, number> = {};
@@ -284,6 +289,23 @@ export default function CCO() {
   const finalizados = maint.filter(m => m.status === 'FINALIZADO').length;
   const emAndamento = maint.filter(m => m.status === 'EM ANDAMENTO').length;
   const pendentes = maint.filter(m => m.status === 'PENDENTE').length;
+
+  // Adherence calculation
+  function parseHMS(hms: string): number {
+    if (!hms) return 0;
+    const parts = hms.split(':').map(Number);
+    return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+  }
+  function formatHMS(totalSec: number): string {
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  const totalHorasPerdidas = filteredMaint.reduce((sum, m) => sum + parseHMS(m.horas_perdidas), 0);
+  const totalEquipamentos = fleet.filter(f => f.categoria !== 'reserva').length;
+  const totalHorasDisp = totalEquipamentos * 10 * 3600; // 10h per equipment per day approx
+  const aderencia = totalHorasDisp > 0 ? ((totalHorasDisp - totalHorasPerdidas) / totalHorasDisp * 100) : 100;
 
   // Fleet form dialog
   const FleetFormDialog = () => (
