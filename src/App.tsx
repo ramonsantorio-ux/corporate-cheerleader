@@ -24,6 +24,7 @@ import Reunioes from "./pages/Reunioes";
 import Clima from "./pages/Clima";
 import Ausencias from "./pages/Ausencias";
 import Colaboradores from "./pages/Colaboradores";
+import CCO from "./pages/CCO";
 
 const queryClient = new QueryClient();
 
