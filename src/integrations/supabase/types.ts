@@ -148,6 +148,72 @@ export type Database = {
         }
         Relationships: []
       }
+      cco_third_party: {
+        Row: {
+          aderencia: number | null
+          atendimento: string
+          created_at: string
+          data: string
+          desvio: string
+          df_percent: number | null
+          dono: string
+          hora_prog_final: string
+          hora_prog_inicio: string
+          hora_real_final: string
+          hora_real_inicio: string
+          id: string
+          justificativa: string
+          os: string
+          status: string
+          tag: string
+          tipo_equipamento: string
+          total_hora_prog: number | null
+          total_hora_real: number | null
+        }
+        Insert: {
+          aderencia?: number | null
+          atendimento?: string
+          created_at?: string
+          data?: string
+          desvio?: string
+          df_percent?: number | null
+          dono?: string
+          hora_prog_final?: string
+          hora_prog_inicio?: string
+          hora_real_final?: string
+          hora_real_inicio?: string
+          id?: string
+          justificativa?: string
+          os?: string
+          status?: string
+          tag?: string
+          tipo_equipamento?: string
+          total_hora_prog?: number | null
+          total_hora_real?: number | null
+        }
+        Update: {
+          aderencia?: number | null
+          atendimento?: string
+          created_at?: string
+          data?: string
+          desvio?: string
+          df_percent?: number | null
+          dono?: string
+          hora_prog_final?: string
+          hora_prog_inicio?: string
+          hora_real_final?: string
+          hora_real_inicio?: string
+          id?: string
+          justificativa?: string
+          os?: string
+          status?: string
+          tag?: string
+          tipo_equipamento?: string
+          total_hora_prog?: number | null
+          total_hora_real?: number | null
+        }
+        Relationships: []
+      }
       climate_responses: {
         Row: {
           comment: string | null
