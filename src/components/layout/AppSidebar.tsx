@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Settings, ChevronLeft, ChevronRight, MessageCircle, Users, Target, Shield, LogOut, Calendar, Smile, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Settings, ChevronLeft, ChevronRight, MessageCircle, Users, Target, Shield, LogOut, Calendar, Smile, CalendarDays, Truck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,6 +15,7 @@ const navItems = [
   { to: '/reunioes', icon: Calendar, label: 'Reuniões 1:1' },
   { to: '/clima', icon: Smile, label: 'Clima' },
   { to: '/ausencias', icon: CalendarDays, label: 'Ausências' },
+  { to: '/cco', icon: Truck, label: 'CCO / Informações' },
   { to: '/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 

@@ -55,6 +55,99 @@ export type Database = {
           },
         ]
       }
+      cco_fleet: {
+        Row: {
+          categoria: string
+          created_at: string
+          equipamento: string
+          id: string
+          local: string
+          operador_turno_a: string
+          operador_turno_b: string
+          placa: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string
+          created_at?: string
+          equipamento: string
+          id?: string
+          local?: string
+          operador_turno_a?: string
+          operador_turno_b?: string
+          placa?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          equipamento?: string
+          id?: string
+          local?: string
+          operador_turno_a?: string
+          operador_turno_b?: string
+          placa?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cco_maintenance: {
+        Row: {
+          area: string
+          created_at: string
+          data: string
+          horas_perdidas: string
+          id: string
+          inicio: string | null
+          letra: string
+          liberacao: string | null
+          motorista: string
+          observacao: string | null
+          placa: string
+          servico: string
+          status: string
+          tipo_equipamento: string
+          tipo_manutencao: string
+        }
+        Insert: {
+          area?: string
+          created_at?: string
+          data?: string
+          horas_perdidas?: string
+          id?: string
+          inicio?: string | null
+          letra?: string
+          liberacao?: string | null
+          motorista?: string
+          observacao?: string | null
+          placa?: string
+          servico?: string
+          status?: string
+          tipo_equipamento?: string
+          tipo_manutencao?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          data?: string
+          horas_perdidas?: string
+          id?: string
+          inicio?: string | null
+          letra?: string
+          liberacao?: string | null
+          motorista?: string
+          observacao?: string | null
+          placa?: string
+          servico?: string
+          status?: string
+          tipo_equipamento?: string
+          tipo_manutencao?: string
+        }
+        Relationships: []
+      }
       climate_responses: {
         Row: {
           comment: string | null
