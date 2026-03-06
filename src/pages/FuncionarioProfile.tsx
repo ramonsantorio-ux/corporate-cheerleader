@@ -314,18 +314,26 @@ export default function FuncionarioProfile() {
               )}
             </div>
           </div>
-          <div className="text-center">
-            <div className="relative w-20 h-20">
-              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
-                <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--primary))" strokeWidth="6"
-                  strokeDasharray={`${(score / 100) * 220} 220`} strokeLinecap="round" />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold">{score}</span>
+          <div className="flex gap-4">
+            {[
+              { label: 'Score Geral', value: score, color: 'hsl(var(--primary))' },
+              { label: 'FIT Cultural', value: scoreFit, color: 'hsl(var(--chart-2))' },
+              { label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' },
+            ].map(s => (
+              <div key={s.label} className="text-center">
+                <div className="relative w-16 h-16">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 80 80">
+                    <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
+                    <circle cx="40" cy="40" r="35" fill="none" stroke={s.color} strokeWidth="6"
+                      strokeDasharray={`${(s.value / 100) * 220} 220`} strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm font-bold">{s.value}</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1">{s.label}</p>
               </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Score Geral</p>
+            ))}
           </div>
         </div>
       </motion.div>
