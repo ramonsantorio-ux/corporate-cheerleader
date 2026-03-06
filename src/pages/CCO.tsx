@@ -252,6 +252,11 @@ export default function CCO() {
     return matchSearch && matchFilter;
   });
 
+  // Group fleet by categoria
+  const fleetPorto = filteredFleet.filter(f => f.categoria === 'porto');
+  const fleetTpm = filteredFleet.filter(f => f.categoria === 'porto_tpm');
+  const fleetReserva = filteredFleet.filter(f => f.categoria === 'reserva');
+
   // --- CHART DATA ---
   const maintByType: Record<string, number> = {};
   const maintByEquip: Record<string, number> = {};
@@ -284,6 +289,23 @@ export default function CCO() {
   const finalizados = maint.filter(m => m.status === 'FINALIZADO').length;
   const emAndamento = maint.filter(m => m.status === 'EM ANDAMENTO').length;
   const pendentes = maint.filter(m => m.status === 'PENDENTE').length;
+
+  // Adherence calculation
+  function parseHMS(hms: string): number {
+    if (!hms) return 0;
+    const parts = hms.split(':').map(Number);
+    return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+  }
+  function formatHMS(totalSec: number): string {
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+  const totalHorasPerdidas = filteredMaint.reduce((sum, m) => sum + parseHMS(m.horas_perdidas), 0);
+  const totalEquipamentos = fleet.filter(f => f.categoria !== 'reserva').length;
+  const totalHorasDisp = totalEquipamentos * 10 * 3600; // 10h per equipment per day approx
+  const aderencia = totalHorasDisp > 0 ? ((totalHorasDisp - totalHorasPerdidas) / totalHorasDisp * 100) : 100;
 
   // Fleet form dialog
   const FleetFormDialog = () => (
@@ -401,44 +423,72 @@ export default function CCO() {
           {fleetLoading ? (
             <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : (
-            <div className="glass-card rounded-xl overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Equipamento</TableHead>
-                    <TableHead>Placa</TableHead>
-                    <TableHead>Local</TableHead>
-                    <TableHead>Turno A</TableHead>
-                    <TableHead>Turno B</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead className="w-24">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredFleet.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum equipamento cadastrado</TableCell></TableRow>
-                  ) : filteredFleet.map(item => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium text-sm">{item.equipamento}</TableCell>
-                      <TableCell className="text-sm">{item.placa}</TableCell>
-                      <TableCell className="text-sm">{item.local}</TableCell>
-                      <TableCell className="text-sm">{item.operador_turno_a}</TableCell>
-                      <TableCell className="text-sm">{item.operador_turno_b}</TableCell>
-                      <TableCell>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                          {CATEGORIAS.find(c => c.value === item.categoria)?.label || item.categoria}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditFleet(item)}><Edit className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteFleetId(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="space-y-6">
+              {[
+                { title: 'TURNO - PORTO', data: fleetPorto, color: 'bg-primary/10 text-primary' },
+                { title: 'TURNO - PORTO - TPM', data: fleetTpm, color: 'bg-chart-2/20 text-foreground' },
+                { title: 'RESERVAS', data: fleetReserva, color: 'bg-destructive/10 text-destructive' },
+              ].filter(g => g.data.length > 0).map(group => (
+                <div key={group.title} className="glass-card rounded-xl overflow-hidden">
+                  <div className={`px-4 py-2 font-bold text-sm ${group.color} border-b border-border`}>
+                    {group.title} ({group.data.length})
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Equipamento</TableHead>
+                        <TableHead>Placa</TableHead>
+                        <TableHead>Local</TableHead>
+                        <TableHead>Turno A</TableHead>
+                        <TableHead>Turno B</TableHead>
+                        <TableHead className="w-24">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {group.data.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium text-sm">{item.equipamento}</TableCell>
+                          <TableCell className="text-sm font-mono">{item.placa}</TableCell>
+                          <TableCell className="text-sm">{item.local}</TableCell>
+                          <TableCell className="text-sm">
+                            <span className={item.operador_turno_a.includes('NOVATO') ? 'font-bold' : ''}>
+                              {item.operador_turno_a}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <span className={
+                              item.operador_turno_b === 'EXTRA' || item.operador_turno_b.includes('EXTRA')
+                                ? 'px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs'
+                                : item.operador_turno_b.includes('férias') || item.operador_turno_b.includes('FÉRIAS')
+                                ? 'px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs'
+                                : item.operador_turno_b.includes('NOVATO') ? 'font-bold' : ''
+                            }>
+                              {item.operador_turno_b}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditFleet(item)}><Edit className="w-3.5 h-3.5" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteFleetId(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ))}
+
+              {/* Legenda */}
+              <div className="glass-card rounded-xl p-4">
+                <h4 className="text-sm font-semibold mb-2">LEGENDA</h4>
+                <div className="flex flex-wrap gap-3 text-xs">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-yellow-300" /> FÉRIAS</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-blue-400" /> EXTRA</span>
+                  <span className="flex items-center gap-1.5"><span className="font-bold">NEGRITO</span> NOVOS</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-destructive" /> ALUGADO</span>
+                </div>
+              </div>
             </div>
           )}
         </TabsContent>
@@ -467,53 +517,108 @@ export default function CCO() {
           {maintLoading ? (
             <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : (
-            <div className="glass-card rounded-xl overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Placa</TableHead>
-                    <TableHead>Equipamento</TableHead>
-                    <TableHead>Motorista</TableHead>
-                    <TableHead>Letra</TableHead>
-                    <TableHead>Serviço</TableHead>
-                    <TableHead>Tipo Manut.</TableHead>
-                    <TableHead>Horas Perd.</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-24">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredMaint.length === 0 ? (
-                    <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">Nenhum registro encontrado</TableCell></TableRow>
-                  ) : filteredMaint.map(item => (
-                    <TableRow key={item.id}>
-                      <TableCell className="text-sm whitespace-nowrap">{item.data}</TableCell>
-                      <TableCell className="text-sm font-medium">{item.placa}</TableCell>
-                      <TableCell className="text-sm max-w-[200px] truncate">{item.tipo_equipamento}</TableCell>
-                      <TableCell className="text-sm">{item.motorista}</TableCell>
-                      <TableCell className="text-sm">{item.letra}</TableCell>
-                      <TableCell className="text-sm max-w-[150px] truncate">{item.servico}</TableCell>
-                      <TableCell><span className="text-xs px-2 py-0.5 rounded-full bg-muted">{item.tipo_manutencao}</span></TableCell>
-                      <TableCell className="text-sm">{item.horas_perdidas}</TableCell>
-                      <TableCell>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          item.status === 'FINALIZADO' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
-                          item.status === 'EM ANDAMENTO' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                        }`}>{item.status}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditMaint(item)}><Edit className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteMaintId(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <>
+              <div className="glass-card rounded-xl overflow-hidden">
+                <div className="px-4 py-2 bg-destructive/10 text-destructive font-bold text-sm border-b border-border">
+                  EM MANUTENÇÃO ({filteredMaint.length})
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Placa</TableHead>
+                        <TableHead>Tipo Equipamento</TableHead>
+                        <TableHead>Motorista</TableHead>
+                        <TableHead>Letra</TableHead>
+                        <TableHead>Área</TableHead>
+                        <TableHead>Serviço</TableHead>
+                        <TableHead>Tipo Manut.</TableHead>
+                        <TableHead>Início</TableHead>
+                        <TableHead>Liberação</TableHead>
+                        <TableHead>Horas Perd.</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="w-24">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredMaint.length === 0 ? (
+                        <TableRow><TableCell colSpan={13} className="text-center text-muted-foreground py-8">Nenhum registro encontrado</TableCell></TableRow>
+                      ) : filteredMaint.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="text-sm whitespace-nowrap">{new Date(item.data + 'T00:00:00').toLocaleDateString('pt-BR')}</TableCell>
+                          <TableCell className="text-sm font-mono font-medium">{item.placa}</TableCell>
+                          <TableCell className="text-sm max-w-[200px] truncate">{item.tipo_equipamento}</TableCell>
+                          <TableCell className="text-sm">{item.motorista}</TableCell>
+                          <TableCell className="text-sm text-center font-medium">{item.letra}</TableCell>
+                          <TableCell className="text-sm">{item.area}</TableCell>
+                          <TableCell className="text-sm max-w-[150px] truncate">{item.servico}</TableCell>
+                          <TableCell><span className="text-xs px-2 py-0.5 rounded-full bg-muted">{item.tipo_manutencao}</span></TableCell>
+                          <TableCell className="text-sm">
+                            <span className={item.inicio ? 'px-1.5 py-0.5 rounded bg-destructive/20 text-destructive text-xs font-medium' : ''}>
+                              {item.inicio || '—'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <span className={item.liberacao ? 'px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-medium' : ''}>
+                              {item.liberacao || '—'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-sm font-medium">{item.horas_perdidas}</TableCell>
+                          <TableCell>
+                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                              item.status === 'FINALIZADO' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' :
+                              item.status === 'EM ANDAMENTO' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            }`}>{item.status}</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditMaint(item)}><Edit className="w-3.5 h-3.5" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteMaintId(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {/* Legenda */}
+              <div className="glass-card rounded-xl p-4">
+                <h4 className="text-sm font-semibold mb-2">LEGENDA</h4>
+                <div className="flex flex-wrap gap-4 text-xs">
+                  <span className="flex items-center gap-1.5"><span className="w-4 h-3 rounded bg-yellow-300" /> CORRETIVA NA BASE</span>
+                  <span className="flex items-center gap-1.5"><span className="w-4 h-3 rounded bg-white border border-border" /> CORRETIVA NA ÁREA</span>
+                </div>
+              </div>
+
+              {/* Adherence Summary */}
+              <div className="glass-card rounded-xl p-5 border-l-4 border-primary">
+                <h4 className="text-sm font-bold mb-4 text-primary">RESUMO DO PERÍODO</h4>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">TOTAL HORAS PERDIDAS</p>
+                    <p className="text-lg font-bold">{formatHMS(totalHorasPerdidas)}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">TOTAL DE EQUIPAMENTOS</p>
+                    <p className="text-lg font-bold">{totalEquipamentos}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-muted/50">
+                    <p className="text-xs text-muted-foreground">TOTAL REGISTROS</p>
+                    <p className="text-lg font-bold">{filteredMaint.length}</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                    <p className="text-xs text-muted-foreground">ADERÊNCIA</p>
+                    <p className={`text-2xl font-bold ${aderencia >= 95 ? 'text-green-600 dark:text-green-400' : aderencia >= 90 ? 'text-yellow-600 dark:text-yellow-400' : 'text-destructive'}`}>
+                      {aderencia.toFixed(2)}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
           )}
         </TabsContent>
 
