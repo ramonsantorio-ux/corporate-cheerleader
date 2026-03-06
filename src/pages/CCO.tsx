@@ -423,44 +423,72 @@ export default function CCO() {
           {fleetLoading ? (
             <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
           ) : (
-            <div className="glass-card rounded-xl overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Equipamento</TableHead>
-                    <TableHead>Placa</TableHead>
-                    <TableHead>Local</TableHead>
-                    <TableHead>Turno A</TableHead>
-                    <TableHead>Turno B</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead className="w-24">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredFleet.length === 0 ? (
-                    <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Nenhum equipamento cadastrado</TableCell></TableRow>
-                  ) : filteredFleet.map(item => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium text-sm">{item.equipamento}</TableCell>
-                      <TableCell className="text-sm">{item.placa}</TableCell>
-                      <TableCell className="text-sm">{item.local}</TableCell>
-                      <TableCell className="text-sm">{item.operador_turno_a}</TableCell>
-                      <TableCell className="text-sm">{item.operador_turno_b}</TableCell>
-                      <TableCell>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                          {CATEGORIAS.find(c => c.value === item.categoria)?.label || item.categoria}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditFleet(item)}><Edit className="w-3.5 h-3.5" /></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteFleetId(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="space-y-6">
+              {[
+                { title: 'TURNO - PORTO', data: fleetPorto, color: 'bg-primary/10 text-primary' },
+                { title: 'TURNO - PORTO - TPM', data: fleetTpm, color: 'bg-chart-2/20 text-foreground' },
+                { title: 'RESERVAS', data: fleetReserva, color: 'bg-destructive/10 text-destructive' },
+              ].filter(g => g.data.length > 0).map(group => (
+                <div key={group.title} className="glass-card rounded-xl overflow-hidden">
+                  <div className={`px-4 py-2 font-bold text-sm ${group.color} border-b border-border`}>
+                    {group.title} ({group.data.length})
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Equipamento</TableHead>
+                        <TableHead>Placa</TableHead>
+                        <TableHead>Local</TableHead>
+                        <TableHead>Turno A</TableHead>
+                        <TableHead>Turno B</TableHead>
+                        <TableHead className="w-24">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {group.data.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium text-sm">{item.equipamento}</TableCell>
+                          <TableCell className="text-sm font-mono">{item.placa}</TableCell>
+                          <TableCell className="text-sm">{item.local}</TableCell>
+                          <TableCell className="text-sm">
+                            <span className={item.operador_turno_a.includes('NOVATO') ? 'font-bold' : ''}>
+                              {item.operador_turno_a}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            <span className={
+                              item.operador_turno_b === 'EXTRA' || item.operador_turno_b.includes('EXTRA')
+                                ? 'px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs'
+                                : item.operador_turno_b.includes('férias') || item.operador_turno_b.includes('FÉRIAS')
+                                ? 'px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs'
+                                : item.operador_turno_b.includes('NOVATO') ? 'font-bold' : ''
+                            }>
+                              {item.operador_turno_b}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditFleet(item)}><Edit className="w-3.5 h-3.5" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteFleetId(item.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ))}
+
+              {/* Legenda */}
+              <div className="glass-card rounded-xl p-4">
+                <h4 className="text-sm font-semibold mb-2">LEGENDA</h4>
+                <div className="flex flex-wrap gap-3 text-xs">
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-yellow-300" /> FÉRIAS</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-blue-400" /> EXTRA</span>
+                  <span className="flex items-center gap-1.5"><span className="font-bold">NEGRITO</span> NOVOS</span>
+                  <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-destructive" /> ALUGADO</span>
+                </div>
+              </div>
             </div>
           )}
         </TabsContent>
