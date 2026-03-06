@@ -15,6 +15,7 @@ const navItems = [
   { to: '/reunioes', icon: Calendar, label: 'Reuniões 1:1' },
   { to: '/clima', icon: Smile, label: 'Clima' },
   { to: '/ausencias', icon: CalendarDays, label: 'Ausências' },
+  { to: '/cco', icon: Truck, label: 'CCO / Informações' },
   { to: '/configuracoes', icon: Settings, label: 'Configurações' },
 ];
 

@@ -13,10 +13,15 @@ import { toast } from 'sonner';
 const PAGES = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'cadastro', label: 'Cadastro' },
+  { key: 'colaboradores', label: 'Colaboradores' },
   { key: 'feedbacks', label: 'Feedbacks' },
   { key: 'novo_feedback', label: 'Novo Feedback' },
   { key: 'desempenho', label: 'Desempenho' },
   { key: 'relatorios', label: 'Relatórios' },
+  { key: 'reunioes', label: 'Reuniões 1:1' },
+  { key: 'clima', label: 'Clima' },
+  { key: 'ausencias', label: 'Ausências' },
+  { key: 'cco', label: 'CCO / Informações' },
   { key: 'configuracoes', label: 'Configurações' },
 ];
 

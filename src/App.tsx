@@ -60,6 +60,7 @@ function ProtectedRoutes() {
         <Route path="/reunioes" element={<Reunioes />} />
         <Route path="/clima" element={<Clima />} />
         <Route path="/ausencias" element={<Ausencias />} />
+        <Route path="/cco" element={<CCO />} />
         <Route path="/admin" element={<Admin />} />
       </Route>
       <Route path="*" element={<NotFound />} />
