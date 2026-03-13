@@ -1,11 +1,10 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, MessageSquarePlus, List, BarChart3, Users, Target, Calendar, Settings } from 'lucide-react';
+import { LayoutDashboard, List, BarChart3, Users, Target, Calendar, Settings } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
-  { to: '/cadastro', icon: Users, label: 'Cadastro' },
+  { to: '/colaboradores', icon: Users, label: 'Colab.' },
   { to: '/feedbacks', icon: List, label: 'Feedbacks' },
-  { to: '/novo', icon: MessageSquarePlus, label: 'Novo' },
   { to: '/desempenho', icon: Target, label: 'Desemp.' },
   { to: '/reunioes', icon: Calendar, label: '1:1' },
   { to: '/configuracoes', icon: Settings, label: 'Config.' },
@@ -20,13 +19,7 @@ export default function MobileNav() {
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                isActive ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            >
+            <NavLink key={item.to} to={item.to} className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-colors ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
               <item.icon className="w-5 h-5" />
               <span>{item.label}</span>
             </NavLink>
