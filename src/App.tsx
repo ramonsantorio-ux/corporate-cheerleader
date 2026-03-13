@@ -8,10 +8,8 @@ import AppLayout from "./components/layout/AppLayout";
 import Index from "./pages/Index";
 import Feedbacks from "./pages/Feedbacks";
 import FeedbackDetail from "./pages/FeedbackDetail";
-import NovoFeedback from "./pages/NovoFeedback";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
-import Cadastro from "./pages/Cadastro";
 import Desempenho from "./pages/Desempenho";
 import Avaliacoes from "./pages/Avaliacoes";
 import Competencias from "./pages/Competencias";
@@ -45,11 +43,11 @@ function ProtectedRoutes() {
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<Index />} />
-        <Route path="/cadastro" element={<Cadastro />} />
         <Route path="/colaboradores" element={<Colaboradores />} />
+        <Route path="/cadastro" element={<Navigate to="/colaboradores" replace />} />
         <Route path="/feedbacks" element={<Feedbacks />} />
         <Route path="/feedbacks/:id" element={<FeedbackDetail />} />
-        <Route path="/novo" element={<NovoFeedback />} />
+        <Route path="/novo" element={<Navigate to="/feedbacks" replace />} />
         <Route path="/relatorios" element={<Relatorios />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
         <Route path="/desempenho" element={<Desempenho />} />
