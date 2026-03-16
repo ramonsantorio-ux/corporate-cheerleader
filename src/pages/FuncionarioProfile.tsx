@@ -64,6 +64,7 @@ export default function FuncionarioProfile() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [vacationInfo, setVacationInfo] = useState<VacationInfo | null>(null);
   const [employeeWarnings, setEmployeeWarnings] = useState<WarningRecord[]>([]);
+  const [employeeEvents, setEmployeeEvents] = useState<EventRecord[]>([]);
   const [extrasCount, setExtrasCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
