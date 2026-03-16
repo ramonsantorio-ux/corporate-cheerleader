@@ -1,16 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  CalendarDays, Plus, Loader2, Trash2, Check, X, Clock, AlertTriangle,
-  Upload, Download, Users, TrendingUp, Sun, Moon, Briefcase, Shield
+  CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
+  Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
@@ -52,7 +52,6 @@ const statusColors: Record<string, string> = {
 
 const PIE_COLORS = ['#0d9488', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', '#dc2626', '#eab308', '#6366f1'];
 
-// ─── Helper to get current period (21st to 20th) ────────────────────────────
 function getCurrentPeriod() {
   const now = new Date();
   const day = now.getDate();
@@ -83,9 +82,10 @@ export default function PontoFerias() {
   const [overtimes, setOvertimes] = useState<OvertimeRecord[]>([]);
   const [funcionarios, setFuncionarios] = useState<Func[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('ponto');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [vacDialogOpen, setVacDialogOpen] = useState(false);
+  const [showPontoTable, setShowPontoTable] = useState(false);
+  const [showFeriasTable, setShowFeriasTable] = useState(false);
   const period = getCurrentPeriod();
 
   const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '' });
@@ -123,11 +123,9 @@ export default function PontoFerias() {
     setLoading(false);
   }
 
-  // ─── Ponto registration with overtime limit enforcement ────────────────
   async function handleCreateAttendance() {
     if (!form.employee_id || !form.date) { toast.error('Preencha os campos obrigatórios'); return; }
 
-    // Enforce 3 extras limit
     if (form.status === 'extra') {
       const { count } = await supabase.from('daily_attendance')
         .select('*', { count: 'exact', head: true })
@@ -136,7 +134,7 @@ export default function PontoFerias() {
         .gte('date', period.start).lte('date', period.end);
 
       if ((count || 0) >= 3) {
-        toast.error('⚠️ LIMITE ATINGIDO: Este colaborador já realizou 3 extras neste período. Não é permitido registrar mais.');
+        toast.error('⚠️ LIMITE ATINGIDO: Este colaborador já realizou 3 extras neste período.');
         return;
       }
     }
@@ -150,7 +148,6 @@ export default function PontoFerias() {
       return;
     }
 
-    // Update overtime control
     if (form.status === 'extra') {
       const { data: existing } = await supabase.from('overtime_control')
         .select('*').eq('employee_id', form.employee_id)
@@ -173,7 +170,6 @@ export default function PontoFerias() {
     fetchAll();
   }
 
-  // ─── Vacation registration ─────────────────────────────────────────────
   async function handleCreateVacation() {
     if (!vacForm.employee_id) { toast.error('Selecione o funcionário'); return; }
     const { error } = await supabase.from('vacation_control').upsert({
@@ -206,7 +202,7 @@ export default function PontoFerias() {
     fetchAll();
   }
 
-  // ─── Computed data ─────────────────────────────────────────────────────
+  // ─── Computed ──────────────────────────────────────────────────────────
   const vacationAlerts = useMemo(() => {
     const today = new Date();
     return vacations.filter(v => {
@@ -215,6 +211,11 @@ export default function PontoFerias() {
       const end = new Date(v.end_date);
       return (today >= start && today <= end) || (start.getTime() - today.getTime() <= 7 * 86400000 && start > today);
     });
+  }, [vacations]);
+
+  const onVacationNow = useMemo(() => {
+    const today = new Date();
+    return vacations.filter(v => v.start_date && v.end_date && today >= new Date(v.start_date) && today <= new Date(v.end_date));
   }, [vacations]);
 
   const overtimeLimitAlerts = useMemo(() => {
@@ -266,6 +267,11 @@ export default function PontoFerias() {
     return Object.values(map).sort((a, b) => b.count - a.count);
   }, [attendance]);
 
+  const totalPresentes = attendance.filter(a => a.status === 'presente').length;
+  const totalFaltas = attendance.filter(a => a.status === 'falta' || a.status === 'falta_justificada').length;
+  const totalExtras = attendance.filter(a => a.status === 'extra').length;
+  const totalAtestados = attendance.filter(a => a.status === 'atestado').length;
+
   const statusBadge = (s: string) => {
     const colors: Record<string, string> = {
       presente: 'bg-success/10 text-success', falta: 'bg-destructive/10 text-destructive',
@@ -277,7 +283,6 @@ export default function PontoFerias() {
     return colors[s] || 'bg-muted text-muted-foreground';
   };
 
-  // ─── Custom Tooltip ────────────────────────────────────────────────────
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload) return null;
     return (
@@ -296,85 +301,27 @@ export default function PontoFerias() {
 
   return (
     <div className="space-y-6">
-      {/* ─── Header ─────────────────────────────────────────────────── */}
+      {/* ═══════════════════════════════════════════════════════════════════
+          HEADER + ACTIONS
+      ═══════════════════════════════════════════════════════════════════ */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Ponto / Férias</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Gestão à Vista — Ponto / Férias</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Controle diário e gestão de férias · Período: <span className="font-medium text-foreground">{period.label}</span>
+              Painel de controle operacional · Período: <span className="font-medium text-foreground">{period.label}</span>
             </p>
           </div>
-        </div>
-      </motion.div>
-
-      {/* ─── Alerts Banner ──────────────────────────────────────────── */}
-      {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-          {vacationAlerts.map(v => {
-            const start = new Date(v.start_date!);
-            const today = new Date();
-            const isOnVacation = today >= start && today <= new Date(v.end_date!);
-            return (
-              <div key={v.id} className={`flex items-center gap-3 rounded-lg p-3 border ${isOnVacation ? 'bg-teal-500/5 border-teal-500/20' : 'bg-warning/5 border-warning/20'}`}>
-                <Sun className={`w-4 h-4 flex-shrink-0 ${isOnVacation ? 'text-teal-500' : 'text-warning'}`} />
-                <p className="text-sm">
-                  <span className="font-semibold">{v.employee_name}</span>
-                  {isOnVacation
-                    ? ` está de férias até ${formatDate(v.end_date)}`
-                    : ` inicia férias em ${formatDate(v.start_date)}`}
-                </p>
-              </div>
-            );
-          })}
-          {overtimeLimitAlerts.map(o => (
-            <div key={o.employee_name} className="flex items-center gap-3 rounded-lg p-3 border bg-destructive/5 border-destructive/20">
-              <Shield className="w-4 h-4 flex-shrink-0 text-destructive" />
-              <p className="text-sm">
-                <span className="font-semibold">{o.employee_name}</span> atingiu o limite de <strong>{o.count}/3 extras</strong> neste período. Novas extras bloqueadas.
-              </p>
-            </div>
-          ))}
-        </motion.div>
-      )}
-
-      {/* ─── KPI Cards ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Registros no Período', value: attendance.length, icon: CalendarDays, accent: 'border-t-primary' },
-          { label: 'Colaboradores em Férias', value: vacationAlerts.filter(v => { const t = new Date(); return t >= new Date(v.start_date!) && t <= new Date(v.end_date!); }).length, icon: Sun, accent: 'border-t-teal-500' },
-          { label: 'Extras no Período', value: attendance.filter(a => a.status === 'extra').length, icon: TrendingUp, accent: 'border-t-purple-500' },
-          { label: 'Limites Atingidos', value: overtimeLimitAlerts.length, icon: AlertTriangle, accent: 'border-t-destructive' },
-        ].map((kpi) => (
-          <motion.div key={kpi.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className={`corporate-kpi ${kpi.accent}`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{kpi.label}</span>
-              <kpi.icon className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <p className="text-2xl font-bold">{kpi.value}</p>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* ─── Tabs ───────────────────────────────────────────────────── */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4 max-w-xl">
-          <TabsTrigger value="ponto">Ponto Diário</TabsTrigger>
-          <TabsTrigger value="ferias">Férias</TabsTrigger>
-          <TabsTrigger value="extras">Controle Extras</TabsTrigger>
-          <TabsTrigger value="graficos">Gráficos</TabsTrigger>
-        </TabsList>
-
-        {/* ─── Tab: Ponto Diário ────────────────────────────────── */}
-        <TabsContent value="ponto" className="space-y-4 mt-4">
-          <div className="flex justify-end">
+          <div className="flex gap-2">
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button><Plus className="w-4 h-4 mr-2" />Registrar Ponto</Button>
+                <Button size="sm"><Plus className="w-4 h-4 mr-2" />Registrar Ponto</Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>Registrar Ponto Diário</DialogTitle></DialogHeader>
+                <DialogHeader>
+                  <DialogTitle>Registrar Ponto Diário</DialogTitle>
+                  <DialogDescription>Registre o ponto para um colaborador no período atual.</DialogDescription>
+                </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <Label>Funcionário</Label>
@@ -383,7 +330,7 @@ export default function PontoFerias() {
                       <SelectContent>
                         {funcionarios.map(f => (
                           <SelectItem key={f.id} value={f.id}>
-                            {f.nome} <span className="text-muted-foreground ml-1">({f.letra}-{f.turno})</span>
+                            {f.nome} ({f.letra}-{f.turno})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -405,7 +352,7 @@ export default function PontoFerias() {
                       const extrasUsed = attendance.filter(a => a.employee_id === form.employee_id && a.status === 'extra').length;
                       return (
                         <p className={`text-xs mt-1 ${extrasUsed >= 3 ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
-                          {extrasUsed}/3 extras utilizadas neste período {extrasUsed >= 3 ? '— BLOQUEADO' : ''}
+                          {extrasUsed}/3 extras utilizadas neste período {extrasUsed >= 3 ? '— ⛔ BLOQUEADO' : ''}
                         </p>
                       );
                     })()}
@@ -418,64 +365,16 @@ export default function PontoFerias() {
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
 
-          {attendance.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Nenhum registro de ponto no período</p>
-            </div>
-          ) : (
-            <div className="corporate-section p-0 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/30">
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Colaborador</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Turno/Letra</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Função</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Data</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Status</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Observação</th>
-                      <th className="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendance.map((a, i) => (
-                      <tr key={a.id} className={`border-b border-border/50 hover:bg-muted/20 transition-colors ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
-                        <td className="px-4 py-3 font-medium">{a.employee_name}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{a.letra}-{a.turno}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{a.cargo}</td>
-                        <td className="px-4 py-3">{formatDate(a.date)}</td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusBadge(a.status)}`}>
-                            {statusLabels[a.status] || a.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground max-w-[200px] truncate">{a.observation || '—'}</td>
-                        <td className="px-4 py-3 text-right">
-                          <Button variant="ghost" size="icon" onClick={() => deleteAttendance(a.id)} className="text-destructive hover:text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </TabsContent>
-
-        {/* ─── Tab: Férias ──────────────────────────────────────── */}
-        <TabsContent value="ferias" className="space-y-4 mt-4">
-          <div className="flex justify-end">
             <Dialog open={vacDialogOpen} onOpenChange={setVacDialogOpen}>
               <DialogTrigger asChild>
-                <Button><Plus className="w-4 h-4 mr-2" />Registrar Férias</Button>
+                <Button size="sm" variant="outline"><Sun className="w-4 h-4 mr-2" />Registrar Férias</Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>Registrar / Atualizar Férias</DialogTitle></DialogHeader>
+                <DialogHeader>
+                  <DialogTitle>Registrar / Atualizar Férias</DialogTitle>
+                  <DialogDescription>Gerencie o período de férias de um colaborador.</DialogDescription>
+                </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-2">
                     <Label>Funcionário</Label>
@@ -487,14 +386,8 @@ export default function PontoFerias() {
                     </Select>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Qtd. Dias</Label>
-                      <Input type="number" value={vacForm.days_count} onChange={e => setVacForm({ ...vacForm, days_count: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Mês Programado</Label>
-                      <Input placeholder="Ex: Março" value={vacForm.scheduled_month} onChange={e => setVacForm({ ...vacForm, scheduled_month: e.target.value })} />
-                    </div>
+                    <div className="space-y-2"><Label>Qtd. Dias</Label><Input type="number" value={vacForm.days_count} onChange={e => setVacForm({ ...vacForm, days_count: e.target.value })} /></div>
+                    <div className="space-y-2"><Label>Mês Programado</Label><Input placeholder="Ex: Março" value={vacForm.scheduled_month} onChange={e => setVacForm({ ...vacForm, scheduled_month: e.target.value })} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2"><Label>Início</Label><Input type="date" value={vacForm.start_date} onChange={e => setVacForm({ ...vacForm, start_date: e.target.value })} /></div>
@@ -506,174 +399,324 @@ export default function PontoFerias() {
               </DialogContent>
             </Dialog>
           </div>
+        </div>
+      </motion.div>
 
-          {vacations.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Sun className="w-12 h-12 mx-auto mb-3 opacity-30" />
-              <p>Nenhum registro de férias</p>
-            </div>
-          ) : (
-            <div className="corporate-section p-0 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/30">
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Colaborador</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Função</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Turno/Letra</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Dias</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Mês Prog.</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Início</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Fim</th>
-                      <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Status</th>
-                      <th className="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {vacations.map((v, i) => {
-                      const today = new Date();
-                      const isOnVac = v.start_date && v.end_date && today >= new Date(v.start_date) && today <= new Date(v.end_date);
-                      const isPending = v.scheduled_month && !v.start_date;
-                      return (
-                        <tr key={v.id} className={`border-b border-border/50 hover:bg-muted/20 transition-colors ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
-                          <td className="px-4 py-3 font-medium">{v.employee_name}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{v.cargo}</td>
-                          <td className="px-4 py-3 text-muted-foreground">{v.letra}-{v.turno}</td>
-                          <td className="px-4 py-3">{v.days_count}</td>
-                          <td className="px-4 py-3">{v.scheduled_month || '—'}</td>
-                          <td className="px-4 py-3">{formatDate(v.start_date)}</td>
-                          <td className="px-4 py-3">{formatDate(v.end_date)}</td>
-                          <td className="px-4 py-3">
-                            {isOnVac ? (
-                              <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-teal-500/10 text-teal-600">Em Férias</span>
-                            ) : isPending ? (
-                              <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-warning/10 text-warning">Programada</span>
-                            ) : (
-                              <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-muted text-muted-foreground">—</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <Button variant="ghost" size="icon" onClick={() => deleteVacation(v.id)} className="text-destructive hover:text-destructive">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+      {/* ═══════════════════════════════════════════════════════════════════
+          ALERTS BANNER
+      ═══════════════════════════════════════════════════════════════════ */}
+      {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {vacationAlerts.map(v => {
+            const start = new Date(v.start_date!);
+            const today = new Date();
+            const isOnVacation = today >= start && today <= new Date(v.end_date!);
+            return (
+              <div key={v.id} className={`flex items-center gap-3 rounded-lg p-3 border ${isOnVacation ? 'bg-teal-500/5 border-teal-500/20' : 'bg-warning/5 border-warning/20'}`}>
+                <Sun className={`w-4 h-4 flex-shrink-0 ${isOnVacation ? 'text-teal-500' : 'text-warning'}`} />
+                <p className="text-sm">
+                  <span className="font-semibold">{v.employee_name}</span>
+                  {isOnVacation ? ` em férias até ${formatDate(v.end_date)}` : ` inicia férias em ${formatDate(v.start_date)}`}
+                </p>
               </div>
+            );
+          })}
+          {overtimeLimitAlerts.map(o => (
+            <div key={o.employee_name} className="flex items-center gap-3 rounded-lg p-3 border bg-destructive/5 border-destructive/20">
+              <Shield className="w-4 h-4 flex-shrink-0 text-destructive" />
+              <p className="text-sm">
+                <span className="font-semibold">{o.employee_name}</span> — <strong>{o.count}/3 extras</strong> ⛔ BLOQUEADO
+              </p>
+            </div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          KPI CARDS — ALWAYS VISIBLE
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          { label: 'Total Registros', value: attendance.length, icon: CalendarDays, color: 'border-t-primary' },
+          { label: 'Presentes', value: totalPresentes, icon: Users, color: 'border-t-success' },
+          { label: 'Faltas', value: totalFaltas, icon: AlertTriangle, color: 'border-t-destructive' },
+          { label: 'Extras', value: totalExtras, icon: TrendingUp, color: 'border-t-purple-500' },
+          { label: 'Em Férias', value: onVacationNow.length, icon: Sun, color: 'border-t-teal-500' },
+          { label: 'Bloqueados', value: overtimeLimitAlerts.length, icon: Shield, color: 'border-t-destructive' },
+        ].map((kpi, idx) => (
+          <motion.div key={kpi.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
+            className={`corporate-kpi ${kpi.color}`}>
+            <div className="flex items-center justify-between mb-1">
+              <kpi.icon className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <p className="text-2xl font-bold tracking-tight">{kpi.value}</p>
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-1">{kpi.label}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          CHARTS ROW — ALWAYS VISIBLE
+      ═══════════════════════════════════════════════════════════════════ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Movimentação Diária */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
+          className="corporate-section lg:col-span-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+            Movimentação Diária — Últimos 15 dias
+          </h3>
+          {dailyChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={dailyChartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="Presentes" stackId="a" fill="hsl(var(--success))" />
+                <Bar dataKey="Faltas" stackId="a" fill="hsl(var(--destructive))" />
+                <Bar dataKey="Extras" stackId="a" fill="hsl(260, 60%, 55%)" />
+                <Bar dataKey="Atestados" stackId="a" fill="hsl(200, 70%, 50%)" />
+                <Bar dataKey="Férias" stackId="a" fill="hsl(160, 60%, 45%)" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <CalendarDays className="w-10 h-10 mb-3 opacity-20" />
+              <p className="text-sm">Nenhum registro de ponto no período</p>
+              <p className="text-xs mt-1">Registre o ponto diário para visualizar os gráficos</p>
             </div>
           )}
-        </TabsContent>
+        </motion.div>
 
-        {/* ─── Tab: Controle de Extras ──────────────────────────── */}
-        <TabsContent value="extras" className="space-y-4 mt-4">
-          <div className="corporate-section">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-              Controle de Horas Extras — Limite: 3 por período
-            </h3>
-            {extrasPerEmployee.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground text-sm">Nenhuma extra registrada no período</p>
+        {/* Distribuição por Status */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+          className="corporate-section">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+            Distribuição por Status
+          </h3>
+          {statusDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie data={statusDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={40}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                  {statusDistribution.map((entry, i) => (
+                    <Cell key={i} fill={entry.fill || PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <Eye className="w-10 h-10 mb-3 opacity-20" />
+              <p className="text-sm">Sem dados para exibir</p>
+            </div>
+          )}
+        </motion.div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          EXTRAS CONTROL — ALWAYS VISIBLE
+      ═══════════════════════════════════════════════════════════════════ */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}
+        className="corporate-section">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Controle de Horas Extras — Limite: 3 por Período
+          </h3>
+          <span className="text-xs text-muted-foreground">{period.label}</span>
+        </div>
+
+        {extrasPerEmployee.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {extrasPerEmployee.map(emp => {
+              const pct = (emp.count / emp.limit) * 100;
+              const isBlocked = emp.count >= emp.limit;
+              return (
+                <div key={emp.name} className={`rounded-lg p-4 border transition-colors ${isBlocked ? 'border-destructive/40 bg-destructive/5' : 'border-border bg-card'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-sm truncate mr-2">{emp.name}</span>
+                    <span className={`text-xs font-bold whitespace-nowrap ${isBlocked ? 'text-destructive' : 'text-foreground'}`}>
+                      {emp.count}/{emp.limit}
+                      {isBlocked && ' ⛔'}
+                    </span>
+                  </div>
+                  <Progress value={Math.min(pct, 100)} className={`h-2 ${isBlocked ? '[&>div]:bg-destructive' : pct >= 66 ? '[&>div]:bg-warning' : '[&>div]:bg-success'}`} />
+                  {isBlocked && <p className="text-[10px] text-destructive font-semibold mt-1.5 uppercase tracking-wider">Novas extras bloqueadas</p>}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-20" />
+            <p className="text-sm">Nenhuma extra registrada no período atual</p>
+          </div>
+        )}
+      </motion.div>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          VACATION OVERVIEW — ALWAYS VISIBLE
+      ═══════════════════════════════════════════════════════════════════ */}
+      {vacations.length > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+          className="corporate-section">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+            Programação de Férias — {vacations.length} colaboradores
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {vacations.slice(0, 9).map(v => {
+              const today = new Date();
+              const isOnVac = v.start_date && v.end_date && today >= new Date(v.start_date) && today <= new Date(v.end_date);
+              const isPending = v.scheduled_month && !v.start_date;
+              return (
+                <div key={v.id} className={`rounded-lg p-3 border transition-colors ${isOnVac ? 'border-teal-500/40 bg-teal-500/5' : 'border-border bg-card'}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-sm truncate">{v.employee_name}</span>
+                    {isOnVac ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/10 text-teal-600 whitespace-nowrap">EM FÉRIAS</span>
+                    ) : isPending ? (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning whitespace-nowrap">PROGRAMADA</span>
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{v.cargo} · {v.letra}-{v.turno}</p>
+                  <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
+                    <span>Início: {formatDate(v.start_date)}</span>
+                    <span>Fim: {formatDate(v.end_date)}</span>
+                  </div>
+                  {v.scheduled_month && <p className="text-xs text-muted-foreground mt-1">Mês prog.: {v.scheduled_month}</p>}
+                </div>
+              );
+            })}
+          </div>
+          {vacations.length > 9 && (
+            <p className="text-xs text-muted-foreground mt-3 text-center">
+              + {vacations.length - 9} colaboradores. Clique abaixo para ver todos.
+            </p>
+          )}
+        </motion.div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════
+          COLLAPSIBLE TABLES
+      ═══════════════════════════════════════════════════════════════════ */}
+      {/* Ponto Table */}
+      <div className="corporate-section">
+        <button onClick={() => setShowPontoTable(!showPontoTable)}
+          className="w-full flex items-center justify-between text-left">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Registros de Ponto Detalhados ({attendance.length})
+          </h3>
+          {showPontoTable ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        {showPontoTable && (
+          <div className="mt-4 overflow-x-auto">
+            {attendance.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground text-sm">Nenhum registro de ponto no período</p>
             ) : (
-              <div className="space-y-3">
-                {extrasPerEmployee.map(emp => {
-                  const pct = (emp.count / emp.limit) * 100;
-                  const isBlocked = emp.count >= emp.limit;
-                  return (
-                    <div key={emp.name} className={`rounded-lg p-4 border ${isBlocked ? 'border-destructive/30 bg-destructive/5' : 'border-border'}`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-sm">{emp.name}</span>
-                        <span className={`text-xs font-bold ${isBlocked ? 'text-destructive' : 'text-foreground'}`}>
-                          {emp.count}/{emp.limit}
-                          {isBlocked && <span className="ml-2 text-destructive">⛔ BLOQUEADO</span>}
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Obs.</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attendance.map((a, i) => (
+                    <tr key={a.id} className={`border-b border-border/50 hover:bg-muted/20 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                      <td className="px-4 py-2.5 font-medium text-sm">{a.employee_name}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground text-xs">{a.letra}-{a.turno}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground text-xs">{a.cargo}</td>
+                      <td className="px-4 py-2.5 text-xs">{formatDate(a.date)}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${statusBadge(a.status)}`}>
+                          {statusLabels[a.status] || a.status}
                         </span>
-                      </div>
-                      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${isBlocked ? 'bg-destructive' : pct >= 66 ? 'bg-warning' : 'bg-success'}`}
-                          style={{ width: `${Math.min(pct, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{a.observation || '—'}</td>
+                      <td className="px-4 py-2.5 text-right">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteAttendance(a.id)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
-        </TabsContent>
+        )}
+      </div>
 
-        {/* ─── Tab: Gráficos ────────────────────────────────────── */}
-        <TabsContent value="graficos" className="space-y-6 mt-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Daily Bar Chart */}
-            <div className="corporate-section">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Movimentação Diária</h3>
-              {dailyChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={dailyChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="Presentes" stackId="a" fill="hsl(var(--success))" radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="Faltas" stackId="a" fill="hsl(var(--destructive))" />
-                    <Bar dataKey="Extras" stackId="a" fill="hsl(260, 60%, 55%)" />
-                    <Bar dataKey="Atestados" stackId="a" fill="hsl(200, 70%, 50%)" />
-                    <Bar dataKey="Férias" stackId="a" fill="hsl(160, 60%, 45%)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-center py-12 text-muted-foreground text-sm">Sem dados no período</p>
-              )}
-            </div>
-
-            {/* Pie Chart */}
-            <div className="corporate-section">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">Distribuição por Status</h3>
-              {statusDistribution.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie data={statusDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                      {statusDistribution.map((entry, i) => (
-                        <Cell key={i} fill={entry.fill || PIE_COLORS[i % PIE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-center py-12 text-muted-foreground text-sm">Sem dados no período</p>
-              )}
-            </div>
-          </div>
-
-          {/* Extras Gauge */}
-          <div className="corporate-section">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-              Extras por Colaborador (Limite 3)
-            </h3>
-            {extrasPerEmployee.length > 0 ? (
-              <ResponsiveContainer width="100%" height={Math.max(200, extrasPerEmployee.length * 40)}>
-                <BarChart data={extrasPerEmployee} layout="vertical" margin={{ left: 140 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" domain={[0, 4]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} width={130} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="count" name="Extras" fill="hsl(260, 60%, 55%)" radius={[0, 4, 4, 0]}>
-                    {extrasPerEmployee.map((entry, i) => (
-                      <Cell key={i} fill={entry.count >= 3 ? 'hsl(var(--destructive))' : entry.count >= 2 ? 'hsl(35, 90%, 50%)' : 'hsl(260, 60%, 55%)'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+      {/* Férias Table */}
+      <div className="corporate-section">
+        <button onClick={() => setShowFeriasTable(!showFeriasTable)}
+          className="w-full flex items-center justify-between text-left">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Registros de Férias Detalhados ({vacations.length})
+          </h3>
+          {showFeriasTable ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        {showFeriasTable && (
+          <div className="mt-4 overflow-x-auto">
+            {vacations.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground text-sm">Nenhum registro de férias</p>
             ) : (
-              <p className="text-center py-8 text-muted-foreground text-sm">Nenhuma extra registrada</p>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Dias</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Início</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Fim</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vacations.map((v, i) => {
+                    const today = new Date();
+                    const isOnVac = v.start_date && v.end_date && today >= new Date(v.start_date) && today <= new Date(v.end_date);
+                    const isPending = v.scheduled_month && !v.start_date;
+                    return (
+                      <tr key={v.id} className={`border-b border-border/50 hover:bg-muted/20 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                        <td className="px-4 py-2.5 font-medium text-sm">{v.employee_name}</td>
+                        <td className="px-4 py-2.5 text-muted-foreground text-xs">{v.cargo}</td>
+                        <td className="px-4 py-2.5 text-muted-foreground text-xs">{v.letra}-{v.turno}</td>
+                        <td className="px-4 py-2.5 text-xs">{v.days_count}</td>
+                        <td className="px-4 py-2.5 text-xs">{formatDate(v.start_date)}</td>
+                        <td className="px-4 py-2.5 text-xs">{formatDate(v.end_date)}</td>
+                        <td className="px-4 py-2.5">
+                          {isOnVac ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-teal-500/10 text-teal-600">Em Férias</span>
+                          ) : isPending ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-warning/10 text-warning">Programada</span>
+                          ) : (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteVacation(v.id)}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             )}
           </div>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
     </div>
   );
 }
