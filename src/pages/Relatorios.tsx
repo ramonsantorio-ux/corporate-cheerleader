@@ -34,18 +34,25 @@ export default function Relatorios() {
     });
   }, []);
 
-  const total = feedbacks.length;
-  const resolvidos = feedbacks.filter(f => f.status === 'resolvido').length;
+  const filteredFeedbacks = useMemo(() => {
+    return feedbacks.filter(f => {
+      const d = new Date(f.criado_em).toISOString().split('T')[0];
+      return d >= period.start && d <= period.end;
+    });
+  }, [feedbacks, period]);
+
+  const total = filteredFeedbacks.length;
+  const resolvidos = filteredFeedbacks.filter(f => f.status === 'resolvido').length;
   const taxaResolucao = total > 0 ? Math.round((resolvidos / total) * 100) : 0;
 
   const deptCounts: Record<string, number> = {};
-  feedbacks.forEach(f => { deptCounts[f.setor] = (deptCounts[f.setor] || 0) + 1; });
+  filteredFeedbacks.forEach(f => { deptCounts[f.setor] = (deptCounts[f.setor] || 0) + 1; });
   const departamentos = Object.entries(deptCounts).map(([key, count]) => ({
     dept: setorLabels[key as FeedbackSetor] || key, count, pct: total > 0 ? Math.round((count / total) * 100) : 0,
   })).sort((a, b) => b.count - a.count);
 
   const monthCounts: Record<string, number> = {};
-  feedbacks.forEach(f => { const d = new Date(f.criado_em); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; monthCounts[key] = (monthCounts[key] || 0) + 1; });
+  filteredFeedbacks.forEach(f => { const d = new Date(f.criado_em); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; monthCounts[key] = (monthCounts[key] || 0) + 1; });
   const monthlyData = Object.entries(monthCounts).sort().slice(-6).map(([key, count]) => {
     const [, m] = key.split('-');
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
