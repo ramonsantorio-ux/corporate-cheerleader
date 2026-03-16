@@ -105,19 +105,21 @@ export default function FuncionarioProfile() {
 
   // Fetch attendance + vacation + warnings data for this employee
   useEffect(() => {
-    if (!id) return;
+    if (!id || !func) return;
     Promise.all([
       supabase.from('daily_attendance').select('id, date, status, observation').eq('employee_id', id).order('date', { ascending: false }).limit(100),
       supabase.from('vacation_control').select('*').eq('employee_id', id).maybeSingle(),
       supabase.from('daily_attendance').select('*', { count: 'exact', head: true }).eq('employee_id', id).eq('status', 'extra'),
       supabase.from('employee_warnings').select('*').eq('employee_id', id).order('date', { ascending: false }),
-    ]).then(([attRes, vacRes, extrasRes, warnRes]) => {
+      supabase.from('events').select('*').ilike('involved_name', func.nome).order('event_date', { ascending: false }),
+    ]).then(([attRes, vacRes, extrasRes, warnRes, eventsRes]) => {
       if (attRes.data) setAttendanceRecords(attRes.data as AttendanceRecord[]);
       if (vacRes.data) setVacationInfo(vacRes.data as unknown as VacationInfo);
       setExtrasCount(extrasRes.count || 0);
       if (warnRes.data) setEmployeeWarnings(warnRes.data as unknown as WarningRecord[]);
+      if (eventsRes.data) setEmployeeEvents(eventsRes.data as unknown as EventRecord[]);
     });
-  }, [id]);
+  }, [id, func]);
 
   async function fetchGoals() {
     if (!func) return;
