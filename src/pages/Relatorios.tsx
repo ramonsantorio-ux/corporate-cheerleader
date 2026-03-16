@@ -102,9 +102,10 @@ export default function Relatorios() {
 
     const empFeedbacks = feedbacks.filter(f => f.autor?.toLowerCase() === emp.nome.toLowerCase());
 
-    const [fitRes, goalsRes] = await Promise.all([
+    const [fitRes, goalsRes, eventsRes] = await Promise.all([
       supabase.from('fit_cultural').select('criteria, stage, score').eq('employee_id', emp.id),
       supabase.from('goals').select('*').eq('cargo', emp.cargo),
+      supabase.from('events').select('*').ilike('involved_name', emp.nome).order('event_date', { ascending: false }),
     ]);
 
     const { default: jsPDF } = await import('jspdf');
