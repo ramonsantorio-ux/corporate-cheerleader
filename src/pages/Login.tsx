@@ -15,6 +15,23 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isFirstSetup, setIsFirstSetup] = useState(false);
 
+  async function handleForgotPassword() {
+    if (!email) {
+      toast.error('Digite seu e-mail para recuperar a senha');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
+    }
+    setLoading(false);
+  }
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !password) {
@@ -132,6 +149,18 @@ export default function Login() {
               )}
             </Button>
           </form>
+
+          {!isFirstSetup && (
+            <div className="text-center">
+              <button
+                onClick={handleForgotPassword}
+                className="text-xs text-primary hover:underline"
+                disabled={loading}
+              >
+                Esqueci minha senha
+              </button>
+            </div>
+          )}
 
           <div className="text-center">
             <button
