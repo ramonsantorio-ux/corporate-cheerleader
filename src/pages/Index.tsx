@@ -128,9 +128,8 @@ export default function Index() {
   const meetingsCompleted = meetings.filter(m => m.status === 'completed').length;
   const meetingsScheduled = meetings.length;
 
-  // Climate
-  const avgClimate = climateScores.length > 0
-    ? Math.round((climateScores.reduce((a, c) => a + c.score, 0) / climateScores.length) * 10) / 10 : 0;
+  // Events
+  const totalEvents = events.length;
 
   // ─── Chart data ───────────────────────────────────────────────────────
 
