@@ -801,6 +801,9 @@ export default function PontoFerias() {
         </div>
       </motion.div>
 
+      {/* ═══ PERIOD FILTER ═══ */}
+      <PeriodFilter value={period} onChange={setPeriod} />
+
       {/* ═══ ALERTS BANNER ═══ */}
       {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-3">
