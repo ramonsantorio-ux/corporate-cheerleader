@@ -212,6 +212,26 @@ export default function FuncionarioProfile() {
   const pieData = goals.map(g => ({ name: g.descricao, value: g.peso }));
   const barData = goals.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
 
+  // Attendance computed data
+  const attendanceStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    attendanceRecords.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
+    return counts;
+  }, [attendanceRecords]);
+
+  const isOnVacation = useMemo(() => {
+    if (!vacationInfo?.start_date || !vacationInfo?.end_date) return false;
+    const today = new Date();
+    return today >= new Date(vacationInfo.start_date) && today <= new Date(vacationInfo.end_date);
+  }, [vacationInfo]);
+
+  const vacationSoon = useMemo(() => {
+    if (!vacationInfo?.start_date) return false;
+    const today = new Date();
+    const start = new Date(vacationInfo.start_date);
+    return start > today && (start.getTime() - today.getTime()) <= 7 * 86400000;
+  }, [vacationInfo]);
+
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
   if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
 
