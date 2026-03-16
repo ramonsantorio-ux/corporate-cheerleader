@@ -106,7 +106,7 @@ export default function PontoFerias() {
     employee_id: '', date: new Date().toISOString().split('T')[0], reason: '', applied: 'true', observation: ''
   });
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [period]);
 
   // ─── Leader alert popups ──────────────────────────────────────────────
   useEffect(() => {
