@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Shield, Users, Eye, Edit, Trash2 } from 'lucide-react';
+import { Plus, Shield, Users, Eye, Edit, Lock, Ban, KeyRound, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 const PAGES = [
@@ -30,6 +31,7 @@ interface UserWithRole {
   email: string;
   full_name: string;
   role: string;
+  banned: boolean;
   permissions: { page: string; can_view: boolean; can_edit: boolean }[];
 }
 
@@ -42,6 +44,22 @@ export default function Admin() {
   const [creating, setCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [editPerms, setEditPerms] = useState<{ page: string; can_view: boolean; can_edit: boolean }[]>([]);
+
+  // Edit user dialog
+  const [editUserDialog, setEditUserDialog] = useState<UserWithRole | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  // Change password dialog
+  const [passwordUser, setPasswordUser] = useState<UserWithRole | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
+
+  // Block confirmation
+  const [blockUser, setBlockUser] = useState<UserWithRole | null>(null);
+  const [blockAction, setBlockAction] = useState<'ban' | 'unban'>('ban');
+  const [savingBlock, setSavingBlock] = useState(false);
 
   useEffect(() => {
     if (isAdmin) fetchUsers();
@@ -60,6 +78,7 @@ export default function Admin() {
         email: p.email,
         full_name: p.full_name,
         role: (roles as any)?.[0]?.role || 'user',
+        banned: false,
         permissions: (perms as any[]) || [],
       });
     }
@@ -77,20 +96,15 @@ export default function Admin() {
       return;
     }
     setCreating(true);
-
-    // Use edge function to create user (admin only)
-    const { data: sessionData } = await supabase.auth.getSession();
     const res = await supabase.functions.invoke('create-user', {
       body: { email: newUser.email, password: newUser.password, full_name: newUser.full_name },
     });
-
     if (res.error) {
       toast.error(res.error.message || 'Erro ao criar usuário');
     } else {
       toast.success('Usuário criado com sucesso!');
       setNewUser({ email: '', password: '', full_name: '' });
       setDialogOpen(false);
-      // Set default permissions
       const userId = res.data?.user_id;
       if (userId) {
         const defaultPerms = PAGES.map(p => ({
@@ -118,7 +132,6 @@ export default function Admin() {
 
   async function savePermissions() {
     if (!editingUser) return;
-    // Delete old perms then insert new ones
     await supabase.from('user_permissions').delete().eq('user_id', editingUser.id);
     await supabase.from('user_permissions').insert(
       editPerms.map(p => ({ user_id: editingUser.id, ...p }))
@@ -126,6 +139,75 @@ export default function Admin() {
     toast.success('Permissões atualizadas!');
     setEditingUser(null);
     fetchUsers();
+  }
+
+  function openEditUser(user: UserWithRole) {
+    setEditUserDialog(user);
+    setEditName(user.full_name);
+    setEditEmail(user.email);
+  }
+
+  async function saveEditUser() {
+    if (!editUserDialog) return;
+    setSavingEdit(true);
+    const res = await supabase.functions.invoke('manage-user', {
+      body: { action: 'update', user_id: editUserDialog.id, email: editEmail, full_name: editName },
+    });
+    if (res.error) {
+      toast.error(res.error.message || 'Erro ao atualizar');
+    } else {
+      toast.success('Usuário atualizado com sucesso!');
+      setEditUserDialog(null);
+      fetchUsers();
+    }
+    setSavingEdit(false);
+  }
+
+  function openBlockUser(user: UserWithRole) {
+    setBlockUser(user);
+    setBlockAction(user.banned ? 'unban' : 'ban');
+  }
+
+  async function confirmBlock() {
+    if (!blockUser) return;
+    setSavingBlock(true);
+    const res = await supabase.functions.invoke('manage-user', {
+      body: { action: blockAction, user_id: blockUser.id },
+    });
+    if (res.error) {
+      toast.error(res.error.message || 'Erro');
+    } else {
+      toast.success(blockAction === 'ban' ? 'Usuário bloqueado!' : 'Usuário desbloqueado!');
+      // Update local state
+      setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
+      setBlockUser(null);
+    }
+    setSavingBlock(false);
+  }
+
+  function openChangePassword(user: UserWithRole) {
+    setPasswordUser(user);
+    setNewPassword('');
+  }
+
+  async function savePassword() {
+    if (!passwordUser) return;
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Senha deve ter no mínimo 6 caracteres');
+      return;
+    }
+    setSavingPassword(true);
+    const res = await supabase.functions.invoke('manage-user', {
+      body: { action: 'change_password', user_id: passwordUser.id, password: newPassword },
+    });
+    if (res.error) {
+      toast.error(res.error.message || 'Erro ao alterar senha');
+    } else {
+      toast.success('Senha alterada com sucesso!');
+      setPasswordUser(null);
+      setNewPassword('');
+    }
+    setSavingPassword(false);
   }
 
   if (!isAdmin) {
@@ -194,14 +276,38 @@ export default function Admin() {
                 <p className="font-semibold text-sm">{u.full_name || 'Sem nome'}</p>
                 <p className="text-xs text-muted-foreground">{u.email}</p>
               </div>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                u.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-              }`}>
-                {u.role === 'admin' ? 'Administrador' : 'Usuário'}
-              </span>
-              <Button variant="outline" size="sm" onClick={() => openPermissions(u)}>
-                <Shield className="w-3.5 h-3.5 mr-1.5" /> Permissões
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                  u.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                }`}>
+                  {u.role === 'admin' ? 'Admin' : 'Usuário'}
+                </span>
+                {u.banned && (
+                  <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-destructive/10 text-destructive">
+                    Bloqueado
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Button variant="outline" size="sm" onClick={() => openEditUser(u)} title="Editar">
+                  <Edit className="w-3.5 h-3.5 mr-1" /> Editar
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => openChangePassword(u)} title="Alterar Senha">
+                  <KeyRound className="w-3.5 h-3.5 mr-1" /> Senha
+                </Button>
+                <Button
+                  variant={u.banned ? "outline" : "destructive"}
+                  size="sm"
+                  onClick={() => openBlockUser(u)}
+                  title={u.banned ? 'Desbloquear' : 'Bloquear'}
+                >
+                  {u.banned ? <Check className="w-3.5 h-3.5 mr-1" /> : <Ban className="w-3.5 h-3.5 mr-1" />}
+                  {u.banned ? 'Desbloquear' : 'Bloquear'}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => openPermissions(u)}>
+                  <Shield className="w-3.5 h-3.5 mr-1" /> Permissões
+                </Button>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -254,6 +360,73 @@ export default function Admin() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit user dialog */}
+      <Dialog open={!!editUserDialog} onOpenChange={(open) => !open && setEditUserDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>Nome completo</Label>
+              <Input value={editName} onChange={e => setEditName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} />
+            </div>
+            <Button onClick={saveEditUser} className="w-full" disabled={savingEdit}>
+              {savingEdit ? 'Salvando...' : 'Salvar Alterações'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change password dialog */}
+      <Dialog open={!!passwordUser} onOpenChange={(open) => !open && setPasswordUser(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Alterar Senha — {passwordUser?.full_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>Nova senha</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+            <Button onClick={savePassword} className="w-full" disabled={savingPassword}>
+              {savingPassword ? 'Salvando...' : 'Alterar Senha'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Block/Unblock confirmation */}
+      <AlertDialog open={!!blockUser} onOpenChange={(open) => !open && setBlockUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {blockAction === 'ban' ? 'Bloquear Usuário' : 'Desbloquear Usuário'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {blockAction === 'ban'
+                ? `Tem certeza que deseja bloquear "${blockUser?.full_name}"? O usuário não conseguirá fazer login.`
+                : `Tem certeza que deseja desbloquear "${blockUser?.full_name}"?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={savingBlock}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmBlock} disabled={savingBlock}>
+              {savingBlock ? 'Aguarde...' : blockAction === 'ban' ? 'Bloquear' : 'Desbloquear'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
