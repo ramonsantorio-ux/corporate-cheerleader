@@ -26,10 +26,24 @@ interface FeedbackItem { id: string; titulo: string; status: string; prioridade:
 interface MeetingItem { id: string; meeting_date: string; manager_name: string; notes: string; status: string; }
 interface Goal { id: string; cargo: string; descricao: string; peso: number; resultado: number | null; muito_abaixo: string; abaixo: string; dentro: string; acima: string; muito_acima: string; }
 interface EmployeeDocument { id: string; file_url: string; file_name: string; document_type: string; created_at: string; }
+interface AttendanceRecord { id: string; date: string; status: string; observation: string; }
+interface VacationInfo { id: string; start_date: string | null; end_date: string | null; days_count: number; scheduled_month: string; remaining_days: number | null; observation: string; }
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
 const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'ADM' };
+const attendanceStatusLabels: Record<string, string> = {
+  presente: 'Presente', falta: 'Falta', falta_justificada: 'Falta Justificada',
+  atestado: 'Atestado', extra: 'Extra', ferias: 'Férias', afastamento: 'Afastamento',
+  abono: 'Abono', banco_horas: 'Banco de Horas',
+};
+const attendanceStatusColors: Record<string, string> = {
+  presente: 'bg-success/10 text-success', falta: 'bg-destructive/10 text-destructive',
+  falta_justificada: 'bg-warning/10 text-warning', atestado: 'bg-blue-500/10 text-blue-600',
+  extra: 'bg-purple-500/10 text-purple-600', ferias: 'bg-teal-500/10 text-teal-600',
+  afastamento: 'bg-red-500/10 text-red-600', abono: 'bg-yellow-500/10 text-yellow-700',
+  banco_horas: 'bg-indigo-500/10 text-indigo-600',
+};
 
 export default function FuncionarioProfile() {
   const { id } = useParams();
