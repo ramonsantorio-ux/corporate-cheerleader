@@ -316,8 +316,9 @@ export default function FuncionarioProfile() {
       )}
 
       <Tabs defaultValue="desempenho" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
+          <TabsTrigger value="ponto-ferias">Ponto / Férias</TabsTrigger>
           <TabsTrigger value="metas">Metas</TabsTrigger>
           <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
           <TabsTrigger value="fit-cultural">Fit Cultural</TabsTrigger>
