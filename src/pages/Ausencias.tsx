@@ -93,7 +93,7 @@ export default function PontoFerias() {
   const [alertsShown, setAlertsShown] = useState(false);
   const pontoFileRef = useRef<HTMLInputElement>(null);
   const feriasFileRef = useRef<HTMLInputElement>(null);
-  const period = getCurrentPeriod();
+  const [period, setPeriod] = useState<PeriodRange>(getCurrentPeriod());
 
   const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '' });
   const [vacForm, setVacForm] = useState({
