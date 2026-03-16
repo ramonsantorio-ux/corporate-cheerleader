@@ -31,6 +31,7 @@ interface EmployeeDocument { id: string; file_url: string; file_name: string; do
 interface AttendanceRecord { id: string; date: string; status: string; observation: string; }
 interface VacationInfo { id: string; start_date: string | null; end_date: string | null; days_count: number; scheduled_month: string; remaining_days: number | null; observation: string; }
 interface WarningRecord { id: string; date: string; reason: string; applied: boolean; observation: string; created_at: string; }
+interface EventRecord { id: string; event_date: string; event_time: string; day_of_week: string; description: string; location: string; equipment: string; plate_tag: string; shift: string; supervisor: string; }
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
@@ -63,6 +64,7 @@ export default function FuncionarioProfile() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [vacationInfo, setVacationInfo] = useState<VacationInfo | null>(null);
   const [employeeWarnings, setEmployeeWarnings] = useState<WarningRecord[]>([]);
+  const [employeeEvents, setEmployeeEvents] = useState<EventRecord[]>([]);
   const [extrasCount, setExtrasCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -103,19 +105,21 @@ export default function FuncionarioProfile() {
 
   // Fetch attendance + vacation + warnings data for this employee
   useEffect(() => {
-    if (!id) return;
+    if (!id || !func) return;
     Promise.all([
       supabase.from('daily_attendance').select('id, date, status, observation').eq('employee_id', id).order('date', { ascending: false }).limit(100),
       supabase.from('vacation_control').select('*').eq('employee_id', id).maybeSingle(),
       supabase.from('daily_attendance').select('*', { count: 'exact', head: true }).eq('employee_id', id).eq('status', 'extra'),
       supabase.from('employee_warnings').select('*').eq('employee_id', id).order('date', { ascending: false }),
-    ]).then(([attRes, vacRes, extrasRes, warnRes]) => {
+      supabase.from('events').select('*').ilike('involved_name', func.nome).order('event_date', { ascending: false }),
+    ]).then(([attRes, vacRes, extrasRes, warnRes, eventsRes]) => {
       if (attRes.data) setAttendanceRecords(attRes.data as AttendanceRecord[]);
       if (vacRes.data) setVacationInfo(vacRes.data as unknown as VacationInfo);
       setExtrasCount(extrasRes.count || 0);
       if (warnRes.data) setEmployeeWarnings(warnRes.data as unknown as WarningRecord[]);
+      if (eventsRes.data) setEmployeeEvents(eventsRes.data as unknown as EventRecord[]);
     });
-  }, [id]);
+  }, [id, func]);
 
   async function fetchGoals() {
     if (!func) return;
@@ -217,8 +221,9 @@ export default function FuncionarioProfile() {
     const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
     if (faltasInj > 0) items.push(`${faltasInj} falta(s) injustificada(s)`);
     if (employeeWarnings.length > 0) items.push(`${employeeWarnings.length} advertência(s) registrada(s)`);
+    if (employeeEvents.length > 0) items.push(`${employeeEvents.length} evento(s) registrado(s)`);
     return items;
-  }, [func, meetings, attendanceRecords, employeeWarnings]);
+  }, [func, meetings, attendanceRecords, employeeWarnings, employeeEvents]);
 
   const pieData = goals.map(g => ({ name: g.descricao, value: g.peso }));
   const barData = goals.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
@@ -340,6 +345,29 @@ export default function FuncionarioProfile() {
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: [180, 40, 40], textColor: 255, fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [255, 248, 248] },
+      });
+    }
+
+    // Events history
+    if (employeeEvents.length > 0) {
+      y = (doc as any).lastAutoTable?.finalY || 180;
+      if (y > 240) { doc.addPage(); y = 20; }
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`HISTÓRICO DE EVENTOS (${employeeEvents.length})`, 14, y + 10);
+
+      autoTable(doc, {
+        startY: y + 14,
+        head: [['Data', 'Descrição', 'Local', 'Equipamento']],
+        body: employeeEvents.map(ev => [
+          new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR'),
+          ev.description.length > 60 ? ev.description.slice(0, 57) + '...' : ev.description,
+          ev.location || '—',
+          ev.equipment || '—',
+        ]),
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [200, 130, 0], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [255, 250, 240] },
       });
     }
 
@@ -486,9 +514,10 @@ export default function FuncionarioProfile() {
       )}
 
       <Tabs defaultValue="desempenho" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
           <TabsTrigger value="ponto-ferias">Ponto / Férias</TabsTrigger>
+          <TabsTrigger value="eventos">Eventos ({employeeEvents.length})</TabsTrigger>
           <TabsTrigger value="desvios">Desvios</TabsTrigger>
           <TabsTrigger value="metas">Metas</TabsTrigger>
           <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
@@ -634,6 +663,64 @@ export default function FuncionarioProfile() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        {/* ════ EVENTOS TAB ════ */}
+        <TabsContent value="eventos" className="space-y-6 mt-4">
+          <h3 className="text-lg font-bold flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-warning" />Eventos Registrados ({employeeEvents.length})</h3>
+          
+          {employeeEvents.length === 0 ? (
+            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum evento registrado para este colaborador.</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {(() => {
+                  const medical = employeeEvents.filter(e => e.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || e.location?.toUpperCase().includes('PROBLEMA PARTICULAR')).length;
+                  const operational = employeeEvents.length - medical;
+                  const years = new Set(employeeEvents.map(e => e.event_date.slice(0, 4)));
+                  return [
+                    { label: 'Total Eventos', value: employeeEvents.length, color: 'bg-warning/10 text-warning' },
+                    { label: 'Operacionais', value: operational, color: 'bg-destructive/10 text-destructive' },
+                    { label: 'Médicos/Pessoais', value: medical, color: 'bg-blue-500/10 text-blue-600' },
+                    { label: 'Anos c/ Registro', value: years.size, color: 'bg-primary/10 text-primary' },
+                  ];
+                })().map(d => (
+                  <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
+                    <p className="text-3xl font-bold">{d.value}</p>
+                    <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="glass-card rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-border bg-warning/5">
+                  <h4 className="text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-warning" />Histórico de Eventos</h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="bg-muted/30 border-b border-border">
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Descrição</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Local</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Equipamento</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
+                    </tr></thead>
+                    <tbody>
+                      {employeeEvents.map((ev, i) => (
+                        <tr key={ev.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                          <td className="px-4 py-2 text-xs whitespace-nowrap">{new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                          <td className="px-4 py-2 text-xs max-w-[300px]">{ev.description}</td>
+                          <td className="px-4 py-2 text-xs">{ev.location || '—'}</td>
+                          <td className="px-4 py-2 text-xs">{ev.equipment || '—'}</td>
+                          <td className="px-4 py-2 text-xs">{ev.shift || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </TabsContent>
 
         {/* ════ DESVIOS TAB ════ */}
