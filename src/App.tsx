@@ -20,7 +20,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import FuncionarioProfile from "./pages/FuncionarioProfile";
 import Reunioes from "./pages/Reunioes";
-import Clima from "./pages/Clima";
+import Eventos from "./pages/Eventos";
 import Ausencias from "./pages/Ausencias";
 import Colaboradores from "./pages/Colaboradores";
 
@@ -57,8 +57,8 @@ function ProtectedRoutes() {
         <Route path="/desempenho/pdi" element={<PDIPage />} />
         <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
         <Route path="/reunioes" element={<Reunioes />} />
-        <Route path="/clima" element={<Clima />} />
-        <Route path="/ausencias" element={<Ausencias />} />
+        <Route path="/eventos" element={<Eventos />} />
+        <Route path="/clima" element={<Navigate to="/eventos" replace />} />
         
         <Route path="/admin" element={<Admin />} />
       </Route>

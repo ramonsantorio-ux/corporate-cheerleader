@@ -536,6 +536,57 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          contract: string | null
+          created_at: string
+          day_of_week: string | null
+          description: string
+          equipment: string | null
+          event_date: string
+          event_time: string | null
+          id: string
+          involved_name: string
+          location: string | null
+          plate_tag: string | null
+          shift: string | null
+          supervisor: string | null
+          updated_at: string
+        }
+        Insert: {
+          contract?: string | null
+          created_at?: string
+          day_of_week?: string | null
+          description?: string
+          equipment?: string | null
+          event_date: string
+          event_time?: string | null
+          id?: string
+          involved_name?: string
+          location?: string | null
+          plate_tag?: string | null
+          shift?: string | null
+          supervisor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contract?: string | null
+          created_at?: string
+          day_of_week?: string | null
+          description?: string
+          equipment?: string | null
+          event_date?: string
+          event_time?: string | null
+          id?: string
+          involved_name?: string
+          location?: string | null
+          plate_tag?: string | null
+          shift?: string | null
+          supervisor?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feedbacks: {
         Row: {
           atualizado_em: string

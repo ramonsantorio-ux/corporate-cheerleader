@@ -1,12 +1,12 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, List, BarChart3, Users, Target, Calendar, Settings } from 'lucide-react';
+import { LayoutDashboard, List, BarChart3, Users, Target, Calendar, Settings, AlertTriangle } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
   { to: '/colaboradores', icon: Users, label: 'Colab.' },
   { to: '/feedbacks', icon: List, label: 'Feedbacks' },
   { to: '/desempenho', icon: Target, label: 'Desemp.' },
-  { to: '/reunioes', icon: Calendar, label: '1:1' },
+  { to: '/eventos', icon: AlertTriangle, label: 'Eventos' },
   { to: '/configuracoes', icon: Settings, label: 'Config.' },
 ];
 
