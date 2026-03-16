@@ -491,9 +491,10 @@ export default function FuncionarioProfile() {
       )}
 
       <Tabs defaultValue="desempenho" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
           <TabsTrigger value="ponto-ferias">Ponto / Férias</TabsTrigger>
+          <TabsTrigger value="eventos">Eventos ({employeeEvents.length})</TabsTrigger>
           <TabsTrigger value="desvios">Desvios</TabsTrigger>
           <TabsTrigger value="metas">Metas</TabsTrigger>
           <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
