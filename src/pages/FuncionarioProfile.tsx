@@ -221,8 +221,9 @@ export default function FuncionarioProfile() {
     const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
     if (faltasInj > 0) items.push(`${faltasInj} falta(s) injustificada(s)`);
     if (employeeWarnings.length > 0) items.push(`${employeeWarnings.length} advertência(s) registrada(s)`);
+    if (employeeEvents.length > 0) items.push(`${employeeEvents.length} evento(s) registrado(s)`);
     return items;
-  }, [func, meetings, attendanceRecords, employeeWarnings]);
+  }, [func, meetings, attendanceRecords, employeeWarnings, employeeEvents]);
 
   const pieData = goals.map(g => ({ name: g.descricao, value: g.peso }));
   const barData = goals.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
