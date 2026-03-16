@@ -661,7 +661,7 @@ export default function PontoFerias() {
         </div>
       </motion.div>
 
-      ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ COLLAPSIBLE TABLES ═══ */}
       {/* Ponto Table */}
       <div className="corporate-section">
         <button onClick={() => setShowPontoTable(!showPontoTable)}
