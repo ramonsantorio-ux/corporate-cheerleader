@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X } from 'lucide-react';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { useNavigate } from 'react-router-dom';
 import FeedbackCard from '@/components/feedback/FeedbackCard';
 import { Feedback, FeedbackStatus, FeedbackPriority, FeedbackSetor, statusLabels, priorityLabels, setorLabels } from '@/lib/feedbackData';
