@@ -40,6 +40,7 @@ export default function Feedbacks() {
   const [selectedDept, setSelectedDept] = useState<FeedbackSetor | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
   // New feedback form state
   const [funcionarios, setFuncionarios] = useState<string[]>([]);
