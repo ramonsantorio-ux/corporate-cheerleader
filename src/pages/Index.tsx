@@ -27,7 +27,7 @@ interface VacationRow { id: string; employee_id: string; start_date: string | nu
 interface WarningRow { id: string; employee_id: string; date: string; applied: boolean; }
 interface EvalRow { id: string; evaluated_name: string; status: string; completed_at: string | null; }
 interface MeetingRow { id: string; employee_id: string; meeting_date: string; status: string; }
-interface ClimateRes { id: string; score: number; }
+interface EventRow { id: string; event_date: string; involved_name: string; }
 
 const CHART_COLORS = [
   'hsl(200, 80%, 38%)', 'hsl(155, 60%, 38%)', 'hsl(38, 90%, 50%)',
