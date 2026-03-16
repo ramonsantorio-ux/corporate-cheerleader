@@ -27,6 +27,7 @@ export default function Reunioes() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ employee_id: '', meeting_date: '', notes: '', action_items: '' });
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
   useEffect(() => { fetchAll(); }, []);
 

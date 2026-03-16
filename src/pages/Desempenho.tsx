@@ -47,6 +47,7 @@ export default function Desempenho() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newCycle, setNewCycle] = useState({ name: '', start_date: '', end_date: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
   const { toast } = useToast();
   const navigate = useNavigate();
 

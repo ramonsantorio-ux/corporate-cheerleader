@@ -27,6 +27,7 @@ export default function Clima() {
   const [respondOpen, setRespondOpen] = useState<string | null>(null);
   const [form, setForm] = useState({ title: '', description: '' });
   const [responseForm, setResponseForm] = useState({ employee_id: '', score: '3', comment: '' });
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
   useEffect(() => { fetchAll(); }, []);
 
