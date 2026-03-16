@@ -315,6 +315,41 @@ export type Database = {
           },
         ]
       }
+      daily_attendance: {
+        Row: {
+          created_at: string
+          date: string
+          employee_id: string
+          id: string
+          observation: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          employee_id: string
+          id?: string
+          observation?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          employee_id?: string
+          id?: string
+          observation?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           created_at: string
@@ -706,6 +741,47 @@ export type Database = {
           },
         ]
       }
+      overtime_control: {
+        Row: {
+          created_at: string
+          employee_id: string
+          extras_count: number
+          id: string
+          max_extras: number
+          period_end: string
+          period_start: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          extras_count?: number
+          id?: string
+          max_extras?: number
+          period_end: string
+          period_start: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          extras_count?: number
+          id?: string
+          max_extras?: number
+          period_end?: string
+          period_start?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overtime_control_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pdi_actions: {
         Row: {
           competency_id: string | null
@@ -860,6 +936,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vacation_control: {
+        Row: {
+          created_at: string
+          days_count: number | null
+          employee_id: string
+          end_date: string | null
+          id: string
+          last_vacation_year1: string | null
+          last_vacation_year2: string | null
+          observation: string | null
+          remaining_days: number | null
+          scheduled_month: string | null
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          days_count?: number | null
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          last_vacation_year1?: string | null
+          last_vacation_year2?: string | null
+          observation?: string | null
+          remaining_days?: number | null
+          scheduled_month?: string | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          days_count?: number | null
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          last_vacation_year1?: string | null
+          last_vacation_year2?: string | null
+          observation?: string | null
+          remaining_days?: number | null
+          scheduled_month?: string | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vacation_control_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
