@@ -239,7 +239,7 @@ export default function Index() {
         <StatCard title="Hrs Negativas" value={totalHorasNeg} change={`${totalFaltasInj} inj. / ${totalAtestados} atest.`} changeType={totalHorasNeg > 0 ? 'negative' : 'positive'} icon={Clock} delay={0.06} />
         <StatCard title="Extras" value={totalExtras} change="No período" changeType="neutral" icon={Timer} delay={0.09} />
         <StatCard title="Advertências" value={totalAdvertencias} change={`${advertenciasAplicadas} aplicadas`} changeType={totalAdvertencias > 0 ? 'negative' : 'positive'} icon={ShieldAlert} delay={0.12} />
-        <StatCard title="Clima Org." value={avgClimate > 0 ? `${avgClimate}/5` : '—'} change={`${climateScores.length} respostas`} changeType={avgClimate >= 3.5 ? 'positive' : avgClimate > 0 ? 'negative' : 'neutral'} icon={Award} delay={0.15} />
+        <StatCard title="Eventos" value={totalEvents} change="No período" changeType={totalEvents > 0 ? 'negative' : 'positive'} icon={AlertTriangle} delay={0.15} />
       </div>
 
       {/* ═══ ROW 2 — Gauges + Priority ═══ */}
