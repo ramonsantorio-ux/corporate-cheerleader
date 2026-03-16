@@ -68,7 +68,7 @@ export default function Index() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [fRes, fbRes, attRes, vacRes, warnRes, evalRes, meetRes, climRes] = await Promise.all([
+      const [fRes, fbRes, attRes, vacRes, warnRes, evalRes, meetRes, evtRes] = await Promise.all([
         supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, turno, letra, data_admissao').order('nome'),
         supabase.from('feedbacks').select('id, setor, status, prioridade, criado_em, autor'),
         supabase.from('daily_attendance').select('id, employee_id, date, status').gte('date', period.start).lte('date', period.end),
@@ -76,7 +76,7 @@ export default function Index() {
         supabase.from('employee_warnings').select('id, employee_id, date, applied').gte('date', period.start).lte('date', period.end),
         supabase.from('evaluations').select('id, evaluated_name, status, completed_at'),
         supabase.from('meetings').select('id, employee_id, meeting_date, status').gte('meeting_date', period.start).lte('meeting_date', period.end),
-        supabase.from('climate_responses').select('id, score'),
+        supabase.from('events').select('id, event_date, involved_name').gte('event_date', period.start).lte('event_date', period.end),
       ]);
       setFuncionarios((fRes.data || []) as Func[]);
       setFeedbacks((fbRes.data || []) as FeedbackRow[]);
@@ -85,7 +85,7 @@ export default function Index() {
       setWarnings((warnRes.data || []) as WarningRow[]);
       setEvaluations((evalRes.data || []) as EvalRow[]);
       setMeetings((meetRes.data || []) as MeetingRow[]);
-      setClimateScores((climRes.data || []) as ClimateRes[]);
+      setEvents((evtRes.data || []) as EventRow[]);
       setLoading(false);
     }
     load();
