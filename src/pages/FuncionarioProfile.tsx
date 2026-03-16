@@ -319,6 +319,7 @@ export default function FuncionarioProfile() {
         ['Horas Extras', String(extrasCount)],
         ['Advertências Aplicadas', String(advApplied)],
         ['Advertências Pendentes', String(advPending)],
+        ['Eventos Registrados', String(employeeEvents.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
       headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: 'bold' },
