@@ -20,7 +20,7 @@ const PAGES = [
   { key: 'desempenho', label: 'Desempenho' },
   { key: 'relatorios', label: 'Relatórios' },
   { key: 'reunioes', label: 'Reuniões 1:1' },
-  { key: 'clima', label: 'Clima' },
+  { key: 'eventos', label: 'Eventos' },
   { key: 'ausencias', label: 'Ausências' },
   { key: 'cco', label: 'CCO / Informações' },
   { key: 'configuracoes', label: 'Configurações' },
