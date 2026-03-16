@@ -642,6 +642,64 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
+        {/* ════ EVENTOS TAB ════ */}
+        <TabsContent value="eventos" className="space-y-6 mt-4">
+          <h3 className="text-lg font-bold flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-warning" />Eventos Registrados ({employeeEvents.length})</h3>
+          
+          {employeeEvents.length === 0 ? (
+            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum evento registrado para este colaborador.</div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {(() => {
+                  const medical = employeeEvents.filter(e => e.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || e.location?.toUpperCase().includes('PROBLEMA PARTICULAR')).length;
+                  const operational = employeeEvents.length - medical;
+                  const years = new Set(employeeEvents.map(e => e.event_date.slice(0, 4)));
+                  return [
+                    { label: 'Total Eventos', value: employeeEvents.length, color: 'bg-warning/10 text-warning' },
+                    { label: 'Operacionais', value: operational, color: 'bg-destructive/10 text-destructive' },
+                    { label: 'Médicos/Pessoais', value: medical, color: 'bg-blue-500/10 text-blue-600' },
+                    { label: 'Anos c/ Registro', value: years.size, color: 'bg-primary/10 text-primary' },
+                  ];
+                })().map(d => (
+                  <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
+                    <p className="text-3xl font-bold">{d.value}</p>
+                    <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="glass-card rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-border bg-warning/5">
+                  <h4 className="text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-warning" />Histórico de Eventos</h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead><tr className="bg-muted/30 border-b border-border">
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Descrição</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Local</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Equipamento</th>
+                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
+                    </tr></thead>
+                    <tbody>
+                      {employeeEvents.map((ev, i) => (
+                        <tr key={ev.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                          <td className="px-4 py-2 text-xs whitespace-nowrap">{new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                          <td className="px-4 py-2 text-xs max-w-[300px]">{ev.description}</td>
+                          <td className="px-4 py-2 text-xs">{ev.location || '—'}</td>
+                          <td className="px-4 py-2 text-xs">{ev.equipment || '—'}</td>
+                          <td className="px-4 py-2 text-xs">{ev.shift || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </TabsContent>
+
         {/* ════ DESVIOS TAB ════ */}
         <TabsContent value="desvios" className="space-y-6 mt-4">
           <div className="flex items-center justify-between">
