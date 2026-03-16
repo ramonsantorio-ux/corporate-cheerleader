@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Smile, Plus, Loader2, Trash2, BarChart3, Star } from 'lucide-react';
+import { Smile, Plus, Loader2, Trash2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -81,15 +81,16 @@ export default function Clima() {
   const scoreColor = (s: number) => s >= 4 ? 'text-success' : s >= 3 ? 'text-warning' : 'text-destructive';
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Clima Organizacional</h1>
-          <p className="text-muted-foreground text-sm mt-1">Pesquisas de satisfação e engajamento</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Pesquisas Internas</p>
+          <h1 className="text-2xl font-bold text-foreground">Clima Organizacional</h1>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" />Nova Pesquisa</Button>
+            <Button size="sm"><Plus className="w-4 h-4 mr-2" />Nova Pesquisa</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Criar Pesquisa de Clima</DialogTitle></DialogHeader>
@@ -105,40 +106,44 @@ export default function Clima() {
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : surveys.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <Smile className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhuma pesquisa criada</p>
+        <div className="corporate-section">
+          <div className="p-12 text-center text-muted-foreground">
+            <Smile className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">Nenhuma pesquisa criada</p>
+          </div>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {surveys.map((s, i) => (
-            <motion.div key={s.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              className="glass-card rounded-xl p-5">
-              <div className="flex items-start justify-between mb-3">
+            <motion.div key={s.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+              className="corporate-section overflow-hidden">
+              <div className="px-5 py-4 flex items-start justify-between border-b border-border">
                 <div>
-                  <h3 className="font-semibold">{s.title}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">{s.description || 'Sem descrição'}</p>
+                  <h3 className="font-semibold text-sm text-foreground">{s.title}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{s.description || 'Sem descrição'}</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => deleteSurvey(s.id)} className="text-destructive hover:text-destructive">
+                <Button variant="ghost" size="icon" onClick={() => deleteSurvey(s.id)} className="text-destructive hover:text-destructive -mr-2 -mt-1">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="flex items-center gap-4 mb-3">
-                <div className="text-center">
-                  <p className={`text-2xl font-bold ${scoreColor(s.avg_score || 0)}`}>{s.avg_score || '-'}</p>
-                  <p className="text-xs text-muted-foreground">Nota Média</p>
+              <div className="px-5 py-4">
+                <div className="flex items-center gap-5 mb-4">
+                  <div>
+                    <p className={`text-3xl font-bold ${scoreColor(s.avg_score || 0)}`}>{s.avg_score || '—'}</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">Nota Média</p>
+                  </div>
+                  <div className="flex-1">
+                    <Progress value={(s.avg_score || 0) * 20} className="h-2" />
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold text-foreground">{s.response_count}</p>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">Respostas</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <Progress value={(s.avg_score || 0) * 20} className="h-2" />
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold">{s.response_count}</p>
-                  <p className="text-xs text-muted-foreground">Respostas</p>
-                </div>
+                <Button variant="outline" size="sm" className="w-full" onClick={() => setRespondOpen(s.id)}>
+                  <Star className="w-4 h-4 mr-2" />Registrar Resposta
+                </Button>
               </div>
-              <Button variant="outline" size="sm" className="w-full" onClick={() => setRespondOpen(s.id)}>
-                <Star className="w-4 h-4 mr-2" />Registrar Resposta
-              </Button>
             </motion.div>
           ))}
         </div>

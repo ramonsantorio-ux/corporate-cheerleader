@@ -327,11 +327,12 @@ export default function Relatorios() {
   }
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Relatórios</h1>
-          <p className="text-muted-foreground text-sm mt-1">Análise e métricas dos feedbacks</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Analytics</p>
+          <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
         </div>
         <div className="flex gap-2 flex-wrap">
           <DropdownMenu>
@@ -345,59 +346,102 @@ export default function Relatorios() {
       </motion.div>
 
       {/* Employee PDF export */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-4 flex flex-col sm:flex-row items-center gap-3">
-        <User className="w-5 h-5 text-primary flex-shrink-0" />
-        <span className="text-sm font-medium">Ficha completa por funcionário:</span>
-        <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-          <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder="Selecione o funcionário" /></SelectTrigger>
-          <SelectContent>{funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} - {f.cargo}</SelectItem>)}</SelectContent>
-        </Select>
-        <Button size="sm" onClick={exportEmployeePDF} disabled={!selectedEmployee}><Download className="w-4 h-4 mr-2" />Baixar PDF</Button>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-section">
+        <div className="px-6 py-4 flex flex-col sm:flex-row items-center gap-3">
+          <User className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          <span className="text-sm font-medium text-foreground">Ficha completa por funcionário:</span>
+          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+            <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder="Selecione o funcionário" /></SelectTrigger>
+            <SelectContent>{funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} — {f.cargo}</SelectItem>)}</SelectContent>
+          </Select>
+          <Button size="sm" onClick={exportEmployeePDF} disabled={!selectedEmployee}><Download className="w-4 h-4 mr-2" />Baixar PDF</Button>
+        </div>
       </motion.div>
 
+      {/* KPI Summary */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {metrics.map((m, i) => (
+          <motion.div key={m.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+            className={`corporate-kpi ${i === 0 ? '' : i === 1 ? 'corporate-kpi-accent' : i === 2 ? 'corporate-kpi-accent' : 'corporate-kpi-warning'}`}>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{m.label}</p>
+            <p className="text-3xl font-bold text-foreground mt-1">{m.value}</p>
+          </motion.div>
+        ))}
+      </div>
+
       <div className="grid lg:grid-cols-2 gap-6">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6"><BarChart3 className="w-5 h-5 text-primary" /><h2 className="font-semibold">Feedbacks por Mês</h2></div>
-          {monthlyData.length === 0 ? <p className="text-sm text-muted-foreground">Sem dados ainda.</p> : (
-            <div className="flex items-end gap-3 h-48">{monthlyData.map((d, i) => (
-              <div key={d.mes} className="flex-1 flex flex-col items-center gap-2">
-                <span className="text-xs font-medium">{d.total}</span>
-                <motion.div initial={{ height: 0 }} animate={{ height: `${(d.total / maxVal) * 100}%` }} transition={{ duration: 0.5, delay: i * 0.1 }} className="w-full bg-primary rounded-t-md min-h-[4px]" />
-                <span className="text-xs text-muted-foreground">{d.mes}</span>
+        {/* Monthly Chart */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-section">
+          <div className="corporate-section-header">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Feedbacks por Mês</h2>
+            </div>
+            <span className="text-xs text-muted-foreground">Últimos 6 meses</span>
+          </div>
+          <div className="corporate-section-body">
+            {monthlyData.length === 0 ? <p className="text-sm text-muted-foreground">Sem dados.</p> : (
+              <div className="flex items-end gap-4 h-48">
+                {monthlyData.map((d, i) => (
+                  <div key={d.mes} className="flex-1 flex flex-col items-center gap-2">
+                    <span className="text-xs font-semibold text-foreground">{d.total}</span>
+                    <motion.div initial={{ height: 0 }} animate={{ height: `${(d.total / maxVal) * 100}%` }}
+                      transition={{ duration: 0.5, delay: i * 0.08 }}
+                      className="w-full bg-primary rounded-sm min-h-[4px]" />
+                    <span className="text-xs text-muted-foreground font-medium">{d.mes}</span>
+                  </div>
+                ))}
               </div>
-            ))}</div>
-          )}
+            )}
+          </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6"><TrendingUp className="w-5 h-5 text-primary" /><h2 className="font-semibold">Métricas Chave</h2></div>
-          <div className="space-y-4">{metrics.map(metric => (
-            <div key={metric.label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-              <span className="text-sm">{metric.label}</span><span className="font-semibold text-sm">{metric.value}</span>
+        {/* Gestor Distribution */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="corporate-section">
+          <div className="corporate-section-header">
+            <div className="flex items-center gap-2">
+              <PieChart className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Por Gestor</h2>
             </div>
-          ))}</div>
+            <span className="text-xs text-muted-foreground">{gestorData.length} gestores</span>
+          </div>
+          <div className="corporate-section-body space-y-3">
+            {gestorData.map((g, i) => (
+              <div key={g.nome} className="flex items-center gap-4">
+                <span className="text-sm text-foreground w-40 shrink-0 truncate font-medium">{g.nome}</span>
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${total > 0 ? (g.count / total) * 100 : 0}%` }}
+                    transition={{ duration: 0.6, delay: i * 0.05 }} className="h-full bg-primary rounded-full" />
+                </div>
+                <span className="text-xs font-semibold text-foreground w-8 text-right">{g.count}</span>
+              </div>
+            ))}
+          </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6"><PieChart className="w-5 h-5 text-primary" /><h2 className="font-semibold">Por Gestor</h2></div>
-          <div className="space-y-3">{gestorData.map(g => (
-            <div key={g.nome} className="flex items-center gap-4">
-              <span className="text-sm w-40 shrink-0 truncate">{g.nome}</span>
-              <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${total > 0 ? (g.count / total) * 100 : 0}%` }} transition={{ duration: 0.6 }} className="h-full bg-primary rounded-full" /></div>
-              <span className="text-sm font-medium w-8 text-right">{g.count}</span>
+        {/* Department Distribution */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="corporate-section lg:col-span-2">
+          <div className="corporate-section-header">
+            <div className="flex items-center gap-2">
+              <PieChart className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Distribuição por Departamento</h2>
             </div>
-          ))}</div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6"><PieChart className="w-5 h-5 text-primary" /><h2 className="font-semibold">Top Departamentos</h2></div>
-          <div className="space-y-3">{departamentos.map(d => (
-            <div key={d.dept} className="flex items-center gap-4">
-              <span className="text-sm w-40 shrink-0">{d.dept}</span>
-              <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden"><motion.div initial={{ width: 0 }} animate={{ width: `${d.pct}%` }} transition={{ duration: 0.6 }} className="h-full bg-primary rounded-full" /></div>
-              <span className="text-sm font-medium w-8 text-right">{d.count}</span>
+          </div>
+          <div className="corporate-section-body">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {departamentos.map((d, i) => (
+                <motion.div key={d.dept} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.25 + i * 0.03 }}
+                  className="text-center p-4 rounded-lg border border-border bg-muted/20">
+                  <p className="text-2xl font-bold text-foreground">{d.count}</p>
+                  <p className="text-xs text-muted-foreground mt-1 font-medium">{d.dept}</p>
+                  <div className="w-full h-1.5 bg-muted rounded-full mt-3 overflow-hidden">
+                    <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${d.pct}%` }} />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{d.pct}%</p>
+                </motion.div>
+              ))}
             </div>
-          ))}</div>
+          </div>
         </motion.div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Target, Users, ClipboardList, Plus, Calendar, ChevronRight, TrendingUp, ChevronDown } from 'lucide-react';
+import { Target, Users, ClipboardList, Plus, Calendar, ChevronRight, TrendingUp, ChevronDown, ArrowUpRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, Cell } from 'recharts';
 
 interface EvaluationCycle {
   id: string; name: string; start_date: string; end_date: string; status: string; created_at: string;
@@ -21,6 +21,22 @@ interface Funcionario {
 interface Evaluation {
   id: string; cycle_id: string; evaluated_name: string; status: string; completed_at: string | null;
 }
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload) return null;
+  return (
+    <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-xs">
+      <p className="font-semibold text-foreground mb-1">{label}</p>
+      {payload.map((entry: any) => (
+        <div key={entry.name} className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="text-muted-foreground">{entry.name}:</span>
+          <span className="font-semibold text-foreground">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function Desempenho() {
   const [cycles, setCycles] = useState<EvaluationCycle[]>([]);
@@ -58,14 +74,11 @@ export default function Desempenho() {
     }
   }
 
-  // Group employees by cargo for chart
   const cargoStats = useMemo(() => {
     const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: string[] }> = {};
     funcionarios.forEach(f => {
       if (!cargos[f.cargo]) cargos[f.cargo] = { cargo: f.cargo, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [] };
       cargos[f.cargo].total++;
-
-      // Check if this employee has evaluations
       const empEvals = evaluations.filter(e => e.evaluated_name.toLowerCase() === f.nome.toLowerCase());
       if (empEvals.length === 0) {
         cargos[f.cargo].pendentes++;
@@ -74,7 +87,6 @@ export default function Desempenho() {
         const completed = empEvals.filter(e => e.status === 'completed');
         if (completed.length > 0) {
           cargos[f.cargo].realizados++;
-          // Check if completed within cycle deadline
           const latestCompleted = completed[completed.length - 1];
           const cycle = cycles.find(c => c.id === latestCompleted.cycle_id);
           if (cycle && latestCompleted.completed_at && new Date(latestCompleted.completed_at) <= new Date(cycle.end_date)) {
@@ -90,24 +102,29 @@ export default function Desempenho() {
   }, [funcionarios, evaluations, cycles]);
 
   const chartData = cargoStats.map(c => ({
-    cargo: c.cargo.length > 15 ? c.cargo.slice(0, 13) + '…' : c.cargo,
+    cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + '…' : c.cargo,
     Realizados: c.realizados,
     'No Prazo': c.noPrazo,
     Pendentes: c.pendentes,
   }));
 
-  const statusColor: Record<string, string> = { active: 'bg-green-100 text-green-700', draft: 'bg-yellow-100 text-yellow-700', closed: 'bg-muted text-muted-foreground' };
+  const totalRealizados = cargoStats.reduce((a, c) => a + c.realizados, 0);
+  const totalPendentes = cargoStats.reduce((a, c) => a + c.pendentes, 0);
+  const totalNoPrazo = cargoStats.reduce((a, c) => a + c.noPrazo, 0);
+
+  const statusColor: Record<string, string> = { active: 'bg-success/10 text-success', draft: 'bg-warning/10 text-warning', closed: 'bg-muted text-muted-foreground' };
   const statusLabel: Record<string, string> = { active: 'Ativo', draft: 'Rascunho', closed: 'Encerrado' };
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+    <div className="space-y-8">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Gestão de Desempenho</h1>
-          <p className="text-muted-foreground text-sm mt-1">Avaliações trimestrais, semestrais e anuais</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Gestão de Pessoas</p>
+          <h1 className="text-2xl font-bold text-foreground">Desempenho</h1>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" /> Novo Ciclo</Button></DialogTrigger>
+          <DialogTrigger asChild><Button size="sm"><Plus className="w-4 h-4 mr-2" />Novo Ciclo</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Criar Ciclo de Avaliação</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
@@ -116,81 +133,139 @@ export default function Desempenho() {
                 <div><Label>Início</Label><Input type="date" value={newCycle.start_date} onChange={e => setNewCycle({ ...newCycle, start_date: e.target.value })} /></div>
                 <div><Label>Fim</Label><Input type="date" value={newCycle.end_date} onChange={e => setNewCycle({ ...newCycle, end_date: e.target.value })} /></div>
               </div>
-              <p className="text-xs text-muted-foreground">Tipos de avaliação: Trimestral (2x ao semestre) e Anual</p>
+              <p className="text-xs text-muted-foreground">Tipos: Trimestral (2x ao semestre) e Anual</p>
               <Button onClick={createCycle} className="w-full">Criar Ciclo</Button>
             </div>
           </DialogContent>
         </Dialog>
       </motion.div>
 
-      {/* Quick access cards */}
+      {/* Summary KPIs */}
+      <div className="grid grid-cols-3 gap-4">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-kpi corporate-kpi-accent">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Realizados</p>
+          <p className="text-3xl font-bold text-foreground mt-1">{totalRealizados}</p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="corporate-kpi">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">No Prazo</p>
+          <p className="text-3xl font-bold text-foreground mt-1">{totalNoPrazo}</p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-kpi corporate-kpi-danger">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pendentes</p>
+          <p className="text-3xl font-bold text-foreground mt-1">{totalPendentes}</p>
+        </motion.div>
+      </div>
+
+      {/* Quick Access */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { icon: TrendingUp, label: 'Gestão de Metas', desc: 'Metas individuais e por departamento', to: '/desempenho/avaliacoes' },
-          { icon: Target, label: 'Fit Cultural', desc: 'Gerenciar competências e fit cultural', to: '/desempenho/competencias' },
+          { icon: Target, label: 'Fit Cultural', desc: 'Competências e fit cultural', to: '/desempenho/competencias' },
           { icon: Users, label: 'PDI', desc: 'Planos de desenvolvimento', to: '/desempenho/pdi' },
         ].map((item, i) => (
-          <motion.div key={item.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-            onClick={() => navigate(item.to)} className="stat-card cursor-pointer group flex items-center gap-4 hover:border-primary/30">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center"><item.icon className="w-6 h-6 text-primary" /></div>
-            <div className="flex-1"><h3 className="font-semibold text-foreground">{item.label}</h3><p className="text-sm text-muted-foreground">{item.desc}</p></div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+          <motion.div key={item.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}
+            onClick={() => navigate(item.to)}
+            className="bg-card border border-border rounded-lg p-4 cursor-pointer group hover:shadow-md transition-all flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <item.icon className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-sm text-foreground">{item.label}</h3>
+              <p className="text-xs text-muted-foreground">{item.desc}</p>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
           </motion.div>
         ))}
       </div>
 
-      {/* Chart by cargo */}
+      {/* Chart */}
       {cargoStats.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Avaliações por Cargo</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ left: 10, right: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="cargo" tick={{ fontSize: 11 }} />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Realizados" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="No Prazo" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="corporate-section">
+          <div className="corporate-section-header">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Avaliações por Cargo</h2>
+            </div>
+            <span className="text-xs text-muted-foreground">{cargoStats.length} cargos</span>
+          </div>
+          <div className="corporate-section-body">
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={chartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="cargo" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
+                <Bar dataKey="Realizados" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="No Prazo" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
 
-          {/* Pendentes por cargo */}
-          <div className="mt-4 space-y-2">
-            {cargoStats.filter(c => c.pendentes > 0).map(c => (
-              <div key={c.cargo}>
-                <button onClick={() => setExpandedCargo(expandedCargo === c.cargo ? null : c.cargo)} className="w-full flex items-center justify-between text-left p-2 rounded-lg hover:bg-muted/50">
-                  <span className="text-sm font-medium">{c.cargo} — <span className="text-destructive">{c.pendentes} pendente(s)</span></span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${expandedCargo === c.cargo ? 'rotate-180' : ''}`} />
-                </button>
-                {expandedCargo === c.cargo && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="ml-4 pl-3 border-l-2 border-destructive/20 space-y-1 py-1">
-                    {c.pendenteNomes.map(nome => (
-                      <p key={nome} className="text-sm text-muted-foreground">• {nome}</p>
-                    ))}
-                  </motion.div>
-                )}
+            {/* Pendentes list */}
+            {cargoStats.some(c => c.pendentes > 0) && (
+              <div className="mt-6 border-t border-border pt-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Colaboradores Pendentes</p>
+                <div className="space-y-1">
+                  {cargoStats.filter(c => c.pendentes > 0).map(c => (
+                    <div key={c.cargo} className="rounded-lg border border-border overflow-hidden">
+                      <button onClick={() => setExpandedCargo(expandedCargo === c.cargo ? null : c.cargo)}
+                        className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                        <span className="text-sm font-medium text-foreground">{c.cargo}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="corporate-badge bg-destructive/10 text-destructive">{c.pendentes}</span>
+                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCargo === c.cargo ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+                      {expandedCargo === c.cargo && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                          className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
+                          {c.pendenteNomes.map(nome => (
+                            <p key={nome} className="text-sm text-muted-foreground py-0.5">• {nome}</p>
+                          ))}
+                        </motion.div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
+            )}
           </div>
         </motion.div>
       )}
 
-      {/* Cycles list */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2"><Calendar className="w-5 h-5" /> Ciclos de Avaliação</h2>
-        {loading ? <div className="text-muted-foreground text-sm">Carregando...</div> : cycles.length === 0 ? (
-          <div className="glass-card rounded-xl p-8 text-center text-muted-foreground"><p>Nenhum ciclo criado ainda.</p></div>
-        ) : (
-          <div className="space-y-2">{cycles.map((cycle, i) => (
-            <motion.div key={cycle.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }} className="glass-card rounded-xl p-4 flex items-center justify-between">
-              <div><h3 className="font-medium text-foreground">{cycle.name}</h3><p className="text-sm text-muted-foreground">{cycle.start_date} → {cycle.end_date}</p></div>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusColor[cycle.status] || ''}`}>{statusLabel[cycle.status] || cycle.status}</span>
-            </motion.div>
-          ))}</div>
-        )}
-      </div>
+      {/* Cycles */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="corporate-section">
+        <div className="corporate-section-header">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Ciclos de Avaliação</h2>
+          </div>
+          <span className="text-xs text-muted-foreground">{cycles.length} ciclos</span>
+        </div>
+        <div className="divide-y divide-border">
+          {loading ? (
+            <div className="p-6 text-muted-foreground text-sm">Carregando...</div>
+          ) : cycles.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground text-sm">Nenhum ciclo criado.</div>
+          ) : (
+            cycles.map((cycle, i) => (
+              <motion.div key={cycle.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+                className="px-6 py-4 flex items-center justify-between hover:bg-muted/20 transition-colors">
+                <div>
+                  <h3 className="font-medium text-sm text-foreground">{cycle.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {new Date(cycle.start_date).toLocaleDateString('pt-BR')} → {new Date(cycle.end_date).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+                <span className={`corporate-badge ${statusColor[cycle.status] || 'bg-muted text-muted-foreground'}`}>
+                  {statusLabel[cycle.status] || cycle.status}
+                </span>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 }
