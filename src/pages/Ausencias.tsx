@@ -599,7 +599,68 @@ export default function PontoFerias() {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════
-          COLLAPSIBLE TABLES
+          EMPLOYEE ROSTER — GESTÃO DE PESSOAL
+      ═══════════════════════════════════════════════════════════════════ */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
+        className="corporate-section">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          Quadro de Colaboradores — {funcionarios.length} cadastrados
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
+                <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
+                <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno / Letra</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Presenças</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Faltas</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Atestados</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Extras</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status Atual</th>
+              </tr>
+            </thead>
+            <tbody>
+              {funcionarios.map((f, i) => {
+                const empAtt = attendance.filter(a => a.employee_id === f.id);
+                const presencas = empAtt.filter(a => a.status === 'presente').length;
+                const faltas = empAtt.filter(a => a.status === 'falta' || a.status === 'falta_justificada').length;
+                const atestados = empAtt.filter(a => a.status === 'atestado').length;
+                const extras = empAtt.filter(a => a.status === 'extra').length;
+                const vac = vacations.find(v => v.employee_id === f.id);
+                const today = new Date();
+                const isOnVac = vac?.start_date && vac?.end_date && today >= new Date(vac.start_date) && today <= new Date(vac.end_date);
+                const isBlocked = extras >= 3;
+                return (
+                  <tr key={f.id} className={`border-b border-border/50 hover:bg-muted/20 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                    <td className="px-4 py-2.5 font-medium text-sm">{f.nome}</td>
+                    <td className="px-4 py-2.5 text-xs text-muted-foreground">{f.cargo}</td>
+                    <td className="px-4 py-2.5 text-xs text-muted-foreground">{f.turno} / {f.letra}</td>
+                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-success">{presencas}</td>
+                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-destructive">{faltas}</td>
+                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-blue-600">{atestados}</td>
+                    <td className="px-4 py-2.5 text-center">
+                      <span className={`text-xs font-bold ${isBlocked ? 'text-destructive' : ''}`}>
+                        {extras}/3 {isBlocked ? '⛔' : ''}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-center">
+                      {isOnVac ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/10 text-teal-600">EM FÉRIAS</span>
+                      ) : isBlocked ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">BLOQUEADO</span>
+                      ) : (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-success/10 text-success">ATIVO</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+
       ═══════════════════════════════════════════════════════════════════ */}
       {/* Ponto Table */}
       <div className="corporate-section">
