@@ -207,8 +207,7 @@ export default function Index() {
     { name: 'Resolução FB', value: fbTaxaResolucao, fill: 'hsl(155, 60%, 38%)' },
     { name: 'Avaliações', value: evaluations.length > 0 ? Math.round((evalsCompleted / evaluations.length) * 100) : 0, fill: 'hsl(200, 80%, 38%)' },
     { name: 'Reuniões 1:1', value: meetingsScheduled > 0 ? Math.round((meetingsCompleted / meetingsScheduled) * 100) : 0, fill: 'hsl(280, 60%, 55%)' },
-    { name: 'Clima', value: Math.round((avgClimate / 5) * 100), fill: 'hsl(38, 90%, 50%)' },
-  ], [fbTaxaResolucao, evalsCompleted, evaluations, meetingsCompleted, meetingsScheduled, avgClimate]);
+  ], [fbTaxaResolucao, evalsCompleted, evaluations, meetingsCompleted, meetingsScheduled]);
 
   if (loading) {
     return (
