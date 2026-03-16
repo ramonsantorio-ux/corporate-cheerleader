@@ -103,10 +103,10 @@ export default function Relatorios() {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
-    const brand = [0, 120, 150]; // teal corporate
-    const brandLight = [230, 245, 248];
-    const dark = [30, 40, 50];
-    const gray = [120, 130, 140];
+    const brand: [number, number, number] = [0, 120, 150];
+    const brandLight: [number, number, number] = [230, 245, 248];
+    const dark: [number, number, number] = [30, 40, 50];
+    const gray: [number, number, number] = [120, 130, 140];
     const now = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
     const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'Administrativo' };
     let pageNum = 1;
