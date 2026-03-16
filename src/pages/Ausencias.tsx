@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
-  Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye
+  Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
+  Upload, Pencil, Bell, MinusCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import * as XLSX from 'xlsx';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Attendance {
@@ -52,6 +54,8 @@ const statusColors: Record<string, string> = {
 
 const PIE_COLORS = ['#0d9488', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981', '#dc2626', '#eab308', '#6366f1'];
 
+const DAILY_MOVEMENT_GOAL = 3;
+
 function getCurrentPeriod() {
   const now = new Date();
   const day = now.getDate();
@@ -84,16 +88,62 @@ export default function PontoFerias() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [vacDialogOpen, setVacDialogOpen] = useState(false);
+  const [editVacDialogOpen, setEditVacDialogOpen] = useState(false);
   const [showPontoTable, setShowPontoTable] = useState(false);
   const [showFeriasTable, setShowFeriasTable] = useState(false);
+  const [alertsShown, setAlertsShown] = useState(false);
+  const pontoFileRef = useRef<HTMLInputElement>(null);
+  const feriasFileRef = useRef<HTMLInputElement>(null);
   const period = getCurrentPeriod();
 
   const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '' });
   const [vacForm, setVacForm] = useState({
     employee_id: '', days_count: '30', scheduled_month: '', start_date: '', end_date: '', observation: ''
   });
+  const [editVacForm, setEditVacForm] = useState({
+    id: '', employee_id: '', days_count: '30', scheduled_month: '', start_date: '', end_date: '', observation: ''
+  });
 
   useEffect(() => { fetchAll(); }, []);
+
+  // ─── Leader alert popups ──────────────────────────────────────────────
+  useEffect(() => {
+    if (alertsShown || loading || attendance.length === 0) return;
+
+    // Check extras limit
+    const extrasMap: Record<string, { name: string; count: number }> = {};
+    attendance.filter(a => a.status === 'extra').forEach(a => {
+      if (!extrasMap[a.employee_id]) extrasMap[a.employee_id] = { name: a.employee_name || '', count: 0 };
+      extrasMap[a.employee_id].count++;
+    });
+    const blocked = Object.values(extrasMap).filter(e => e.count >= 3);
+    blocked.forEach(emp => {
+      toast.warning(`⛔ ALERTA: ${emp.name} atingiu ${emp.count}/3 extras no período. Novas extras BLOQUEADAS.`, {
+        duration: 8000,
+        icon: <Shield className="w-4 h-4" />,
+      });
+    });
+
+    // Check vacations
+    const today = new Date();
+    vacations.forEach(v => {
+      if (!v.start_date || !v.end_date) return;
+      const start = new Date(v.start_date);
+      const end = new Date(v.end_date);
+      if (today >= start && today <= end) {
+        toast.info(`🏖️ ${v.employee_name} está em FÉRIAS até ${formatDate(v.end_date)}`, {
+          duration: 6000,
+          icon: <Sun className="w-4 h-4" />,
+        });
+      } else if (start.getTime() - today.getTime() <= 7 * 86400000 && start > today) {
+        toast.info(`📅 ${v.employee_name} inicia férias em ${formatDate(v.start_date)}`, {
+          duration: 6000,
+        });
+      }
+    });
+
+    setAlertsShown(true);
+  }, [attendance, vacations, loading, alertsShown]);
 
   async function fetchAll() {
     setLoading(true);
@@ -162,6 +212,13 @@ export default function PontoFerias() {
           employee_id: form.employee_id, period_start: period.start, period_end: period.end, extras_count: 1, max_extras: 3,
         });
       }
+
+      // Check if just hit limit — alert
+      const newCount = (existing ? (existing as any).extras_count + 1 : 1);
+      if (newCount >= 3) {
+        const empName = funcionarios.find(f => f.id === form.employee_id)?.nome || '';
+        toast.warning(`⛔ ALERTA LÍDER: ${empName} atingiu o LIMITE de 3 extras! Novas extras BLOQUEADAS.`, { duration: 10000 });
+      }
     }
 
     setDialogOpen(false);
@@ -187,7 +244,45 @@ export default function PontoFerias() {
     setVacDialogOpen(false);
     setVacForm({ employee_id: '', days_count: '30', scheduled_month: '', start_date: '', end_date: '', observation: '' });
     toast.success('Férias registradas!');
+
+    // Alert popup
+    const empName = funcionarios.find(f => f.id === vacForm.employee_id)?.nome || '';
+    if (vacForm.start_date) {
+      toast.info(`📅 ALERTA: Férias programadas para ${empName} — Início: ${formatDate(vacForm.start_date)}`, { duration: 8000 });
+    }
     fetchAll();
+  }
+
+  async function handleEditVacation() {
+    if (!editVacForm.id) return;
+    const { error } = await supabase.from('vacation_control').update({
+      days_count: parseInt(editVacForm.days_count) || 30,
+      scheduled_month: editVacForm.scheduled_month,
+      start_date: editVacForm.start_date || null,
+      end_date: editVacForm.end_date || null,
+      observation: editVacForm.observation,
+      remaining_days: editVacForm.start_date && editVacForm.end_date
+        ? Math.ceil((new Date(editVacForm.end_date).getTime() - new Date().getTime()) / 86400000)
+        : null,
+      updated_at: new Date().toISOString(),
+    }).eq('id', editVacForm.id);
+    if (error) { toast.error('Erro ao atualizar férias'); return; }
+    setEditVacDialogOpen(false);
+    toast.success('Férias atualizadas!');
+    fetchAll();
+  }
+
+  function openEditVacation(v: VacationRecord) {
+    setEditVacForm({
+      id: v.id,
+      employee_id: v.employee_id,
+      days_count: String(v.days_count || 30),
+      scheduled_month: v.scheduled_month || '',
+      start_date: v.start_date || '',
+      end_date: v.end_date || '',
+      observation: v.observation || '',
+    });
+    setEditVacDialogOpen(true);
   }
 
   async function deleteAttendance(id: string) {
@@ -200,6 +295,94 @@ export default function PontoFerias() {
     await supabase.from('vacation_control').delete().eq('id', id);
     toast.success('Registro removido');
     fetchAll();
+  }
+
+  // ─── Import handlers ──────────────────────────────────────────────────
+  async function handleImportPonto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<any>(ws);
+
+      const nameToId = Object.fromEntries(funcionarios.map(f => [f.nome.toLowerCase().trim(), f.id]));
+      let imported = 0;
+
+      for (const row of rows) {
+        const nome = String(row['Nome'] || row['nome'] || row['Colaborador'] || row['colaborador'] || '').toLowerCase().trim();
+        const empId = nameToId[nome];
+        if (!empId) continue;
+        const date = row['Data'] || row['data'] || '';
+        const status = String(row['Status'] || row['status'] || 'presente').toLowerCase().trim();
+        const obs = row['Observação'] || row['observacao'] || row['Obs'] || '';
+
+        if (!date) continue;
+        let dateStr = date;
+        if (typeof date === 'number') {
+          const d = XLSX.SSF.parse_date_code(date);
+          dateStr = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+        }
+
+        await supabase.from('daily_attendance').insert({
+          employee_id: empId, date: dateStr, status, observation: obs,
+        });
+        imported++;
+      }
+      toast.success(`${imported} registros de ponto importados com sucesso!`);
+      fetchAll();
+    } catch {
+      toast.error('Erro ao importar arquivo de ponto');
+    }
+    if (pontoFileRef.current) pontoFileRef.current.value = '';
+  }
+
+  async function handleImportFerias(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<any>(ws);
+
+      const nameToId = Object.fromEntries(funcionarios.map(f => [f.nome.toLowerCase().trim(), f.id]));
+      let imported = 0;
+
+      for (const row of rows) {
+        const nome = String(row['Nome'] || row['nome'] || row['Colaborador'] || row['colaborador'] || '').toLowerCase().trim();
+        const empId = nameToId[nome];
+        if (!empId) continue;
+
+        let startDate = row['Início'] || row['inicio'] || row['Start'] || '';
+        let endDate = row['Fim'] || row['fim'] || row['End'] || '';
+        if (typeof startDate === 'number') {
+          const d = XLSX.SSF.parse_date_code(startDate);
+          startDate = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+        }
+        if (typeof endDate === 'number') {
+          const d = XLSX.SSF.parse_date_code(endDate);
+          endDate = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+        }
+
+        await supabase.from('vacation_control').upsert({
+          employee_id: empId,
+          days_count: parseInt(row['Dias'] || row['dias'] || '30') || 30,
+          scheduled_month: row['Mês'] || row['mes'] || '',
+          start_date: startDate || null,
+          end_date: endDate || null,
+          observation: row['Observação'] || row['observacao'] || '',
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'employee_id' });
+        imported++;
+      }
+      toast.success(`${imported} registros de férias importados com sucesso!`);
+      fetchAll();
+    } catch {
+      toast.error('Erro ao importar arquivo de férias');
+    }
+    if (feriasFileRef.current) feriasFileRef.current.value = '';
   }
 
   // ─── Computed ──────────────────────────────────────────────────────────
@@ -250,7 +433,7 @@ export default function PontoFerias() {
       .slice(-15)
       .map(([date, statuses]) => ({
         date: new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-        Presentes: statuses.presente || 0,
+        'Hrs Negativas': (statuses.falta || 0) + (statuses.falta_justificada || 0) + (statuses.atestado || 0),
         Faltas: (statuses.falta || 0) + (statuses.falta_justificada || 0),
         Extras: statuses.extra || 0,
         Atestados: statuses.atestado || 0,
@@ -267,7 +450,34 @@ export default function PontoFerias() {
     return Object.values(map).sort((a, b) => b.count - a.count);
   }, [attendance]);
 
-  const totalPresentes = attendance.filter(a => a.status === 'presente').length;
+  // Horas negativas per employee (faltas + falta_justificada + atestados)
+  const negativeHoursPerEmployee = useMemo(() => {
+    const map: Record<string, { name: string; faltas: number; faltasJust: number; atestados: number; total: number }> = {};
+    attendance.forEach(a => {
+      if (!['falta', 'falta_justificada', 'atestado'].includes(a.status)) return;
+      if (!map[a.employee_id]) map[a.employee_id] = { name: a.employee_name || '', faltas: 0, faltasJust: 0, atestados: 0, total: 0 };
+      if (a.status === 'falta') map[a.employee_id].faltas++;
+      if (a.status === 'falta_justificada') map[a.employee_id].faltasJust++;
+      if (a.status === 'atestado') map[a.employee_id].atestados++;
+      map[a.employee_id].total++;
+    });
+    return Object.values(map).sort((a, b) => b.total - a.total);
+  }, [attendance]);
+
+  // Daily movement tracking (meta 3 movimentações/dia)
+  const dailyMovements = useMemo(() => {
+    const byDate: Record<string, number> = {};
+    attendance.forEach(a => {
+      byDate[a.date] = (byDate[a.date] || 0) + 1;
+    });
+    const today = new Date().toISOString().split('T')[0];
+    const todayCount = byDate[today] || 0;
+    const totalDays = Object.keys(byDate).length;
+    const daysMetGoal = Object.values(byDate).filter(c => c >= DAILY_MOVEMENT_GOAL).length;
+    return { todayCount, totalDays, daysMetGoal, goalPct: totalDays > 0 ? Math.round((daysMetGoal / totalDays) * 100) : 0 };
+  }, [attendance]);
+
+  const totalHorasNegativas = attendance.filter(a => ['falta', 'falta_justificada', 'atestado'].includes(a.status)).length;
   const totalFaltas = attendance.filter(a => a.status === 'falta' || a.status === 'falta_justificada').length;
   const totalExtras = attendance.filter(a => a.status === 'extra').length;
   const totalAtestados = attendance.filter(a => a.status === 'atestado').length;
@@ -301,9 +511,11 @@ export default function PontoFerias() {
 
   return (
     <div className="space-y-6">
-      {/* ═══════════════════════════════════════════════════════════════════
-          HEADER + ACTIONS
-      ═══════════════════════════════════════════════════════════════════ */}
+      {/* Hidden file inputs */}
+      <input ref={pontoFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportPonto} />
+      <input ref={feriasFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFerias} />
+
+      {/* ═══ HEADER + ACTIONS ═══ */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
@@ -312,7 +524,7 @@ export default function PontoFerias() {
               Painel de controle operacional · Período: <span className="font-medium text-foreground">{period.label}</span>
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm"><Plus className="w-4 h-4 mr-2" />Registrar Ponto</Button>
@@ -398,13 +610,18 @@ export default function PontoFerias() {
                 </div>
               </DialogContent>
             </Dialog>
+
+            <Button size="sm" variant="outline" onClick={() => pontoFileRef.current?.click()}>
+              <Upload className="w-4 h-4 mr-2" />Importar Ponto
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => feriasFileRef.current?.click()}>
+              <Upload className="w-4 h-4 mr-2" />Importar Férias
+            </Button>
           </div>
         </div>
       </motion.div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          ALERTS BANNER
-      ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ ALERTS BANNER ═══ */}
       {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {vacationAlerts.map(v => {
@@ -432,15 +649,14 @@ export default function PontoFerias() {
         </motion.div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          KPI CARDS — ALWAYS VISIBLE
-      ═══════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      {/* ═══ KPI CARDS ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
         {[
           { label: 'Total Registros', value: attendance.length, icon: CalendarDays, color: 'border-t-primary' },
-          { label: 'Presentes', value: totalPresentes, icon: Users, color: 'border-t-success' },
+          { label: 'Horas Negativas', value: totalHorasNegativas, icon: MinusCircle, color: 'border-t-orange-500' },
           { label: 'Faltas', value: totalFaltas, icon: AlertTriangle, color: 'border-t-destructive' },
           { label: 'Extras', value: totalExtras, icon: TrendingUp, color: 'border-t-purple-500' },
+          { label: 'Atestados', value: totalAtestados, icon: Clock, color: 'border-t-blue-500' },
           { label: 'Em Férias', value: onVacationNow.length, icon: Sun, color: 'border-t-teal-500' },
           { label: 'Bloqueados', value: overtimeLimitAlerts.length, icon: Shield, color: 'border-t-destructive' },
         ].map((kpi, idx) => (
@@ -455,11 +671,48 @@ export default function PontoFerias() {
         ))}
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          CHARTS ROW — ALWAYS VISIBLE
-      ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ META DIÁRIA — 3 MOVIMENTAÇÕES ═══ */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
+        className="corporate-section">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Meta Diária — {DAILY_MOVEMENT_GOAL} Movimentações / Dia
+          </h3>
+          <span className="text-xs text-muted-foreground">Hoje: {dailyMovements.todayCount}/{DAILY_MOVEMENT_GOAL}</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="rounded-lg p-4 border border-border bg-card">
+            <p className="text-xs text-muted-foreground mb-2">Movimentações Hoje</p>
+            <div className="flex items-center gap-3">
+              <p className={`text-3xl font-bold ${dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? 'text-success' : 'text-warning'}`}>
+                {dailyMovements.todayCount}
+              </p>
+              <div className="flex-1">
+                <Progress value={Math.min((dailyMovements.todayCount / DAILY_MOVEMENT_GOAL) * 100, 100)}
+                  className={`h-2 ${dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? '[&>div]:bg-success' : '[&>div]:bg-warning'}`} />
+              </div>
+              {dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? (
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-success/10 text-success">✓ META</span>
+              ) : (
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
+              )}
+            </div>
+          </div>
+          <div className="rounded-lg p-4 border border-border bg-card">
+            <p className="text-xs text-muted-foreground mb-2">Dias com Meta Atingida</p>
+            <p className="text-3xl font-bold text-foreground">{dailyMovements.daysMetGoal}<span className="text-sm text-muted-foreground">/{dailyMovements.totalDays}</span></p>
+          </div>
+          <div className="rounded-lg p-4 border border-border bg-card">
+            <p className="text-xs text-muted-foreground mb-2">Aderência à Meta</p>
+            <p className={`text-3xl font-bold ${dailyMovements.goalPct >= 80 ? 'text-success' : dailyMovements.goalPct >= 50 ? 'text-warning' : 'text-destructive'}`}>
+              {dailyMovements.goalPct}%
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ═══ CHARTS ROW ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Movimentação Diária */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
           className="corporate-section lg:col-span-2">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
@@ -472,7 +725,7 @@ export default function PontoFerias() {
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="Presentes" stackId="a" fill="hsl(var(--success))" />
+                <Bar dataKey="Hrs Negativas" stackId="a" fill="hsl(25, 90%, 50%)" />
                 <Bar dataKey="Faltas" stackId="a" fill="hsl(var(--destructive))" />
                 <Bar dataKey="Extras" stackId="a" fill="hsl(260, 60%, 55%)" />
                 <Bar dataKey="Atestados" stackId="a" fill="hsl(200, 70%, 50%)" />
@@ -488,7 +741,6 @@ export default function PontoFerias() {
           )}
         </motion.div>
 
-        {/* Distribuição por Status */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
           className="corporate-section">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
@@ -516,9 +768,51 @@ export default function PontoFerias() {
         </motion.div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          EXTRAS CONTROL — ALWAYS VISIBLE
-      ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ HORAS NEGATIVAS POR COLABORADOR ═══ */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.22 }}
+        className="corporate-section">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          <MinusCircle className="w-3.5 h-3.5 inline mr-1.5" />
+          Horas Negativas por Colaborador — {period.label}
+        </h3>
+        {negativeHoursPerEmployee.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
+                  <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Faltas Injust.</th>
+                  <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Faltas Just.</th>
+                  <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Atestados</th>
+                  <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Total Hrs Neg.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {negativeHoursPerEmployee.map((emp, i) => (
+                  <tr key={emp.name} className={`border-b border-border/50 hover:bg-muted/20 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                    <td className="px-4 py-2.5 font-medium text-sm">{emp.name}</td>
+                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-destructive">{emp.faltas}</td>
+                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-warning">{emp.faltasJust}</td>
+                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-blue-600">{emp.atestados}</td>
+                    <td className="px-4 py-2.5 text-center">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${emp.total >= 3 ? 'bg-destructive/10 text-destructive' : 'bg-orange-500/10 text-orange-600'}`}>
+                        {emp.total}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <MinusCircle className="w-8 h-8 mx-auto mb-2 opacity-20" />
+            <p className="text-sm">Nenhuma hora negativa registrada no período</p>
+          </div>
+        )}
+      </motion.div>
+
+      {/* ═══ EXTRAS CONTROL ═══ */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}
         className="corporate-section">
         <div className="flex items-center justify-between mb-4">
@@ -556,9 +850,7 @@ export default function PontoFerias() {
         )}
       </motion.div>
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          VACATION OVERVIEW — ALWAYS VISIBLE
-      ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ VACATION OVERVIEW ═══ */}
       {vacations.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
           className="corporate-section">
@@ -574,11 +866,16 @@ export default function PontoFerias() {
                 <div key={v.id} className={`rounded-lg p-3 border transition-colors ${isOnVac ? 'border-teal-500/40 bg-teal-500/5' : 'border-border bg-card'}`}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="font-medium text-sm truncate">{v.employee_name}</span>
-                    {isOnVac ? (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/10 text-teal-600 whitespace-nowrap">EM FÉRIAS</span>
-                    ) : isPending ? (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning whitespace-nowrap">PROGRAMADA</span>
-                    ) : null}
+                    <div className="flex items-center gap-1">
+                      {isOnVac ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/10 text-teal-600 whitespace-nowrap">EM FÉRIAS</span>
+                      ) : isPending ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning whitespace-nowrap">PROGRAMADA</span>
+                      ) : null}
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditVacation(v)}>
+                        <Pencil className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">{v.cargo} · {v.letra}-{v.turno}</p>
                   <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
@@ -598,9 +895,7 @@ export default function PontoFerias() {
         </motion.div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════════
-          EMPLOYEE ROSTER — GESTÃO DE PESSOAL
-      ═══════════════════════════════════════════════════════════════════ */}
+      {/* ═══ EMPLOYEE ROSTER ═══ */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
         className="corporate-section">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
@@ -613,7 +908,7 @@ export default function PontoFerias() {
                 <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
                 <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
                 <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno / Letra</th>
-                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Presenças</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Hrs Negativas</th>
                 <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Faltas</th>
                 <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Atestados</th>
                 <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Extras</th>
@@ -623,7 +918,7 @@ export default function PontoFerias() {
             <tbody>
               {funcionarios.map((f, i) => {
                 const empAtt = attendance.filter(a => a.employee_id === f.id);
-                const presencas = empAtt.filter(a => a.status === 'presente').length;
+                const hrsNeg = empAtt.filter(a => ['falta', 'falta_justificada', 'atestado'].includes(a.status)).length;
                 const faltas = empAtt.filter(a => a.status === 'falta' || a.status === 'falta_justificada').length;
                 const atestados = empAtt.filter(a => a.status === 'atestado').length;
                 const extras = empAtt.filter(a => a.status === 'extra').length;
@@ -636,7 +931,9 @@ export default function PontoFerias() {
                     <td className="px-4 py-2.5 font-medium text-sm">{f.nome}</td>
                     <td className="px-4 py-2.5 text-xs text-muted-foreground">{f.cargo}</td>
                     <td className="px-4 py-2.5 text-xs text-muted-foreground">{f.turno} / {f.letra}</td>
-                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-success">{presencas}</td>
+                    <td className="px-4 py-2.5 text-center">
+                      <span className={`text-xs font-bold ${hrsNeg > 0 ? 'text-orange-600' : 'text-muted-foreground'}`}>{hrsNeg}</span>
+                    </td>
                     <td className="px-4 py-2.5 text-center text-xs font-semibold text-destructive">{faltas}</td>
                     <td className="px-4 py-2.5 text-center text-xs font-semibold text-blue-600">{atestados}</td>
                     <td className="px-4 py-2.5 text-center">
@@ -662,7 +959,6 @@ export default function PontoFerias() {
       </motion.div>
 
       {/* ═══ COLLAPSIBLE TABLES ═══ */}
-      {/* Ponto Table */}
       <div className="corporate-section">
         <button onClick={() => setShowPontoTable(!showPontoTable)}
           className="w-full flex items-center justify-between text-left">
@@ -739,7 +1035,7 @@ export default function PontoFerias() {
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Início</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Fim</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ação</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -764,7 +1060,10 @@ export default function PontoFerias() {
                             <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 text-right">
+                        <td className="px-4 py-2.5 text-right flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditVacation(v)}>
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteVacation(v.id)}>
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
@@ -778,6 +1077,33 @@ export default function PontoFerias() {
           </div>
         )}
       </div>
+
+      {/* ═══ EDIT VACATION DIALOG ═══ */}
+      <Dialog open={editVacDialogOpen} onOpenChange={setEditVacDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Férias</DialogTitle>
+            <DialogDescription>Altere as datas ou informações das férias do colaborador.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label>Qtd. Dias</Label><Input type="number" value={editVacForm.days_count} onChange={e => setEditVacForm({ ...editVacForm, days_count: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Mês Programado</Label><Input value={editVacForm.scheduled_month} onChange={e => setEditVacForm({ ...editVacForm, scheduled_month: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2"><Label>Início</Label><Input type="date" value={editVacForm.start_date} onChange={e => setEditVacForm({ ...editVacForm, start_date: e.target.value })} /></div>
+              <div className="space-y-2"><Label>Fim</Label><Input type="date" value={editVacForm.end_date} onChange={e => setEditVacForm({ ...editVacForm, end_date: e.target.value })} /></div>
+            </div>
+            <div className="space-y-2"><Label>Observação</Label><Textarea value={editVacForm.observation} onChange={e => setEditVacForm({ ...editVacForm, observation: e.target.value })} rows={2} /></div>
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={handleEditVacation}>Salvar Alterações</Button>
+              <Button variant="destructive" onClick={() => { deleteVacation(editVacForm.id); setEditVacDialogOpen(false); }}>
+                <Trash2 className="w-4 h-4 mr-1" /> Excluir
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
