@@ -133,6 +133,18 @@ export default function Login() {
             </Button>
           </form>
 
+          {!isFirstSetup && (
+            <div className="text-center">
+              <button
+                onClick={handleForgotPassword}
+                className="text-xs text-primary hover:underline"
+                disabled={loading}
+              >
+                Esqueci minha senha
+              </button>
+            </div>
+          )}
+
           <div className="text-center">
             <button
               onClick={() => setIsFirstSetup(!isFirstSetup)}
