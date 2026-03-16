@@ -20,7 +20,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import FuncionarioProfile from "./pages/FuncionarioProfile";
 import Reunioes from "./pages/Reunioes";
-import Clima from "./pages/Clima";
+import Eventos from "./pages/Eventos";
 import Ausencias from "./pages/Ausencias";
 import Colaboradores from "./pages/Colaboradores";
 
