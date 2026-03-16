@@ -347,7 +347,129 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
-        <TabsContent value="metas" className="space-y-6 mt-4">
+        {/* ════ PONTO / FÉRIAS TAB ════ */}
+        <TabsContent value="ponto-ferias" className="space-y-6 mt-4">
+          {/* Vacation Alert */}
+          {isOnVacation && vacationInfo && (
+            <div className="flex items-center gap-3 rounded-lg p-4 border bg-teal-500/5 border-teal-500/20">
+              <Sun className="w-5 h-5 text-teal-500" />
+              <div>
+                <p className="font-semibold text-sm">Colaborador em Férias</p>
+                <p className="text-xs text-muted-foreground">Período: {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')} a {new Date(vacationInfo.end_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+              </div>
+            </div>
+          )}
+          {vacationSoon && vacationInfo && (
+            <div className="flex items-center gap-3 rounded-lg p-4 border bg-warning/5 border-warning/20">
+              <CalendarDays className="w-5 h-5 text-warning" />
+              <div>
+                <p className="font-semibold text-sm">Férias Programadas</p>
+                <p className="text-xs text-muted-foreground">Início em {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+              </div>
+            </div>
+          )}
+
+          {/* KPI Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: 'Total Registros', value: attendanceRecords.length, icon: CalendarDays, color: 'text-primary' },
+              { label: 'Presenças', value: attendanceStats.presente || 0, icon: Users, color: 'text-success' },
+              { label: 'Faltas', value: (attendanceStats.falta || 0) + (attendanceStats.falta_justificada || 0), icon: AlertTriangle, color: 'text-destructive' },
+              { label: 'Extras (Total)', value: extrasCount, icon: TrendingUp, color: extrasCount >= 3 ? 'text-destructive' : 'text-primary' },
+            ].map(k => (
+              <div key={k.label} className="glass-card rounded-xl p-4 text-center">
+                <k.icon className={`w-5 h-5 mx-auto mb-2 ${k.color}`} />
+                <p className="text-2xl font-bold">{k.value}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{k.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Extras Control */}
+          <div className="glass-card rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-3"><Shield className="w-5 h-5 text-primary" />Controle de Horas Extras</h3>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Extras no período atual</span>
+                  <span className={`font-bold ${extrasCount >= 3 ? 'text-destructive' : ''}`}>{extrasCount}/3 {extrasCount >= 3 ? '⛔ BLOQUEADO' : ''}</span>
+                </div>
+                <Progress value={Math.min((extrasCount / 3) * 100, 100)} className={`h-3 ${extrasCount >= 3 ? '[&>div]:bg-destructive' : extrasCount >= 2 ? '[&>div]:bg-warning' : '[&>div]:bg-success'}`} />
+              </div>
+            </div>
+          </div>
+
+          {/* Absence Summary */}
+          <div className="glass-card rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-4"><Clock className="w-5 h-5 text-primary" />Resumo de Ocorrências</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {Object.entries(attendanceStatusLabels).filter(([key]) => (attendanceStats[key] || 0) > 0).map(([key, label]) => (
+                <div key={key} className={`rounded-lg p-3 text-center ${attendanceStatusColors[key] || 'bg-muted text-muted-foreground'}`}>
+                  <p className="text-xl font-bold">{attendanceStats[key]}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider">{label}</p>
+                </div>
+              ))}
+              {Object.keys(attendanceStats).length === 0 && (
+                <p className="col-span-full text-sm text-muted-foreground text-center py-4">Nenhuma ocorrência registrada</p>
+              )}
+            </div>
+          </div>
+
+          {/* Vacation Info */}
+          <div className="glass-card rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-4"><Sun className="w-5 h-5 text-primary" />Informações de Férias</h3>
+            {vacationInfo ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div><p className="text-muted-foreground text-xs">Dias Programados</p><p className="font-semibold">{vacationInfo.days_count} dias</p></div>
+                <div><p className="text-muted-foreground text-xs">Mês Programado</p><p className="font-semibold">{vacationInfo.scheduled_month || '—'}</p></div>
+                <div><p className="text-muted-foreground text-xs">Início</p><p className="font-semibold">{vacationInfo.start_date ? new Date(vacationInfo.start_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p></div>
+                <div><p className="text-muted-foreground text-xs">Fim</p><p className="font-semibold">{vacationInfo.end_date ? new Date(vacationInfo.end_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p></div>
+                {vacationInfo.remaining_days != null && (
+                  <div><p className="text-muted-foreground text-xs">Dias Restantes</p><p className="font-semibold">{vacationInfo.remaining_days}</p></div>
+                )}
+                {vacationInfo.observation && (
+                  <div className="col-span-2"><p className="text-muted-foreground text-xs">Observação</p><p className="font-semibold">{vacationInfo.observation}</p></div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhum registro de férias cadastrado.</p>
+            )}
+          </div>
+
+          {/* Attendance History */}
+          <div className="glass-card rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border bg-primary/5">
+              <h4 className="text-sm font-bold flex items-center gap-2"><Calendar className="w-4 h-4" />Histórico de Registros (últimos 100)</h4>
+            </div>
+            {attendanceRecords.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Nenhum registro de ponto encontrado.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-muted/30 border-b border-border">
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
+                  </tr></thead>
+                  <tbody>
+                    {attendanceRecords.slice(0, 30).map((a, i) => (
+                      <tr key={a.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                        <td className="px-4 py-2 text-xs">{new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-2">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${attendanceStatusColors[a.status] || 'bg-muted text-muted-foreground'}`}>
+                            {attendanceStatusLabels[a.status] || a.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{a.observation || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
             <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
