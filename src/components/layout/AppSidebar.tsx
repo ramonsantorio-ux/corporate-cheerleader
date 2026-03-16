@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, List, BarChart3, Settings, ChevronLeft, ChevronRight, MessageCircle, Users, Target, Shield, LogOut, Calendar, Smile, CalendarDays } from 'lucide-react';
+import { LayoutDashboard, List, BarChart3, Settings, ChevronLeft, ChevronRight, MessageCircle, Users, Target, Shield, LogOut, Calendar, AlertTriangle, CalendarDays } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 
