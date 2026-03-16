@@ -319,6 +319,7 @@ export default function FuncionarioProfile() {
         ['Horas Extras', String(extrasCount)],
         ['Advertências Aplicadas', String(advApplied)],
         ['Advertências Pendentes', String(advPending)],
+        ['Eventos Registrados', String(employeeEvents.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
       headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: 'bold' },
@@ -467,6 +468,7 @@ export default function FuncionarioProfile() {
               {turnoDisplay && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-3/20 text-foreground"><Briefcase className="w-3 h-3" />Turno: {turnoDisplay}</span>}
               {func.letra && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-4/20 text-foreground font-semibold">Letra: {func.letra}</span>}
               {encarregadoNome && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-4/20 text-foreground"><Users className="w-3 h-3" />Enc.: {encarregadoNome}</span>}
+              {employeeEvents.length > 0 && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-warning/15 text-warning font-semibold"><AlertTriangle className="w-3 h-3" />{employeeEvents.length} evento(s)</span>}
             </div>
           </div>
           <div className="flex gap-4">
@@ -491,11 +493,12 @@ export default function FuncionarioProfile() {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { icon: MessageSquare, label: 'Feedbacks Recebidos', value: func.feedbacks_recebidos, color: 'text-primary' },
           { icon: Target, label: 'Feedbacks Resolvidos', value: `${pctResolvido}%`, color: pctResolvido >= 70 ? 'text-success' : 'text-warning' },
           { icon: Calendar, label: 'Reuniões 1:1', value: meetings.length, color: 'text-primary' },
+          { icon: AlertTriangle, label: 'Eventos', value: employeeEvents.length, color: employeeEvents.length > 0 ? 'text-warning' : 'text-muted-foreground' },
           { icon: Users, label: 'Média Equipe', value: `${deptAvg}%`, color: 'text-muted-foreground' },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card rounded-xl p-4 text-center">
