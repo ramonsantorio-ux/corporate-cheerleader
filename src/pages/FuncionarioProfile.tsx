@@ -348,6 +348,29 @@ export default function FuncionarioProfile() {
       });
     }
 
+    // Events history
+    if (employeeEvents.length > 0) {
+      y = (doc as any).lastAutoTable?.finalY || 180;
+      if (y > 240) { doc.addPage(); y = 20; }
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`HISTÓRICO DE EVENTOS (${employeeEvents.length})`, 14, y + 10);
+
+      autoTable(doc, {
+        startY: y + 14,
+        head: [['Data', 'Descrição', 'Local', 'Equipamento']],
+        body: employeeEvents.map(ev => [
+          new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR'),
+          ev.description.length > 60 ? ev.description.slice(0, 57) + '...' : ev.description,
+          ev.location || '—',
+          ev.equipment || '—',
+        ]),
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [200, 130, 0], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [255, 250, 240] },
+      });
+    }
+
     // Attendance history
     if (attendanceRecords.length > 0) {
       y = (doc as any).lastAutoTable?.finalY || 180;
