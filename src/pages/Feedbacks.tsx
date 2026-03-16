@@ -154,6 +154,8 @@ export default function Feedbacks() {
         <Button onClick={() => setCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Novo Feedback</Button>
       </motion.div>
 
+      <PeriodFilter value={period} onChange={setPeriod} />
+
       {/* Alert banner */}
       {alertFeedbacks.length > 0 && (
         <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl border-l-4 border-l-warning">
