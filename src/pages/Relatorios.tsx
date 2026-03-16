@@ -23,6 +23,7 @@ export default function Relatorios() {
   const [feedbacks, setFeedbacks] = useState<FeedbackRow[]>([]);
   const [funcionarios, setFuncionarios] = useState<FuncionarioRow[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
   useEffect(() => {
     supabase.from('feedbacks').select('*').order('criado_em', { ascending: false }).then(({ data }) => {
