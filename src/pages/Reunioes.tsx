@@ -117,14 +117,16 @@ export default function Reunioes() {
 
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-      ) : meetings.length === 0 ? (
+      ) : (() => {
+        const filteredMeetings = meetings.filter(m => m.meeting_date >= period.start && m.meeting_date <= period.end);
+        return filteredMeetings.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Calendar className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhuma reunião registrada</p>
+          <p>Nenhuma reunião no período selecionado</p>
         </div>
       ) : (
         <div className="grid gap-3">
-          {meetings.map((m, i) => (
+          {filteredMeetings.map((m, i) => (
             <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
               className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${m.status === 'completed' ? 'bg-success/10' : 'bg-primary/10'}`}>
