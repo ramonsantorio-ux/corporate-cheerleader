@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
   Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert
 } from 'lucide-react';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
