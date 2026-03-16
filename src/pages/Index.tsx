@@ -62,7 +62,7 @@ export default function Index() {
   const [warnings, setWarnings] = useState<WarningRow[]>([]);
   const [evaluations, setEvaluations] = useState<EvalRow[]>([]);
   const [meetings, setMeetings] = useState<MeetingRow[]>([]);
-  const [climateScores, setClimateScores] = useState<ClimateRes[]>([]);
+  const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
