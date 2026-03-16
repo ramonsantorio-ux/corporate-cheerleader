@@ -61,7 +61,7 @@ export default function Relatorios() {
   const maxVal = Math.max(...monthlyData.map(d => d.total), 1);
 
   const gestorCounts: Record<string, number> = {};
-  feedbacks.forEach(f => { const g = f.gestor || 'Sem gestor'; gestorCounts[g] = (gestorCounts[g] || 0) + 1; });
+  filteredFeedbacks.forEach(f => { const g = f.gestor || 'Sem gestor'; gestorCounts[g] = (gestorCounts[g] || 0) + 1; });
   const gestorData = Object.entries(gestorCounts).map(([nome, count]) => ({ nome, count })).sort((a, b) => b.count - a.count);
 
   const metrics = [
