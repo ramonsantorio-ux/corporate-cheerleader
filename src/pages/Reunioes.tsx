@@ -148,7 +148,8 @@ export default function Reunioes() {
             </motion.div>
           ))}
         </div>
-      )}
+      );
+      })()}
     </div>
   );
 }
