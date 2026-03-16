@@ -643,9 +643,7 @@ export default function PontoFerias() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Gestão à Vista — Ponto / Férias</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Painel de controle operacional · Período: <span className="font-medium text-foreground">{period.label}</span>
-            </p>
+            <p className="text-muted-foreground text-sm mt-1">Painel de controle operacional</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
