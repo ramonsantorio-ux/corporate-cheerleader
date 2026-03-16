@@ -95,6 +95,20 @@ export default function FuncionarioProfile() {
 
   useEffect(() => { if (func) fetchGoals(); }, [func]);
 
+  // Fetch attendance + vacation data for this employee
+  useEffect(() => {
+    if (!id) return;
+    Promise.all([
+      supabase.from('daily_attendance').select('id, date, status, observation').eq('employee_id', id).order('date', { ascending: false }).limit(100),
+      supabase.from('vacation_control').select('*').eq('employee_id', id).maybeSingle(),
+      supabase.from('daily_attendance').select('*', { count: 'exact', head: true }).eq('employee_id', id).eq('status', 'extra'),
+    ]).then(([attRes, vacRes, extrasRes]) => {
+      if (attRes.data) setAttendanceRecords(attRes.data as AttendanceRecord[]);
+      if (vacRes.data) setVacationInfo(vacRes.data as unknown as VacationInfo);
+      setExtrasCount(extrasRes.count || 0);
+    });
+  }, [id]);
+
   async function fetchGoals() {
     if (!func) return;
     const { data } = await supabase.from('goals').select('*').eq('cargo', func.cargo).order('peso', { ascending: false });
