@@ -11,7 +11,7 @@ const navItems = [
   { to: '/desempenho', icon: Target, label: 'Desempenho' },
   { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
   { to: '/reunioes', icon: Calendar, label: 'Reuniões 1:1' },
-  { to: '/clima', icon: Smile, label: 'Clima' },
+  { to: '/eventos', icon: AlertTriangle, label: 'Eventos' },
   { to: '/ausencias', icon: CalendarDays, label: 'Ponto / Férias' },
   { to: '/configuracoes', icon: Settings, label: 'Configurações' },
 ];
