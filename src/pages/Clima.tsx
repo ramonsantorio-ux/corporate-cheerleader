@@ -156,7 +156,8 @@ export default function Clima() {
             </motion.div>
           ))}
         </div>
-      )}
+      );
+      })()}
 
       {/* Respond Dialog */}
       <Dialog open={!!respondOpen} onOpenChange={open => !open && setRespondOpen(null)}>
