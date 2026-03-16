@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2 } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -26,10 +26,24 @@ interface FeedbackItem { id: string; titulo: string; status: string; prioridade:
 interface MeetingItem { id: string; meeting_date: string; manager_name: string; notes: string; status: string; }
 interface Goal { id: string; cargo: string; descricao: string; peso: number; resultado: number | null; muito_abaixo: string; abaixo: string; dentro: string; acima: string; muito_acima: string; }
 interface EmployeeDocument { id: string; file_url: string; file_name: string; document_type: string; created_at: string; }
+interface AttendanceRecord { id: string; date: string; status: string; observation: string; }
+interface VacationInfo { id: string; start_date: string | null; end_date: string | null; days_count: number; scheduled_month: string; remaining_days: number | null; observation: string; }
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
 const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'ADM' };
+const attendanceStatusLabels: Record<string, string> = {
+  presente: 'Presente', falta: 'Falta', falta_justificada: 'Falta Justificada',
+  atestado: 'Atestado', extra: 'Extra', ferias: 'Férias', afastamento: 'Afastamento',
+  abono: 'Abono', banco_horas: 'Banco de Horas',
+};
+const attendanceStatusColors: Record<string, string> = {
+  presente: 'bg-success/10 text-success', falta: 'bg-destructive/10 text-destructive',
+  falta_justificada: 'bg-warning/10 text-warning', atestado: 'bg-blue-500/10 text-blue-600',
+  extra: 'bg-purple-500/10 text-purple-600', ferias: 'bg-teal-500/10 text-teal-600',
+  afastamento: 'bg-red-500/10 text-red-600', abono: 'bg-yellow-500/10 text-yellow-700',
+  banco_horas: 'bg-indigo-500/10 text-indigo-600',
+};
 
 export default function FuncionarioProfile() {
   const { id } = useParams();
@@ -41,6 +55,9 @@ export default function FuncionarioProfile() {
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [vacationInfo, setVacationInfo] = useState<VacationInfo | null>(null);
+  const [extrasCount, setExtrasCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -77,6 +94,20 @@ export default function FuncionarioProfile() {
   }, [id]);
 
   useEffect(() => { if (func) fetchGoals(); }, [func]);
+
+  // Fetch attendance + vacation data for this employee
+  useEffect(() => {
+    if (!id) return;
+    Promise.all([
+      supabase.from('daily_attendance').select('id, date, status, observation').eq('employee_id', id).order('date', { ascending: false }).limit(100),
+      supabase.from('vacation_control').select('*').eq('employee_id', id).maybeSingle(),
+      supabase.from('daily_attendance').select('*', { count: 'exact', head: true }).eq('employee_id', id).eq('status', 'extra'),
+    ]).then(([attRes, vacRes, extrasRes]) => {
+      if (attRes.data) setAttendanceRecords(attRes.data as AttendanceRecord[]);
+      if (vacRes.data) setVacationInfo(vacRes.data as unknown as VacationInfo);
+      setExtrasCount(extrasRes.count || 0);
+    });
+  }, [id]);
 
   async function fetchGoals() {
     if (!func) return;
@@ -181,6 +212,26 @@ export default function FuncionarioProfile() {
   const pieData = goals.map(g => ({ name: g.descricao, value: g.peso }));
   const barData = goals.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
 
+  // Attendance computed data
+  const attendanceStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    attendanceRecords.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
+    return counts;
+  }, [attendanceRecords]);
+
+  const isOnVacation = useMemo(() => {
+    if (!vacationInfo?.start_date || !vacationInfo?.end_date) return false;
+    const today = new Date();
+    return today >= new Date(vacationInfo.start_date) && today <= new Date(vacationInfo.end_date);
+  }, [vacationInfo]);
+
+  const vacationSoon = useMemo(() => {
+    if (!vacationInfo?.start_date) return false;
+    const today = new Date();
+    const start = new Date(vacationInfo.start_date);
+    return start > today && (start.getTime() - today.getTime()) <= 7 * 86400000;
+  }, [vacationInfo]);
+
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
   if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
 
@@ -265,8 +316,9 @@ export default function FuncionarioProfile() {
       )}
 
       <Tabs defaultValue="desempenho" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
+          <TabsTrigger value="ponto-ferias">Ponto / Férias</TabsTrigger>
           <TabsTrigger value="metas">Metas</TabsTrigger>
           <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
           <TabsTrigger value="fit-cultural">Fit Cultural</TabsTrigger>
@@ -291,6 +343,129 @@ export default function FuncionarioProfile() {
                   <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{m.status === 'completed' ? 'Concluída' : 'Agendada'}</span>
                 </div>
               ))}</div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ════ PONTO / FÉRIAS TAB ════ */}
+        <TabsContent value="ponto-ferias" className="space-y-6 mt-4">
+          {/* Vacation Alert */}
+          {isOnVacation && vacationInfo && (
+            <div className="flex items-center gap-3 rounded-lg p-4 border bg-teal-500/5 border-teal-500/20">
+              <Sun className="w-5 h-5 text-teal-500" />
+              <div>
+                <p className="font-semibold text-sm">Colaborador em Férias</p>
+                <p className="text-xs text-muted-foreground">Período: {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')} a {new Date(vacationInfo.end_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+              </div>
+            </div>
+          )}
+          {vacationSoon && vacationInfo && (
+            <div className="flex items-center gap-3 rounded-lg p-4 border bg-warning/5 border-warning/20">
+              <CalendarDays className="w-5 h-5 text-warning" />
+              <div>
+                <p className="font-semibold text-sm">Férias Programadas</p>
+                <p className="text-xs text-muted-foreground">Início em {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+              </div>
+            </div>
+          )}
+
+          {/* KPI Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: 'Total Registros', value: attendanceRecords.length, icon: CalendarDays, color: 'text-primary' },
+              { label: 'Presenças', value: attendanceStats.presente || 0, icon: Users, color: 'text-success' },
+              { label: 'Faltas', value: (attendanceStats.falta || 0) + (attendanceStats.falta_justificada || 0), icon: AlertTriangle, color: 'text-destructive' },
+              { label: 'Extras (Total)', value: extrasCount, icon: TrendingUp, color: extrasCount >= 3 ? 'text-destructive' : 'text-primary' },
+            ].map(k => (
+              <div key={k.label} className="glass-card rounded-xl p-4 text-center">
+                <k.icon className={`w-5 h-5 mx-auto mb-2 ${k.color}`} />
+                <p className="text-2xl font-bold">{k.value}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{k.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Extras Control */}
+          <div className="glass-card rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-3"><Shield className="w-5 h-5 text-primary" />Controle de Horas Extras</h3>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Extras no período atual</span>
+                  <span className={`font-bold ${extrasCount >= 3 ? 'text-destructive' : ''}`}>{extrasCount}/3 {extrasCount >= 3 ? '⛔ BLOQUEADO' : ''}</span>
+                </div>
+                <Progress value={Math.min((extrasCount / 3) * 100, 100)} className={`h-3 ${extrasCount >= 3 ? '[&>div]:bg-destructive' : extrasCount >= 2 ? '[&>div]:bg-warning' : '[&>div]:bg-success'}`} />
+              </div>
+            </div>
+          </div>
+
+          {/* Absence Summary */}
+          <div className="glass-card rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-4"><Clock className="w-5 h-5 text-primary" />Resumo de Ocorrências</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {Object.entries(attendanceStatusLabels).filter(([key]) => (attendanceStats[key] || 0) > 0).map(([key, label]) => (
+                <div key={key} className={`rounded-lg p-3 text-center ${attendanceStatusColors[key] || 'bg-muted text-muted-foreground'}`}>
+                  <p className="text-xl font-bold">{attendanceStats[key]}</p>
+                  <p className="text-[10px] font-medium uppercase tracking-wider">{label}</p>
+                </div>
+              ))}
+              {Object.keys(attendanceStats).length === 0 && (
+                <p className="col-span-full text-sm text-muted-foreground text-center py-4">Nenhuma ocorrência registrada</p>
+              )}
+            </div>
+          </div>
+
+          {/* Vacation Info */}
+          <div className="glass-card rounded-xl p-5">
+            <h3 className="font-semibold flex items-center gap-2 mb-4"><Sun className="w-5 h-5 text-primary" />Informações de Férias</h3>
+            {vacationInfo ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div><p className="text-muted-foreground text-xs">Dias Programados</p><p className="font-semibold">{vacationInfo.days_count} dias</p></div>
+                <div><p className="text-muted-foreground text-xs">Mês Programado</p><p className="font-semibold">{vacationInfo.scheduled_month || '—'}</p></div>
+                <div><p className="text-muted-foreground text-xs">Início</p><p className="font-semibold">{vacationInfo.start_date ? new Date(vacationInfo.start_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p></div>
+                <div><p className="text-muted-foreground text-xs">Fim</p><p className="font-semibold">{vacationInfo.end_date ? new Date(vacationInfo.end_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p></div>
+                {vacationInfo.remaining_days != null && (
+                  <div><p className="text-muted-foreground text-xs">Dias Restantes</p><p className="font-semibold">{vacationInfo.remaining_days}</p></div>
+                )}
+                {vacationInfo.observation && (
+                  <div className="col-span-2"><p className="text-muted-foreground text-xs">Observação</p><p className="font-semibold">{vacationInfo.observation}</p></div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhum registro de férias cadastrado.</p>
+            )}
+          </div>
+
+          {/* Attendance History */}
+          <div className="glass-card rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border bg-primary/5">
+              <h4 className="text-sm font-bold flex items-center gap-2"><Calendar className="w-4 h-4" />Histórico de Registros (últimos 100)</h4>
+            </div>
+            {attendanceRecords.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Nenhum registro de ponto encontrado.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-muted/30 border-b border-border">
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
+                  </tr></thead>
+                  <tbody>
+                    {attendanceRecords.slice(0, 30).map((a, i) => (
+                      <tr key={a.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                        <td className="px-4 py-2 text-xs">{new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-2">
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${attendanceStatusColors[a.status] || 'bg-muted text-muted-foreground'}`}>
+                            {attendanceStatusLabels[a.status] || a.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{a.observation || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </TabsContent>
