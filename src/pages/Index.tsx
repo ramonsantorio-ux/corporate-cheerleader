@@ -128,8 +128,10 @@ export default function Index() {
   const meetingsCompleted = meetings.filter(m => m.status === 'completed').length;
   const meetingsScheduled = meetings.length;
 
-  // Events
-  const totalEvents = events.length;
+  // Events — only count events where involved_name matches a registered employee
+  const registeredNames = useMemo(() => new Set(funcionarios.map(f => f.nome.trim().toLowerCase())), [funcionarios]);
+  const registeredEvents = useMemo(() => events.filter(e => registeredNames.has(e.involved_name.trim().toLowerCase())), [events, registeredNames]);
+  const totalEvents = registeredEvents.length;
 
   // ─── Chart data ───────────────────────────────────────────────────────
 
