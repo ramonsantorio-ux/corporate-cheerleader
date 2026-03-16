@@ -16,6 +16,7 @@ import Competencias from "./pages/Competencias";
 import PDIPage from "./pages/PDI";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import FuncionarioProfile from "./pages/FuncionarioProfile";
 import Reunioes from "./pages/Reunioes";
