@@ -319,6 +319,33 @@ export default function Relatorios() {
       y += 14;
     }
 
+    // Events section
+    const eventsData = eventsRes.data || [];
+    y = checkPage(y, 30);
+    y = sectionTitle(`Histórico de Eventos (${eventsData.length})`, y);
+    if (eventsData.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [200, 130, 0], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+        alternateRowStyles: { fillColor: [255, 250, 240] },
+        head: [['Data', 'Descrição', 'Local', 'Equipamento']],
+        body: (eventsData as any[]).map(ev => [
+          ev.event_date ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—',
+          ev.description?.length > 50 ? ev.description.slice(0, 47) + '...' : (ev.description || '—'),
+          ev.location || '—',
+          ev.equipment || '—',
+        ]),
+      });
+      y = (doc as any).lastAutoTable.finalY + 14;
+    } else {
+      doc.setFontSize(9);
+      doc.setTextColor(gray[0], gray[1], gray[2]);
+      doc.text('Nenhum evento registrado.', 18, y + 2);
+      y += 14;
+    }
+
     // Signature area
     y = checkPage(y, 40);
     y += 10;
