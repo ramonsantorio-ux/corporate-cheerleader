@@ -27,7 +27,7 @@ interface VacationRow { id: string; employee_id: string; start_date: string | nu
 interface WarningRow { id: string; employee_id: string; date: string; applied: boolean; }
 interface EvalRow { id: string; evaluated_name: string; status: string; completed_at: string | null; }
 interface MeetingRow { id: string; employee_id: string; meeting_date: string; status: string; }
-interface ClimateRes { id: string; score: number; }
+interface EventRow { id: string; event_date: string; involved_name: string; }
 
 const CHART_COLORS = [
   'hsl(200, 80%, 38%)', 'hsl(155, 60%, 38%)', 'hsl(38, 90%, 50%)',
@@ -62,13 +62,13 @@ export default function Index() {
   const [warnings, setWarnings] = useState<WarningRow[]>([]);
   const [evaluations, setEvaluations] = useState<EvalRow[]>([]);
   const [meetings, setMeetings] = useState<MeetingRow[]>([]);
-  const [climateScores, setClimateScores] = useState<ClimateRes[]>([]);
+  const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [fRes, fbRes, attRes, vacRes, warnRes, evalRes, meetRes, climRes] = await Promise.all([
+      const [fRes, fbRes, attRes, vacRes, warnRes, evalRes, meetRes, evtRes] = await Promise.all([
         supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, turno, letra, data_admissao').order('nome'),
         supabase.from('feedbacks').select('id, setor, status, prioridade, criado_em, autor'),
         supabase.from('daily_attendance').select('id, employee_id, date, status').gte('date', period.start).lte('date', period.end),
@@ -76,7 +76,7 @@ export default function Index() {
         supabase.from('employee_warnings').select('id, employee_id, date, applied').gte('date', period.start).lte('date', period.end),
         supabase.from('evaluations').select('id, evaluated_name, status, completed_at'),
         supabase.from('meetings').select('id, employee_id, meeting_date, status').gte('meeting_date', period.start).lte('meeting_date', period.end),
-        supabase.from('climate_responses').select('id, score'),
+        supabase.from('events').select('id, event_date, involved_name').gte('event_date', period.start).lte('event_date', period.end),
       ]);
       setFuncionarios((fRes.data || []) as Func[]);
       setFeedbacks((fbRes.data || []) as FeedbackRow[]);
@@ -85,7 +85,7 @@ export default function Index() {
       setWarnings((warnRes.data || []) as WarningRow[]);
       setEvaluations((evalRes.data || []) as EvalRow[]);
       setMeetings((meetRes.data || []) as MeetingRow[]);
-      setClimateScores((climRes.data || []) as ClimateRes[]);
+      setEvents((evtRes.data || []) as EventRow[]);
       setLoading(false);
     }
     load();
@@ -128,9 +128,8 @@ export default function Index() {
   const meetingsCompleted = meetings.filter(m => m.status === 'completed').length;
   const meetingsScheduled = meetings.length;
 
-  // Climate
-  const avgClimate = climateScores.length > 0
-    ? Math.round((climateScores.reduce((a, c) => a + c.score, 0) / climateScores.length) * 10) / 10 : 0;
+  // Events
+  const totalEvents = events.length;
 
   // ─── Chart data ───────────────────────────────────────────────────────
 
@@ -208,8 +207,7 @@ export default function Index() {
     { name: 'Resolução FB', value: fbTaxaResolucao, fill: 'hsl(155, 60%, 38%)' },
     { name: 'Avaliações', value: evaluations.length > 0 ? Math.round((evalsCompleted / evaluations.length) * 100) : 0, fill: 'hsl(200, 80%, 38%)' },
     { name: 'Reuniões 1:1', value: meetingsScheduled > 0 ? Math.round((meetingsCompleted / meetingsScheduled) * 100) : 0, fill: 'hsl(280, 60%, 55%)' },
-    { name: 'Clima', value: Math.round((avgClimate / 5) * 100), fill: 'hsl(38, 90%, 50%)' },
-  ], [fbTaxaResolucao, evalsCompleted, evaluations, meetingsCompleted, meetingsScheduled, avgClimate]);
+  ], [fbTaxaResolucao, evalsCompleted, evaluations, meetingsCompleted, meetingsScheduled]);
 
   if (loading) {
     return (
@@ -241,7 +239,7 @@ export default function Index() {
         <StatCard title="Hrs Negativas" value={totalHorasNeg} change={`${totalFaltasInj} inj. / ${totalAtestados} atest.`} changeType={totalHorasNeg > 0 ? 'negative' : 'positive'} icon={Clock} delay={0.06} />
         <StatCard title="Extras" value={totalExtras} change="No período" changeType="neutral" icon={Timer} delay={0.09} />
         <StatCard title="Advertências" value={totalAdvertencias} change={`${advertenciasAplicadas} aplicadas`} changeType={totalAdvertencias > 0 ? 'negative' : 'positive'} icon={ShieldAlert} delay={0.12} />
-        <StatCard title="Clima Org." value={avgClimate > 0 ? `${avgClimate}/5` : '—'} change={`${climateScores.length} respostas`} changeType={avgClimate >= 3.5 ? 'positive' : avgClimate > 0 ? 'negative' : 'neutral'} icon={Award} delay={0.15} />
+        <StatCard title="Eventos" value={totalEvents} change="No período" changeType={totalEvents > 0 ? 'negative' : 'positive'} icon={AlertTriangle} delay={0.15} />
       </div>
 
       {/* ═══ ROW 2 — Gauges + Priority ═══ */}

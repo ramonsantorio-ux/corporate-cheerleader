@@ -58,7 +58,7 @@ function ProtectedRoutes() {
         <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
         <Route path="/reunioes" element={<Reunioes />} />
         <Route path="/eventos" element={<Eventos />} />
-        <Route path="/clima" element={<Navigate to="/eventos" replace />} />
+        
         
         <Route path="/admin" element={<Admin />} />
       </Route>
