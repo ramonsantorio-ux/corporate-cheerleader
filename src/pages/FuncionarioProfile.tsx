@@ -467,6 +467,7 @@ export default function FuncionarioProfile() {
               {turnoDisplay && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-3/20 text-foreground"><Briefcase className="w-3 h-3" />Turno: {turnoDisplay}</span>}
               {func.letra && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-4/20 text-foreground font-semibold">Letra: {func.letra}</span>}
               {encarregadoNome && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-4/20 text-foreground"><Users className="w-3 h-3" />Enc.: {encarregadoNome}</span>}
+              {employeeEvents.length > 0 && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-warning/15 text-warning font-semibold"><AlertTriangle className="w-3 h-3" />{employeeEvents.length} evento(s)</span>}
             </div>
           </div>
           <div className="flex gap-4">
