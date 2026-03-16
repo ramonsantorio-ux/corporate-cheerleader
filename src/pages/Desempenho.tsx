@@ -142,6 +142,8 @@ export default function Desempenho() {
         </Dialog>
       </motion.div>
 
+      <PeriodFilter value={period} onChange={setPeriod} />
+
       {/* Summary KPIs */}
       <div className="grid grid-cols-3 gap-4">
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-kpi corporate-kpi-accent">

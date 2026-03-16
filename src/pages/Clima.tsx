@@ -105,6 +105,8 @@ export default function Clima() {
         </Dialog>
       </motion.div>
 
+      <PeriodFilter value={period} onChange={setPeriod} />
+
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
       ) : surveys.length === 0 ? (
