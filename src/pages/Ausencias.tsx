@@ -65,22 +65,9 @@ const PIE_COLORS = ['#0d9488', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b
 
 const DAILY_MOVEMENT_GOAL = 3;
 
+// getCurrentPeriod kept for backward compat
 function getCurrentPeriod() {
-  const now = new Date();
-  const day = now.getDate();
-  let start: Date, end: Date;
-  if (day >= 21) {
-    start = new Date(now.getFullYear(), now.getMonth(), 21);
-    end = new Date(now.getFullYear(), now.getMonth() + 1, 20);
-  } else {
-    start = new Date(now.getFullYear(), now.getMonth() - 1, 21);
-    end = new Date(now.getFullYear(), now.getMonth(), 20);
-  }
-  return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
-    label: `${start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} — ${end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}`
-  };
+  return getPortoPeriod(0);
 }
 
 function formatDate(d: string | null) {
