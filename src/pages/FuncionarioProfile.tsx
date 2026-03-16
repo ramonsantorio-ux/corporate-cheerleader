@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays, ShieldAlert } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { statusLabels, statusColors, priorityLabels, priorityColors, FeedbackStatus, FeedbackPriority } from '@/lib/feedbackData';
 import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
@@ -28,17 +30,20 @@ interface Goal { id: string; cargo: string; descricao: string; peso: number; res
 interface EmployeeDocument { id: string; file_url: string; file_name: string; document_type: string; created_at: string; }
 interface AttendanceRecord { id: string; date: string; status: string; observation: string; }
 interface VacationInfo { id: string; start_date: string | null; end_date: string | null; days_count: number; scheduled_month: string; remaining_days: number | null; observation: string; }
+interface WarningRecord { id: string; date: string; reason: string; applied: boolean; observation: string; created_at: string; }
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
 const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'ADM' };
 const attendanceStatusLabels: Record<string, string> = {
-  presente: 'Presente', falta: 'Falta', falta_justificada: 'Falta Justificada',
+  presente: 'Presente', falta: 'Falta Injustificada', falta_injustificada: 'Falta Injustificada',
+  falta_justificada: 'Falta Justificada',
   atestado: 'Atestado', extra: 'Extra', ferias: 'Férias', afastamento: 'Afastamento',
   abono: 'Abono', banco_horas: 'Banco de Horas',
 };
 const attendanceStatusColors: Record<string, string> = {
   presente: 'bg-success/10 text-success', falta: 'bg-destructive/10 text-destructive',
+  falta_injustificada: 'bg-destructive/10 text-destructive',
   falta_justificada: 'bg-warning/10 text-warning', atestado: 'bg-blue-500/10 text-blue-600',
   extra: 'bg-purple-500/10 text-purple-600', ferias: 'bg-teal-500/10 text-teal-600',
   afastamento: 'bg-red-500/10 text-red-600', abono: 'bg-yellow-500/10 text-yellow-700',
@@ -57,6 +62,7 @@ export default function FuncionarioProfile() {
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [vacationInfo, setVacationInfo] = useState<VacationInfo | null>(null);
+  const [employeeWarnings, setEmployeeWarnings] = useState<WarningRecord[]>([]);
   const [extrasCount, setExtrasCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -95,17 +101,19 @@ export default function FuncionarioProfile() {
 
   useEffect(() => { if (func) fetchGoals(); }, [func]);
 
-  // Fetch attendance + vacation data for this employee
+  // Fetch attendance + vacation + warnings data for this employee
   useEffect(() => {
     if (!id) return;
     Promise.all([
       supabase.from('daily_attendance').select('id, date, status, observation').eq('employee_id', id).order('date', { ascending: false }).limit(100),
       supabase.from('vacation_control').select('*').eq('employee_id', id).maybeSingle(),
       supabase.from('daily_attendance').select('*', { count: 'exact', head: true }).eq('employee_id', id).eq('status', 'extra'),
-    ]).then(([attRes, vacRes, extrasRes]) => {
+      supabase.from('employee_warnings').select('*').eq('employee_id', id).order('date', { ascending: false }),
+    ]).then(([attRes, vacRes, extrasRes, warnRes]) => {
       if (attRes.data) setAttendanceRecords(attRes.data as AttendanceRecord[]);
       if (vacRes.data) setVacationInfo(vacRes.data as unknown as VacationInfo);
       setExtrasCount(extrasRes.count || 0);
+      if (warnRes.data) setEmployeeWarnings(warnRes.data as unknown as WarningRecord[]);
     });
   }, [id]);
 
@@ -206,16 +214,21 @@ export default function FuncionarioProfile() {
     const items: string[] = [];
     if (func && func.feedbacks_recebidos > func.feedbacks_resolvidos) items.push(`${func.feedbacks_recebidos - func.feedbacks_resolvidos} feedback(s) pendente(s)`);
     if (meetings.length === 0) items.push('Nenhuma reunião 1:1 registrada');
+    const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
+    if (faltasInj > 0) items.push(`${faltasInj} falta(s) injustificada(s)`);
+    if (employeeWarnings.length > 0) items.push(`${employeeWarnings.length} advertência(s) registrada(s)`);
     return items;
-  }, [func, meetings]);
+  }, [func, meetings, attendanceRecords, employeeWarnings]);
 
   const pieData = goals.map(g => ({ name: g.descricao, value: g.peso }));
   const barData = goals.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
 
-  // Attendance computed data
   const attendanceStats = useMemo(() => {
     const counts: Record<string, number> = {};
-    attendanceRecords.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
+    attendanceRecords.forEach(a => {
+      const key = a.status === 'falta' ? 'falta_injustificada' : a.status;
+      counts[key] = (counts[key] || 0) + 1;
+    });
     return counts;
   }, [attendanceRecords]);
 
@@ -232,6 +245,160 @@ export default function FuncionarioProfile() {
     return start > today && (start.getTime() - today.getTime()) <= 7 * 86400000;
   }, [vacationInfo]);
 
+  // ─── Deviations Report PDF for this employee ────────────────────────
+  function exportEmployeeDeviationsReport() {
+    if (!func) return;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFillColor(13, 148, 136);
+    doc.rect(0, 0, pageWidth, 28, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RELATÓRIO DE DESVIOS — FICHA DO COLABORADOR', 14, 12);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Emitido: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 14, 20);
+    doc.text('CONFIDENCIAL — PARA USO EXCLUSIVO DO RH', pageWidth - 14, 20, { align: 'right' });
+
+    doc.setTextColor(0, 0, 0);
+
+    // Employee info
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DADOS DO COLABORADOR', 14, 36);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+
+    const info = [
+      ['Nome', func.nome],
+      ['Cargo', func.cargo],
+      ['Departamento', func.departamento],
+      ['Turno / Letra', `${func.turno} / ${func.letra}`],
+      ['Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR')],
+      ['E-mail', func.email || '—'],
+    ];
+
+    autoTable(doc, {
+      startY: 40,
+      body: info,
+      theme: 'plain',
+      styles: { fontSize: 9, cellPadding: 2 },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40 } },
+    });
+
+    // Deviations summary
+    const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
+    const faltasJust = attendanceRecords.filter(a => a.status === 'falta_justificada').length;
+    const atestados = attendanceRecords.filter(a => a.status === 'atestado').length;
+    const hrsNeg = faltasInj + faltasJust + atestados;
+    const advApplied = employeeWarnings.filter(w => w.applied).length;
+    const advPending = employeeWarnings.filter(w => !w.applied).length;
+
+    let y = (doc as any).lastAutoTable?.finalY || 70;
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RESUMO DE DESVIOS', 14, y + 10);
+
+    autoTable(doc, {
+      startY: y + 14,
+      head: [['Indicador', 'Quantidade']],
+      body: [
+        ['Horas Negativas (Total)', String(hrsNeg)],
+        ['Faltas Injustificadas', String(faltasInj)],
+        ['Faltas Justificadas', String(faltasJust)],
+        ['Atestados Médicos', String(atestados)],
+        ['Horas Extras', String(extrasCount)],
+        ['Advertências Aplicadas', String(advApplied)],
+        ['Advertências Pendentes', String(advPending)],
+      ],
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [255, 245, 245] },
+      columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
+    });
+
+    // Warning details
+    if (employeeWarnings.length > 0) {
+      y = (doc as any).lastAutoTable?.finalY || 140;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('HISTÓRICO DE ADVERTÊNCIAS', 14, y + 10);
+
+      autoTable(doc, {
+        startY: y + 14,
+        head: [['Data', 'Motivo', 'Aplicada', 'Observação']],
+        body: employeeWarnings.map(w => [
+          new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'),
+          w.reason,
+          w.applied ? 'SIM' : 'NÃO',
+          w.observation || '—',
+        ]),
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [180, 40, 40], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [255, 248, 248] },
+      });
+    }
+
+    // Attendance history
+    if (attendanceRecords.length > 0) {
+      y = (doc as any).lastAutoTable?.finalY || 180;
+      if (y > 240) { doc.addPage(); y = 20; }
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('HISTÓRICO DE REGISTROS', 14, y + 10);
+
+      const deviationRecords = attendanceRecords.filter(a =>
+        ['falta', 'falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)
+      );
+
+      if (deviationRecords.length > 0) {
+        autoTable(doc, {
+          startY: y + 14,
+          head: [['Data', 'Status', 'Observação']],
+          body: deviationRecords.map(a => [
+            new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR'),
+            attendanceStatusLabels[a.status] || a.status,
+            a.observation || '—',
+          ]),
+          styles: { fontSize: 8, cellPadding: 3 },
+          headStyles: { fillColor: [60, 60, 60], textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+        });
+      }
+    }
+
+    // Signature area
+    const lastY = (doc as any).lastAutoTable?.finalY || 200;
+    const sigY = Math.max(lastY + 30, 240);
+    if (sigY > 270) { doc.addPage(); }
+    const finalSigY = sigY > 270 ? 40 : sigY;
+
+    doc.setDrawColor(0);
+    doc.line(14, finalSigY, 90, finalSigY);
+    doc.line(120, finalSigY, 196, finalSigY);
+    doc.setFontSize(8);
+    doc.setTextColor(0);
+    doc.text('Assinatura do Colaborador', 14, finalSigY + 5);
+    doc.text('Assinatura do Gestor / RH', 120, finalSigY + 5);
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(120);
+      doc.text(`GESTÃO PORTO — Ficha de Desvios: ${func.nome} — Pág. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
+      doc.text('Documento confidencial de uso exclusivo do RH — Desligamento', pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
+    }
+
+    doc.save(`Desvios_${func.nome.replace(/\s+/g, '_')}.pdf`);
+    toast({ title: 'Relatório de desvios exportado!' });
+  }
+
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
   if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
 
@@ -241,7 +408,10 @@ export default function FuncionarioProfile() {
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5" /></Button>
-        <div><h1 className="text-2xl font-bold">Perfil do Funcionário</h1><p className="text-muted-foreground text-sm">Visão consolidada de desempenho</p></div>
+        <div className="flex-1"><h1 className="text-2xl font-bold">Perfil do Funcionário</h1><p className="text-muted-foreground text-sm">Visão consolidada de desempenho</p></div>
+        <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportEmployeeDeviationsReport}>
+          <FileText className="w-4 h-4 mr-2" />Relatório de Desvios (RH)
+        </Button>
       </motion.div>
 
       {/* Header Card */}
@@ -316,9 +486,10 @@ export default function FuncionarioProfile() {
       )}
 
       <Tabs defaultValue="desempenho" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
           <TabsTrigger value="ponto-ferias">Ponto / Férias</TabsTrigger>
+          <TabsTrigger value="desvios">Desvios</TabsTrigger>
           <TabsTrigger value="metas">Metas</TabsTrigger>
           <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
           <TabsTrigger value="fit-cultural">Fit Cultural</TabsTrigger>
@@ -349,7 +520,6 @@ export default function FuncionarioProfile() {
 
         {/* ════ PONTO / FÉRIAS TAB ════ */}
         <TabsContent value="ponto-ferias" className="space-y-6 mt-4">
-          {/* Vacation Alert */}
           {isOnVacation && vacationInfo && (
             <div className="flex items-center gap-3 rounded-lg p-4 border bg-teal-500/5 border-teal-500/20">
               <Sun className="w-5 h-5 text-teal-500" />
@@ -369,13 +539,13 @@ export default function FuncionarioProfile() {
             </div>
           )}
 
-          {/* KPI Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {[
               { label: 'Total Registros', value: attendanceRecords.length, icon: CalendarDays, color: 'text-primary' },
               { label: 'Presenças', value: attendanceStats.presente || 0, icon: Users, color: 'text-success' },
-              { label: 'Faltas', value: (attendanceStats.falta || 0) + (attendanceStats.falta_justificada || 0), icon: AlertTriangle, color: 'text-destructive' },
-              { label: 'Extras (Total)', value: extrasCount, icon: TrendingUp, color: extrasCount >= 3 ? 'text-destructive' : 'text-primary' },
+              { label: 'Faltas Injust.', value: (attendanceStats.falta_injustificada || 0), icon: AlertTriangle, color: 'text-destructive' },
+              { label: 'Atestados', value: attendanceStats.atestado || 0, icon: Clock, color: 'text-blue-600' },
+              { label: 'Extras', value: extrasCount, icon: TrendingUp, color: extrasCount >= 3 ? 'text-destructive' : 'text-primary' },
             ].map(k => (
               <div key={k.label} className="glass-card rounded-xl p-4 text-center">
                 <k.icon className={`w-5 h-5 mx-auto mb-2 ${k.color}`} />
@@ -385,7 +555,6 @@ export default function FuncionarioProfile() {
             ))}
           </div>
 
-          {/* Extras Control */}
           <div className="glass-card rounded-xl p-5">
             <h3 className="font-semibold flex items-center gap-2 mb-3"><Shield className="w-5 h-5 text-primary" />Controle de Horas Extras</h3>
             <div className="flex items-center gap-4">
@@ -399,7 +568,6 @@ export default function FuncionarioProfile() {
             </div>
           </div>
 
-          {/* Absence Summary */}
           <div className="glass-card rounded-xl p-5">
             <h3 className="font-semibold flex items-center gap-2 mb-4"><Clock className="w-5 h-5 text-primary" />Resumo de Ocorrências</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -415,7 +583,6 @@ export default function FuncionarioProfile() {
             </div>
           </div>
 
-          {/* Vacation Info */}
           <div className="glass-card rounded-xl p-5">
             <h3 className="font-semibold flex items-center gap-2 mb-4"><Sun className="w-5 h-5 text-primary" />Informações de Férias</h3>
             {vacationInfo ? (
@@ -436,7 +603,6 @@ export default function FuncionarioProfile() {
             )}
           </div>
 
-          {/* Attendance History */}
           <div className="glass-card rounded-xl overflow-hidden">
             <div className="p-4 border-b border-border bg-primary/5">
               <h4 className="text-sm font-bold flex items-center gap-2"><Calendar className="w-4 h-4" />Histórico de Registros (últimos 100)</h4>
@@ -456,7 +622,7 @@ export default function FuncionarioProfile() {
                       <tr key={a.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
                         <td className="px-4 py-2 text-xs">{new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                         <td className="px-4 py-2">
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${attendanceStatusColors[a.status] || 'bg-muted text-muted-foreground'}`}>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${attendanceStatusColors[a.status] || attendanceStatusColors[a.status === 'falta' ? 'falta_injustificada' : a.status] || 'bg-muted text-muted-foreground'}`}>
                             {attendanceStatusLabels[a.status] || a.status}
                           </span>
                         </td>
@@ -467,6 +633,75 @@ export default function FuncionarioProfile() {
                 </table>
               </div>
             )}
+          </div>
+        </TabsContent>
+
+        {/* ════ DESVIOS TAB ════ */}
+        <TabsContent value="desvios" className="space-y-6 mt-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-destructive" />Desvios e Advertências</h3>
+            <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600" onClick={exportEmployeeDeviationsReport}>
+              <FileText className="w-4 h-4 mr-2" />Exportar PDF (RH)
+            </Button>
+          </div>
+
+          {/* Deviations Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: 'Faltas Injust.', value: attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length, color: 'bg-destructive/10 text-destructive' },
+              { label: 'Faltas Just.', value: attendanceRecords.filter(a => a.status === 'falta_justificada').length, color: 'bg-warning/10 text-warning' },
+              { label: 'Atestados', value: attendanceRecords.filter(a => a.status === 'atestado').length, color: 'bg-blue-500/10 text-blue-600' },
+              { label: 'Advertências', value: employeeWarnings.length, color: 'bg-red-600/10 text-red-600' },
+            ].map(d => (
+              <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
+                <p className="text-3xl font-bold">{d.value}</p>
+                <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Warnings Table */}
+          <div className="glass-card rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border bg-destructive/5">
+              <h4 className="text-sm font-bold flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-destructive" />Histórico de Advertências ({employeeWarnings.length})</h4>
+            </div>
+            {employeeWarnings.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma advertência registrada</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-muted/30 border-b border-border">
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Motivo</th>
+                    <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Aplicada</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
+                  </tr></thead>
+                  <tbody>
+                    {employeeWarnings.map((w, i) => (
+                      <tr key={w.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                        <td className="px-4 py-2 text-xs">{new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-2 text-xs">{w.reason}</td>
+                        <td className="px-4 py-2 text-center">
+                          {w.applied ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">APLICADA</span>
+                          ) : (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{w.observation || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Deviations note */}
+          <div className="rounded-lg p-4 border border-orange-500/20 bg-orange-500/5">
+            <p className="text-xs text-orange-700 font-medium">
+              ⚠️ <strong>Nota:</strong> Faltas Injustificadas NÃO contemplam banco de horas. Este relatório é anexado à ficha do colaborador para envio ao RH no momento do desligamento.
+            </p>
           </div>
         </TabsContent>
 

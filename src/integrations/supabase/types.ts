@@ -385,6 +385,47 @@ export type Database = {
           },
         ]
       }
+      employee_warnings: {
+        Row: {
+          applied: boolean
+          created_at: string
+          date: string
+          employee_id: string
+          id: string
+          observation: string | null
+          reason: string
+          updated_at: string
+        }
+        Insert: {
+          applied?: boolean
+          created_at?: string
+          date?: string
+          employee_id: string
+          id?: string
+          observation?: string | null
+          reason?: string
+          updated_at?: string
+        }
+        Update: {
+          applied?: boolean
+          created_at?: string
+          date?: string
+          employee_id?: string
+          id?: string
+          observation?: string | null
+          reason?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_warnings_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       evaluation_cycles: {
         Row: {
           created_at: string

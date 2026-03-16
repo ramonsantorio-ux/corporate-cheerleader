@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
-  Upload, Pencil, Bell, MinusCircle
+  Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Attendance {
@@ -36,16 +38,22 @@ interface OvertimeRecord {
   extras_count: number; max_extras: number; employee_name?: string;
 }
 
-interface Func { id: string; nome: string; turno: string; letra: string; cargo: string; }
+interface Warning {
+  id: string; employee_id: string; date: string; reason: string;
+  applied: boolean; observation: string; created_at: string;
+  employee_name?: string;
+}
+
+interface Func { id: string; nome: string; turno: string; letra: string; cargo: string; departamento: string; }
 
 const statusLabels: Record<string, string> = {
-  presente: 'Presente', falta: 'Falta', falta_justificada: 'Falta Justificada',
+  presente: 'Presente', falta_injustificada: 'Falta Injustificada', falta_justificada: 'Falta Justificada',
   atestado: 'Atestado', extra: 'Extra', ferias: 'Férias', afastamento: 'Afastamento',
   abono: 'Abono', banco_horas: 'Banco de Horas',
 };
 
 const statusColors: Record<string, string> = {
-  presente: 'hsl(var(--success))', falta: 'hsl(var(--destructive))',
+  presente: 'hsl(var(--success))', falta_injustificada: 'hsl(var(--destructive))',
   falta_justificada: 'hsl(35, 90%, 50%)', atestado: 'hsl(200, 70%, 50%)',
   extra: 'hsl(260, 60%, 55%)', ferias: 'hsl(160, 60%, 45%)',
   afastamento: 'hsl(0, 50%, 50%)', abono: 'hsl(45, 80%, 50%)',
@@ -84,13 +92,16 @@ export default function PontoFerias() {
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [vacations, setVacations] = useState<VacationRecord[]>([]);
   const [overtimes, setOvertimes] = useState<OvertimeRecord[]>([]);
+  const [warnings, setWarnings] = useState<Warning[]>([]);
   const [funcionarios, setFuncionarios] = useState<Func[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [vacDialogOpen, setVacDialogOpen] = useState(false);
   const [editVacDialogOpen, setEditVacDialogOpen] = useState(false);
+  const [warningDialogOpen, setWarningDialogOpen] = useState(false);
   const [showPontoTable, setShowPontoTable] = useState(false);
   const [showFeriasTable, setShowFeriasTable] = useState(false);
+  const [showWarningsTable, setShowWarningsTable] = useState(false);
   const [alertsShown, setAlertsShown] = useState(false);
   const pontoFileRef = useRef<HTMLInputElement>(null);
   const feriasFileRef = useRef<HTMLInputElement>(null);
@@ -103,6 +114,9 @@ export default function PontoFerias() {
   const [editVacForm, setEditVacForm] = useState({
     id: '', employee_id: '', days_count: '30', scheduled_month: '', start_date: '', end_date: '', observation: ''
   });
+  const [warningForm, setWarningForm] = useState({
+    employee_id: '', date: new Date().toISOString().split('T')[0], reason: '', applied: 'true', observation: ''
+  });
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -110,7 +124,6 @@ export default function PontoFerias() {
   useEffect(() => {
     if (alertsShown || loading || attendance.length === 0) return;
 
-    // Check extras limit
     const extrasMap: Record<string, { name: string; count: number }> = {};
     attendance.filter(a => a.status === 'extra').forEach(a => {
       if (!extrasMap[a.employee_id]) extrasMap[a.employee_id] = { name: a.employee_name || '', count: 0 };
@@ -124,7 +137,6 @@ export default function PontoFerias() {
       });
     });
 
-    // Check vacations
     const today = new Date();
     vacations.forEach(v => {
       if (!v.start_date || !v.end_date) return;
@@ -147,18 +159,22 @@ export default function PontoFerias() {
 
   async function fetchAll() {
     setLoading(true);
-    const [attRes, vacRes, ovtRes, fRes] = await Promise.all([
+    const [attRes, vacRes, ovtRes, fRes, warnRes] = await Promise.all([
       supabase.from('daily_attendance').select('*').gte('date', period.start).lte('date', period.end).order('date', { ascending: false }),
       supabase.from('vacation_control').select('*'),
       supabase.from('overtime_control').select('*').gte('period_start', period.start).lte('period_end', period.end),
-      supabase.from('funcionarios').select('id, nome, turno, letra, cargo').order('nome'),
+      supabase.from('funcionarios').select('id, nome, turno, letra, cargo, departamento').order('nome'),
+      supabase.from('employee_warnings').select('*').order('date', { ascending: false }),
     ]);
     const funcs = (fRes.data || []) as Func[];
     setFuncionarios(funcs);
     const nameMap = Object.fromEntries(funcs.map(f => [f.id, f]));
 
+    // Migrate old 'falta' status to 'falta_injustificada' in display
     setAttendance((attRes.data || []).map((a: any) => ({
-      ...a, employee_name: nameMap[a.employee_id]?.nome || 'Desconhecido',
+      ...a,
+      status: a.status === 'falta' ? 'falta_injustificada' : a.status,
+      employee_name: nameMap[a.employee_id]?.nome || 'Desconhecido',
       turno: nameMap[a.employee_id]?.turno, letra: nameMap[a.employee_id]?.letra,
       cargo: nameMap[a.employee_id]?.cargo,
     })));
@@ -170,11 +186,17 @@ export default function PontoFerias() {
     setOvertimes((ovtRes.data || []).map((o: any) => ({
       ...o, employee_name: nameMap[o.employee_id]?.nome || 'Desconhecido',
     })));
+    setWarnings((warnRes.data || []).map((w: any) => ({
+      ...w, employee_name: nameMap[w.employee_id]?.nome || 'Desconhecido',
+    })));
     setLoading(false);
   }
 
   async function handleCreateAttendance() {
     if (!form.employee_id || !form.date) { toast.error('Preencha os campos obrigatórios'); return; }
+
+    // Falta injustificada does NOT count for banco de horas
+    const statusToSave = form.status === 'falta_injustificada' ? 'falta' : form.status;
 
     if (form.status === 'extra') {
       const { count } = await supabase.from('daily_attendance')
@@ -190,7 +212,7 @@ export default function PontoFerias() {
     }
 
     const { error } = await supabase.from('daily_attendance').insert({
-      employee_id: form.employee_id, date: form.date, status: form.status, observation: form.observation,
+      employee_id: form.employee_id, date: form.date, status: statusToSave, observation: form.observation,
     });
     if (error) {
       if (error.code === '23505') toast.error('Já existe registro para este colaborador nesta data');
@@ -213,7 +235,6 @@ export default function PontoFerias() {
         });
       }
 
-      // Check if just hit limit — alert
       const newCount = (existing ? (existing as any).extras_count + 1 : 1);
       if (newCount >= 3) {
         const empName = funcionarios.find(f => f.id === form.employee_id)?.nome || '';
@@ -245,7 +266,6 @@ export default function PontoFerias() {
     setVacForm({ employee_id: '', days_count: '30', scheduled_month: '', start_date: '', end_date: '', observation: '' });
     toast.success('Férias registradas!');
 
-    // Alert popup
     const empName = funcionarios.find(f => f.id === vacForm.employee_id)?.nome || '';
     if (vacForm.start_date) {
       toast.info(`📅 ALERTA: Férias programadas para ${empName} — Início: ${formatDate(vacForm.start_date)}`, { duration: 8000 });
@@ -274,13 +294,9 @@ export default function PontoFerias() {
 
   function openEditVacation(v: VacationRecord) {
     setEditVacForm({
-      id: v.id,
-      employee_id: v.employee_id,
-      days_count: String(v.days_count || 30),
-      scheduled_month: v.scheduled_month || '',
-      start_date: v.start_date || '',
-      end_date: v.end_date || '',
-      observation: v.observation || '',
+      id: v.id, employee_id: v.employee_id,
+      days_count: String(v.days_count || 30), scheduled_month: v.scheduled_month || '',
+      start_date: v.start_date || '', end_date: v.end_date || '', observation: v.observation || '',
     });
     setEditVacDialogOpen(true);
   }
@@ -294,6 +310,29 @@ export default function PontoFerias() {
   async function deleteVacation(id: string) {
     await supabase.from('vacation_control').delete().eq('id', id);
     toast.success('Registro removido');
+    fetchAll();
+  }
+
+  // ─── Warning handlers ─────────────────────────────────────────────────
+  async function handleCreateWarning() {
+    if (!warningForm.employee_id || !warningForm.reason) { toast.error('Preencha funcionário e motivo'); return; }
+    const { error } = await supabase.from('employee_warnings').insert({
+      employee_id: warningForm.employee_id,
+      date: warningForm.date,
+      reason: warningForm.reason,
+      applied: warningForm.applied === 'true',
+      observation: warningForm.observation,
+    });
+    if (error) { toast.error('Erro ao registrar advertência'); return; }
+    setWarningDialogOpen(false);
+    setWarningForm({ employee_id: '', date: new Date().toISOString().split('T')[0], reason: '', applied: 'true', observation: '' });
+    toast.success('Advertência registrada!');
+    fetchAll();
+  }
+
+  async function deleteWarning(id: string) {
+    await supabase.from('employee_warnings').delete().eq('id', id);
+    toast.success('Advertência removida');
     fetchAll();
   }
 
@@ -370,8 +409,7 @@ export default function PontoFerias() {
           employee_id: empId,
           days_count: parseInt(row['Dias'] || row['dias'] || '30') || 30,
           scheduled_month: row['Mês'] || row['mes'] || '',
-          start_date: startDate || null,
-          end_date: endDate || null,
+          start_date: startDate || null, end_date: endDate || null,
           observation: row['Observação'] || row['observacao'] || '',
           updated_at: new Date().toISOString(),
         }, { onConflict: 'employee_id' });
@@ -383,6 +421,107 @@ export default function PontoFerias() {
       toast.error('Erro ao importar arquivo de férias');
     }
     if (feriasFileRef.current) feriasFileRef.current.value = '';
+  }
+
+  // ─── Deviations Report PDF ────────────────────────────────────────────
+  function exportDeviationsReport() {
+    const doc = new jsPDF('landscape');
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Header
+    doc.setFillColor(13, 148, 136);
+    doc.rect(0, 0, pageWidth, 28, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RELATÓRIO DE DESVIOS — GESTÃO À VISTA', 14, 14);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Período: ${period.label} | Emitido: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 14, 22);
+    doc.text('CONFIDENCIAL — USO INTERNO RH', pageWidth - 14, 22, { align: 'right' });
+
+    doc.setTextColor(0, 0, 0);
+
+    // Build data per employee
+    const deviationRows: any[][] = [];
+    funcionarios.forEach(f => {
+      const empAtt = attendance.filter(a => a.employee_id === f.id);
+      const faltasInj = empAtt.filter(a => a.status === 'falta_injustificada').length;
+      const faltasJust = empAtt.filter(a => a.status === 'falta_justificada').length;
+      const atestados = empAtt.filter(a => a.status === 'atestado').length;
+      const hrsNeg = faltasInj + faltasJust + atestados;
+      const extras = empAtt.filter(a => a.status === 'extra').length;
+      const empWarnings = warnings.filter(w => w.employee_id === f.id);
+      const advApplied = empWarnings.filter(w => w.applied).length;
+      const advPending = empWarnings.filter(w => !w.applied).length;
+
+      if (hrsNeg > 0 || faltasInj > 0 || atestados > 0 || advApplied > 0) {
+        deviationRows.push([
+          f.nome,
+          `${f.cargo}`,
+          `${f.turno}/${f.letra}`,
+          hrsNeg,
+          faltasInj,
+          faltasJust,
+          atestados,
+          extras,
+          advApplied > 0 ? `${advApplied} aplicada(s)` : '—',
+          advPending > 0 ? `${advPending} pendente(s)` : '—',
+        ]);
+      }
+    });
+
+    autoTable(doc, {
+      startY: 34,
+      head: [['Colaborador', 'Cargo', 'Turno/Letra', 'Hrs Neg.', 'Faltas Inj.', 'Faltas Just.', 'Atestados', 'Extras', 'Advertências', 'Pendentes']],
+      body: deviationRows.length > 0 ? deviationRows : [['Nenhum desvio registrado no período', '', '', '', '', '', '', '', '', '']],
+      styles: { fontSize: 8, cellPadding: 3 },
+      headStyles: { fillColor: [13, 148, 136], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      columnStyles: {
+        3: { halign: 'center', fontStyle: 'bold' },
+        4: { halign: 'center', textColor: [220, 38, 38] },
+        5: { halign: 'center', textColor: [180, 120, 0] },
+        6: { halign: 'center', textColor: [37, 99, 235] },
+        7: { halign: 'center' },
+      },
+    });
+
+    // Warning details section
+    if (warnings.length > 0) {
+      const finalY = (doc as any).lastAutoTable?.finalY || 120;
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DETALHAMENTO DE ADVERTÊNCIAS', 14, finalY + 12);
+
+      autoTable(doc, {
+        startY: finalY + 18,
+        head: [['Colaborador', 'Data', 'Motivo', 'Aplicada', 'Observação']],
+        body: warnings.map(w => [
+          w.employee_name,
+          formatDate(w.date),
+          w.reason,
+          w.applied ? 'SIM' : 'NÃO',
+          w.observation || '—',
+        ]),
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+        alternateRowStyles: { fillColor: [255, 245, 245] },
+      });
+    }
+
+    // Footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7);
+      doc.setTextColor(120);
+      doc.text(`GESTÃO PORTO — Relatório de Desvios — Pág. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
+      doc.text('Documento confidencial de uso exclusivo do RH', pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
+    }
+
+    doc.save(`Relatorio_Desvios_${period.start}_${period.end}.pdf`);
+    toast.success('Relatório de desvios exportado com sucesso!');
   }
 
   // ─── Computed ──────────────────────────────────────────────────────────
@@ -433,8 +572,8 @@ export default function PontoFerias() {
       .slice(-15)
       .map(([date, statuses]) => ({
         date: new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-        'Hrs Negativas': (statuses.falta || 0) + (statuses.falta_justificada || 0) + (statuses.atestado || 0),
-        Faltas: (statuses.falta || 0) + (statuses.falta_justificada || 0),
+        'Hrs Negativas': (statuses.falta_injustificada || 0) + (statuses.falta_justificada || 0) + (statuses.atestado || 0),
+        'Faltas Inj.': statuses.falta_injustificada || 0,
         Extras: statuses.extra || 0,
         Atestados: statuses.atestado || 0,
         Férias: statuses.ferias || 0,
@@ -450,13 +589,12 @@ export default function PontoFerias() {
     return Object.values(map).sort((a, b) => b.count - a.count);
   }, [attendance]);
 
-  // Horas negativas per employee (faltas + falta_justificada + atestados)
   const negativeHoursPerEmployee = useMemo(() => {
-    const map: Record<string, { name: string; faltas: number; faltasJust: number; atestados: number; total: number }> = {};
+    const map: Record<string, { name: string; faltasInj: number; faltasJust: number; atestados: number; total: number }> = {};
     attendance.forEach(a => {
-      if (!['falta', 'falta_justificada', 'atestado'].includes(a.status)) return;
-      if (!map[a.employee_id]) map[a.employee_id] = { name: a.employee_name || '', faltas: 0, faltasJust: 0, atestados: 0, total: 0 };
-      if (a.status === 'falta') map[a.employee_id].faltas++;
+      if (!['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)) return;
+      if (!map[a.employee_id]) map[a.employee_id] = { name: a.employee_name || '', faltasInj: 0, faltasJust: 0, atestados: 0, total: 0 };
+      if (a.status === 'falta_injustificada') map[a.employee_id].faltasInj++;
       if (a.status === 'falta_justificada') map[a.employee_id].faltasJust++;
       if (a.status === 'atestado') map[a.employee_id].atestados++;
       map[a.employee_id].total++;
@@ -464,12 +602,9 @@ export default function PontoFerias() {
     return Object.values(map).sort((a, b) => b.total - a.total);
   }, [attendance]);
 
-  // Daily movement tracking (meta 3 movimentações/dia)
   const dailyMovements = useMemo(() => {
     const byDate: Record<string, number> = {};
-    attendance.forEach(a => {
-      byDate[a.date] = (byDate[a.date] || 0) + 1;
-    });
+    attendance.forEach(a => { byDate[a.date] = (byDate[a.date] || 0) + 1; });
     const today = new Date().toISOString().split('T')[0];
     const todayCount = byDate[today] || 0;
     const totalDays = Object.keys(byDate).length;
@@ -477,14 +612,15 @@ export default function PontoFerias() {
     return { todayCount, totalDays, daysMetGoal, goalPct: totalDays > 0 ? Math.round((daysMetGoal / totalDays) * 100) : 0 };
   }, [attendance]);
 
-  const totalHorasNegativas = attendance.filter(a => ['falta', 'falta_justificada', 'atestado'].includes(a.status)).length;
-  const totalFaltas = attendance.filter(a => a.status === 'falta' || a.status === 'falta_justificada').length;
+  const totalHorasNegativas = attendance.filter(a => ['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)).length;
+  const totalFaltasInj = attendance.filter(a => a.status === 'falta_injustificada').length;
   const totalExtras = attendance.filter(a => a.status === 'extra').length;
   const totalAtestados = attendance.filter(a => a.status === 'atestado').length;
+  const totalWarnings = warnings.length;
 
   const statusBadge = (s: string) => {
     const colors: Record<string, string> = {
-      presente: 'bg-success/10 text-success', falta: 'bg-destructive/10 text-destructive',
+      presente: 'bg-success/10 text-success', falta_injustificada: 'bg-destructive/10 text-destructive',
       falta_justificada: 'bg-warning/10 text-warning', atestado: 'bg-blue-500/10 text-blue-600',
       extra: 'bg-purple-500/10 text-purple-600', ferias: 'bg-teal-500/10 text-teal-600',
       afastamento: 'bg-red-500/10 text-red-600', abono: 'bg-yellow-500/10 text-yellow-700',
@@ -511,7 +647,6 @@ export default function PontoFerias() {
 
   return (
     <div className="space-y-6">
-      {/* Hidden file inputs */}
       <input ref={pontoFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportPonto} />
       <input ref={feriasFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFerias} />
 
@@ -560,6 +695,9 @@ export default function PontoFerias() {
                         {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                       </SelectContent>
                     </Select>
+                    {form.status === 'falta_injustificada' && (
+                      <p className="text-xs text-destructive mt-1 font-medium">⚠️ Falta Injustificada NÃO contempla banco de horas</p>
+                    )}
                     {form.status === 'extra' && form.employee_id && (() => {
                       const extrasUsed = attendance.filter(a => a.employee_id === form.employee_id && a.status === 'extra').length;
                       return (
@@ -611,11 +749,67 @@ export default function PontoFerias() {
               </DialogContent>
             </Dialog>
 
+            {/* Warning Dialog */}
+            <Dialog open={warningDialogOpen} onOpenChange={setWarningDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/5">
+                  <ShieldAlert className="w-4 h-4 mr-2" />Advertência
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Registrar Advertência</DialogTitle>
+                  <DialogDescription>Aplique uma advertência formal a um colaborador.</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-2">
+                    <Label>Funcionário</Label>
+                    <Select value={warningForm.employee_id} onValueChange={v => setWarningForm({ ...warningForm, employee_id: v })}>
+                      <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                      <SelectContent>
+                        {funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} ({f.cargo})</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Data</Label>
+                      <Input type="date" value={warningForm.date} onChange={e => setWarningForm({ ...warningForm, date: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Aplicada?</Label>
+                      <Select value={warningForm.applied} onValueChange={v => setWarningForm({ ...warningForm, applied: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Sim — Aplicada</SelectItem>
+                          <SelectItem value="false">Não — Pendente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Motivo</Label>
+                    <Textarea value={warningForm.reason} onChange={e => setWarningForm({ ...warningForm, reason: e.target.value })} rows={2} placeholder="Descreva o motivo da advertência" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Observação</Label>
+                    <Textarea value={warningForm.observation} onChange={e => setWarningForm({ ...warningForm, observation: e.target.value })} rows={2} />
+                  </div>
+                  <Button className="w-full" onClick={handleCreateWarning}>Registrar Advertência</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             <Button size="sm" variant="outline" onClick={() => pontoFileRef.current?.click()}>
               <Upload className="w-4 h-4 mr-2" />Importar Ponto
             </Button>
             <Button size="sm" variant="outline" onClick={() => feriasFileRef.current?.click()}>
               <Upload className="w-4 h-4 mr-2" />Importar Férias
+            </Button>
+
+            {/* Deviations Report */}
+            <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportDeviationsReport}>
+              <FileText className="w-4 h-4 mr-2" />Relatório de Desvios
             </Button>
           </div>
         </div>
@@ -650,15 +844,16 @@ export default function PontoFerias() {
       )}
 
       {/* ═══ KPI CARDS ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         {[
           { label: 'Total Registros', value: attendance.length, icon: CalendarDays, color: 'border-t-primary' },
           { label: 'Horas Negativas', value: totalHorasNegativas, icon: MinusCircle, color: 'border-t-orange-500' },
-          { label: 'Faltas', value: totalFaltas, icon: AlertTriangle, color: 'border-t-destructive' },
+          { label: 'Faltas Injust.', value: totalFaltasInj, icon: AlertTriangle, color: 'border-t-destructive' },
           { label: 'Extras', value: totalExtras, icon: TrendingUp, color: 'border-t-purple-500' },
           { label: 'Atestados', value: totalAtestados, icon: Clock, color: 'border-t-blue-500' },
           { label: 'Em Férias', value: onVacationNow.length, icon: Sun, color: 'border-t-teal-500' },
           { label: 'Bloqueados', value: overtimeLimitAlerts.length, icon: Shield, color: 'border-t-destructive' },
+          { label: 'Advertências', value: totalWarnings, icon: ShieldAlert, color: 'border-t-red-600' },
         ].map((kpi, idx) => (
           <motion.div key={kpi.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
             className={`corporate-kpi ${kpi.color}`}>
@@ -671,7 +866,7 @@ export default function PontoFerias() {
         ))}
       </div>
 
-      {/* ═══ META DIÁRIA — 3 MOVIMENTAÇÕES ═══ */}
+      {/* ═══ META DIÁRIA ═══ */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
         className="corporate-section">
         <div className="flex items-center justify-between mb-3">
@@ -726,7 +921,7 @@ export default function PontoFerias() {
                 <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="Hrs Negativas" stackId="a" fill="hsl(25, 90%, 50%)" />
-                <Bar dataKey="Faltas" stackId="a" fill="hsl(var(--destructive))" />
+                <Bar dataKey="Faltas Inj." stackId="a" fill="hsl(var(--destructive))" />
                 <Bar dataKey="Extras" stackId="a" fill="hsl(260, 60%, 55%)" />
                 <Bar dataKey="Atestados" stackId="a" fill="hsl(200, 70%, 50%)" />
                 <Bar dataKey="Férias" stackId="a" fill="hsl(160, 60%, 45%)" radius={[3, 3, 0, 0]} />
@@ -736,7 +931,6 @@ export default function PontoFerias() {
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <CalendarDays className="w-10 h-10 mb-3 opacity-20" />
               <p className="text-sm">Nenhum registro de ponto no período</p>
-              <p className="text-xs mt-1">Registre o ponto diário para visualizar os gráficos</p>
             </div>
           )}
         </motion.div>
@@ -791,7 +985,7 @@ export default function PontoFerias() {
                 {negativeHoursPerEmployee.map((emp, i) => (
                   <tr key={emp.name} className={`border-b border-border/50 hover:bg-muted/20 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
                     <td className="px-4 py-2.5 font-medium text-sm">{emp.name}</td>
-                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-destructive">{emp.faltas}</td>
+                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-destructive">{emp.faltasInj}</td>
                     <td className="px-4 py-2.5 text-center text-xs font-semibold text-warning">{emp.faltasJust}</td>
                     <td className="px-4 py-2.5 text-center text-xs font-semibold text-blue-600">{emp.atestados}</td>
                     <td className="px-4 py-2.5 text-center">
@@ -850,6 +1044,61 @@ export default function PontoFerias() {
         )}
       </motion.div>
 
+      {/* ═══ ADVERTÊNCIAS ═══ */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.27 }}
+        className="corporate-section">
+        <button onClick={() => setShowWarningsTable(!showWarningsTable)}
+          className="w-full flex items-center justify-between text-left">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <ShieldAlert className="w-3.5 h-3.5" />
+            Advertências Registradas ({warnings.length})
+          </h3>
+          {showWarningsTable ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        </button>
+        {showWarningsTable && (
+          <div className="mt-4 overflow-x-auto">
+            {warnings.length === 0 ? (
+              <p className="text-center py-8 text-muted-foreground text-sm">Nenhuma advertência registrada</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Motivo</th>
+                    <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Aplicada</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {warnings.map((w, i) => (
+                    <tr key={w.id} className={`border-b border-border/50 hover:bg-muted/20 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                      <td className="px-4 py-2.5 font-medium text-sm">{w.employee_name}</td>
+                      <td className="px-4 py-2.5 text-xs">{formatDate(w.date)}</td>
+                      <td className="px-4 py-2.5 text-xs max-w-[200px] truncate">{w.reason}</td>
+                      <td className="px-4 py-2.5 text-center">
+                        {w.applied ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">APLICADA</span>
+                        ) : (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{w.observation || '—'}</td>
+                      <td className="px-4 py-2.5 text-right">
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteWarning(w.id)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </motion.div>
+
       {/* ═══ VACATION OVERVIEW ═══ */}
       {vacations.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
@@ -889,7 +1138,7 @@ export default function PontoFerias() {
           </div>
           {vacations.length > 9 && (
             <p className="text-xs text-muted-foreground mt-3 text-center">
-              + {vacations.length - 9} colaboradores. Clique abaixo para ver todos.
+              + {vacations.length - 9} colaboradores. Veja todos na tabela abaixo.
             </p>
           )}
         </motion.div>
@@ -909,19 +1158,21 @@ export default function PontoFerias() {
                 <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
                 <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno / Letra</th>
                 <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Hrs Negativas</th>
-                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Faltas</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Faltas Inj.</th>
                 <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Atestados</th>
                 <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Extras</th>
-                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status Atual</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Advert.</th>
+                <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
               </tr>
             </thead>
             <tbody>
               {funcionarios.map((f, i) => {
                 const empAtt = attendance.filter(a => a.employee_id === f.id);
-                const hrsNeg = empAtt.filter(a => ['falta', 'falta_justificada', 'atestado'].includes(a.status)).length;
-                const faltas = empAtt.filter(a => a.status === 'falta' || a.status === 'falta_justificada').length;
+                const hrsNeg = empAtt.filter(a => ['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)).length;
+                const faltasInj = empAtt.filter(a => a.status === 'falta_injustificada').length;
                 const atestados = empAtt.filter(a => a.status === 'atestado').length;
                 const extras = empAtt.filter(a => a.status === 'extra').length;
+                const empWarns = warnings.filter(w => w.employee_id === f.id).length;
                 const vac = vacations.find(v => v.employee_id === f.id);
                 const today = new Date();
                 const isOnVac = vac?.start_date && vac?.end_date && today >= new Date(vac.start_date) && today <= new Date(vac.end_date);
@@ -934,12 +1185,19 @@ export default function PontoFerias() {
                     <td className="px-4 py-2.5 text-center">
                       <span className={`text-xs font-bold ${hrsNeg > 0 ? 'text-orange-600' : 'text-muted-foreground'}`}>{hrsNeg}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-destructive">{faltas}</td>
+                    <td className="px-4 py-2.5 text-center text-xs font-semibold text-destructive">{faltasInj}</td>
                     <td className="px-4 py-2.5 text-center text-xs font-semibold text-blue-600">{atestados}</td>
                     <td className="px-4 py-2.5 text-center">
                       <span className={`text-xs font-bold ${isBlocked ? 'text-destructive' : ''}`}>
                         {extras}/3 {isBlocked ? '⛔' : ''}
                       </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-center">
+                      {empWarns > 0 ? (
+                        <span className="text-xs font-bold text-destructive">{empWarns}</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">0</span>
+                      )}
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       {isOnVac ? (
