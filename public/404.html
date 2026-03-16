@@ -1,0 +1,16 @@
+<!-- This file ensures SPA routing works on Netlify/static hosting -->
+<!-- For Lovable deployments, client-side routing fallback -->
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  // Redirect all routes to index.html for SPA
+  var path = window.location.pathname;
+  if (path !== '/' && !path.includes('.')) {
+    var hash = window.location.hash;
+    var search = window.location.search;
+    sessionStorage.setItem('spa-redirect', path + search + hash);
+  }
+</script>
+</head>
+</html>

@@ -14,20 +14,50 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  const [checking, setChecking] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Listen for the PASSWORD_RECOVERY event
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    // Listen for PASSWORD_RECOVERY event from Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setReady(true);
+        setChecking(false);
+      }
+      // Also handle SIGNED_IN with recovery type
+      if (event === 'SIGNED_IN' && session) {
+        // Check if this came from a recovery flow
+        const hash = window.location.hash;
+        if (hash.includes('type=recovery')) {
+          setReady(true);
+          setChecking(false);
+        }
       }
     });
-    // Also check hash for type=recovery
-    if (window.location.hash.includes('type=recovery')) {
+
+    // Check URL hash for recovery tokens
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery')) {
       setReady(true);
+      setChecking(false);
     }
-    return () => subscription.unsubscribe();
+
+    // Also check URL search params (some Supabase versions use query params)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('type') === 'recovery') {
+      setReady(true);
+      setChecking(false);
+    }
+
+    // Give Supabase time to process the token, then stop checking
+    const timeout = setTimeout(() => {
+      setChecking(false);
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   async function handleReset(e: React.FormEvent) {
@@ -55,10 +85,25 @@ export default function ResetPassword() {
     setLoading(false);
   }
 
-  if (!ready) {
+  if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="text-muted-foreground text-sm">Verificando link de recuperação...</div>
+      </div>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground text-sm">
+            Link de recuperação inválido ou expirado.
+          </p>
+          <Button variant="outline" onClick={() => navigate('/login')}>
+            Voltar para Login
+          </Button>
+        </div>
       </div>
     );
   }
