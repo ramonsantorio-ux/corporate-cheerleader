@@ -1,15 +1,17 @@
-import { useState, useMemo } from 'react';
-import { CalendarDays, Filter } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from 'react';
+import { Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 export interface PeriodRange {
   start: string;
   end: string;
   label: string;
+}
+
+function makeLabel(start: string, end: string): string {
+  if (!start || !end) return '';
+  return `${new Date(start + 'T00:00:00').toLocaleDateString('pt-BR')} — ${new Date(end + 'T00:00:00').toLocaleDateString('pt-BR')}`;
 }
 
 function getPortoPeriod(monthsOffset = 0): PeriodRange {
@@ -25,22 +27,18 @@ function getPortoPeriod(monthsOffset = 0): PeriodRange {
   }
   const start = new Date(refYear, refMonth, 21);
   const end = new Date(refYear, refMonth + 1, 20);
-  return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
-    label: `${start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} — ${end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}`,
-  };
+  const s = start.toISOString().split('T')[0];
+  const e = end.toISOString().split('T')[0];
+  return { start: s, end: e, label: makeLabel(s, e) };
 }
 
 function getMonthPeriod(monthsOffset = 0): PeriodRange {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth() + monthsOffset, 1);
   const end = new Date(now.getFullYear(), now.getMonth() + monthsOffset + 1, 0);
-  return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
-    label: start.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-  };
+  const s = start.toISOString().split('T')[0];
+  const e = end.toISOString().split('T')[0];
+  return { start: s, end: e, label: makeLabel(s, e) };
 }
 
 const PRESETS = [
@@ -50,7 +48,6 @@ const PRESETS = [
   { value: 'mes_anterior', label: 'Mês Anterior' },
   { value: 'ultimos_90', label: 'Últimos 90 dias' },
   { value: 'ano_atual', label: 'Ano Atual' },
-  { value: 'personalizado', label: 'Personalizado' },
 ];
 
 function resolvePreset(preset: string): PeriodRange {
@@ -64,12 +61,14 @@ function resolvePreset(preset: string): PeriodRange {
       const end = new Date();
       const start = new Date();
       start.setDate(start.getDate() - 90);
-      return { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0], label: 'Últimos 90 dias' };
+      const s = start.toISOString().split('T')[0];
+      const e = end.toISOString().split('T')[0];
+      return { start: s, end: e, label: makeLabel(s, e) };
     }
     case 'ano_atual': {
-      const start = new Date(now.getFullYear(), 0, 1);
-      const end = new Date(now.getFullYear(), 11, 31);
-      return { start: start.toISOString().split('T')[0], end: end.toISOString().split('T')[0], label: `Ano ${now.getFullYear()}` };
+      const s = `${now.getFullYear()}-01-01`;
+      const e = `${now.getFullYear()}-12-31`;
+      return { start: s, end: e, label: makeLabel(s, e) };
     }
     default: return getPortoPeriod(0);
   }
@@ -82,36 +81,46 @@ interface PeriodFilterProps {
 }
 
 export default function PeriodFilter({ value, onChange, className = '' }: PeriodFilterProps) {
-  const [preset, setPreset] = useState('porto_atual');
-  const [customStart, setCustomStart] = useState('');
-  const [customEnd, setCustomEnd] = useState('');
+  const [startDate, setStartDate] = useState(value.start);
+  const [endDate, setEndDate] = useState(value.end);
+
+  // Sync when parent changes (e.g. preset selection)
+  useEffect(() => {
+    setStartDate(value.start);
+    setEndDate(value.end);
+  }, [value.start, value.end]);
 
   function handlePresetChange(val: string) {
-    setPreset(val);
-    if (val !== 'personalizado') {
-      onChange(resolvePreset(val));
+    const range = resolvePreset(val);
+    setStartDate(range.start);
+    setEndDate(range.end);
+    onChange(range);
+  }
+
+  function handleStartChange(newStart: string) {
+    setStartDate(newStart);
+    if (newStart && endDate) {
+      onChange({ start: newStart, end: endDate, label: makeLabel(newStart, endDate) });
     }
   }
 
-  function applyCustom() {
-    if (customStart && customEnd) {
-      onChange({
-        start: customStart,
-        end: customEnd,
-        label: `${new Date(customStart + 'T00:00:00').toLocaleDateString('pt-BR')} — ${new Date(customEnd + 'T00:00:00').toLocaleDateString('pt-BR')}`,
-      });
+  function handleEndChange(newEnd: string) {
+    setEndDate(newEnd);
+    if (startDate && newEnd) {
+      onChange({ start: startDate, end: newEnd, label: makeLabel(startDate, newEnd) });
     }
   }
 
   return (
-    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-2.5 ${className}`}>
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Filter className="w-3.5 h-3.5" />
         <span className="font-medium">Período:</span>
       </div>
-      <Select value={preset} onValueChange={handlePresetChange}>
-        <SelectTrigger className="h-8 w-52 text-xs">
-          <SelectValue />
+
+      <Select onValueChange={handlePresetChange}>
+        <SelectTrigger className="h-9 w-48 text-xs">
+          <SelectValue placeholder="Atalho rápido" />
         </SelectTrigger>
         <SelectContent>
           {PRESETS.map(p => (
@@ -120,18 +129,20 @@ export default function PeriodFilter({ value, onChange, className = '' }: Period
         </SelectContent>
       </Select>
 
-      {preset === 'personalizado' && (
-        <div className="flex items-center gap-1.5">
-          <Input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="h-8 text-xs w-36" />
-          <span className="text-xs text-muted-foreground">até</span>
-          <Input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="h-8 text-xs w-36" />
-          <Button size="sm" variant="outline" className="h-8 text-xs" onClick={applyCustom}>Aplicar</Button>
-        </div>
-      )}
-
-      <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted text-xs text-muted-foreground">
-        <CalendarDays className="w-3.5 h-3.5" />
-        <span>{value.label}</span>
+      <div className="flex items-center gap-2">
+        <Input
+          type="date"
+          value={startDate}
+          onChange={e => handleStartChange(e.target.value)}
+          className="h-9 text-xs w-[150px]"
+        />
+        <span className="text-xs text-muted-foreground font-medium">até</span>
+        <Input
+          type="date"
+          value={endDate}
+          onChange={e => handleEndChange(e.target.value)}
+          className="h-9 text-xs w-[150px]"
+        />
       </div>
     </div>
   );
