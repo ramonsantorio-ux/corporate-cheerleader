@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { BarChart3, TrendingUp, PieChart, Download, FileText, FileSpreadsheet, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -22,6 +23,7 @@ export default function Relatorios() {
   const [feedbacks, setFeedbacks] = useState<FeedbackRow[]>([]);
   const [funcionarios, setFuncionarios] = useState<FuncionarioRow[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState('');
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
   useEffect(() => {
     supabase.from('feedbacks').select('*').order('criado_em', { ascending: false }).then(({ data }) => {
@@ -32,18 +34,25 @@ export default function Relatorios() {
     });
   }, []);
 
-  const total = feedbacks.length;
-  const resolvidos = feedbacks.filter(f => f.status === 'resolvido').length;
+  const filteredFeedbacks = useMemo(() => {
+    return feedbacks.filter(f => {
+      const d = new Date(f.criado_em).toISOString().split('T')[0];
+      return d >= period.start && d <= period.end;
+    });
+  }, [feedbacks, period]);
+
+  const total = filteredFeedbacks.length;
+  const resolvidos = filteredFeedbacks.filter(f => f.status === 'resolvido').length;
   const taxaResolucao = total > 0 ? Math.round((resolvidos / total) * 100) : 0;
 
   const deptCounts: Record<string, number> = {};
-  feedbacks.forEach(f => { deptCounts[f.setor] = (deptCounts[f.setor] || 0) + 1; });
+  filteredFeedbacks.forEach(f => { deptCounts[f.setor] = (deptCounts[f.setor] || 0) + 1; });
   const departamentos = Object.entries(deptCounts).map(([key, count]) => ({
     dept: setorLabels[key as FeedbackSetor] || key, count, pct: total > 0 ? Math.round((count / total) * 100) : 0,
   })).sort((a, b) => b.count - a.count);
 
   const monthCounts: Record<string, number> = {};
-  feedbacks.forEach(f => { const d = new Date(f.criado_em); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; monthCounts[key] = (monthCounts[key] || 0) + 1; });
+  filteredFeedbacks.forEach(f => { const d = new Date(f.criado_em); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; monthCounts[key] = (monthCounts[key] || 0) + 1; });
   const monthlyData = Object.entries(monthCounts).sort().slice(-6).map(([key, count]) => {
     const [, m] = key.split('-');
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -52,7 +61,7 @@ export default function Relatorios() {
   const maxVal = Math.max(...monthlyData.map(d => d.total), 1);
 
   const gestorCounts: Record<string, number> = {};
-  feedbacks.forEach(f => { const g = f.gestor || 'Sem gestor'; gestorCounts[g] = (gestorCounts[g] || 0) + 1; });
+  filteredFeedbacks.forEach(f => { const g = f.gestor || 'Sem gestor'; gestorCounts[g] = (gestorCounts[g] || 0) + 1; });
   const gestorData = Object.entries(gestorCounts).map(([nome, count]) => ({ nome, count })).sort((a, b) => b.count - a.count);
 
   const metrics = [
@@ -344,6 +353,8 @@ export default function Relatorios() {
           </DropdownMenu>
         </div>
       </motion.div>
+
+      <PeriodFilter value={period} onChange={setPeriod} />
 
       {/* Employee PDF export */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-section">

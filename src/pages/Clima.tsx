@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Smile, Plus, Loader2, Trash2, Star } from 'lucide-react';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,7 @@ export default function Clima() {
   const [respondOpen, setRespondOpen] = useState<string | null>(null);
   const [form, setForm] = useState({ title: '', description: '' });
   const [responseForm, setResponseForm] = useState({ employee_id: '', score: '3', comment: '' });
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -103,18 +105,25 @@ export default function Clima() {
         </Dialog>
       </motion.div>
 
+      <PeriodFilter value={period} onChange={setPeriod} />
+
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-      ) : surveys.length === 0 ? (
+      ) : (() => {
+        const filteredSurveys = surveys.filter(s => {
+          const d = new Date(s.created_at).toISOString().split('T')[0];
+          return d >= period.start && d <= period.end;
+        });
+        return filteredSurveys.length === 0 ? (
         <div className="corporate-section">
           <div className="p-12 text-center text-muted-foreground">
             <Smile className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Nenhuma pesquisa criada</p>
+            <p className="text-sm">Nenhuma pesquisa no período selecionado</p>
           </div>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {surveys.map((s, i) => (
+          {filteredSurveys.map((s, i) => (
             <motion.div key={s.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
               className="corporate-section overflow-hidden">
               <div className="px-5 py-4 flex items-start justify-between border-b border-border">
@@ -147,7 +156,8 @@ export default function Clima() {
             </motion.div>
           ))}
         </div>
-      )}
+      );
+      })()}
 
       {/* Respond Dialog */}
       <Dialog open={!!respondOpen} onOpenChange={open => !open && setRespondOpen(null)}>

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Plus, Loader2, CheckCircle2, Clock, Trash2 } from 'lucide-react';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +27,7 @@ export default function Reunioes() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ employee_id: '', meeting_date: '', notes: '', action_items: '' });
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -111,16 +113,20 @@ export default function Reunioes() {
         </Dialog>
       </motion.div>
 
+      <PeriodFilter value={period} onChange={setPeriod} />
+
       {loading ? (
         <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-      ) : meetings.length === 0 ? (
+      ) : (() => {
+        const filteredMeetings = meetings.filter(m => m.meeting_date >= period.start && m.meeting_date <= period.end);
+        return filteredMeetings.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Calendar className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhuma reunião registrada</p>
+          <p>Nenhuma reunião no período selecionado</p>
         </div>
       ) : (
         <div className="grid gap-3">
-          {meetings.map((m, i) => (
+          {filteredMeetings.map((m, i) => (
             <motion.div key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
               className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${m.status === 'completed' ? 'bg-success/10' : 'bg-primary/10'}`}>
@@ -142,7 +148,8 @@ export default function Reunioes() {
             </motion.div>
           ))}
         </div>
-      )}
+      );
+      })()}
     </div>
   );
 }

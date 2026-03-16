@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X } from 'lucide-react';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { useNavigate } from 'react-router-dom';
 import FeedbackCard from '@/components/feedback/FeedbackCard';
 import { Feedback, FeedbackStatus, FeedbackPriority, FeedbackSetor, statusLabels, priorityLabels, setorLabels } from '@/lib/feedbackData';
@@ -39,6 +40,7 @@ export default function Feedbacks() {
   const [selectedDept, setSelectedDept] = useState<FeedbackSetor | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
   // New feedback form state
   const [funcionarios, setFuncionarios] = useState<string[]>([]);
@@ -103,7 +105,8 @@ export default function Feedbacks() {
     const matchSearch = fb.titulo.toLowerCase().includes(search.toLowerCase()) || fb.descricao.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'todos' || fb.status === statusFilter;
     const matchPriority = priorityFilter === 'todos' || fb.prioridade === priorityFilter;
-    return matchSearch && matchStatus && matchPriority;
+    const matchPeriod = fb.criadoEm >= period.start && fb.criadoEm <= period.end;
+    return matchSearch && matchStatus && matchPriority && matchPeriod;
   });
 
   const alertFeedbacks = useMemo(() => feedbacks.filter(fb => getAlertType(fb) !== null), [feedbacks]);
@@ -150,6 +153,8 @@ export default function Feedbacks() {
         </div>
         <Button onClick={() => setCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Novo Feedback</Button>
       </motion.div>
+
+      <PeriodFilter value={period} onChange={setPeriod} />
 
       {/* Alert banner */}
       {alertFeedbacks.length > 0 && (

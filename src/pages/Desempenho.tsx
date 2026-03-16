@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Users, ClipboardList, Plus, Calendar, ChevronRight, TrendingUp, ChevronDown, ArrowUpRight } from 'lucide-react';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -46,6 +47,7 @@ export default function Desempenho() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newCycle, setNewCycle] = useState({ name: '', start_date: '', end_date: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
+  const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -139,6 +141,8 @@ export default function Desempenho() {
           </DialogContent>
         </Dialog>
       </motion.div>
+
+      <PeriodFilter value={period} onChange={setPeriod} />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-3 gap-4">

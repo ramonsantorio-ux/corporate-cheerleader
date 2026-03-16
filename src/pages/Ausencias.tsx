@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
   Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert
 } from 'lucide-react';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,22 +65,9 @@ const PIE_COLORS = ['#0d9488', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b
 
 const DAILY_MOVEMENT_GOAL = 3;
 
+// getCurrentPeriod kept for backward compat
 function getCurrentPeriod() {
-  const now = new Date();
-  const day = now.getDate();
-  let start: Date, end: Date;
-  if (day >= 21) {
-    start = new Date(now.getFullYear(), now.getMonth(), 21);
-    end = new Date(now.getFullYear(), now.getMonth() + 1, 20);
-  } else {
-    start = new Date(now.getFullYear(), now.getMonth() - 1, 21);
-    end = new Date(now.getFullYear(), now.getMonth(), 20);
-  }
-  return {
-    start: start.toISOString().split('T')[0],
-    end: end.toISOString().split('T')[0],
-    label: `${start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} — ${end.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' })}`
-  };
+  return getPortoPeriod(0);
 }
 
 function formatDate(d: string | null) {
@@ -105,7 +93,7 @@ export default function PontoFerias() {
   const [alertsShown, setAlertsShown] = useState(false);
   const pontoFileRef = useRef<HTMLInputElement>(null);
   const feriasFileRef = useRef<HTMLInputElement>(null);
-  const period = getCurrentPeriod();
+  const [period, setPeriod] = useState<PeriodRange>(getCurrentPeriod());
 
   const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '' });
   const [vacForm, setVacForm] = useState({
@@ -118,7 +106,7 @@ export default function PontoFerias() {
     employee_id: '', date: new Date().toISOString().split('T')[0], reason: '', applied: 'true', observation: ''
   });
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [period]);
 
   // ─── Leader alert popups ──────────────────────────────────────────────
   useEffect(() => {
@@ -655,9 +643,7 @@ export default function PontoFerias() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Gestão à Vista — Ponto / Férias</h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Painel de controle operacional · Período: <span className="font-medium text-foreground">{period.label}</span>
-            </p>
+            <p className="text-muted-foreground text-sm mt-1">Painel de controle operacional</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -814,6 +800,9 @@ export default function PontoFerias() {
           </div>
         </div>
       </motion.div>
+
+      {/* ═══ PERIOD FILTER ═══ */}
+      <PeriodFilter value={period} onChange={setPeriod} />
 
       {/* ═══ ALERTS BANNER ═══ */}
       {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (
