@@ -6,101 +6,104 @@
 
 @layer base {
   :root {
-    --background: 210 25% 97%;
-    --foreground: 220 30% 12%;
+    --background: 215 25% 96%;
+    --foreground: 220 35% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 30% 12%;
+    --card-foreground: 220 35% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 30% 12%;
+    --popover-foreground: 220 35% 10%;
 
-    --primary: 195 85% 40%;
+    --primary: 200 80% 38%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 20% 94%;
-    --secondary-foreground: 220 30% 12%;
+    --secondary: 215 20% 93%;
+    --secondary-foreground: 220 35% 10%;
 
-    --muted: 210 15% 92%;
-    --muted-foreground: 220 12% 48%;
+    --muted: 215 18% 91%;
+    --muted-foreground: 220 12% 46%;
 
-    --accent: 175 55% 90%;
-    --accent-foreground: 195 85% 28%;
+    --accent: 180 45% 92%;
+    --accent-foreground: 200 80% 28%;
 
-    --destructive: 0 72% 55%;
+    --destructive: 0 68% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 160 65% 40%;
+    --success: 155 60% 38%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 38 90% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --info: 210 75% 55%;
+    --info: 210 75% 50%;
     --info-foreground: 0 0% 100%;
 
-    --border: 210 18% 88%;
-    --input: 210 18% 88%;
-    --ring: 195 85% 40%;
+    --border: 215 20% 88%;
+    --input: 215 20% 88%;
+    --ring: 200 80% 38%;
 
-    --radius: 0.875rem;
+    --radius: 0.625rem;
 
-    --sidebar-background: 220 35% 10%;
-    --sidebar-foreground: 210 15% 82%;
-    --sidebar-primary: 175 65% 48%;
+    --sidebar-background: 220 38% 8%;
+    --sidebar-foreground: 215 15% 80%;
+    --sidebar-primary: 180 60% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 25% 16%;
-    --sidebar-accent-foreground: 210 15% 82%;
-    --sidebar-border: 220 25% 18%;
-    --sidebar-ring: 175 65% 48%;
+    --sidebar-accent: 220 28% 14%;
+    --sidebar-accent-foreground: 215 15% 80%;
+    --sidebar-border: 220 28% 16%;
+    --sidebar-ring: 180 60% 45%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(195 85% 40%), hsl(175 65% 48%));
-    --gradient-hero: linear-gradient(135deg, hsl(220 35% 10%), hsl(220 30% 18%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(210 25% 97%));
-
-    --shadow-sm: 0 1px 3px hsl(220 30% 12% / 0.06);
-    --shadow-md: 0 4px 12px hsl(220 30% 12% / 0.08);
-    --shadow-lg: 0 8px 30px hsl(220 30% 12% / 0.12);
-    --shadow-glow: 0 0 20px hsl(195 85% 40% / 0.15);
+    --chart-1: 200 80% 38%;
+    --chart-2: 155 60% 38%;
+    --chart-3: 38 90% 50%;
+    --chart-4: 280 60% 55%;
+    --chart-5: 0 68% 50%;
   }
 
   .dark {
-    --background: 220 30% 7%;
-    --foreground: 210 20% 95%;
+    --background: 220 32% 6%;
+    --foreground: 215 20% 95%;
 
-    --card: 220 28% 11%;
-    --card-foreground: 210 20% 95%;
+    --card: 220 30% 10%;
+    --card-foreground: 215 20% 95%;
 
-    --popover: 220 28% 11%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 220 30% 10%;
+    --popover-foreground: 215 20% 95%;
 
-    --primary: 195 80% 48%;
+    --primary: 200 75% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 22% 16%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 220 24% 15%;
+    --secondary-foreground: 215 20% 95%;
 
-    --muted: 220 22% 14%;
-    --muted-foreground: 220 12% 55%;
+    --muted: 220 24% 13%;
+    --muted-foreground: 220 14% 52%;
 
-    --accent: 175 35% 16%;
-    --accent-foreground: 175 65% 62%;
+    --accent: 180 30% 14%;
+    --accent-foreground: 180 60% 58%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 215 40% 98%;
 
-    --border: 220 22% 16%;
-    --input: 220 22% 16%;
-    --ring: 195 80% 48%;
+    --border: 220 24% 15%;
+    --input: 220 24% 15%;
+    --ring: 200 75% 50%;
 
-    --sidebar-background: 220 35% 5%;
-    --sidebar-foreground: 210 15% 78%;
-    --sidebar-primary: 175 65% 48%;
+    --sidebar-background: 220 38% 4%;
+    --sidebar-foreground: 215 15% 76%;
+    --sidebar-primary: 180 60% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 28% 11%;
-    --sidebar-accent-foreground: 210 15% 78%;
-    --sidebar-border: 220 28% 14%;
-    --sidebar-ring: 175 65% 48%;
+    --sidebar-accent: 220 30% 10%;
+    --sidebar-accent-foreground: 215 15% 76%;
+    --sidebar-border: 220 30% 12%;
+    --sidebar-ring: 180 60% 45%;
+
+    --chart-1: 200 75% 50%;
+    --chart-2: 155 55% 45%;
+    --chart-3: 38 85% 55%;
+    --chart-4: 280 55% 60%;
+    --chart-5: 0 60% 55%;
   }
 }
 
@@ -120,14 +123,60 @@
 
 @layer utilities {
   .glass-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border shadow-sm;
+    @apply bg-card border border-border shadow-sm;
   }
 
   .stat-card {
-    @apply glass-card rounded-xl p-5 transition-all duration-200 hover:shadow-md;
+    @apply glass-card rounded-lg p-5 transition-all duration-200 hover:shadow-md;
+  }
+
+  .corporate-section {
+    @apply bg-card border border-border rounded-lg;
+  }
+
+  .corporate-section-header {
+    @apply px-6 py-4 border-b border-border flex items-center justify-between;
+  }
+
+  .corporate-section-body {
+    @apply p-6;
+  }
+
+  .corporate-kpi {
+    @apply bg-card border border-border rounded-lg p-5 relative overflow-hidden;
+  }
+
+  .corporate-kpi::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: hsl(var(--primary));
+  }
+
+  .corporate-kpi-accent::before {
+    background: hsl(var(--success));
+  }
+
+  .corporate-kpi-warning::before {
+    background: hsl(var(--warning));
+  }
+
+  .corporate-kpi-danger::before {
+    background: hsl(var(--destructive));
   }
 
   .feedback-row {
     @apply px-4 py-3 border-b border-border transition-colors duration-150 hover:bg-muted/50 cursor-pointer;
+  }
+
+  .corporate-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium tracking-wide uppercase;
+  }
+
+  .corporate-divider {
+    @apply border-t border-border my-6;
   }
 }
