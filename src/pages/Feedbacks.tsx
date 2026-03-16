@@ -105,7 +105,8 @@ export default function Feedbacks() {
     const matchSearch = fb.titulo.toLowerCase().includes(search.toLowerCase()) || fb.descricao.toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'todos' || fb.status === statusFilter;
     const matchPriority = priorityFilter === 'todos' || fb.prioridade === priorityFilter;
-    return matchSearch && matchStatus && matchPriority;
+    const matchPeriod = fb.criadoEm >= period.start && fb.criadoEm <= period.end;
+    return matchSearch && matchStatus && matchPriority && matchPeriod;
   });
 
   const alertFeedbacks = useMemo(() => feedbacks.filter(fb => getAlertType(fb) !== null), [feedbacks]);
