@@ -93,7 +93,6 @@ export default function Relatorios() {
 
     const empFeedbacks = feedbacks.filter(f => f.autor?.toLowerCase() === emp.nome.toLowerCase());
 
-    // Fetch fit cultural and goals
     const [fitRes, goalsRes] = await Promise.all([
       supabase.from('fit_cultural').select('criteria, stage, score').eq('employee_id', emp.id),
       supabase.from('goals').select('*').eq('cargo', emp.cargo),
@@ -102,43 +101,228 @@ export default function Relatorios() {
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF();
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const brand = [0, 120, 150]; // teal corporate
+    const brandLight = [230, 245, 248];
+    const dark = [30, 40, 50];
+    const gray = [120, 130, 140];
+    const now = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+    const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'Administrativo' };
+    let pageNum = 1;
 
-    doc.setFontSize(18); doc.text(`Ficha Completa - ${emp.nome}`, 14, 22);
-    doc.setFontSize(10); doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 30);
-
-    // Info pessoal
-    doc.setFontSize(13); doc.text('Informações Pessoais', 14, 42);
-    const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'ADM' };
-    autoTable(doc, { startY: 46, head: [['Campo', 'Valor']], body: [
-      ['Nome', emp.nome], ['Cargo', emp.cargo], ['Departamento', emp.departamento],
-      ['E-mail', emp.email || '-'], ['Turno', turnoLabels[emp.turno] || emp.turno || '-'],
-      ['Letra', emp.letra || '-'], ['Escolaridade', emp.escolaridade || '-'],
-      ['Admissão', emp.data_admissao ? new Date(emp.data_admissao).toLocaleDateString('pt-BR') : '-'],
-    ]});
-
-    // Feedbacks
-    let y = (doc as any).lastAutoTable.finalY + 12;
-    doc.setFontSize(13); doc.text(`Feedbacks (${empFeedbacks.length})`, 14, y);
-    if (empFeedbacks.length > 0) {
-      autoTable(doc, { startY: y + 4, head: [['Título', 'Status', 'Prioridade', 'Gestor', 'Data']], body: empFeedbacks.map(f => [f.titulo, f.status, f.prioridade, f.gestor || '-', new Date(f.criado_em).toLocaleDateString('pt-BR')]), styles: { fontSize: 8 } });
-      y = (doc as any).lastAutoTable.finalY + 12;
-    } else { y += 10; }
-
-    // Fit Cultural
-    const fitData = fitRes.data || [];
-    doc.setFontSize(13); doc.text('Fit Cultural', 14, y);
-    if (fitData.length > 0) {
-      autoTable(doc, { startY: y + 4, head: [['Critério', 'Etapa', 'Nota']], body: (fitData as any[]).filter(s => s.score != null).map(s => [s.criteria, s.stage, String(s.score)]), styles: { fontSize: 8 } });
-      y = (doc as any).lastAutoTable.finalY + 12;
-    } else { y += 10; }
-
-    // Metas
-    const goalsData = goalsRes.data || [];
-    doc.setFontSize(13); doc.text(`Metas - ${emp.cargo}`, 14, y);
-    if (goalsData.length > 0) {
-      autoTable(doc, { startY: y + 4, head: [['Descrição', 'Peso', 'Resultado']], body: (goalsData as any[]).map(g => [g.descricao, `${g.peso}%`, g.resultado != null ? String(g.resultado) : '-']), styles: { fontSize: 8 } });
+    function addHeader() {
+      doc.setFillColor(brand[0], brand[1], brand[2]);
+      doc.rect(0, 0, pageW, 28, 'F');
+      doc.setFillColor(0, 90, 115);
+      doc.rect(0, 28, pageW, 2, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('GESTÃO PORTO', 14, 14);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('SISTEMA INTEGRADO DE GESTÃO DE PESSOAS', 14, 21);
+      doc.setFontSize(9);
+      doc.text(`Emitido em: ${now}`, pageW - 14, 14, { align: 'right' });
+      doc.text('DOCUMENTO CONFIDENCIAL', pageW - 14, 21, { align: 'right' });
     }
 
+    function addFooter() {
+      doc.setDrawColor(brand[0], brand[1], brand[2]);
+      doc.setLineWidth(0.5);
+      doc.line(14, pageH - 16, pageW - 14, pageH - 16);
+      doc.setFontSize(7);
+      doc.setTextColor(gray[0], gray[1], gray[2]);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Gestão Porto — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, pageH - 10);
+      doc.text(`Página ${pageNum}`, pageW - 14, pageH - 10, { align: 'right' });
+    }
+
+    function sectionTitle(title: string, y: number) {
+      doc.setFillColor(brandLight[0], brandLight[1], brandLight[2]);
+      doc.roundedRect(14, y - 5, pageW - 28, 9, 1, 1, 'F');
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(brand[0], brand[1], brand[2]);
+      doc.text(title.toUpperCase(), 18, y + 1);
+      return y + 10;
+    }
+
+    function checkPage(y: number, needed: number) {
+      if (y + needed > pageH - 25) {
+        addFooter();
+        doc.addPage();
+        pageNum++;
+        addHeader();
+        return 40;
+      }
+      return y;
+    }
+
+    // --- Page 1 ---
+    addHeader();
+
+    // Title block
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(14, 36, pageW - 28, 22, 2, 2, 'F');
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(dark[0], dark[1], dark[2]);
+    doc.text('FICHA COMPLETA DO COLABORADOR', 18, 47);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(gray[0], gray[1], gray[2]);
+    doc.text(`Matrícula: ${emp.id.substring(0, 8).toUpperCase()}`, 18, 54);
+
+    // Personal info section
+    let y = sectionTitle('Dados Cadastrais', 70);
+    autoTable(doc, {
+      startY: y,
+      margin: { left: 14, right: 14 },
+      theme: 'plain',
+      styles: { fontSize: 9, cellPadding: 3, textColor: dark },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: brand } },
+      body: [
+        ['Nome Completo', emp.nome],
+        ['Cargo', emp.cargo],
+        ['Departamento', emp.departamento],
+        ['E-mail', emp.email || '—'],
+        ['Turno', turnoLabels[emp.turno] || emp.turno || '—'],
+        ['Letra', emp.letra || '—'],
+        ['Escolaridade', emp.escolaridade || '—'],
+        ['Data de Admissão', emp.data_admissao ? new Date(emp.data_admissao).toLocaleDateString('pt-BR') : '—'],
+      ],
+    });
+    y = (doc as any).lastAutoTable.finalY + 14;
+
+    // Feedbacks section
+    y = checkPage(y, 30);
+    y = sectionTitle(`Histórico de Feedbacks (${empFeedbacks.length})`, y);
+    if (empFeedbacks.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        head: [['Título', 'Status', 'Prioridade', 'Gestor', 'Data']],
+        body: empFeedbacks.map(f => [
+          f.titulo,
+          f.status.charAt(0).toUpperCase() + f.status.slice(1),
+          f.prioridade.charAt(0).toUpperCase() + f.prioridade.slice(1),
+          f.gestor || '—',
+          new Date(f.criado_em).toLocaleDateString('pt-BR'),
+        ]),
+      });
+      y = (doc as any).lastAutoTable.finalY + 14;
+
+      // Detail per feedback
+      for (const fb of empFeedbacks) {
+        y = checkPage(y, 40);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(dark[0], dark[1], dark[2]);
+        doc.text(`▸ ${fb.titulo}`, 18, y);
+        y += 5;
+        const details: string[][] = [];
+        if (fb.descricao) details.push(['Descrição', fb.descricao]);
+        if (fb.pontos_positivos) details.push(['Pontos Positivos', fb.pontos_positivos]);
+        if (fb.pontos_melhoria) details.push(['Pontos de Melhoria', fb.pontos_melhoria]);
+        if (fb.observacoes) details.push(['Observações', fb.observacoes]);
+        if (details.length > 0) {
+          autoTable(doc, {
+            startY: y,
+            margin: { left: 20, right: 14 },
+            theme: 'plain',
+            styles: { fontSize: 8, cellPadding: 2, textColor: dark },
+            columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40, textColor: gray } },
+            body: details,
+          });
+          y = (doc as any).lastAutoTable.finalY + 8;
+        }
+      }
+    } else {
+      doc.setFontSize(9);
+      doc.setTextColor(gray[0], gray[1], gray[2]);
+      doc.text('Nenhum feedback registrado.', 18, y + 2);
+      y += 14;
+    }
+
+    // Fit Cultural section
+    const fitData = fitRes.data || [];
+    y = checkPage(y, 30);
+    y = sectionTitle('Avaliação FIT Cultural', y);
+    const fitScored = (fitData as any[]).filter(s => s.score != null);
+    if (fitScored.length > 0) {
+      const stageLabels: Record<string, string> = { autoavaliacao: 'Autoavaliação', gestor: 'Gestor', calibracao: 'Calibração', validacao: 'Validação' };
+      autoTable(doc, {
+        startY: y,
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        head: [['Critério', 'Etapa', 'Nota']],
+        body: fitScored.map(s => [s.criteria, stageLabels[s.stage] || s.stage, String(s.score)]),
+      });
+      const avg = fitScored.reduce((a: number, b: any) => a + b.score, 0) / fitScored.length;
+      y = (doc as any).lastAutoTable.finalY + 4;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(brand[0], brand[1], brand[2]);
+      doc.text(`Média FIT Cultural: ${avg.toFixed(1)} / 5.0`, 18, y + 2);
+      y += 14;
+    } else {
+      doc.setFontSize(9);
+      doc.setTextColor(gray[0], gray[1], gray[2]);
+      doc.text('Nenhuma avaliação FIT Cultural registrada.', 18, y + 2);
+      y += 14;
+    }
+
+    // Goals section
+    const goalsData = goalsRes.data || [];
+    y = checkPage(y, 30);
+    y = sectionTitle(`Metas — ${emp.cargo}`, y);
+    if (goalsData.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        head: [['Descrição', 'Peso (%)', 'Resultado', 'Status']],
+        body: (goalsData as any[]).map(g => {
+          let status = '—';
+          if (g.resultado != null) {
+            if (g.resultado >= 100) status = '✓ Atingida';
+            else if (g.resultado >= 80) status = '◐ Parcial';
+            else status = '✗ Abaixo';
+          }
+          return [g.descricao, `${g.peso}%`, g.resultado != null ? `${g.resultado}%` : '—', status];
+        }),
+      });
+      y = (doc as any).lastAutoTable.finalY + 14;
+    } else {
+      doc.setFontSize(9);
+      doc.setTextColor(gray[0], gray[1], gray[2]);
+      doc.text('Nenhuma meta definida para este cargo.', 18, y + 2);
+      y += 14;
+    }
+
+    // Signature area
+    y = checkPage(y, 40);
+    y += 10;
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+    doc.line(14, y + 20, 90, y + 20);
+    doc.line(pageW - 90, y + 20, pageW - 14, y + 20);
+    doc.setFontSize(8);
+    doc.setTextColor(gray[0], gray[1], gray[2]);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Assinatura do Colaborador', 52, y + 26, { align: 'center' });
+    doc.text('Assinatura do Gestor', pageW - 52, y + 26, { align: 'center' });
+
+    addFooter();
     doc.save(`ficha-${emp.nome.replace(/\s+/g, '-').toLowerCase()}.pdf`);
   }
 
