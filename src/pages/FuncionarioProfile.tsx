@@ -55,6 +55,9 @@ export default function FuncionarioProfile() {
   const [meetings, setMeetings] = useState<MeetingItem[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [vacationInfo, setVacationInfo] = useState<VacationInfo | null>(null);
+  const [extrasCount, setExtrasCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
