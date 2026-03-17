@@ -553,17 +553,28 @@ export default function PontoFerias() {
       }));
   }, [attendance]);
 
+  // ─── Employee-filtered data ───────────────────────────────────────────
+  const empAttendance = useMemo(() => {
+    if (!selectedEmployee) return attendance;
+    return attendance.filter(a => a.employee_id === selectedEmployee.id);
+  }, [attendance, selectedEmployee]);
+
+  const empWarnings = useMemo(() => {
+    if (!selectedEmployee) return warnings;
+    return warnings.filter(w => w.employee_id === selectedEmployee.id);
+  }, [warnings, selectedEmployee]);
+
   const statusDistribution = useMemo(() => {
     const counts: Record<string, number> = {};
-    attendance.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
+    empAttendance.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
     return Object.entries(counts).map(([status, value]) => ({
       name: statusLabels[status] || status, value, fill: statusColors[status] || '#94a3b8'
     }));
-  }, [attendance]);
+  }, [empAttendance]);
 
   const dailyChartData = useMemo(() => {
     const byDate: Record<string, Record<string, number>> = {};
-    attendance.forEach(a => {
+    empAttendance.forEach(a => {
       if (!byDate[a.date]) byDate[a.date] = {};
       byDate[a.date][a.status] = (byDate[a.date][a.status] || 0) + 1;
     });
@@ -578,20 +589,20 @@ export default function PontoFerias() {
         Atestados: statuses.atestado || 0,
         Férias: statuses.ferias || 0,
       }));
-  }, [attendance]);
+  }, [empAttendance]);
 
   const extrasPerEmployee = useMemo(() => {
     const map: Record<string, { name: string; count: number; limit: number }> = {};
-    attendance.filter(a => a.status === 'extra').forEach(a => {
+    empAttendance.filter(a => a.status === 'extra').forEach(a => {
       if (!map[a.employee_id]) map[a.employee_id] = { name: a.employee_name || '', count: 0, limit: 3 };
       map[a.employee_id].count++;
     });
     return Object.values(map).sort((a, b) => b.count - a.count);
-  }, [attendance]);
+  }, [empAttendance]);
 
   const negativeHoursPerEmployee = useMemo(() => {
     const map: Record<string, { name: string; faltasInj: number; faltasJust: number; atestados: number; total: number }> = {};
-    attendance.forEach(a => {
+    empAttendance.forEach(a => {
       if (!['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)) return;
       if (!map[a.employee_id]) map[a.employee_id] = { name: a.employee_name || '', faltasInj: 0, faltasJust: 0, atestados: 0, total: 0 };
       if (a.status === 'falta_injustificada') map[a.employee_id].faltasInj++;
@@ -600,23 +611,23 @@ export default function PontoFerias() {
       map[a.employee_id].total++;
     });
     return Object.values(map).sort((a, b) => b.total - a.total);
-  }, [attendance]);
+  }, [empAttendance]);
 
   const dailyMovements = useMemo(() => {
     const byDate: Record<string, number> = {};
-    attendance.forEach(a => { byDate[a.date] = (byDate[a.date] || 0) + 1; });
+    empAttendance.forEach(a => { byDate[a.date] = (byDate[a.date] || 0) + 1; });
     const today = new Date().toISOString().split('T')[0];
     const todayCount = byDate[today] || 0;
     const totalDays = Object.keys(byDate).length;
     const daysMetGoal = Object.values(byDate).filter(c => c >= DAILY_MOVEMENT_GOAL).length;
     return { todayCount, totalDays, daysMetGoal, goalPct: totalDays > 0 ? Math.round((daysMetGoal / totalDays) * 100) : 0 };
-  }, [attendance]);
+  }, [empAttendance]);
 
-  const totalHorasNegativas = attendance.filter(a => ['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)).length;
-  const totalFaltasInj = attendance.filter(a => a.status === 'falta_injustificada').length;
-  const totalExtras = attendance.filter(a => a.status === 'extra').length;
-  const totalAtestados = attendance.filter(a => a.status === 'atestado').length;
-  const totalWarnings = warnings.length;
+  const totalHorasNegativas = empAttendance.filter(a => ['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)).length;
+  const totalFaltasInj = empAttendance.filter(a => a.status === 'falta_injustificada').length;
+  const totalExtras = empAttendance.filter(a => a.status === 'extra').length;
+  const totalAtestados = empAttendance.filter(a => a.status === 'atestado').length;
+  const totalWarnings = empWarnings.length;
 
   const statusBadge = (s: string) => {
     const colors: Record<string, string> = {
