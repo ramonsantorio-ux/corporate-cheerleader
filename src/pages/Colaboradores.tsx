@@ -43,7 +43,7 @@ export default function Colaboradores() {
   const [uploading, setUploading] = useState(false);
   const [importing, setImporting] = useState(false);
 
-  const emptyForm = { nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: '' as string };
+  const emptyForm = { nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: 'none' };
   const [newData, setNewData] = useState(emptyForm);
   const [editData, setEditData] = useState({ id: '', foto_url: '', ...emptyForm });
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
