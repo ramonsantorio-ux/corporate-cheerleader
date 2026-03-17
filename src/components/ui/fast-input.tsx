@@ -1,4 +1,5 @@
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { Input } from "@/components/ui/input";
 
 interface FastInputProps extends Omit<React.ComponentProps<typeof Input>, "onChange" | "value"> {
@@ -19,8 +20,12 @@ const FastInput = React.memo(({ value, onValueChange, debounceMs = 120, onBlur, 
     }
   }, []);
 
-  const commit = React.useCallback((nextValue: string) => {
+  const commit = React.useCallback((nextValue: string, sync = false) => {
     valueRef.current = nextValue;
+    if (sync) {
+      flushSync(() => onValueChange(nextValue));
+      return;
+    }
     onValueChange(nextValue);
   }, [onValueChange]);
 
@@ -45,7 +50,7 @@ const FastInput = React.memo(({ value, onValueChange, debounceMs = 120, onBlur, 
       }}
       onBlur={(e) => {
         clearPending();
-        commit(local);
+        commit(local, true);
         onBlur?.(e);
       }}
     />
