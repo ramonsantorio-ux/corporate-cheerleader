@@ -266,12 +266,11 @@ export default function Colaboradores() {
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Departamento" /></SelectTrigger>
           <SelectContent><SelectItem value="todos">Todos</SelectItem>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
         </Select>
-        <Select value={letraFilter} onValueChange={setLetraFilter}>
-          <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Letra" /></SelectTrigger>
+        <Select value={turnoFilter} onValueChange={setTurnoFilter}>
+          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Turno/Escala" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="todos">Todas Letras</SelectItem>
-            <SelectItem value="A">Letra A</SelectItem>
-            <SelectItem value="B">Letra B</SelectItem>
+            <SelectItem value="todos">Todos Turnos</SelectItem>
+            {TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>
         <div className="flex gap-2">
