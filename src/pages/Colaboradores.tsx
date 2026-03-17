@@ -41,6 +41,7 @@ export default function Colaboradores() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
+  const [letraFilter, setLetraFilter] = useState('todos');
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
@@ -78,7 +79,8 @@ export default function Colaboradores() {
   const filtered = funcionarios.filter((f) => {
     const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
     const matchDept = deptFilter === 'todos' || f.departamento === deptFilter;
-    return matchSearch && matchDept;
+    const matchLetra = letraFilter === 'todos' || f.letra === letraFilter;
+    return matchSearch && matchDept && matchLetra;
   });
 
   async function uploadPhoto(file: File): Promise<string> {
@@ -263,6 +265,14 @@ export default function Colaboradores() {
         <Select value={deptFilter} onValueChange={setDeptFilter}>
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Departamento" /></SelectTrigger>
           <SelectContent><SelectItem value="todos">Todos</SelectItem>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+        </Select>
+        <Select value={letraFilter} onValueChange={setLetraFilter}>
+          <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Letra" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas Letras</SelectItem>
+            <SelectItem value="A">Letra A</SelectItem>
+            <SelectItem value="B">Letra B</SelectItem>
+          </SelectContent>
         </Select>
         <div className="flex gap-2">
           <Button variant="outline" onClick={downloadTemplate} title="Baixar modelo"><Download className="w-4 h-4 mr-2" />Modelo</Button>
