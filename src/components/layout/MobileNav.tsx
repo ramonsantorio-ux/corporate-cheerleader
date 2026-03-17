@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 const mainItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Home' },
+  { to: '/', icon: LayoutDashboard, label: 'Geral' },
   { to: '/colaboradores', icon: Users, label: 'Pessoas' },
   { to: '/feedbacks', icon: List, label: 'Feedbacks' },
   { to: '/ausencias', icon: CalendarDays, label: 'Ponto' },
