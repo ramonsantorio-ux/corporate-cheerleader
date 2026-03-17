@@ -79,7 +79,8 @@ export default function Colaboradores() {
   const filtered = funcionarios.filter((f) => {
     const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
     const matchDept = deptFilter === 'todos' || f.departamento === deptFilter;
-    return matchSearch && matchDept;
+    const matchLetra = letraFilter === 'todos' || f.letra === letraFilter;
+    return matchSearch && matchDept && matchLetra;
   });
 
   async function uploadPhoto(file: File): Promise<string> {
