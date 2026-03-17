@@ -166,8 +166,8 @@ export default function Relatorios() {
     const doc = new jsPDF();
     const pw = doc.internal.pageSize.getWidth();
     const ph = doc.internal.pageSize.getHeight();
-    const blue = [...PDF_COLORS.primary] as [number, number, number];
-    const blueLt = [...PDF_COLORS.lightBg] as [number, number, number];
+    const blue: [number, number, number] = [59, 130, 187];
+    const blueLt: [number, number, number] = [232, 241, 250];
     let pageNum = 1;
 
     function header() {
@@ -177,11 +177,11 @@ export default function Relatorios() {
       drawBusatoFooter(doc, pageNum, { pageWidth: pw, pageHeight: ph });
     }
     function section(title: string, y: number) {
-      doc.setFillColor(...tealLight);
+      doc.setFillColor(...blueLt);
       doc.rect(14, y, pw - 28, 10, 'F');
-      doc.setFillColor(...teal);
+      doc.setFillColor(...blue);
       doc.rect(14, y, 3, 10, 'F');
-      doc.setTextColor(...teal); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...blue); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
       doc.text(title, 21, y + 7);
       doc.setTextColor(0);
       return y + 14;
@@ -210,8 +210,8 @@ export default function Relatorios() {
       head: [['Indicador', 'Valor']],
       body: fbMetrics.map(m => [m.label, m.value]),
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [...tealLight] },
+      headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: blueLt },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
 
@@ -222,8 +222,8 @@ export default function Relatorios() {
         head: [['Departamento', 'Qtd', '%']],
         body: departamentos.map(d => [d.dept, d.count.toString(), `${d.pct}%`]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLight] },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
       });
       y = (doc as any).lastAutoTable.finalY + 8;
     }
@@ -242,8 +242,8 @@ export default function Relatorios() {
         ['Total Desvios no Período', String(attDeviations.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [...tealLight] },
+      headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: blueLt },
       columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -260,8 +260,8 @@ export default function Relatorios() {
         ['Total no Período', String(filteredWarnings.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [...tealLight] },
+      headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: blueLt },
       columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -278,8 +278,8 @@ export default function Relatorios() {
           w.applied ? 'SIM' : 'NÃO',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLight] },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
       });
       y = (doc as any).lastAutoTable.finalY + 8;
     }
@@ -298,8 +298,8 @@ export default function Relatorios() {
           ev.location || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLight] },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
       });
       y = (doc as any).lastAutoTable.finalY + 8;
     } else {
@@ -319,8 +319,8 @@ export default function Relatorios() {
         ['Total no Período', String(filteredMeetings.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [...tealLight] },
+      headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: blueLt },
       columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -336,8 +336,8 @@ export default function Relatorios() {
         ['Registros de Controle', String(filteredOvertime.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [...tealLight] },
+      headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: blueLt },
       columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
     });
     y = (doc as any).lastAutoTable.finalY + 8;
@@ -351,8 +351,8 @@ export default function Relatorios() {
         head: [['Colaborador', 'Faltas', 'Atestados', 'Advertências', 'Eventos', 'Total']],
         body: desviosPorFunc.map(d => [d.nome, String(d.faltas), String(d.atestados), String(d.advertencias), String(d.eventos), String(d.total)]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLight] },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
         columnStyles: { 1: { halign: 'center' }, 2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' }, 5: { halign: 'center', fontStyle: 'bold' } },
       });
     }
@@ -362,8 +362,7 @@ export default function Relatorios() {
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
       if (i > 1) header();
-      // re-draw footer with correct numbering
-      doc.setDrawColor(...teal); doc.setLineWidth(0.5);
+      doc.setDrawColor(...blue); doc.setLineWidth(0.5);
       doc.line(14, ph - 14, pw - 14, ph - 14);
       doc.setFontSize(7); doc.setTextColor(120); doc.setFont('helvetica', 'normal');
       doc.text('Busato — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, ph - 9);
