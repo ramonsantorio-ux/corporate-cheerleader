@@ -25,9 +25,9 @@ export default defineConfig(({ mode }) => ({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       manifest: {
-        name: "Gestão Porto - Gestão de Pessoas",
-        short_name: "Gestão Porto",
-        description: "Sistema de gestão de pessoas e feedbacks",
+        name: "Busato - Gestão de Contrato",
+        short_name: "Busato",
+        description: "Sistema de gestão de contrato e pessoas",
         theme_color: "#1a8a7a",
         background_color: "#f5f7fa",
         display: "standalone",

@@ -567,7 +567,7 @@ export default function PontoFerias() {
       doc.setPage(i);
       doc.setFontSize(7);
       doc.setTextColor(120);
-      doc.text(`GESTÃO PORTO — Relatório de Desvios — Pág. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
+      doc.text(`BUSATO — Relatório de Desvios — Pág. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
       doc.text('Documento confidencial de uso exclusivo do RH', pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
     }
 
