@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, List, BarChart3, Settings, ChevronLeft, ChevronRight,
+  LayoutDashboard, BarChart3, Settings, ChevronLeft, ChevronRight,
   Users, Target, Shield, LogOut, Calendar, AlertTriangle, CalendarDays,
   ChevronDown, Briefcase
 } from 'lucide-react';
@@ -32,7 +32,6 @@ const navGroups: NavGroup[] = [
   {
     label: 'Desempenho & Feedback',
     items: [
-      { to: '/feedbacks', icon: List, label: 'Feedbacks' },
       { to: '/desempenho', icon: Target, label: 'Avaliações' },
     ],
   },
