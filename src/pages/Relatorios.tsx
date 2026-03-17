@@ -166,8 +166,8 @@ export default function Relatorios() {
     const doc = new jsPDF();
     const pw = doc.internal.pageSize.getWidth();
     const ph = doc.internal.pageSize.getHeight();
-    const teal = [13, 148, 136] as const;
-    const tealLight = [232, 245, 243] as const;
+    const blue = [...PDF_COLORS.primary] as [number, number, number];
+    const blueLt = [...PDF_COLORS.lightBg] as [number, number, number];
     let pageNum = 1;
 
     function header() {
