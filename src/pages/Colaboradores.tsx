@@ -266,6 +266,13 @@ export default function Colaboradores() {
           <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Departamento" /></SelectTrigger>
           <SelectContent><SelectItem value="todos">Todos</SelectItem>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
         </Select>
+        <Select value={letraFilter} onValueChange={setLetraFilter}>
+          <SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="Letra" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas Letras</SelectItem>
+            <SelectItem value="A">Letra A</SelectItem>
+            <SelectItem value="B">Letra B</SelectItem>
+          </SelectContent>
         <div className="flex gap-2">
           <Button variant="outline" onClick={downloadTemplate} title="Baixar modelo"><Download className="w-4 h-4 mr-2" />Modelo</Button>
           <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
