@@ -46,7 +46,7 @@ interface Warning {
   employee_name?: string;
 }
 
-interface Func { id: string; nome: string; turno: string; letra: string; cargo: string; departamento: string; }
+interface Func { id: string; nome: string; turno: string; letra: string; cargo: string; departamento: string; foto_url?: string; }
 
 const statusLabels: Record<string, string> = {
   presente: 'Presente', falta_injustificada: 'Falta Injustificada', falta_justificada: 'Falta Justificada',
