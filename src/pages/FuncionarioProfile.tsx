@@ -527,7 +527,7 @@ export default function FuncionarioProfile() {
         </motion.div>
       )}
 
-      <Tabs defaultValue="desempenho" className="w-full">
+      <Tabs defaultValue={initialTab} className="w-full">
         <TabsList className={`grid w-full ${cargoSemMeta ? 'grid-cols-6' : 'grid-cols-7'}`}>
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
           <TabsTrigger value="ponto-ocorrencias">Ponto / Ocorrências</TabsTrigger>
