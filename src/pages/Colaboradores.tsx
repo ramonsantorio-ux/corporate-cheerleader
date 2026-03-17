@@ -151,7 +151,7 @@ export default function Colaboradores() {
     try { if (newPhotoFile) foto_url = await uploadPhoto(newPhotoFile); } catch { toast.error('Erro ao enviar foto'); setUploading(false); return; }
     const insertData: any = { nome: newData.nome, email: newData.email, cargo: newData.cargo, departamento: newData.departamento, escolaridade: newData.escolaridade, graduacao: newData.graduacao, pos_graduacao: newData.pos_graduacao, pos_graduacao_tipo: newData.pos_graduacao_tipo, turno: newData.turno, letra: newData.letra, foto_url };
     if (newData.data_admissao) insertData.data_admissao = newData.data_admissao;
-    if (newData.encarregado_id) insertData.encarregado_id = newData.encarregado_id;
+    if (newData.encarregado_id && newData.encarregado_id !== 'none') insertData.encarregado_id = newData.encarregado_id;
     const { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
     if (error) { toast.error('Erro ao cadastrar'); setUploading(false); return; }
     if (docFiles.length > 0 && inserted) {
