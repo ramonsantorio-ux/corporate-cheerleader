@@ -173,7 +173,7 @@ export default function Colaboradores() {
     setUploading(true);
     let foto_url = editData.foto_url;
     try { if (editPhotoFile) foto_url = await uploadPhoto(editPhotoFile); } catch { toast.error('Erro foto'); setUploading(false); return; }
-    const updateData: any = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id || null, foto_url };
+    const updateData: any = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id && editData.encarregado_id !== 'none' ? editData.encarregado_id : null, foto_url };
     if (editData.data_admissao) updateData.data_admissao = editData.data_admissao;
     const { error } = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
     if (editDocFiles.length > 0) {
