@@ -82,8 +82,10 @@ export default function Feedbacks() {
   const [createOpen, setCreateOpen] = useState(false);
   const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
+  const [funcionariosFull, setFuncionariosFull] = useState<{ id: string; nome: string; cargo: string }[]>([]);
   const [funcionarios, setFuncionarios] = useState<string[]>([]);
   const [gestorName, setGestorName] = useState('');
+  const [expandedFbCargo, setExpandedFbCargo] = useState<string | null>(null);
   const [form, setForm] = useState({
     titulo: '', descricao: '', setor: 'contrato_porto' as FeedbackSetor,
     prioridade: 'media' as FeedbackPriority, departamento: '', funcionario: '',
@@ -92,8 +94,11 @@ export default function Feedbacks() {
 
   useEffect(() => {
     fetchFeedbacks();
-    supabase.from('funcionarios').select('nome').then(({ data }) => {
-      if (data) setFuncionarios(data.map(f => f.nome));
+    supabase.from('funcionarios').select('id, nome, cargo').then(({ data }) => {
+      if (data) {
+        setFuncionariosFull(data as { id: string; nome: string; cargo: string }[]);
+        setFuncionarios(data.map(f => f.nome));
+      }
     });
     if (user?.id) {
       supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
