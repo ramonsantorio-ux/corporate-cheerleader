@@ -713,7 +713,7 @@ export default function Feedbacks() {
             </div>
             <div>
               <label className={labelClass}>Observações</label>
-              <textarea placeholder="Observações adicionais..." value={form.departamento} onChange={(e) => setForm({ ...form, departamento: e.target.value })} className={`${inputClass} min-h-[60px] resize-none`} maxLength={500} />
+              <FastTextarea placeholder="Observações adicionais..." value={form.departamento} onValueChange={(v) => setForm(f => ({ ...f, departamento: v }))} className={`${inputClass} min-h-[60px] resize-none`} maxLength={500} />
             </div>
             <Button type="submit" className="w-full"><Send className="w-4 h-4 mr-2" />Enviar Feedback</Button>
           </form>

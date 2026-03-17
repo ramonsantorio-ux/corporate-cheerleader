@@ -204,8 +204,8 @@ export default function PDIPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Nova Ação de Desenvolvimento</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
-            <div><Label>Título</Label><Input value={actionForm.title} onChange={e => setActionForm({ ...actionForm, title: e.target.value })} placeholder="Ex: Curso de liderança" /></div>
-            <div><Label>Descrição</Label><Textarea value={actionForm.description} onChange={e => setActionForm({ ...actionForm, description: e.target.value })} /></div>
+            <div><Label>Título</Label><FastInput value={actionForm.title} onValueChange={v => setActionForm(f => ({ ...f, title: v }))} placeholder="Ex: Curso de liderança" /></div>
+            <div><Label>Descrição</Label><FastTextarea value={actionForm.description} onValueChange={v => setActionForm(f => ({ ...f, description: v }))} /></div>
             <div><Label>Prazo</Label><Input type="date" value={actionForm.deadline} onChange={e => setActionForm({ ...actionForm, deadline: e.target.value })} /></div>
             <div>
               <Label>Competência vinculada (opcional)</Label>

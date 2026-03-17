@@ -363,10 +363,10 @@ export default function FeedbackDetail() {
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Observações (opcional)</label>
-              <textarea
+              <FastTextarea
                 placeholder="Observações adicionais..."
                 value={resolveForm.observacoes}
-                onChange={e => setResolveForm({ ...resolveForm, observacoes: e.target.value })}
+                onValueChange={v => setResolveForm(f => ({ ...f, observacoes: v }))}
                 className={`${inputClass} min-h-[50px] resize-none`}
                 maxLength={500}
               />

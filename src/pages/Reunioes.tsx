@@ -192,7 +192,7 @@ export default function Reunioes() {
               </div>
               <div className="space-y-2">
                 <Label>Ações combinadas</Label>
-                <Textarea value={form.action_items} onChange={e => setForm({ ...form, action_items: e.target.value })} placeholder="Itens de ação..." rows={2} />
+                <FastTextarea value={form.action_items} onValueChange={v => setForm(f => ({ ...f, action_items: v }))} placeholder="Itens de ação..." rows={2} />
               </div>
               <Button className="w-full" onClick={handleCreate}>Agendar</Button>
             </div>

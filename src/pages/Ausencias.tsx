@@ -803,7 +803,7 @@ export default function PontoFerias() {
                   </div>
                   <div className="space-y-2">
                     <Label>Observação</Label>
-                    <Textarea value={warningForm.observation} onChange={e => setWarningForm({ ...warningForm, observation: e.target.value })} rows={2} />
+                    <FastTextarea value={warningForm.observation} onValueChange={v => setWarningForm(f => ({ ...f, observation: v }))} rows={2} />
                   </div>
                   <Button className="w-full" onClick={handleCreateWarning}>Registrar Advertência</Button>
                 </div>

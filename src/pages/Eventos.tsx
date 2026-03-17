@@ -359,7 +359,7 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Descrição do Evento *</Label>
-                  <Textarea rows={4} value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} placeholder="Descreva o evento detalhadamente..." />
+                  <FastTextarea rows={4} value={newEvent.description} onValueChange={v => setNewEvent(p => ({ ...p, description: v }))} placeholder="Descreva o evento detalhadamente..." />
                 </div>
                 <div className="md:col-span-2">
                   <Button onClick={handleCreate} className="w-full">Registrar Evento</Button>
