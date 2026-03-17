@@ -825,6 +825,7 @@ export default function FuncionarioProfile() {
             </>
           )}
         </TabsContent>
+        )}
 
         <TabsContent value="feedbacks" className="space-y-4 mt-4">
           <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
