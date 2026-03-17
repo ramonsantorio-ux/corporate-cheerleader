@@ -361,7 +361,7 @@ export default function FuncionarioProfile() {
     const advPending = employeeWarnings.filter(w => !w.applied).length;
 
     y = checkPageBreak(y, 60);
-    y = drawSectionHeading('RESUMO DE DESVIOS', y);
+    y = drawSectionHeadingLocal('RESUMO DE DESVIOS', y);
 
     autoTable(doc, {
       startY: y,
