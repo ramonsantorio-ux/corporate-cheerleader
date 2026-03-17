@@ -1428,7 +1428,7 @@ export default function PontoFerias() {
               <div className="space-y-2"><Label>Início</Label><Input type="date" value={editVacForm.start_date} onChange={e => setEditVacForm({ ...editVacForm, start_date: e.target.value })} /></div>
               <div className="space-y-2"><Label>Fim</Label><Input type="date" value={editVacForm.end_date} onChange={e => setEditVacForm({ ...editVacForm, end_date: e.target.value })} /></div>
             </div>
-            <div className="space-y-2"><Label>Observação</Label><Textarea value={editVacForm.observation} onChange={e => setEditVacForm({ ...editVacForm, observation: e.target.value })} rows={2} /></div>
+            <div className="space-y-2"><Label>Observação</Label><FastTextarea value={editVacForm.observation} onValueChange={v => setEditVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
             <div className="flex gap-2">
               <Button className="flex-1" onClick={handleEditVacation}>Salvar Alterações</Button>
               <Button variant="destructive" onClick={() => { deleteVacation(editVacForm.id); setEditVacDialogOpen(false); }}>
