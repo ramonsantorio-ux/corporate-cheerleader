@@ -46,15 +46,15 @@ function ProtectedRoutes() {
         <Route path="/" element={<Index />} />
         <Route path="/colaboradores" element={<Colaboradores />} />
         <Route path="/cadastro" element={<Navigate to="/colaboradores" replace />} />
-        <Route path="/feedbacks" element={<Feedbacks />} />
+        <Route path="/feedbacks" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
         <Route path="/feedbacks/:id" element={<FeedbackDetail />} />
-        <Route path="/novo" element={<Navigate to="/feedbacks" replace />} />
+        <Route path="/novo" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
         <Route path="/relatorios" element={<Relatorios />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
         <Route path="/desempenho" element={<Desempenho />} />
-        <Route path="/desempenho/avaliacoes" element={<Avaliacoes />} />
-        <Route path="/desempenho/competencias" element={<Competencias />} />
-        <Route path="/desempenho/pdi" element={<PDIPage />} />
+        <Route path="/desempenho/avaliacoes" element={<Navigate to="/desempenho?tab=metas" replace />} />
+        <Route path="/desempenho/competencias" element={<Navigate to="/desempenho?tab=fit-cultural" replace />} />
+        <Route path="/desempenho/pdi" element={<Navigate to="/desempenho?tab=pdi" replace />} />
         <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
         <Route path="/reunioes" element={<Reunioes />} />
         <Route path="/eventos" element={<Eventos />} />

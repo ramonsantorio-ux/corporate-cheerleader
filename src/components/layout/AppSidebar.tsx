@@ -32,7 +32,6 @@ const navGroups: NavGroup[] = [
   {
     label: 'Desempenho & Feedback',
     items: [
-      { to: '/feedbacks', icon: List, label: 'Feedbacks' },
       { to: '/desempenho', icon: Target, label: 'Avaliações' },
     ],
   },
