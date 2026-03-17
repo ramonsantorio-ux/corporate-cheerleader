@@ -813,8 +813,71 @@ export default function PontoFerias() {
         </div>
       </motion.div>
 
-      {/* ═══ PERIOD FILTER ═══ */}
-      <PeriodFilter value={period} onChange={setPeriod} />
+      {/* ═══ PERIOD FILTER + EMPLOYEE FILTER ═══ */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start">
+        <div className="flex-1 w-full">
+          <PeriodFilter value={period} onChange={setPeriod} />
+        </div>
+        <div className="relative w-full sm:w-72">
+          <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2">
+            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            {selectedEmployee ? (
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {selectedEmployee.foto_url ? (
+                  <img src={selectedEmployee.foto_url} className="w-6 h-6 rounded-full object-cover border border-border" alt="" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{selectedEmployee.nome.charAt(0)}</div>
+                )}
+                <span className="text-sm font-medium truncate">{selectedEmployee.nome}</span>
+                <button onClick={() => { setSelectedEmployee(null); setEmployeeSearch(''); }} className="ml-auto text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <input type="text" placeholder="Filtrar por funcionário..." value={employeeSearch}
+                onChange={e => { setEmployeeSearch(e.target.value); setShowEmpDropdown(true); }}
+                onFocus={() => setShowEmpDropdown(true)}
+                className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground" />
+            )}
+          </div>
+          {showEmpDropdown && filteredSearchEmps.length > 0 && !selectedEmployee && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+              {filteredSearchEmps.map(f => (
+                <button key={f.id} onClick={() => { setSelectedEmployee(f); setEmployeeSearch(''); setShowEmpDropdown(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left">
+                  {f.foto_url ? (
+                    <img src={f.foto_url} className="w-7 h-7 rounded-full object-cover border border-border" alt="" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{f.nome.charAt(0)}</div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{f.nome}</p>
+                    <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.turno}/{f.letra}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Employee context banner */}
+      {selectedEmployee && (
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-4 border-l-4 border-l-primary flex items-center gap-4">
+          {selectedEmployee.foto_url ? (
+            <img src={selectedEmployee.foto_url} className="w-10 h-10 rounded-full object-cover border-2 border-primary/30" alt="" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">{selectedEmployee.nome.charAt(0)}</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-foreground">{selectedEmployee.nome}</p>
+            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} · {selectedEmployee.departamento} · {selectedEmployee.turno}/{selectedEmployee.letra}</p>
+          </div>
+          <button onClick={() => navigate(`/funcionario/${selectedEmployee.id}`)} className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium shrink-0">
+            <Eye className="w-3.5 h-3.5" /> Ver Perfil
+          </button>
+        </motion.div>
+      )}
 
       {/* ═══ ALERTS BANNER ═══ */}
       {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (
