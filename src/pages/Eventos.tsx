@@ -343,7 +343,7 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Placa/TAG</Label>
-                  <Input value={newEvent.plate_tag} onChange={e => setNewEvent({ ...newEvent, plate_tag: e.target.value })} placeholder="Ex: QRD0980" />
+                  <FastInput value={newEvent.plate_tag} onValueChange={v => setNewEvent(p => ({ ...p, plate_tag: v }))} placeholder="Ex: QRD0980" />
                 </div>
                 <div className="space-y-2">
                   <Label>Turno</Label>
