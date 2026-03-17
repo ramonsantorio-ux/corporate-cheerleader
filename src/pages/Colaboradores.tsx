@@ -68,11 +68,11 @@ export default function Colaboradores() {
 
   useEffect(() => { fetchFuncionarios(); }, []);
 
-  async function fetchFuncionarios() {
-    setLoading(true);
+  async function fetchFuncionarios(silent = false) {
+    if (!silent) setLoading(true);
     const { data, error } = await supabase.from('funcionarios').select('*').order('nome');
     if (!error && data) setFuncionarios(data as Funcionario[]);
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
 
   const filtered = funcionarios.filter((f) => {
