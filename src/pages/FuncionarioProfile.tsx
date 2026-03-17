@@ -198,20 +198,21 @@ export default function FuncionarioProfile() {
   }, [fitScores]);
 
   const scoreMeta = useMemo(() => {
-    if (goals.length === 0) return 0;
+    if (cargoSemMeta || goals.length === 0) return 0;
     const withResult = goals.filter(g => g.resultado != null);
     if (withResult.length === 0) return 0;
     const totalPeso = withResult.reduce((s, g) => s + g.peso, 0);
     const weighted = withResult.reduce((s, g) => s + (g.resultado! * g.peso / 100), 0);
     return Math.min(Math.round((weighted / totalPeso) * 100), 100);
-  }, [goals]);
+  }, [goals, cargoSemMeta]);
 
   const score = useMemo(() => {
+    if (cargoSemMeta) return scoreFit;
     if (scoreFit === 0 && scoreMeta === 0) return 0;
     if (scoreFit === 0) return scoreMeta;
     if (scoreMeta === 0) return scoreFit;
     return Math.round((scoreFit + scoreMeta) / 2);
-  }, [scoreFit, scoreMeta]);
+  }, [scoreFit, scoreMeta, cargoSemMeta]);
 
   const deptAvg = useMemo(() => {
     if (!func) return 0;
