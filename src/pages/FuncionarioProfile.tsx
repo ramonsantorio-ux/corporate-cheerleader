@@ -103,7 +103,13 @@ export default function FuncionarioProfile() {
     });
   }, [id]);
 
-  useEffect(() => { if (func) fetchGoals(); }, [func]);
+  useEffect(() => {
+    if (!func || cargoSemMeta) {
+      setGoals([]);
+      return;
+    }
+    fetchGoals();
+  }, [func, cargoSemMeta]);
 
   // Fetch attendance + vacation + warnings data for this employee
   useEffect(() => {
