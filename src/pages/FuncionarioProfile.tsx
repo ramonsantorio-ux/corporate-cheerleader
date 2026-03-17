@@ -75,6 +75,7 @@ export default function FuncionarioProfile() {
   const [editGoal, setEditGoal] = useState<Goal | null>(null);
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
   const [goalForm, setGoalForm] = useState(emptyGoalForm);
+  const cargoSemMeta = func ? CARGOS_SEM_META.includes(func.cargo) : false;
 
   useEffect(() => {
     if (!id) return;
@@ -102,7 +103,13 @@ export default function FuncionarioProfile() {
     });
   }, [id]);
 
-  useEffect(() => { if (func) fetchGoals(); }, [func]);
+  useEffect(() => {
+    if (!func || cargoSemMeta) {
+      setGoals([]);
+      return;
+    }
+    fetchGoals();
+  }, [func, cargoSemMeta]);
 
   // Fetch attendance + vacation + warnings data for this employee
   useEffect(() => {
@@ -191,20 +198,21 @@ export default function FuncionarioProfile() {
   }, [fitScores]);
 
   const scoreMeta = useMemo(() => {
-    if (goals.length === 0) return 0;
+    if (cargoSemMeta || goals.length === 0) return 0;
     const withResult = goals.filter(g => g.resultado != null);
     if (withResult.length === 0) return 0;
     const totalPeso = withResult.reduce((s, g) => s + g.peso, 0);
     const weighted = withResult.reduce((s, g) => s + (g.resultado! * g.peso / 100), 0);
     return Math.min(Math.round((weighted / totalPeso) * 100), 100);
-  }, [goals]);
+  }, [goals, cargoSemMeta]);
 
   const score = useMemo(() => {
+    if (cargoSemMeta) return scoreFit;
     if (scoreFit === 0 && scoreMeta === 0) return 0;
     if (scoreFit === 0) return scoreMeta;
     if (scoreMeta === 0) return scoreFit;
     return Math.round((scoreFit + scoreMeta) / 2);
-  }, [scoreFit, scoreMeta]);
+  }, [scoreFit, scoreMeta, cargoSemMeta]);
 
   const deptAvg = useMemo(() => {
     if (!func) return 0;
@@ -476,7 +484,7 @@ export default function FuncionarioProfile() {
             {[
               { label: 'Score Geral', value: score, color: 'hsl(var(--primary))' },
               { label: 'FIT Cultural', value: scoreFit, color: 'hsl(var(--chart-2))' },
-              ...(!CARGOS_SEM_META.includes(func.cargo) ? [{ label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' }] : []),
+              ...(!cargoSemMeta ? [{ label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' }] : []),
             ].map(s => (
               <div key={s.label} className="text-center">
                 <div className="relative w-16 h-16">
@@ -518,11 +526,11 @@ export default function FuncionarioProfile() {
       )}
 
       <Tabs defaultValue="desempenho" className="w-full">
-        <TabsList className={`grid w-full ${CARGOS_SEM_META.includes(func.cargo) ? 'grid-cols-6' : 'grid-cols-7'}`}>
+        <TabsList className={`grid w-full ${cargoSemMeta ? 'grid-cols-6' : 'grid-cols-7'}`}>
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
           <TabsTrigger value="ponto-ocorrencias">Ponto / Ocorrências</TabsTrigger>
           <TabsTrigger value="eventos">Eventos ({employeeEvents.length})</TabsTrigger>
-          {!CARGOS_SEM_META.includes(func.cargo) && <TabsTrigger value="metas">Metas</TabsTrigger>}
+          {!cargoSemMeta && <TabsTrigger value="metas">Metas</TabsTrigger>}
           <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
           <TabsTrigger value="fit-cultural">Fit Cultural</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
@@ -791,7 +799,7 @@ export default function FuncionarioProfile() {
         </TabsContent>
 
 
-        {!CARGOS_SEM_META.includes(func.cargo) && (
+        {!cargoSemMeta && (
         <TabsContent value="metas" className="space-y-6 mt-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
