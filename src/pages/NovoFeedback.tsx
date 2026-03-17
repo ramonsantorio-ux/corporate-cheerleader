@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +6,8 @@ import { setorLabels, priorityLabels, FeedbackSetor, FeedbackPriority } from '@/
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-
+import { FastInput } from '@/components/ui/fast-input';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 export default function NovoFeedback() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -108,11 +109,10 @@ export default function NovoFeedback() {
 
         <div>
           <label className={labelClass}>Título *</label>
-          <input
-            type="text"
+          <FastInput
             placeholder="Resumo breve do feedback"
             value={form.titulo}
-            onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+            onValueChange={(v) => setForm(f => ({ ...f, titulo: v }))}
             className={inputClass}
             maxLength={100}
           />
@@ -134,10 +134,10 @@ export default function NovoFeedback() {
 
         <div>
           <label className={labelClass}>Descrição *</label>
-          <textarea
+          <FastTextarea
             placeholder="Descreva em detalhes o feedback, incluindo contexto e impacto..."
             value={form.descricao}
-            onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+            onValueChange={(v) => setForm(f => ({ ...f, descricao: v }))}
             className={`${inputClass} min-h-[120px] resize-none`}
             maxLength={1000}
           />
@@ -145,10 +145,10 @@ export default function NovoFeedback() {
 
         <div>
           <label className={labelClass}>Pontos Positivos</label>
-          <textarea
+          <FastTextarea
             placeholder="Destaque os pontos positivos..."
             value={form.pontos_positivos}
-            onChange={(e) => setForm({ ...form, pontos_positivos: e.target.value })}
+            onValueChange={(v) => setForm(f => ({ ...f, pontos_positivos: v }))}
             className={`${inputClass} min-h-[80px] resize-none`}
             maxLength={1000}
           />
@@ -156,10 +156,10 @@ export default function NovoFeedback() {
 
         <div>
           <label className={labelClass}>Pontos de Melhoria</label>
-          <textarea
+          <FastTextarea
             placeholder="Indique os pontos de melhoria..."
             value={form.pontos_melhoria}
-            onChange={(e) => setForm({ ...form, pontos_melhoria: e.target.value })}
+            onValueChange={(v) => setForm(f => ({ ...f, pontos_melhoria: v }))}
             className={`${inputClass} min-h-[80px] resize-none`}
             maxLength={1000}
           />
@@ -195,10 +195,10 @@ export default function NovoFeedback() {
 
         <div>
           <label className={labelClass}>Observações</label>
-          <textarea
+          <FastTextarea
             placeholder="Observações adicionais..."
             value={form.departamento}
-            onChange={(e) => setForm({ ...form, departamento: e.target.value })}
+            onValueChange={(v) => setForm(f => ({ ...f, departamento: v }))}
             className={`${inputClass} min-h-[80px] resize-none`}
             maxLength={500}
           />

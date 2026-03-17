@@ -4,8 +4,8 @@ import { Calendar, Plus, Loader2, CheckCircle2, Clock, Trash2, Search, X, Users,
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
@@ -188,11 +188,11 @@ export default function Reunioes() {
               </div>
               <div className="space-y-2">
                 <Label>Pauta / Anotações</Label>
-                <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="O que será discutido..." rows={3} />
+                <FastTextarea value={form.notes} onValueChange={v => setForm(f => ({ ...f, notes: v }))} placeholder="O que será discutido..." rows={3} />
               </div>
               <div className="space-y-2">
                 <Label>Ações combinadas</Label>
-                <Textarea value={form.action_items} onChange={e => setForm({ ...form, action_items: e.target.value })} placeholder="Itens de ação..." rows={2} />
+                <FastTextarea value={form.action_items} onValueChange={v => setForm(f => ({ ...f, action_items: v }))} placeholder="Itens de ação..." rows={2} />
               </div>
               <Button className="w-full" onClick={handleCreate}>Agendar</Button>
             </div>

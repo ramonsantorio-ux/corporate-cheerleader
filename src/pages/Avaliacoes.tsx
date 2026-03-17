@@ -7,6 +7,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -254,17 +255,17 @@ export default function Avaliacoes() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editGoal ? 'Editar Meta' : 'Nova Meta'}</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-2">
-            <div><Label>Descrição</Label><Input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></div>
+            <div><Label>Descrição</Label><FastInput value={form.descricao} onValueChange={v => setForm(f => ({ ...f, descricao: v }))} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Peso (%)</Label><Input type="number" value={form.peso} onChange={e => setForm({ ...form, peso: Number(e.target.value) })} /></div>
               <div><Label>Resultado</Label><Input type="number" value={form.resultado} onChange={e => setForm({ ...form, resultado: e.target.value })} placeholder="Ex: 85" /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label>Muito Abaixo</Label><Input value={form.muito_abaixo} onChange={e => setForm({ ...form, muito_abaixo: e.target.value })} /></div>
-              <div><Label>Abaixo</Label><Input value={form.abaixo} onChange={e => setForm({ ...form, abaixo: e.target.value })} /></div>
-              <div><Label>Dentro</Label><Input value={form.dentro} onChange={e => setForm({ ...form, dentro: e.target.value })} /></div>
-              <div><Label>Acima</Label><Input value={form.acima} onChange={e => setForm({ ...form, acima: e.target.value })} /></div>
-              <div className="col-span-2"><Label>Muito Acima</Label><Input value={form.muito_acima} onChange={e => setForm({ ...form, muito_acima: e.target.value })} /></div>
+              <div><Label>Muito Abaixo</Label><FastInput value={form.muito_abaixo} onValueChange={v => setForm(f => ({ ...f, muito_abaixo: v }))} /></div>
+              <div><Label>Abaixo</Label><FastInput value={form.abaixo} onValueChange={v => setForm(f => ({ ...f, abaixo: v }))} /></div>
+              <div><Label>Dentro</Label><FastInput value={form.dentro} onValueChange={v => setForm(f => ({ ...f, dentro: v }))} /></div>
+              <div><Label>Acima</Label><FastInput value={form.acima} onValueChange={v => setForm(f => ({ ...f, acima: v }))} /></div>
+              <div className="col-span-2"><Label>Muito Acima</Label><FastInput value={form.muito_acima} onValueChange={v => setForm(f => ({ ...f, muito_acima: v }))} /></div>
             </div>
             <Button onClick={saveGoal} className="w-full">{editGoal ? 'Salvar' : 'Criar'}</Button>
           </div>

@@ -4,8 +4,9 @@ import { Plus, ChevronDown, ChevronUp, CheckCircle2, Clock, PlayCircle, Trash2 }
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -191,7 +192,7 @@ export default function PDIPage() {
                   <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Colaborador</Label><Input value={pdiForm.employee_name} onChange={e => setPdiForm({ ...pdiForm, employee_name: e.target.value })} placeholder="Nome do colaborador" /></div>
+              <div><Label>Colaborador</Label><FastInput value={pdiForm.employee_name} onValueChange={v => setPdiForm(f => ({ ...f, employee_name: v }))} placeholder="Nome do colaborador" /></div>
               <Button onClick={createPDI} className="w-full">Criar PDI</Button>
             </div>
           </DialogContent>
@@ -203,8 +204,8 @@ export default function PDIPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>Nova Ação de Desenvolvimento</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
-            <div><Label>Título</Label><Input value={actionForm.title} onChange={e => setActionForm({ ...actionForm, title: e.target.value })} placeholder="Ex: Curso de liderança" /></div>
-            <div><Label>Descrição</Label><Textarea value={actionForm.description} onChange={e => setActionForm({ ...actionForm, description: e.target.value })} /></div>
+            <div><Label>Título</Label><FastInput value={actionForm.title} onValueChange={v => setActionForm(f => ({ ...f, title: v }))} placeholder="Ex: Curso de liderança" /></div>
+            <div><Label>Descrição</Label><FastTextarea value={actionForm.description} onValueChange={v => setActionForm(f => ({ ...f, description: v }))} /></div>
             <div><Label>Prazo</Label><Input type="date" value={actionForm.deadline} onChange={e => setActionForm({ ...actionForm, deadline: e.target.value })} /></div>
             <div>
               <Label>Competência vinculada (opcional)</Label>

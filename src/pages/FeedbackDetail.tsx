@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ThumbsUp, MessageSquare, Calendar, User, Building2, UserCheck, CheckCircle2, Clock, AlertTriangle, ArrowRight, FileText, Shield, X, Loader2 } from 'lucide-react';
@@ -342,30 +343,30 @@ export default function FeedbackDetail() {
           <form onSubmit={handleResolve} className="space-y-4 pt-2">
             <div>
               <label className="text-sm font-medium mb-1.5 block">Ação Tomada *</label>
-              <textarea
+              <FastTextarea
                 placeholder="Descreva a ação realizada para resolver este feedback..."
                 value={resolveForm.acaoTomada}
-                onChange={e => setResolveForm({ ...resolveForm, acaoTomada: e.target.value })}
+                onValueChange={v => setResolveForm(f => ({ ...f, acaoTomada: v }))}
                 className={`${inputClass} min-h-[90px] resize-none`}
                 maxLength={1000}
               />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Plano de Ação (opcional)</label>
-              <textarea
+              <FastTextarea
                 placeholder="Se necessário, descreva o plano de ação para evitar recorrência..."
                 value={resolveForm.planoAcao}
-                onChange={e => setResolveForm({ ...resolveForm, planoAcao: e.target.value })}
+                onValueChange={v => setResolveForm(f => ({ ...f, planoAcao: v }))}
                 className={`${inputClass} min-h-[70px] resize-none`}
                 maxLength={1000}
               />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Observações (opcional)</label>
-              <textarea
+              <FastTextarea
                 placeholder="Observações adicionais..."
                 value={resolveForm.observacoes}
-                onChange={e => setResolveForm({ ...resolveForm, observacoes: e.target.value })}
+                onValueChange={v => setResolveForm(f => ({ ...f, observacoes: v }))}
                 className={`${inputClass} min-h-[50px] resize-none`}
                 maxLength={500}
               />

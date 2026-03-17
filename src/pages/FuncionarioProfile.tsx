@@ -5,6 +5,7 @@ import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, 
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -968,9 +969,9 @@ export default function FuncionarioProfile() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editGoal ? 'Editar Meta' : 'Nova Meta'}</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-2">
-            <div><Label>Descrição</Label><Input value={goalForm.descricao} onChange={e => setGoalForm({ ...goalForm, descricao: e.target.value })} /></div>
+            <div><Label>Descrição</Label><FastInput value={goalForm.descricao} onValueChange={v => setGoalForm(f => ({ ...f, descricao: v }))} /></div>
             <div className="grid grid-cols-2 gap-3"><div><Label>Peso (%)</Label><Input type="number" value={goalForm.peso} onChange={e => setGoalForm({ ...goalForm, peso: Number(e.target.value) })} /></div><div><Label>Resultado</Label><Input type="number" value={goalForm.resultado} onChange={e => setGoalForm({ ...goalForm, resultado: e.target.value })} placeholder="Ex: 85" /></div></div>
-            <div className="grid grid-cols-2 gap-3"><div><Label>Muito Abaixo</Label><Input value={goalForm.muito_abaixo} onChange={e => setGoalForm({ ...goalForm, muito_abaixo: e.target.value })} /></div><div><Label>Abaixo</Label><Input value={goalForm.abaixo} onChange={e => setGoalForm({ ...goalForm, abaixo: e.target.value })} /></div><div><Label>Dentro</Label><Input value={goalForm.dentro} onChange={e => setGoalForm({ ...goalForm, dentro: e.target.value })} /></div><div><Label>Acima</Label><Input value={goalForm.acima} onChange={e => setGoalForm({ ...goalForm, acima: e.target.value })} /></div><div className="col-span-2"><Label>Muito Acima</Label><Input value={goalForm.muito_acima} onChange={e => setGoalForm({ ...goalForm, muito_acima: e.target.value })} /></div></div>
+            <div className="grid grid-cols-2 gap-3"><div><Label>Muito Abaixo</Label><FastInput value={goalForm.muito_abaixo} onValueChange={v => setGoalForm(f => ({ ...f, muito_abaixo: v }))} /></div><div><Label>Abaixo</Label><FastInput value={goalForm.abaixo} onValueChange={v => setGoalForm(f => ({ ...f, abaixo: v }))} /></div><div><Label>Dentro</Label><FastInput value={goalForm.dentro} onValueChange={v => setGoalForm(f => ({ ...f, dentro: v }))} /></div><div><Label>Acima</Label><FastInput value={goalForm.acima} onValueChange={v => setGoalForm(f => ({ ...f, acima: v }))} /></div><div className="col-span-2"><Label>Muito Acima</Label><FastInput value={goalForm.muito_acima} onValueChange={v => setGoalForm(f => ({ ...f, muito_acima: v }))} /></div></div>
             <Button onClick={saveGoal} className="w-full">{editGoal ? 'Salvar' : 'Criar'}</Button>
           </div>
         </DialogContent>

@@ -5,8 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -319,7 +320,7 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Horário</Label>
-                  <Input value={newEvent.event_time} onChange={e => setNewEvent({ ...newEvent, event_time: e.target.value })} placeholder="Ex: 14:30" />
+                  <FastInput value={newEvent.event_time} onValueChange={v => setNewEvent(p => ({ ...p, event_time: v }))} placeholder="Ex: 14:30" />
                 </div>
                 <div className="space-y-2">
                   <Label>Dia da Semana</Label>
@@ -334,31 +335,31 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Local</Label>
-                  <Input value={newEvent.location} onChange={e => setNewEvent({ ...newEvent, location: e.target.value })} placeholder="Ex: PÁTIO P" />
+                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P" />
                 </div>
                 <div className="space-y-2">
                   <Label>Equipamento</Label>
-                  <Input value={newEvent.equipment} onChange={e => setNewEvent({ ...newEvent, equipment: e.target.value })} placeholder="Ex: CAMINHÃO PIPA" />
+                  <FastInput value={newEvent.equipment} onValueChange={v => setNewEvent(p => ({ ...p, equipment: v }))} placeholder="Ex: CAMINHÃO PIPA" />
                 </div>
                 <div className="space-y-2">
                   <Label>Placa/TAG</Label>
-                  <Input value={newEvent.plate_tag} onChange={e => setNewEvent({ ...newEvent, plate_tag: e.target.value })} placeholder="Ex: QRD0980" />
+                  <FastInput value={newEvent.plate_tag} onValueChange={v => setNewEvent(p => ({ ...p, plate_tag: v }))} placeholder="Ex: QRD0980" />
                 </div>
                 <div className="space-y-2">
                   <Label>Turno</Label>
-                  <Input value={newEvent.shift} onChange={e => setNewEvent({ ...newEvent, shift: e.target.value })} />
+                  <FastInput value={newEvent.shift} onValueChange={v => setNewEvent(p => ({ ...p, shift: v }))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Encarregado</Label>
-                  <Input value={newEvent.supervisor} onChange={e => setNewEvent({ ...newEvent, supervisor: e.target.value })} />
+                  <FastInput value={newEvent.supervisor} onValueChange={v => setNewEvent(p => ({ ...p, supervisor: v }))} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Nome do Envolvido *</Label>
-                  <Input value={newEvent.involved_name} onChange={e => setNewEvent({ ...newEvent, involved_name: e.target.value })} placeholder="Nome completo" />
+                  <FastInput value={newEvent.involved_name} onValueChange={v => setNewEvent(p => ({ ...p, involved_name: v }))} placeholder="Nome completo" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Descrição do Evento *</Label>
-                  <Textarea rows={4} value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} placeholder="Descreva o evento detalhadamente..." />
+                  <FastTextarea rows={4} value={newEvent.description} onValueChange={v => setNewEvent(p => ({ ...p, description: v }))} placeholder="Descreva o evento detalhadamente..." />
                 </div>
                 <div className="md:col-span-2">
                   <Button onClick={handleCreate} className="w-full">Registrar Evento</Button>

@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, BarChart3, Target, Activity } from 'lucide-react';
+import { FastInput } from '@/components/ui/fast-input';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { useNavigate } from 'react-router-dom';
 import FeedbackCard from '@/components/feedback/FeedbackCard';
@@ -672,7 +674,7 @@ export default function Feedbacks() {
             </div>
             <div>
               <label className={labelClass}>Título *</label>
-              <input type="text" placeholder="Resumo breve do feedback" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} className={inputClass} maxLength={100} />
+              <FastInput placeholder="Resumo breve do feedback" value={form.titulo} onValueChange={(v) => setForm(f => ({ ...f, titulo: v }))} className={inputClass} maxLength={100} />
             </div>
             <div>
               <label className={labelClass}>Funcionário *</label>
@@ -683,16 +685,16 @@ export default function Feedbacks() {
             </div>
             <div>
               <label className={labelClass}>Descrição *</label>
-              <textarea placeholder="Descreva em detalhes o feedback..." value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} className={`${inputClass} min-h-[100px] resize-none`} maxLength={1000} />
+              <FastTextarea placeholder="Descreva em detalhes o feedback..." value={form.descricao} onValueChange={(v) => setForm(f => ({ ...f, descricao: v }))} className={`${inputClass} min-h-[100px] resize-none`} maxLength={1000} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
                 <label className={labelClass}>Pontos Positivos</label>
-                <textarea placeholder="Destaque os pontos positivos..." value={form.pontos_positivos} onChange={(e) => setForm({ ...form, pontos_positivos: e.target.value })} className={`${inputClass} min-h-[60px] resize-none`} />
+                <FastTextarea placeholder="Destaque os pontos positivos..." value={form.pontos_positivos} onValueChange={(v) => setForm(f => ({ ...f, pontos_positivos: v }))} className={`${inputClass} min-h-[60px] resize-none`} />
               </div>
               <div>
                 <label className={labelClass}>Pontos de Melhoria</label>
-                <textarea placeholder="Indique os pontos de melhoria..." value={form.pontos_melhoria} onChange={(e) => setForm({ ...form, pontos_melhoria: e.target.value })} className={`${inputClass} min-h-[60px] resize-none`} />
+                <FastTextarea placeholder="Indique os pontos de melhoria..." value={form.pontos_melhoria} onValueChange={(v) => setForm(f => ({ ...f, pontos_melhoria: v }))} className={`${inputClass} min-h-[60px] resize-none`} />
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -711,7 +713,7 @@ export default function Feedbacks() {
             </div>
             <div>
               <label className={labelClass}>Observações</label>
-              <textarea placeholder="Observações adicionais..." value={form.departamento} onChange={(e) => setForm({ ...form, departamento: e.target.value })} className={`${inputClass} min-h-[60px] resize-none`} maxLength={500} />
+              <FastTextarea placeholder="Observações adicionais..." value={form.departamento} onValueChange={(v) => setForm(f => ({ ...f, departamento: v }))} className={`${inputClass} min-h-[60px] resize-none`} maxLength={500} />
             </div>
             <Button type="submit" className="w-full"><Send className="w-4 h-4 mr-2" />Enviar Feedback</Button>
           </form>

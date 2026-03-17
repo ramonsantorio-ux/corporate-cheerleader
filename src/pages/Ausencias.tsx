@@ -9,8 +9,9 @@ import { useNavigate } from 'react-router-dom';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
@@ -718,7 +719,7 @@ export default function PontoFerias() {
                   </div>
                   <div className="space-y-2">
                     <Label>Observação</Label>
-                    <Textarea value={form.observation} onChange={e => setForm({ ...form, observation: e.target.value })} rows={2} />
+                    <FastTextarea value={form.observation} onValueChange={v => setForm(f => ({ ...f, observation: v }))} rows={2} />
                   </div>
                   <Button className="w-full" onClick={handleCreateAttendance}>Registrar</Button>
                 </div>
@@ -746,13 +747,13 @@ export default function PontoFerias() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2"><Label>Qtd. Dias</Label><Input type="number" value={vacForm.days_count} onChange={e => setVacForm({ ...vacForm, days_count: e.target.value })} /></div>
-                    <div className="space-y-2"><Label>Mês Programado</Label><Input placeholder="Ex: Março" value={vacForm.scheduled_month} onChange={e => setVacForm({ ...vacForm, scheduled_month: e.target.value })} /></div>
+                    <div className="space-y-2"><Label>Mês Programado</Label><FastInput placeholder="Ex: Março" value={vacForm.scheduled_month} onValueChange={v => setVacForm(f => ({ ...f, scheduled_month: v }))} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2"><Label>Início</Label><Input type="date" value={vacForm.start_date} onChange={e => setVacForm({ ...vacForm, start_date: e.target.value })} /></div>
                     <div className="space-y-2"><Label>Fim</Label><Input type="date" value={vacForm.end_date} onChange={e => setVacForm({ ...vacForm, end_date: e.target.value })} /></div>
                   </div>
-                  <div className="space-y-2"><Label>Observação</Label><Textarea value={vacForm.observation} onChange={e => setVacForm({ ...vacForm, observation: e.target.value })} rows={2} /></div>
+                  <div className="space-y-2"><Label>Observação</Label><FastTextarea value={vacForm.observation} onValueChange={v => setVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
                   <Button className="w-full" onClick={handleCreateVacation}>Salvar</Button>
                 </div>
               </DialogContent>
@@ -798,11 +799,11 @@ export default function PontoFerias() {
                   </div>
                   <div className="space-y-2">
                     <Label>Motivo</Label>
-                    <Textarea value={warningForm.reason} onChange={e => setWarningForm({ ...warningForm, reason: e.target.value })} rows={2} placeholder="Descreva o motivo da advertência" />
+                    <FastTextarea value={warningForm.reason} onValueChange={v => setWarningForm(f => ({ ...f, reason: v }))} rows={2} placeholder="Descreva o motivo da advertência" />
                   </div>
                   <div className="space-y-2">
                     <Label>Observação</Label>
-                    <Textarea value={warningForm.observation} onChange={e => setWarningForm({ ...warningForm, observation: e.target.value })} rows={2} />
+                    <FastTextarea value={warningForm.observation} onValueChange={v => setWarningForm(f => ({ ...f, observation: v }))} rows={2} />
                   </div>
                   <Button className="w-full" onClick={handleCreateWarning}>Registrar Advertência</Button>
                 </div>
@@ -1427,7 +1428,7 @@ export default function PontoFerias() {
               <div className="space-y-2"><Label>Início</Label><Input type="date" value={editVacForm.start_date} onChange={e => setEditVacForm({ ...editVacForm, start_date: e.target.value })} /></div>
               <div className="space-y-2"><Label>Fim</Label><Input type="date" value={editVacForm.end_date} onChange={e => setEditVacForm({ ...editVacForm, end_date: e.target.value })} /></div>
             </div>
-            <div className="space-y-2"><Label>Observação</Label><Textarea value={editVacForm.observation} onChange={e => setEditVacForm({ ...editVacForm, observation: e.target.value })} rows={2} /></div>
+            <div className="space-y-2"><Label>Observação</Label><FastTextarea value={editVacForm.observation} onValueChange={v => setEditVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
             <div className="flex gap-2">
               <Button className="flex-1" onClick={handleEditVacation}>Salvar Alterações</Button>
               <Button variant="destructive" onClick={() => { deleteVacation(editVacForm.id); setEditVacDialogOpen(false); }}>
