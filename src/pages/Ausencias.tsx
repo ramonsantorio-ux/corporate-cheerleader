@@ -753,7 +753,7 @@ export default function PontoFerias() {
                     <div className="space-y-2"><Label>Início</Label><Input type="date" value={vacForm.start_date} onChange={e => setVacForm({ ...vacForm, start_date: e.target.value })} /></div>
                     <div className="space-y-2"><Label>Fim</Label><Input type="date" value={vacForm.end_date} onChange={e => setVacForm({ ...vacForm, end_date: e.target.value })} /></div>
                   </div>
-                  <div className="space-y-2"><Label>Observação</Label><Textarea value={vacForm.observation} onChange={e => setVacForm({ ...vacForm, observation: e.target.value })} rows={2} /></div>
+                  <div className="space-y-2"><Label>Observação</Label><FastTextarea value={vacForm.observation} onValueChange={v => setVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
                   <Button className="w-full" onClick={handleCreateVacation}>Salvar</Button>
                 </div>
               </DialogContent>
