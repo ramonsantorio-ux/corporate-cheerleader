@@ -61,6 +61,12 @@ function cargoNeedsDocs(cargo: string) {
   return CARGOS_COM_DOCUMENTOS.some(c => cargo.toLowerCase().includes(c));
 }
 
+function letraFromTurno(turno: string): string {
+  if (turno.endsWith('_a')) return 'A';
+  if (turno.endsWith('_b')) return 'B';
+  return '';
+}
+
 export default function Cadastro() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
