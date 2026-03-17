@@ -445,7 +445,7 @@ export default function FuncionarioProfile() {
     );
 
     y = checkPageBreak(y, 30);
-    y = drawSectionHeading(`HISTÓRICO DE REGISTROS (${deviationRecords.length})`, y);
+    y = drawSectionHeadingLocal(`HISTÓRICO DE REGISTROS (${deviationRecords.length})`, y);
 
     if (deviationRecords.length > 0) {
       autoTable(doc, {
