@@ -204,46 +204,48 @@ export default function Colaboradores() {
     else setDocFiles(prev => [...prev, ...files]);
   }
 
-  const FormFields = ({ data, setData, docs, setDocs, docRef }: { data: typeof newData; setData: (d: typeof newData) => void; docs: File[]; setDocs: React.Dispatch<React.SetStateAction<File[]>>; docRef: React.RefObject<HTMLInputElement>; }) => (
-    <>
-      <div className="space-y-2"><Label>Nome completo</Label><Input value={data.nome} onChange={e => setData({ ...data, nome: e.target.value })} placeholder="Nome do funcionário" /></div>
-      <div className="space-y-2"><Label>Data de Admissão</Label><Input type="date" value={data.data_admissao} onChange={e => setData({ ...data, data_admissao: e.target.value })} /></div>
-      <div className="space-y-2">
-        <Label>Escolaridade</Label>
-        <Select value={data.escolaridade} onValueChange={v => setData({ ...data, escolaridade: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{escolaridades.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select>
-      </div>
-      <div className="space-y-2"><Label>Graduação</Label><Input value={data.graduacao} onChange={e => setData({ ...data, graduacao: e.target.value })} placeholder="Ex: Engenharia Civil" /></div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between"><Label>Possui Pós-Graduação?</Label><Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} /></div>
-        {data.pos_graduacao && <Input value={data.pos_graduacao_tipo} onChange={e => setData({ ...data, pos_graduacao_tipo: e.target.value })} placeholder="Qual pós-graduação?" className="mt-2" />}
-      </div>
-      <div className="space-y-2"><Label>Cargo</Label><Input value={data.cargo} onChange={e => setData({ ...data, cargo: e.target.value })} placeholder="Cargo" /></div>
-      <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} placeholder="email@empresa.com" /></div>
-      <div className="space-y-2">
-        <Label>Departamento</Label>
-        <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select>
-      </div>
-      <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
-        <Label className="text-sm font-semibold">Turno / Escala</Label>
-        <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v, letra: letraFromTurno(v) })}><SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger><SelectContent>{TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
-        {data.letra && <p className="text-xs text-muted-foreground mt-1">Letra: <span className="font-semibold">{data.letra}</span></p>}
-      </div>
-      {encarregados.length > 0 && (
+  function renderFormFields(data: typeof newData, setData: (d: typeof newData) => void, docs: File[], setDocs: React.Dispatch<React.SetStateAction<File[]>>, docRef: React.RefObject<HTMLInputElement>) {
+    return (
+      <>
+        <div className="space-y-2"><Label>Nome completo</Label><Input value={data.nome} onChange={e => setData({ ...data, nome: e.target.value })} placeholder="Nome do funcionário" /></div>
+        <div className="space-y-2"><Label>Data de Admissão</Label><Input type="date" value={data.data_admissao} onChange={e => setData({ ...data, data_admissao: e.target.value })} /></div>
         <div className="space-y-2">
-          <Label>Encarregado (Supervisor)</Label>
-          <Select value={data.encarregado_id} onValueChange={v => setData({ ...data, encarregado_id: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent><SelectItem value="none">Nenhum</SelectItem>{encarregados.map(enc => <SelectItem key={enc.id} value={enc.id}>{enc.nome}</SelectItem>)}</SelectContent></Select>
+          <Label>Escolaridade</Label>
+          <Select value={data.escolaridade} onValueChange={v => setData({ ...data, escolaridade: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{escolaridades.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select>
         </div>
-      )}
-      {cargoNeedsDocs(data.cargo) && (
+        <div className="space-y-2"><Label>Graduação</Label><Input value={data.graduacao} onChange={e => setData({ ...data, graduacao: e.target.value })} placeholder="Ex: Engenharia Civil" /></div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between"><Label>Possui Pós-Graduação?</Label><Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} /></div>
+          {data.pos_graduacao && <Input value={data.pos_graduacao_tipo} onChange={e => setData({ ...data, pos_graduacao_tipo: e.target.value })} placeholder="Qual pós-graduação?" className="mt-2" />}
+        </div>
+        <div className="space-y-2"><Label>Cargo</Label><Input value={data.cargo} onChange={e => setData({ ...data, cargo: e.target.value })} placeholder="Cargo" /></div>
+        <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} placeholder="email@empresa.com" /></div>
+        <div className="space-y-2">
+          <Label>Departamento</Label>
+          <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select>
+        </div>
         <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
-          <Label className="flex items-center gap-2"><FileUp className="w-4 h-4 text-primary" />Documentos</Label>
-          <input ref={docRef} type="file" accept=".pdf,image/*" multiple className="hidden" onChange={e => handleDocFilesChange(e, docs === editDocFiles)} />
-          <Button type="button" variant="outline" size="sm" onClick={() => docRef.current?.click()} className="w-full"><FileUp className="w-4 h-4 mr-2" />Anexar</Button>
-          {docs.length > 0 && <div className="space-y-1 mt-2">{docs.map((f, i) => <div key={i} className="flex items-center gap-2 text-sm p-1.5 bg-background rounded"><FileText className="w-4 h-4 text-muted-foreground" /><span className="truncate flex-1">{f.name}</span><button onClick={() => { const u = [...docs]; u.splice(i, 1); setDocs(u); }} className="text-destructive"><X className="w-3 h-3" /></button></div>)}</div>}
+          <Label className="text-sm font-semibold">Turno / Escala</Label>
+          <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v, letra: letraFromTurno(v) })}><SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger><SelectContent>{TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
+          {data.letra && <p className="text-xs text-muted-foreground mt-1">Letra: <span className="font-semibold">{data.letra}</span></p>}
         </div>
-      )}
-    </>
-  );
+        {encarregados.length > 0 && (
+          <div className="space-y-2">
+            <Label>Encarregado (Supervisor)</Label>
+            <Select value={data.encarregado_id} onValueChange={v => setData({ ...data, encarregado_id: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent><SelectItem value="none">Nenhum</SelectItem>{encarregados.map(enc => <SelectItem key={enc.id} value={enc.id}>{enc.nome}</SelectItem>)}</SelectContent></Select>
+          </div>
+        )}
+        {cargoNeedsDocs(data.cargo) && (
+          <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
+            <Label className="flex items-center gap-2"><FileUp className="w-4 h-4 text-primary" />Documentos</Label>
+            <input ref={docRef} type="file" accept=".pdf,image/*" multiple className="hidden" onChange={e => handleDocFilesChange(e, docs === editDocFiles)} />
+            <Button type="button" variant="outline" size="sm" onClick={() => docRef.current?.click()} className="w-full"><FileUp className="w-4 h-4 mr-2" />Anexar</Button>
+            {docs.length > 0 && <div className="space-y-1 mt-2">{docs.map((f, i) => <div key={i} className="flex items-center gap-2 text-sm p-1.5 bg-background rounded"><FileText className="w-4 h-4 text-muted-foreground" /><span className="truncate flex-1">{f.name}</span><button onClick={() => { const u = [...docs]; u.splice(i, 1); setDocs(u); }} className="text-destructive"><X className="w-3 h-3" /></button></div>)}</div>}
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -279,7 +281,7 @@ export default function Colaboradores() {
                   <button onClick={() => newFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
                 )}
               </div>
-              <FormFields data={newData} setData={setNewData} docs={docFiles} setDocs={setDocFiles} docRef={docFileRef as React.RefObject<HTMLInputElement>} />
+              {renderFormFields(newData, setNewData, docFiles, setDocFiles, docFileRef as React.RefObject<HTMLInputElement>)}
               <Button className="w-full" onClick={handleCreate} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Cadastrar</Button>
             </div>
           </DialogContent>
@@ -335,7 +337,7 @@ export default function Colaboradores() {
                 <button onClick={() => editFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
               )}
             </div>
-            <FormFields data={editData} setData={setEditData as any} docs={editDocFiles} setDocs={setEditDocFiles} docRef={editDocFileRef as React.RefObject<HTMLInputElement>} />
+            {renderFormFields(editData, setEditData as any, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
             <Button className="w-full" onClick={handleEdit} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Salvar Alterações</Button>
           </div>
         </DialogContent>

@@ -463,13 +463,8 @@ export default function Cadastro() {
     }
   }
 
-  const FormFields = ({ data, setData, docs, setDocs, docRef }: {
-    data: typeof newData;
-    setData: (d: typeof newData) => void;
-    docs: File[];
-    setDocs: React.Dispatch<React.SetStateAction<File[]>>;
-    docRef: React.RefObject<HTMLInputElement>;
-  }) => (
+  function renderFormFields(data: typeof newData, setData: (d: typeof newData) => void, docs: File[], setDocs: React.Dispatch<React.SetStateAction<File[]>>, docRef: React.RefObject<HTMLInputElement>) {
+    return (
     <>
       <div className="space-y-2">
         <Label>Nome completo</Label>
@@ -593,7 +588,8 @@ export default function Cadastro() {
         </div>
       )}
     </>
-  );
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -653,7 +649,7 @@ export default function Cadastro() {
                 )}
                 <p className="text-xs text-muted-foreground">Foto (opcional)</p>
               </div>
-              <FormFields data={newData} setData={setNewData} docs={docFiles} setDocs={setDocFiles} docRef={docFileRef as React.RefObject<HTMLInputElement>} />
+              {renderFormFields(newData, setNewData, docFiles, setDocFiles, docFileRef as React.RefObject<HTMLInputElement>)}
               <Button className="w-full" onClick={handleCreate} disabled={uploading}>
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Cadastrar
@@ -753,7 +749,7 @@ export default function Cadastro() {
               )}
               <button onClick={() => editFileRef.current?.click()} className="text-xs text-primary hover:underline">Alterar foto</button>
             </div>
-            <FormFields data={editData} setData={setEditData as any} docs={editDocFiles} setDocs={setEditDocFiles} docRef={editDocFileRef as React.RefObject<HTMLInputElement>} />
+            {renderFormFields(editData, setEditData as any, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
             <Button className="w-full" onClick={handleEdit} disabled={uploading}>
               {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Salvar Alterações
