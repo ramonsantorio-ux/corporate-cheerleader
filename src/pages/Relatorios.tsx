@@ -366,7 +366,7 @@ export default function Relatorios() {
       doc.setDrawColor(...teal); doc.setLineWidth(0.5);
       doc.line(14, ph - 14, pw - 14, ph - 14);
       doc.setFontSize(7); doc.setTextColor(120); doc.setFont('helvetica', 'normal');
-      doc.text('Gestão Porto — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, ph - 9);
+      doc.text('Busato — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, ph - 9);
       doc.text(`Página ${i} / ${totalPages}`, pw - 14, ph - 9, { align: 'right' });
     }
 
