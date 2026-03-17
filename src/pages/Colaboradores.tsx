@@ -43,7 +43,7 @@ export default function Colaboradores() {
   const [uploading, setUploading] = useState(false);
   const [importing, setImporting] = useState(false);
 
-  const emptyForm = { nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: '' as string };
+  const emptyForm = { nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: 'none' };
   const [newData, setNewData] = useState(emptyForm);
   const [editData, setEditData] = useState({ id: '', foto_url: '', ...emptyForm });
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
@@ -151,7 +151,7 @@ export default function Colaboradores() {
     try { if (newPhotoFile) foto_url = await uploadPhoto(newPhotoFile); } catch { toast.error('Erro ao enviar foto'); setUploading(false); return; }
     const insertData: any = { nome: newData.nome, email: newData.email, cargo: newData.cargo, departamento: newData.departamento, escolaridade: newData.escolaridade, graduacao: newData.graduacao, pos_graduacao: newData.pos_graduacao, pos_graduacao_tipo: newData.pos_graduacao_tipo, turno: newData.turno, letra: newData.letra, foto_url };
     if (newData.data_admissao) insertData.data_admissao = newData.data_admissao;
-    if (newData.encarregado_id) insertData.encarregado_id = newData.encarregado_id;
+    if (newData.encarregado_id && newData.encarregado_id !== 'none') insertData.encarregado_id = newData.encarregado_id;
     const { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
     if (error) { toast.error('Erro ao cadastrar'); setUploading(false); return; }
     if (docFiles.length > 0 && inserted) {
@@ -164,7 +164,7 @@ export default function Colaboradores() {
   }
 
   function openEdit(f: Funcionario) {
-    setEditData({ id: f.id, nome: f.nome, email: f.email, cargo: f.cargo, departamento: f.departamento, foto_url: f.foto_url || '', data_admissao: f.data_admissao || '', escolaridade: f.escolaridade || '', graduacao: f.graduacao || '', pos_graduacao: f.pos_graduacao || false, pos_graduacao_tipo: f.pos_graduacao_tipo || '', turno: f.turno || '', letra: f.letra || '', encarregado_id: f.encarregado_id || '' });
+    setEditData({ id: f.id, nome: f.nome, email: f.email || '', cargo: f.cargo, departamento: f.departamento, foto_url: f.foto_url || '', data_admissao: f.data_admissao || '', escolaridade: f.escolaridade || '', graduacao: f.graduacao || '', pos_graduacao: f.pos_graduacao || false, pos_graduacao_tipo: f.pos_graduacao_tipo || '', turno: f.turno || '', letra: f.letra || '', encarregado_id: f.encarregado_id || 'none' });
     setEditPhotoFile(null); setEditPhotoPreview(f.foto_url || ''); setEditDocFiles([]); setEditOpen(true);
   }
 
@@ -173,7 +173,7 @@ export default function Colaboradores() {
     setUploading(true);
     let foto_url = editData.foto_url;
     try { if (editPhotoFile) foto_url = await uploadPhoto(editPhotoFile); } catch { toast.error('Erro foto'); setUploading(false); return; }
-    const updateData: any = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id || null, foto_url };
+    const updateData: any = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id && editData.encarregado_id !== 'none' ? editData.encarregado_id : null, foto_url };
     if (editData.data_admissao) updateData.data_admissao = editData.data_admissao;
     const { error } = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
     if (editDocFiles.length > 0) {
