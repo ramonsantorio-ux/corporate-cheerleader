@@ -281,7 +281,7 @@ export default function Colaboradores() {
                   <button onClick={() => newFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
                 )}
               </div>
-              <FormFields data={newData} setData={setNewData} docs={docFiles} setDocs={setDocFiles} docRef={docFileRef as React.RefObject<HTMLInputElement>} />
+              {renderFormFields(newData, setNewData, docFiles, setDocFiles, docFileRef as React.RefObject<HTMLInputElement>)}
               <Button className="w-full" onClick={handleCreate} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Cadastrar</Button>
             </div>
           </DialogContent>
