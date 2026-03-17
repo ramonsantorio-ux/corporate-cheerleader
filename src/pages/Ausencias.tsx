@@ -719,7 +719,7 @@ export default function PontoFerias() {
                   </div>
                   <div className="space-y-2">
                     <Label>Observação</Label>
-                    <Textarea value={form.observation} onChange={e => setForm({ ...form, observation: e.target.value })} rows={2} />
+                    <FastTextarea value={form.observation} onValueChange={v => setForm(f => ({ ...f, observation: v }))} rows={2} />
                   </div>
                   <Button className="w-full" onClick={handleCreateAttendance}>Registrar</Button>
                 </div>
