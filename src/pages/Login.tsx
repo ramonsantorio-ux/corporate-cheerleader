@@ -3,11 +3,12 @@ import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { MessageCircle, LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import busatoLogo from '@/assets/busato-logo-full.png';
 
 export default function Login() {
   const { user, loading: authLoading } = useAuth();
