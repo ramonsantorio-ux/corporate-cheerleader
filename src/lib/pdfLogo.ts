@@ -4,7 +4,7 @@ let cachedLogo: string | null = null;
 export async function getBusatoLogoBase64(): Promise<string | null> {
   if (cachedLogo) return cachedLogo;
   try {
-    const res = await fetch('/images/busato-logo-full.jpeg');
+    const res = await fetch('/images/busato-logo-full.png');
     const blob = await res.blob();
     return new Promise((resolve) => {
       const reader = new FileReader();
