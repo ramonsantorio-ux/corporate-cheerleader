@@ -163,7 +163,7 @@ export default function PontoFerias() {
       supabase.from('daily_attendance').select('*').gte('date', period.start).lte('date', period.end).order('date', { ascending: false }),
       supabase.from('vacation_control').select('*'),
       supabase.from('overtime_control').select('*').gte('period_start', period.start).lte('period_end', period.end),
-      supabase.from('funcionarios').select('id, nome, turno, letra, cargo, departamento').order('nome'),
+      supabase.from('funcionarios').select('id, nome, turno, letra, cargo, departamento, foto_url').order('nome'),
       supabase.from('employee_warnings').select('*').order('date', { ascending: false }),
     ]);
     const funcs = (fRes.data || []) as Func[];
