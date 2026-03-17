@@ -68,11 +68,11 @@ export default function Colaboradores() {
 
   useEffect(() => { fetchFuncionarios(); }, []);
 
-  async function fetchFuncionarios() {
-    setLoading(true);
+  async function fetchFuncionarios(silent = false) {
+    if (!silent) setLoading(true);
     const { data, error } = await supabase.from('funcionarios').select('*').order('nome');
     if (!error && data) setFuncionarios(data as Funcionario[]);
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
 
   const filtered = funcionarios.filter((f) => {
@@ -144,7 +144,7 @@ export default function Colaboradores() {
       });
       const { error } = await supabase.from('funcionarios').insert(toInsert);
       if (error) toast.error('Erro ao importar: ' + error.message);
-      else { toast.success(`${records.length} funcionário(s) importado(s)!`); fetchFuncionarios(); }
+      else { toast.success(`${records.length} funcionário(s) importado(s)!`); fetchFuncionarios(true); }
     } catch { toast.error('Erro ao ler arquivo.'); }
     setImporting(false);
     if (importFileRef.current) importFileRef.current.value = '';
@@ -166,7 +166,7 @@ export default function Colaboradores() {
       }
     }
     setUploading(false); setNewData(emptyForm); setNewPhotoFile(null); setNewPhotoPreview(''); setDocFiles([]); setCreateOpen(false);
-    toast.success('Funcionário cadastrado!'); fetchFuncionarios();
+    toast.success('Funcionário cadastrado!'); fetchFuncionarios(true);
   }
 
   function openEdit(f: Funcionario) {
@@ -189,14 +189,14 @@ export default function Colaboradores() {
     }
     setUploading(false);
     if (error) { toast.error('Erro ao atualizar'); return; }
-    setEditOpen(false); toast.success('Funcionário atualizado!'); fetchFuncionarios();
+    setEditOpen(false); toast.success('Funcionário atualizado!'); fetchFuncionarios(true);
   }
 
   async function handleDelete() {
     if (!deleteId) return;
     const { error } = await supabase.from('funcionarios').delete().eq('id', deleteId);
     if (error) { toast.error('Erro ao excluir'); return; }
-    setDeleteId(null); toast.success('Funcionário excluído!'); fetchFuncionarios();
+    setDeleteId(null); toast.success('Funcionário excluído!'); fetchFuncionarios(true);
   }
 
   function handleDocFilesChange(e: React.ChangeEvent<HTMLInputElement>, isEdit = false) {
