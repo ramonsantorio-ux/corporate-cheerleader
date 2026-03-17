@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X } from 'lucide-react';
+import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, BarChart3, Target, Activity } from 'lucide-react';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { useNavigate } from 'react-router-dom';
 import FeedbackCard from '@/components/feedback/FeedbackCard';
@@ -11,8 +11,33 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, AreaChart, Area, CartesianGrid, RadialBarChart, RadialBar, Legend } from 'recharts';
 
 const departamentos = Object.entries(setorLabels) as [FeedbackSetor, string][];
+
+const CHART_COLORS = [
+  'hsl(var(--primary))',
+  'hsl(var(--success))',
+  'hsl(var(--warning))',
+  'hsl(var(--destructive))',
+  'hsl(var(--info))',
+  'hsl(var(--accent))',
+];
+
+const STATUS_COLORS: Record<string, string> = {
+  novo: 'hsl(var(--info))',
+  em_analise: 'hsl(var(--warning))',
+  em_andamento: 'hsl(var(--primary))',
+  resolvido: 'hsl(var(--success))',
+  arquivado: 'hsl(var(--muted-foreground))',
+};
+
+const PRIORITY_COLORS: Record<string, string> = {
+  baixa: 'hsl(var(--muted-foreground))',
+  media: 'hsl(var(--info))',
+  alta: 'hsl(var(--warning))',
+  critica: 'hsl(var(--destructive))',
+};
 
 function getDaysSince(dateStr: string) {
   const now = new Date();
@@ -28,6 +53,21 @@ function getAlertType(fb: Feedback): 'quinzenal' | 'mensal' | null {
   return null;
 }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg bg-card border border-border px-3 py-2 shadow-lg text-xs">
+      {label && <p className="font-semibold text-foreground mb-1">{label}</p>}
+      {payload.map((p: any, i: number) => (
+        <p key={i} style={{ color: p.color }} className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full inline-block" style={{ background: p.color }} />
+          {p.name}: <span className="font-bold">{p.value}</span>
+        </p>
+      ))}
+    </div>
+  );
+};
+
 export default function Feedbacks() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -42,7 +82,6 @@ export default function Feedbacks() {
   const [createOpen, setCreateOpen] = useState(false);
   const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
-  // New feedback form state
   const [funcionarios, setFuncionarios] = useState<string[]>([]);
   const [gestorName, setGestorName] = useState('');
   const [form, setForm] = useState({
@@ -111,6 +150,77 @@ export default function Feedbacks() {
 
   const alertFeedbacks = useMemo(() => feedbacks.filter(fb => getAlertType(fb) !== null), [feedbacks]);
 
+  // ── KPI Computations ──
+  const kpis = useMemo(() => {
+    const total = filtered.length;
+    const resolvidos = filtered.filter(fb => fb.status === 'resolvido').length;
+    const criticos = filtered.filter(fb => fb.prioridade === 'critica' && fb.status !== 'resolvido' && fb.status !== 'arquivado').length;
+    const abertos = filtered.filter(fb => fb.status !== 'resolvido' && fb.status !== 'arquivado').length;
+    const taxaResolucao = total > 0 ? Math.round((resolvidos / total) * 100) : 0;
+
+    // Avg resolution time (days) for resolved feedbacks
+    const resolvedFbs = filtered.filter(fb => fb.status === 'resolvido');
+    const avgDays = resolvedFbs.length > 0
+      ? Math.round(resolvedFbs.reduce((sum, fb) => sum + Math.max(0, getDaysSince(fb.criadoEm)), 0) / resolvedFbs.length)
+      : 0;
+
+    // SLA: feedbacks resolved within 15 days
+    const withinSla = resolvedFbs.filter(fb => {
+      const diff = Math.abs(new Date(fb.atualizadoEm).getTime() - new Date(fb.criadoEm).getTime());
+      return diff / (1000 * 60 * 60 * 24) <= 15;
+    }).length;
+    const slaRate = resolvedFbs.length > 0 ? Math.round((withinSla / resolvedFbs.length) * 100) : 100;
+
+    return { total, resolvidos, criticos, abertos, taxaResolucao, avgDays, slaRate };
+  }, [filtered]);
+
+  // ── Chart Data ──
+  const statusChartData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filtered.forEach(fb => { counts[fb.status] = (counts[fb.status] || 0) + 1; });
+    return Object.entries(counts).map(([key, value]) => ({
+      name: statusLabels[key as FeedbackStatus] || key,
+      value,
+      fill: STATUS_COLORS[key] || CHART_COLORS[0],
+    }));
+  }, [filtered]);
+
+  const priorityChartData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filtered.forEach(fb => { counts[fb.prioridade] = (counts[fb.prioridade] || 0) + 1; });
+    return Object.entries(priorityLabels).map(([key, label]) => ({
+      name: label,
+      value: counts[key] || 0,
+      fill: PRIORITY_COLORS[key] || CHART_COLORS[0],
+    })).filter(d => d.value > 0);
+  }, [filtered]);
+
+  const trendData = useMemo(() => {
+    const byMonth: Record<string, { abertos: number; resolvidos: number }> = {};
+    filtered.forEach(fb => {
+      const month = fb.criadoEm.substring(0, 7); // YYYY-MM
+      if (!byMonth[month]) byMonth[month] = { abertos: 0, resolvidos: 0 };
+      byMonth[month].abertos++;
+      if (fb.status === 'resolvido') byMonth[month].resolvidos++;
+    });
+    return Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([month, data]) => {
+        const [y, m] = month.split('-');
+        const label = new Date(Number(y), Number(m) - 1).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+        return { name: label, Abertos: data.abertos, Resolvidos: data.resolvidos };
+      });
+  }, [filtered]);
+
+  const deptChartData = useMemo(() => {
+    return departamentos.map(([key, label]) => {
+      const deptFbs = filtered.filter(fb => fb.setor === key);
+      const resolved = deptFbs.filter(fb => fb.status === 'resolvido').length;
+      const pending = deptFbs.length - resolved;
+      return { name: label, Resolvidos: resolved, Pendentes: pending, total: deptFbs.length };
+    }).filter(d => d.total > 0).sort((a, b) => b.total - a.total);
+  }, [filtered]);
+
   const deptStats = useMemo(() => {
     return departamentos.map(([key, label]) => {
       const deptFbs = feedbacks.filter(fb => fb.setor === key);
@@ -145,16 +255,191 @@ export default function Feedbacks() {
   const labelClass = "text-sm font-medium mb-1.5 block";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Feedbacks</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerencie todos os feedbacks recebidos</p>
+          <h1 className="text-2xl font-bold">Gestão de Feedbacks</h1>
+          <p className="text-muted-foreground text-sm mt-1">Painel analítico de acompanhamento e resolução</p>
         </div>
         <Button onClick={() => setCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Novo Feedback</Button>
       </motion.div>
 
       <PeriodFilter value={period} onChange={setPeriod} />
+
+      {/* ── KPI Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} className="corporate-kpi">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total no Período</p>
+              <p className="text-3xl font-bold tracking-tight text-foreground">{kpis.total}</p>
+              <p className="text-xs text-muted-foreground">{kpis.abertos} abertos · {kpis.resolvidos} resolvidos</p>
+            </div>
+            <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-primary" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className={`corporate-kpi ${kpis.taxaResolucao >= 70 ? 'corporate-kpi-accent' : kpis.taxaResolucao < 40 ? 'corporate-kpi-danger' : ''}`}>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Taxa de Resolução</p>
+              <p className="text-3xl font-bold tracking-tight text-foreground">{kpis.taxaResolucao}%</p>
+              <p className={`text-xs font-medium ${kpis.taxaResolucao >= 70 ? 'text-success' : kpis.taxaResolucao < 40 ? 'text-destructive' : 'text-warning'}`}>
+                {kpis.taxaResolucao >= 70 ? '↑ Dentro da meta' : kpis.taxaResolucao >= 40 ? '→ Atenção necessária' : '↓ Abaixo da meta'}
+              </p>
+            </div>
+            <div className="w-11 h-11 rounded-lg bg-success/10 flex items-center justify-center">
+              <Target className="w-5 h-5 text-success" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className={`corporate-kpi ${kpis.slaRate >= 80 ? 'corporate-kpi-accent' : 'corporate-kpi-danger'}`}>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">SLA (≤15 dias)</p>
+              <p className="text-3xl font-bold tracking-tight text-foreground">{kpis.slaRate}%</p>
+              <p className="text-xs text-muted-foreground">Tempo médio: {kpis.avgDays}d</p>
+            </div>
+            <div className="w-11 h-11 rounded-lg bg-info/10 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-info" />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className={`corporate-kpi ${kpis.criticos > 0 ? 'corporate-kpi-danger' : ''}`}>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Críticos Abertos</p>
+              <p className="text-3xl font-bold tracking-tight text-foreground">{kpis.criticos}</p>
+              <p className={`text-xs font-medium ${kpis.criticos > 0 ? 'text-destructive' : 'text-success'}`}>
+                {kpis.criticos > 0 ? '⚠ Requer ação imediata' : '✓ Nenhum pendente'}
+              </p>
+            </div>
+            <div className="w-11 h-11 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* ── Charts Row ── */}
+      <div className="grid lg:grid-cols-3 gap-4">
+        {/* Status Donut */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary" />Distribuição por Status
+          </h3>
+          {statusChartData.length > 0 ? (
+            <div className="flex items-center gap-2">
+              <ResponsiveContainer width="50%" height={160}>
+                <PieChart>
+                  <Pie data={statusChartData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={2} stroke="hsl(var(--card))">
+                    {statusChartData.map((entry, i) => (
+                      <Cell key={i} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="flex-1 space-y-1.5">
+                {statusChartData.map((d, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.fill }} />
+                    <span className="text-muted-foreground flex-1 truncate">{d.name}</span>
+                    <span className="font-bold text-foreground">{d.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no período</p>
+          )}
+        </motion.div>
+
+        {/* Priority Bar */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-warning" />Distribuição por Prioridade
+          </h3>
+          {priorityChartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={priorityChartData} layout="vertical" margin={{ left: 0, right: 10 }}>
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="name" width={60} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="value" name="Qtd" radius={[0, 6, 6, 0]} barSize={20}>
+                  {priorityChartData.map((entry, i) => (
+                    <Cell key={i} fill={entry.fill} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no período</p>
+          )}
+        </motion.div>
+
+        {/* Trend Area */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-success" />Tendência Mensal
+          </h3>
+          {trendData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={160}>
+              <AreaChart data={trendData} margin={{ left: -10, right: 5, top: 5, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="gradAbertos" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--warning))" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(var(--warning))" stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="gradResolvidos" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Area type="monotone" dataKey="Abertos" stroke="hsl(var(--warning))" fill="url(#gradAbertos)" strokeWidth={2} />
+                <Area type="monotone" dataKey="Resolvidos" stroke="hsl(var(--success))" fill="url(#gradResolvidos)" strokeWidth={2} />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no período</p>
+          )}
+        </motion.div>
+      </div>
+
+      {/* ── Department Performance Chart ── */}
+      {deptChartData.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card rounded-xl p-5">
+          <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary" />Performance por Departamento
+          </h3>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={deptChartData} margin={{ left: -5, right: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} angle={-25} textAnchor="end" height={60} />
+              <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="Resolvidos" stackId="a" fill="hsl(var(--success))" radius={[0, 0, 0, 0]} barSize={28} />
+              <Bar dataKey="Pendentes" stackId="a" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} barSize={28} />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center">
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(var(--success))' }} /> Resolvidos</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(var(--warning))' }} /> Pendentes</div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Alert banner */}
       {alertFeedbacks.length > 0 && (
@@ -165,7 +450,7 @@ export default function Feedbacks() {
                 <Bell className="w-5 h-5 text-warning" />
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center font-bold">{alertFeedbacks.length}</span>
               </div>
-              <span className="text-sm font-semibold">{alertFeedbacks.length} alerta(s) pendente(s)</span>
+              <span className="text-sm font-semibold">{alertFeedbacks.length} alerta(s) de SLA pendente(s)</span>
             </div>
             {showAlerts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -184,7 +469,7 @@ export default function Feedbacks() {
                           <p className="text-xs text-muted-foreground">{fb.autor} · {setorLabels[fb.setor]}</p>
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${alertType === 'mensal' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}>
-                          {days} dias · {alertType === 'mensal' ? 'Mensal' : 'Quinzenal'}
+                          {days}d · {alertType === 'mensal' ? 'Mensal' : 'Quinzenal'}
                         </span>
                       </div>
                     );
@@ -241,9 +526,9 @@ export default function Feedbacks() {
         </div>
       )}
 
-      {/* Department tracking */}
+      {/* Department tracking detail */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl p-6">
-        <h2 className="font-semibold text-lg mb-4">Acompanhamento por Departamento</h2>
+        <h2 className="font-semibold text-lg mb-4">Detalhamento por Departamento</h2>
         <div className="space-y-3">
           {deptStats.map(dept => {
             const maxTotal = Math.max(...deptStats.map(d => d.total), 1);
@@ -283,10 +568,6 @@ export default function Feedbacks() {
               </div>
             );
           })}
-        </div>
-        <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-success" /> Realizados</div>
-          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-warning" /> Pendentes</div>
         </div>
       </motion.div>
 
