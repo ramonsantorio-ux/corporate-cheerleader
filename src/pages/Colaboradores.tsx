@@ -166,7 +166,7 @@ export default function Colaboradores() {
       }
     }
     setUploading(false); setNewData(emptyForm); setNewPhotoFile(null); setNewPhotoPreview(''); setDocFiles([]); setCreateOpen(false);
-    toast.success('Funcionário cadastrado!'); fetchFuncionarios();
+    toast.success('Funcionário cadastrado!'); fetchFuncionarios(true);
   }
 
   function openEdit(f: Funcionario) {
