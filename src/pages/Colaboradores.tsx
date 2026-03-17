@@ -231,7 +231,7 @@ export default function Colaboradores() {
       {encarregados.length > 0 && (
         <div className="space-y-2">
           <Label>Encarregado (Supervisor)</Label>
-          <Select value={data.encarregado_id} onValueChange={v => setData({ ...data, encarregado_id: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent><SelectItem value="none">Nenhum</SelectItem>{encarregados.map(enc => <SelectItem key={enc.id} value={enc.id}>{enc.nome} {enc.turno ? `(${TURNOS.find(t => t.value === enc.turno)?.label || enc.turno})` : ''}</SelectItem>)}</SelectContent></Select>
+          <Select value={data.encarregado_id} onValueChange={v => setData({ ...data, encarregado_id: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent><SelectItem value="none">Nenhum</SelectItem>{encarregados.map(enc => <SelectItem key={enc.id} value={enc.id}>{enc.nome}</SelectItem>)}</SelectContent></Select>
         </div>
       )}
       {cargoNeedsDocs(data.cargo) && (
