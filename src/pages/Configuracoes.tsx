@@ -48,18 +48,17 @@ export default function Configuracoes() {
     if (!data || data.length === 0) { toast.error('Nenhum dado para exportar'); return; }
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
+    const { getBusatoLogoBase64, drawBusatoHeader } = await import('@/lib/pdfLogo');
+    const logoBase64 = await getBusatoLogoBase64();
     const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text('Gestão Porto - Exportação de Dados', 14, 20);
-    doc.setFontSize(10);
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 28);
+    drawBusatoHeader(doc, logoBase64);
     autoTable(doc, {
       startY: 34,
       head: [['Título', 'Funcionário', 'Gestor', 'Setor', 'Status', 'Data']],
       body: data.map((f: any) => [f.titulo, f.autor, f.gestor || '-', setorLabels[f.setor as FeedbackSetor] || f.setor, f.status, new Date(f.criado_em).toLocaleDateString('pt-BR')]),
       styles: { fontSize: 7 },
     });
-    doc.save('gestao-porto-dados.pdf');
+    doc.save('busato-gestao-dados.pdf');
     toast.success('PDF exportado!');
   }
 
