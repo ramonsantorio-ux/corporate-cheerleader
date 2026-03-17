@@ -343,10 +343,10 @@ export default function FeedbackDetail() {
           <form onSubmit={handleResolve} className="space-y-4 pt-2">
             <div>
               <label className="text-sm font-medium mb-1.5 block">Ação Tomada *</label>
-              <textarea
+              <FastTextarea
                 placeholder="Descreva a ação realizada para resolver este feedback..."
                 value={resolveForm.acaoTomada}
-                onChange={e => setResolveForm({ ...resolveForm, acaoTomada: e.target.value })}
+                onValueChange={v => setResolveForm(f => ({ ...f, acaoTomada: v }))}
                 className={`${inputClass} min-h-[90px] resize-none`}
                 maxLength={1000}
               />
