@@ -80,7 +80,7 @@ export default function Colaboradores() {
     const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
     const matchDept = deptFilter === 'todos' || f.departamento === deptFilter;
     const matchTurno = turnoFilter === 'todos' || f.turno === turnoFilter;
-    return matchSearch && matchDept && matchLetra;
+    return matchSearch && matchDept && matchTurno;
   });
 
   async function uploadPhoto(file: File): Promise<string> {
