@@ -156,10 +156,10 @@ export default function NovoFeedback() {
 
         <div>
           <label className={labelClass}>Pontos de Melhoria</label>
-          <textarea
+          <FastTextarea
             placeholder="Indique os pontos de melhoria..."
             value={form.pontos_melhoria}
-            onChange={(e) => setForm({ ...form, pontos_melhoria: e.target.value })}
+            onValueChange={(v) => setForm(f => ({ ...f, pontos_melhoria: v }))}
             className={`${inputClass} min-h-[80px] resize-none`}
             maxLength={1000}
           />
