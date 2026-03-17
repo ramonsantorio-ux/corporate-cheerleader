@@ -320,7 +320,7 @@ export default function Colaboradores() {
                   <p className="text-xs text-muted-foreground">
                     {f.cargo} · {f.departamento}
                     {turnoLabel && <span className="ml-1">· {turnoLabel}</span>}
-                    {f.letra && <span className="ml-1">· Letra {f.letra}</span>}
+                    
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
