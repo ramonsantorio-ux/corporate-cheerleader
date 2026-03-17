@@ -75,6 +75,7 @@ export default function FuncionarioProfile() {
   const [editGoal, setEditGoal] = useState<Goal | null>(null);
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
   const [goalForm, setGoalForm] = useState(emptyGoalForm);
+  const cargoSemMeta = func ? CARGOS_SEM_META.includes(func.cargo) : false;
 
   useEffect(() => {
     if (!id) return;
