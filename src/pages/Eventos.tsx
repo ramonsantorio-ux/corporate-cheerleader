@@ -335,7 +335,7 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Local</Label>
-                  <Input value={newEvent.location} onChange={e => setNewEvent({ ...newEvent, location: e.target.value })} placeholder="Ex: PÁTIO P" />
+                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P" />
                 </div>
                 <div className="space-y-2">
                   <Label>Equipamento</Label>
