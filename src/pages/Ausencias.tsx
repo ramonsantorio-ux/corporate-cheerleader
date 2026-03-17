@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
-  Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert, Search, X
+  Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert, Search, X, Download
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
@@ -95,6 +95,7 @@ export default function PontoFerias() {
   const [alertsShown, setAlertsShown] = useState(false);
   const pontoFileRef = useRef<HTMLInputElement>(null);
   const feriasFileRef = useRef<HTMLInputElement>(null);
+  const extrasFileRef = useRef<HTMLInputElement>(null);
   const [period, setPeriod] = useState<PeriodRange>(getCurrentPeriod());
   const navigate = useNavigate();
 
@@ -424,6 +425,62 @@ export default function PontoFerias() {
     if (feriasFileRef.current) feriasFileRef.current.value = '';
   }
 
+  async function handleImportExtras(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<any>(ws);
+      const nameToId = Object.fromEntries(funcionarios.map(f => [f.nome.toLowerCase().trim(), f.id]));
+      let imported = 0;
+      for (const row of rows) {
+        const nome = String(row['Nome'] || row['nome'] || row['Colaborador'] || '').toLowerCase().trim();
+        const empId = nameToId[nome];
+        if (!empId) continue;
+        let periodStart = row['Início Período'] || row['inicio_periodo'] || '';
+        let periodEnd = row['Fim Período'] || row['fim_periodo'] || '';
+        if (typeof periodStart === 'number') { const d = XLSX.SSF.parse_date_code(periodStart); periodStart = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
+        if (typeof periodEnd === 'number') { const d = XLSX.SSF.parse_date_code(periodEnd); periodEnd = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
+        if (!periodStart || !periodEnd) continue;
+        await supabase.from('overtime_control').insert({
+          employee_id: empId,
+          period_start: periodStart,
+          period_end: periodEnd,
+          extras_count: parseInt(row['Extras Realizadas'] || row['extras_count'] || '0') || 0,
+          max_extras: parseInt(row['Máximo Extras'] || row['max_extras'] || '3') || 3,
+        });
+        imported++;
+      }
+      toast.success(`${imported} registros de extras importados com sucesso!`);
+      fetchAll();
+    } catch {
+      toast.error('Erro ao importar arquivo de extras');
+    }
+    if (extrasFileRef.current) extrasFileRef.current.value = '';
+  }
+
+  function downloadTemplateFerias() {
+    const header = [['Nome', 'Dias', 'Mês', 'Início', 'Fim', 'Observação']];
+    const example = [['João Silva', 30, 'Janeiro', '2025-01-05', '2025-02-04', 'Férias regulares']];
+    const ws = XLSX.utils.aoa_to_sheet([...header, ...example]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 8 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 25 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Férias');
+    XLSX.writeFile(wb, 'modelo_ferias.xlsx');
+  }
+
+  function downloadTemplateExtras() {
+    const header = [['Nome', 'Início Período', 'Fim Período', 'Extras Realizadas', 'Máximo Extras']];
+    const example = [['João Silva', '2025-01-01', '2025-01-31', 1, 3]];
+    const ws = XLSX.utils.aoa_to_sheet([...header, ...example]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 15 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Extras');
+    XLSX.writeFile(wb, 'modelo_extras.xlsx');
+  }
+
   // ─── Deviations Report PDF ────────────────────────────────────────────
   function exportDeviationsReport() {
     const doc = new jsPDF('landscape');
@@ -661,6 +718,7 @@ export default function PontoFerias() {
     <div className="space-y-6">
       <input ref={pontoFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportPonto} />
       <input ref={feriasFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFerias} />
+      <input ref={extrasFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportExtras} />
 
       {/* ═══ HEADER + ACTIONS ═══ */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
@@ -815,6 +873,15 @@ export default function PontoFerias() {
             </Button>
             <Button size="sm" variant="outline" onClick={() => feriasFileRef.current?.click()}>
               <Upload className="w-4 h-4 mr-2" />Importar Férias
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => extrasFileRef.current?.click()}>
+              <Upload className="w-4 h-4 mr-2" />Importar Extras
+            </Button>
+            <Button size="sm" variant="outline" onClick={downloadTemplateFerias}>
+              <Download className="w-4 h-4 mr-2" />Modelo Férias
+            </Button>
+            <Button size="sm" variant="outline" onClick={downloadTemplateExtras}>
+              <Download className="w-4 h-4 mr-2" />Modelo Extras
             </Button>
 
             {/* Deviations Report */}
