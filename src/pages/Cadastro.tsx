@@ -648,7 +648,7 @@ export default function Cadastro() {
                 )}
                 <p className="text-xs text-muted-foreground">Foto (opcional)</p>
               </div>
-              <FormFields data={newData} setData={setNewData} docs={docFiles} setDocs={setDocFiles} docRef={docFileRef as React.RefObject<HTMLInputElement>} />
+              {renderFormFields(newData, setNewData, docFiles, setDocFiles, docFileRef as React.RefObject<HTMLInputElement>)}
               <Button className="w-full" onClick={handleCreate} disabled={uploading}>
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Cadastrar
