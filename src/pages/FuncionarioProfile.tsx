@@ -35,6 +35,7 @@ interface EventRecord { id: string; event_date: string; event_time: string; day_
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
+const CARGOS_SEM_META = ['Motorista', 'Operador de Equipamentos', 'Ajudante de Caminhão Pipa', 'Operador de Mini Carregadeira'];
 const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'ADM' };
 const attendanceStatusLabels: Record<string, string> = {
   presente: 'Presente', falta: 'Falta Injustificada', falta_injustificada: 'Falta Injustificada',
