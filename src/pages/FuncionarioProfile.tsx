@@ -729,6 +729,7 @@ export default function FuncionarioProfile() {
               ⚠️ <strong>Nota:</strong> Faltas Injustificadas NÃO contemplam banco de horas. Este relatório é anexado à ficha do colaborador para envio ao RH no momento do desligamento.
             </p>
           </div>
+        </TabsContent>
 
         {/* ════ EVENTOS TAB ════ */}
         <TabsContent value="eventos" className="space-y-6 mt-4">
