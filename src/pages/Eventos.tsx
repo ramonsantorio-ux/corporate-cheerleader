@@ -351,7 +351,7 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Encarregado</Label>
-                  <Input value={newEvent.supervisor} onChange={e => setNewEvent({ ...newEvent, supervisor: e.target.value })} />
+                  <FastInput value={newEvent.supervisor} onValueChange={v => setNewEvent(p => ({ ...p, supervisor: v }))} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Nome do Envolvido *</Label>
