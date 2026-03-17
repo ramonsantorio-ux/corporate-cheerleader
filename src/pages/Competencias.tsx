@@ -87,26 +87,30 @@ export default function Competencias() {
   }
 
   const cargoStats = useMemo(() => {
+    // Normalize cargo: remove trailing Roman numerals and level numbers (e.g. "Técnico de Segurança III" -> "Técnico de Segurança")
+    const normalizeCargo = (cargo: string) => cargo.replace(/\s+(I{1,3}|IV|V|VI{0,3}|[0-9]+)\s*$/i, '').trim();
+
     const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: string[] }> = {};
     funcionarios.forEach(f => {
-      if (!cargos[f.cargo]) cargos[f.cargo] = { cargo: f.cargo, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [] };
-      cargos[f.cargo].total++;
+      const cargoKey = normalizeCargo(f.cargo);
+      if (!cargos[cargoKey]) cargos[cargoKey] = { cargo: cargoKey, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [] };
+      cargos[cargoKey].total++;
       const empEvals = evaluations.filter(e => e.evaluated_name.toLowerCase() === f.nome.toLowerCase());
       if (empEvals.length === 0) {
-        cargos[f.cargo].pendentes++;
-        cargos[f.cargo].pendenteNomes.push(f.nome);
+        cargos[cargoKey].pendentes++;
+        cargos[cargoKey].pendenteNomes.push(f.nome);
       } else {
         const completed = empEvals.filter(e => e.status === 'completed');
         if (completed.length > 0) {
-          cargos[f.cargo].realizados++;
+          cargos[cargoKey].realizados++;
           const latestCompleted = completed[completed.length - 1];
           const cycle = evalCycles.find(c => c.id === latestCompleted.cycle_id);
           if (cycle && latestCompleted.completed_at && new Date(latestCompleted.completed_at) <= new Date(cycle.end_date)) {
-            cargos[f.cargo].noPrazo++;
+            cargos[cargoKey].noPrazo++;
           }
         } else {
-          cargos[f.cargo].pendentes++;
-          cargos[f.cargo].pendenteNomes.push(f.nome);
+          cargos[cargoKey].pendentes++;
+          cargos[cargoKey].pendenteNomes.push(f.nome);
         }
       }
     });
