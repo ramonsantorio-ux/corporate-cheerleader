@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Target, Trash2, TrendingUp, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,6 +65,7 @@ export default function Competencias() {
   const [form, setForm] = useState({ name: '', description: '', cycle_id: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
@@ -94,7 +96,7 @@ export default function Competencias() {
       return normalized;
     };
 
-    const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: string[] }> = {};
+    const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: { id: string; nome: string }[] }> = {};
     funcionarios.forEach(f => {
       const cargoKey = normalizeCargo(f.cargo);
       if (!cargos[cargoKey]) cargos[cargoKey] = { cargo: cargoKey, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [] };
@@ -102,7 +104,7 @@ export default function Competencias() {
       const empEvals = evaluations.filter(e => e.evaluated_name.toLowerCase() === f.nome.toLowerCase());
       if (empEvals.length === 0) {
         cargos[cargoKey].pendentes++;
-        cargos[cargoKey].pendenteNomes.push(f.nome);
+        cargos[cargoKey].pendenteNomes.push({ id: f.id, nome: f.nome });
       } else {
         const completed = empEvals.filter(e => e.status === 'completed');
         if (completed.length > 0) {
@@ -114,7 +116,7 @@ export default function Competencias() {
           }
         } else {
           cargos[cargoKey].pendentes++;
-          cargos[cargoKey].pendenteNomes.push(f.nome);
+          cargos[cargoKey].pendenteNomes.push({ id: f.id, nome: f.nome });
         }
       }
     });
@@ -230,8 +232,11 @@ export default function Competencias() {
                       {expandedCargo === c.cargo && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                           className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
-                          {c.pendenteNomes.map(nome => (
-                            <p key={nome} className="text-sm text-muted-foreground py-0.5">• {nome}</p>
+                          {c.pendenteNomes.map(emp => (
+                            <button key={emp.id} onClick={() => navigate(`/funcionario/${emp.id}`)}
+                              className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
+                              • {emp.nome}
+                            </button>
                           ))}
                         </motion.div>
                       )}
