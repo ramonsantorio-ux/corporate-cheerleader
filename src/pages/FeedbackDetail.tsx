@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ThumbsUp, MessageSquare, Calendar, User, Building2, UserCheck, CheckCircle2, Clock, AlertTriangle, ArrowRight, FileText, Shield, X, Loader2 } from 'lucide-react';
