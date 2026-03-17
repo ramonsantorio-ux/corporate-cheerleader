@@ -377,8 +377,8 @@ export default function FuncionarioProfile() {
         ['Eventos Registrados', String(employeeEvents.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [...tealLight] },
+      headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: blueLt },
       columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
       margin: { left: margin + 4, right: margin + 4 },
     });
