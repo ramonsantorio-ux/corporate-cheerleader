@@ -549,8 +549,8 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
-        {/* ════ PONTO / FÉRIAS TAB ════ */}
-        <TabsContent value="ponto-ferias" className="space-y-6 mt-4">
+        {/* ════ PONTO / OCORRÊNCIAS TAB (merged Ponto/Férias + Desvios) ════ */}
+        <TabsContent value="ponto-ocorrencias" className="space-y-6 mt-4">
           {isOnVacation && vacationInfo && (
             <div className="flex items-center gap-3 rounded-lg p-4 border bg-teal-500/5 border-teal-500/20">
               <Sun className="w-5 h-5 text-teal-500" />
