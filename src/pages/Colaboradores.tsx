@@ -144,7 +144,7 @@ export default function Colaboradores() {
       });
       const { error } = await supabase.from('funcionarios').insert(toInsert);
       if (error) toast.error('Erro ao importar: ' + error.message);
-      else { toast.success(`${records.length} funcionário(s) importado(s)!`); fetchFuncionarios(); }
+      else { toast.success(`${records.length} funcionário(s) importado(s)!`); fetchFuncionarios(true); }
     } catch { toast.error('Erro ao ler arquivo.'); }
     setImporting(false);
     if (importFileRef.current) importFileRef.current.value = '';
