@@ -35,6 +35,7 @@ interface EventRecord { id: string; event_date: string; event_time: string; day_
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
+const CARGOS_SEM_META = ['Motorista', 'Operador de Equipamentos', 'Ajudante de Caminhão Pipa', 'Operador de Mini Carregadeira'];
 const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'ADM' };
 const attendanceStatusLabels: Record<string, string> = {
   presente: 'Presente', falta: 'Falta Injustificada', falta_injustificada: 'Falta Injustificada',
@@ -475,7 +476,7 @@ export default function FuncionarioProfile() {
             {[
               { label: 'Score Geral', value: score, color: 'hsl(var(--primary))' },
               { label: 'FIT Cultural', value: scoreFit, color: 'hsl(var(--chart-2))' },
-              { label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' },
+              ...(!CARGOS_SEM_META.includes(func.cargo) ? [{ label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' }] : []),
             ].map(s => (
               <div key={s.label} className="text-center">
                 <div className="relative w-16 h-16">
@@ -517,12 +518,11 @@ export default function FuncionarioProfile() {
       )}
 
       <Tabs defaultValue="desempenho" className="w-full">
-        <TabsList className="grid w-full grid-cols-8">
+        <TabsList className={`grid w-full ${CARGOS_SEM_META.includes(func.cargo) ? 'grid-cols-6' : 'grid-cols-7'}`}>
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
-          <TabsTrigger value="ponto-ferias">Ponto / Férias</TabsTrigger>
+          <TabsTrigger value="ponto-ocorrencias">Ponto / Ocorrências</TabsTrigger>
           <TabsTrigger value="eventos">Eventos ({employeeEvents.length})</TabsTrigger>
-          <TabsTrigger value="desvios">Desvios</TabsTrigger>
-          <TabsTrigger value="metas">Metas</TabsTrigger>
+          {!CARGOS_SEM_META.includes(func.cargo) && <TabsTrigger value="metas">Metas</TabsTrigger>}
           <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
           <TabsTrigger value="fit-cultural">Fit Cultural</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
@@ -550,8 +550,8 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
-        {/* ════ PONTO / FÉRIAS TAB ════ */}
-        <TabsContent value="ponto-ferias" className="space-y-6 mt-4">
+        {/* ════ PONTO / OCORRÊNCIAS TAB (merged Ponto/Férias + Desvios) ════ */}
+        <TabsContent value="ponto-ocorrencias" className="space-y-6 mt-4">
           {isOnVacation && vacationInfo && (
             <div className="flex items-center gap-3 rounded-lg p-4 border bg-teal-500/5 border-teal-500/20">
               <Sun className="w-5 h-5 text-teal-500" />
@@ -666,6 +666,70 @@ export default function FuncionarioProfile() {
               </div>
             )}
           </div>
+
+          {/* ── Desvios e Advertências (dentro da aba Ponto/Ocorrências) ── */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-destructive" />Desvios e Advertências</h3>
+            <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600" onClick={exportEmployeeDeviationsReport}>
+              <FileText className="w-4 h-4 mr-2" />Exportar PDF (RH)
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: 'Faltas Injust.', value: attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length, color: 'bg-destructive/10 text-destructive' },
+              { label: 'Faltas Just.', value: attendanceRecords.filter(a => a.status === 'falta_justificada').length, color: 'bg-warning/10 text-warning' },
+              { label: 'Atestados', value: attendanceRecords.filter(a => a.status === 'atestado').length, color: 'bg-blue-500/10 text-blue-600' },
+              { label: 'Advertências', value: employeeWarnings.length, color: 'bg-red-600/10 text-red-600' },
+            ].map(d => (
+              <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
+                <p className="text-3xl font-bold">{d.value}</p>
+                <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="glass-card rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border bg-destructive/5">
+              <h4 className="text-sm font-bold flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-destructive" />Histórico de Advertências ({employeeWarnings.length})</h4>
+            </div>
+            {employeeWarnings.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma advertência registrada</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="bg-muted/30 border-b border-border">
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Motivo</th>
+                    <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Aplicada</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
+                  </tr></thead>
+                  <tbody>
+                    {employeeWarnings.map((w, i) => (
+                      <tr key={w.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                        <td className="px-4 py-2 text-xs">{new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-2 text-xs">{w.reason}</td>
+                        <td className="px-4 py-2 text-center">
+                          {w.applied ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">APLICADA</span>
+                          ) : (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{w.observation || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-lg p-4 border border-orange-500/20 bg-orange-500/5">
+            <p className="text-xs text-orange-700 font-medium">
+              ⚠️ <strong>Nota:</strong> Faltas Injustificadas NÃO contemplam banco de horas. Este relatório é anexado à ficha do colaborador para envio ao RH no momento do desligamento.
+            </p>
+          </div>
         </TabsContent>
 
         {/* ════ EVENTOS TAB ════ */}
@@ -726,75 +790,8 @@ export default function FuncionarioProfile() {
           )}
         </TabsContent>
 
-        {/* ════ DESVIOS TAB ════ */}
-        <TabsContent value="desvios" className="space-y-6 mt-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-destructive" />Desvios e Advertências</h3>
-            <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600" onClick={exportEmployeeDeviationsReport}>
-              <FileText className="w-4 h-4 mr-2" />Exportar PDF (RH)
-            </Button>
-          </div>
 
-          {/* Deviations Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: 'Faltas Injust.', value: attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length, color: 'bg-destructive/10 text-destructive' },
-              { label: 'Faltas Just.', value: attendanceRecords.filter(a => a.status === 'falta_justificada').length, color: 'bg-warning/10 text-warning' },
-              { label: 'Atestados', value: attendanceRecords.filter(a => a.status === 'atestado').length, color: 'bg-blue-500/10 text-blue-600' },
-              { label: 'Advertências', value: employeeWarnings.length, color: 'bg-red-600/10 text-red-600' },
-            ].map(d => (
-              <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
-                <p className="text-3xl font-bold">{d.value}</p>
-                <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Warnings Table */}
-          <div className="glass-card rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-border bg-destructive/5">
-              <h4 className="text-sm font-bold flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-destructive" />Histórico de Advertências ({employeeWarnings.length})</h4>
-            </div>
-            {employeeWarnings.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma advertência registrada</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="bg-muted/30 border-b border-border">
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Motivo</th>
-                    <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Aplicada</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
-                  </tr></thead>
-                  <tbody>
-                    {employeeWarnings.map((w, i) => (
-                      <tr key={w.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
-                        <td className="px-4 py-2 text-xs">{new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                        <td className="px-4 py-2 text-xs">{w.reason}</td>
-                        <td className="px-4 py-2 text-center">
-                          {w.applied ? (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">APLICADA</span>
-                          ) : (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-xs text-muted-foreground">{w.observation || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Deviations note */}
-          <div className="rounded-lg p-4 border border-orange-500/20 bg-orange-500/5">
-            <p className="text-xs text-orange-700 font-medium">
-              ⚠️ <strong>Nota:</strong> Faltas Injustificadas NÃO contemplam banco de horas. Este relatório é anexado à ficha do colaborador para envio ao RH no momento do desligamento.
-            </p>
-          </div>
-        </TabsContent>
-
+        {!CARGOS_SEM_META.includes(func.cargo) && (
         <TabsContent value="metas" className="space-y-6 mt-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
@@ -829,6 +826,7 @@ export default function FuncionarioProfile() {
             </>
           )}
         </TabsContent>
+        )}
 
         <TabsContent value="feedbacks" className="space-y-4 mt-4">
           <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
