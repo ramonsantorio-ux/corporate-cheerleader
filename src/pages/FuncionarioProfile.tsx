@@ -283,12 +283,12 @@ export default function FuncionarioProfile() {
       drawBusatoFooter(doc, pageNum, { pageWidth, pageHeight });
     }
 
-    function drawSectionHeading(title: string, yPos: number) {
-      doc.setFillColor(...tealLight);
+    function drawSectionHeadingLocal(title: string, yPos: number) {
+      doc.setFillColor(...blueLt);
       doc.rect(margin, yPos, pageWidth - margin * 2, 10, 'F');
-      doc.setFillColor(...teal);
+      doc.setFillColor(...blue);
       doc.rect(margin, yPos, 3, 10, 'F');
-      doc.setTextColor(...teal);
+      doc.setTextColor(...blue);
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
       doc.text(title, margin + 7, yPos + 7);
