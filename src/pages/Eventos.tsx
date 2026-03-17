@@ -347,7 +347,7 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Turno</Label>
-                  <Input value={newEvent.shift} onChange={e => setNewEvent({ ...newEvent, shift: e.target.value })} />
+                  <FastInput value={newEvent.shift} onValueChange={v => setNewEvent(p => ({ ...p, shift: v }))} />
                 </div>
                 <div className="space-y-2">
                   <Label>Encarregado</Label>
