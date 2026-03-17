@@ -4,8 +4,8 @@ import { Calendar, Plus, Loader2, CheckCircle2, Clock, Trash2, Search, X, Users,
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
