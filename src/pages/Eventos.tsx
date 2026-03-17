@@ -91,13 +91,12 @@ export default function Eventos() {
 
   async function fetchEvents() {
     setLoading(true);
-    const { data } = await supabase
-      .from('events')
-      .select('*')
-      .gte('event_date', period.start)
-      .lte('event_date', period.end)
-      .order('event_date', { ascending: false });
-    setEvents((data as EventRow[]) || []);
+    const [evtRes, fRes] = await Promise.all([
+      supabase.from('events').select('*').gte('event_date', period.start).lte('event_date', period.end).order('event_date', { ascending: false }),
+      supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url').order('nome'),
+    ]);
+    setEvents((evtRes.data as EventRow[]) || []);
+    setFuncionarios((fRes.data || []) as any[]);
     setLoading(false);
   }
 
