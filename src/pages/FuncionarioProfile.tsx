@@ -17,6 +17,7 @@ import { statusLabels, statusColors, priorityLabels, priorityColors, FeedbackSta
 import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
