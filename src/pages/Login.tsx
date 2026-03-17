@@ -3,11 +3,12 @@ import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { MessageCircle, LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
+import { LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import busatoLogo from '@/assets/busato-logo-full.png';
 
 export default function Login() {
   const { user, loading: authLoading } = useAuth();
@@ -100,11 +101,9 @@ export default function Login() {
         className="w-full max-w-sm"
       >
         <div className="glass-card rounded-2xl p-8 space-y-6">
-          <div className="text-center space-y-2">
-            <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto">
-              <MessageCircle className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold">FeedbackHub</h1>
+          <div className="text-center space-y-3">
+            <img src={busatoLogo} alt="Busato" className="h-14 mx-auto object-contain" />
+            <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Gestão de Contrato</p>
             <p className="text-sm text-muted-foreground">
               {isFirstSetup ? 'Configure a conta administrador' : 'Faça login para acessar o sistema'}
             </p>
