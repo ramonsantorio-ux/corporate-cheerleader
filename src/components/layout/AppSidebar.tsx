@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import busatoLogo from '@/assets/busato-logo.png';
 
 interface NavGroup {
   label: string;
@@ -76,14 +77,12 @@ export default function AppSidebar() {
     >
       {/* Brand */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border flex-shrink-0">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-primary/70 flex items-center justify-center flex-shrink-0 shadow-sm">
-          <Briefcase className="w-4.5 h-4.5 text-sidebar-primary-foreground" />
-        </div>
+        <img src={busatoLogo} alt="Busato" className="w-9 h-9 rounded-lg flex-shrink-0" />
         <AnimatePresence>
           {!collapsed && (
             <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.15 }}>
-              <span className="text-sidebar-foreground font-bold text-sm tracking-tight block leading-none">GESTÃO PORTO</span>
-              <span className="text-sidebar-foreground/50 text-[10px] font-medium tracking-widest">PEOPLE MANAGEMENT</span>
+              <span className="text-sidebar-foreground font-bold text-sm tracking-tight block leading-none">BUSATO</span>
+              <span className="text-sidebar-foreground/50 text-[10px] font-medium tracking-widest">GESTÃO DE CONTRATO</span>
             </motion.div>
           )}
         </AnimatePresence>
