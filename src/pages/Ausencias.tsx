@@ -527,7 +527,7 @@ export default function PontoFerias() {
       head: [['Colaborador', 'Cargo', 'Turno/Letra', 'Hrs Neg.', 'Faltas Inj.', 'Faltas Just.', 'Atestados', 'Extras', 'Advertências', 'Pendentes']],
       body: deviationRows.length > 0 ? deviationRows : [['Nenhum desvio registrado no período', '', '', '', '', '', '', '', '', '']],
       styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillColor: [13, 148, 136], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+      headStyles: { fillColor: [59, 130, 187], textColor: 255, fontStyle: 'bold', fontSize: 7 },
       alternateRowStyles: { fillColor: [245, 245, 245] },
       columnStyles: {
         3: { halign: 'center', fontStyle: 'bold' },

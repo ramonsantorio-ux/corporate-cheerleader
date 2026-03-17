@@ -427,8 +427,8 @@ export default function Relatorios() {
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
-    const teal: [number, number, number] = [13, 148, 136];
-    const tealLt: [number, number, number] = [232, 245, 243];
+    const blue: [number, number, number] = [59, 130, 187];
+    const blueLt: [number, number, number] = [232, 241, 250];
     const dark: [number, number, number] = [30, 40, 50];
     const gray: [number, number, number] = [120, 130, 140];
     const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'Administrativo' };

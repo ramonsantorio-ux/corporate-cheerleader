@@ -270,8 +270,8 @@ export default function FuncionarioProfile() {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const teal = [13, 148, 136] as const;
-    const tealLight = [232, 245, 243] as const;
+    const blue: [number, number, number] = [59, 130, 187];
+    const blueLt: [number, number, number] = [232, 241, 250];
     const margin = 14;
 
     function drawHeader() {
