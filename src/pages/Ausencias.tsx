@@ -799,7 +799,7 @@ export default function PontoFerias() {
                   </div>
                   <div className="space-y-2">
                     <Label>Motivo</Label>
-                    <Textarea value={warningForm.reason} onChange={e => setWarningForm({ ...warningForm, reason: e.target.value })} rows={2} placeholder="Descreva o motivo da advertência" />
+                    <FastTextarea value={warningForm.reason} onValueChange={v => setWarningForm(f => ({ ...f, reason: v }))} rows={2} placeholder="Descreva o motivo da advertência" />
                   </div>
                   <div className="space-y-2">
                     <Label>Observação</Label>
