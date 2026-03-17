@@ -523,10 +523,10 @@ export default function Cadastro() {
         </Select>
       </div>
 
-      {/* Turno / Escala */}
+      {/* Turno / Escala + Letra */}
       <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
         <Label className="text-sm font-semibold">Turno / Escala</Label>
-        <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v })}>
+        <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v, letra: letraFromTurno(v) })}>
           <SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger>
           <SelectContent>
             {TURNOS.map(t => (
@@ -534,6 +534,7 @@ export default function Cadastro() {
             ))}
           </SelectContent>
         </Select>
+        {data.letra && <p className="text-xs text-muted-foreground mt-1">Letra: <span className="font-semibold">{data.letra}</span></p>}
       </div>
 
       {/* Encarregado */}
