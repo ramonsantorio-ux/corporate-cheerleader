@@ -247,7 +247,35 @@ export default function Feedbacks() {
     return Object.values(byAuthor);
   }, [selectedDept, feedbacks]);
 
-  async function handleDelete() {
+  // ── Feedback por Cargo (mín. 1 feedback por funcionário) ──
+  const feedbackCargoStats = useMemo(() => {
+    const cargos: Record<string, { cargo: string; total: number; comFeedback: number; pendentes: number; pendenteNomes: { id: string; nome: string }[] }> = {};
+    funcionariosFull.forEach(f => {
+      if (!cargos[f.cargo]) cargos[f.cargo] = { cargo: f.cargo, total: 0, comFeedback: 0, pendentes: 0, pendenteNomes: [] };
+      cargos[f.cargo].total++;
+      const hasFb = feedbacks.some(fb => fb.autor.toLowerCase() === f.nome.toLowerCase());
+      if (hasFb) {
+        cargos[f.cargo].comFeedback++;
+      } else {
+        cargos[f.cargo].pendentes++;
+        cargos[f.cargo].pendenteNomes.push({ id: f.id, nome: f.nome });
+      }
+    });
+    return Object.values(cargos).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
+  }, [funcionariosFull, feedbacks]);
+
+  const fbCargoChartData = feedbackCargoStats.map(c => ({
+    cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + '…' : c.cargo,
+    'Com Feedback': c.comFeedback,
+    Pendentes: c.pendentes,
+  }));
+
+  function openCreateForEmployee(nome: string) {
+    setForm(prev => ({ ...prev, funcionario: nome }));
+    setCreateOpen(true);
+  }
+
+
     if (!deleteId) return;
     const { error } = await supabase.from('feedbacks').delete().eq('id', deleteId);
     if (error) { toast.error('Erro ao excluir feedback.'); return; }
