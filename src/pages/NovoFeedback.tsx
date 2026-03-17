@@ -109,11 +109,10 @@ export default function NovoFeedback() {
 
         <div>
           <label className={labelClass}>Título *</label>
-          <input
-            type="text"
+          <FastInput
             placeholder="Resumo breve do feedback"
             value={form.titulo}
-            onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+            onValueChange={(v) => setForm(f => ({ ...f, titulo: v }))}
             className={inputClass}
             maxLength={100}
           />
