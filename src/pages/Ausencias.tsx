@@ -462,6 +462,33 @@ export default function PontoFerias() {
     if (extrasFileRef.current) extrasFileRef.current.value = '';
   }
 
+  function downloadTemplatePonto() {
+    const header = [['Nome', 'Data', 'Status', 'Observação']];
+    const examples = [
+      ['João Silva', '2025-01-15', 'presente', ''],
+      ['Maria Souza', '2025-01-15', 'falta_injustificada', 'Não compareceu'],
+      ['Pedro Santos', '2025-01-15', 'atestado', 'Atestado médico 3 dias'],
+      ['Ana Lima', '2025-01-15', 'extra', 'Hora extra autorizada'],
+      ['Carlos Dias', '2025-01-15', 'falta_justificada', 'Consulta médica'],
+      ['José Oliveira', '2025-01-15', 'ferias', ''],
+      ['Lucas Costa', '2025-01-15', 'abono', 'Abono do gestor'],
+      ['Fernanda Rocha', '2025-01-15', 'banco_horas', 'Compensação'],
+      ['Roberto Alves', '2025-01-15', 'afastamento', 'Afastamento INSS'],
+    ];
+    const instructions = [
+      [],
+      ['INSTRUÇÕES:'],
+      ['Status válidos: presente, falta_injustificada, falta_justificada, atestado, extra, ferias, afastamento, abono, banco_horas'],
+      ['O campo Nome deve corresponder exatamente ao nome cadastrado no sistema.'],
+      ['A Data deve estar no formato AAAA-MM-DD (ex: 2025-01-15).'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([...header, ...examples, ...instructions]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 14 }, { wch: 22 }, { wch: 35 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ponto');
+    XLSX.writeFile(wb, 'modelo_ponto.xlsx');
+  }
+
   function downloadTemplateFerias() {
     const header = [['Nome', 'Dias', 'Mês', 'Início', 'Fim', 'Observação']];
     const example = [['João Silva', 30, 'Janeiro', '2025-01-05', '2025-02-04', 'Férias regulares']];
