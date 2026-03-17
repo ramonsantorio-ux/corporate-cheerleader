@@ -270,8 +270,8 @@ export default function FuncionarioProfile() {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const teal = [13, 148, 136] as const;
-    const tealLight = [232, 245, 243] as const;
+    const blue: [number, number, number] = [59, 130, 187];
+    const blueLt: [number, number, number] = [232, 241, 250];
     const margin = 14;
 
     function drawHeader() {
@@ -283,12 +283,12 @@ export default function FuncionarioProfile() {
       drawBusatoFooter(doc, pageNum, { pageWidth, pageHeight });
     }
 
-    function drawSectionHeading(title: string, yPos: number) {
-      doc.setFillColor(...tealLight);
+    function drawSectionHeadingLocal(title: string, yPos: number) {
+      doc.setFillColor(...blueLt);
       doc.rect(margin, yPos, pageWidth - margin * 2, 10, 'F');
-      doc.setFillColor(...teal);
+      doc.setFillColor(...blue);
       doc.rect(margin, yPos, 3, 10, 'F');
-      doc.setTextColor(...teal);
+      doc.setTextColor(...blue);
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
       doc.text(title, margin + 7, yPos + 7);
@@ -328,7 +328,7 @@ export default function FuncionarioProfile() {
     y = y + 24;
 
     // ── DADOS CADASTRAIS ──
-    y = drawSectionHeading('DADOS CADASTRAIS', y);
+    y = drawSectionHeadingLocal('DADOS CADASTRAIS', y);
 
     const info = [
       ['Nome Completo', func.nome.toUpperCase()],
@@ -361,7 +361,7 @@ export default function FuncionarioProfile() {
     const advPending = employeeWarnings.filter(w => !w.applied).length;
 
     y = checkPageBreak(y, 60);
-    y = drawSectionHeading('RESUMO DE DESVIOS', y);
+    y = drawSectionHeadingLocal('RESUMO DE DESVIOS', y);
 
     autoTable(doc, {
       startY: y,
@@ -377,8 +377,8 @@ export default function FuncionarioProfile() {
         ['Eventos Registrados', String(employeeEvents.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [...tealLight] },
+      headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: blueLt },
       columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
       margin: { left: margin + 4, right: margin + 4 },
     });
@@ -387,7 +387,7 @@ export default function FuncionarioProfile() {
 
     // ── HISTÓRICO DE ADVERTÊNCIAS ──
     y = checkPageBreak(y, 30);
-    y = drawSectionHeading(`HISTÓRICO DE ADVERTÊNCIAS (${employeeWarnings.length})`, y);
+    y = drawSectionHeadingLocal(`HISTÓRICO DE ADVERTÊNCIAS (${employeeWarnings.length})`, y);
 
     if (employeeWarnings.length > 0) {
       autoTable(doc, {
@@ -400,8 +400,8 @@ export default function FuncionarioProfile() {
           w.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLight] },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
         margin: { left: margin + 4, right: margin + 4 },
       });
       y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
@@ -414,7 +414,7 @@ export default function FuncionarioProfile() {
 
     // ── HISTÓRICO DE EVENTOS ──
     y = checkPageBreak(y, 30);
-    y = drawSectionHeading(`HISTÓRICO DE EVENTOS (${employeeEvents.length})`, y);
+    y = drawSectionHeadingLocal(`HISTÓRICO DE EVENTOS (${employeeEvents.length})`, y);
 
     if (employeeEvents.length > 0) {
       autoTable(doc, {
@@ -427,8 +427,8 @@ export default function FuncionarioProfile() {
           ev.equipment || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLight] },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
         margin: { left: margin + 4, right: margin + 4 },
       });
       y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
@@ -445,7 +445,7 @@ export default function FuncionarioProfile() {
     );
 
     y = checkPageBreak(y, 30);
-    y = drawSectionHeading(`HISTÓRICO DE REGISTROS (${deviationRecords.length})`, y);
+    y = drawSectionHeadingLocal(`HISTÓRICO DE REGISTROS (${deviationRecords.length})`, y);
 
     if (deviationRecords.length > 0) {
       autoTable(doc, {
@@ -457,8 +457,8 @@ export default function FuncionarioProfile() {
           a.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLight] },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
         margin: { left: margin + 4, right: margin + 4 },
       });
       y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
