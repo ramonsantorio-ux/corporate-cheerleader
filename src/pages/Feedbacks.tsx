@@ -362,6 +362,63 @@ export default function Feedbacks() {
         </motion.div>
       </div>
 
+      {/* ── Acompanhamento de Feedbacks por Cargo ── */}
+      {feedbackCargoStats.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="corporate-section">
+          <div className="corporate-section-header">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Acompanhamento — Mín. 1 Feedback por Colaborador</h2>
+            </div>
+            <span className="text-xs text-muted-foreground">{feedbackCargoStats.length} cargos</span>
+          </div>
+          <div className="corporate-section-body">
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={fbCargoChartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="cargo" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
+                <Bar dataKey="Com Feedback" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+
+            {feedbackCargoStats.some(c => c.pendentes > 0) && (
+              <div className="mt-6 border-t border-border pt-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Colaboradores sem Feedback</p>
+                <div className="space-y-1">
+                  {feedbackCargoStats.filter(c => c.pendentes > 0).map(c => (
+                    <div key={c.cargo} className="rounded-lg border border-border overflow-hidden">
+                      <button onClick={() => setExpandedFbCargo(expandedFbCargo === c.cargo ? null : c.cargo)}
+                        className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                        <span className="text-sm font-medium text-foreground">{c.cargo}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="corporate-badge bg-destructive/10 text-destructive">{c.pendentes}</span>
+                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedFbCargo === c.cargo ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+                      {expandedFbCargo === c.cargo && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                          className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
+                          {c.pendenteNomes.map(emp => (
+                            <button key={emp.id} onClick={() => openCreateForEmployee(emp.nome)}
+                              className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
+                              • {emp.nome}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
+
       {/* ── Charts Row ── */}
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Status Donut */}
