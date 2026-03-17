@@ -320,7 +320,7 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Horário</Label>
-                  <Input value={newEvent.event_time} onChange={e => setNewEvent({ ...newEvent, event_time: e.target.value })} placeholder="Ex: 14:30" />
+                  <FastInput value={newEvent.event_time} onValueChange={v => setNewEvent(p => ({ ...p, event_time: v }))} placeholder="Ex: 14:30" />
                 </div>
                 <div className="space-y-2">
                   <Label>Dia da Semana</Label>
