@@ -192,7 +192,7 @@ export default function PDIPage() {
                   <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-              <div><Label>Colaborador</Label><Input value={pdiForm.employee_name} onChange={e => setPdiForm({ ...pdiForm, employee_name: e.target.value })} placeholder="Nome do colaborador" /></div>
+              <div><Label>Colaborador</Label><FastInput value={pdiForm.employee_name} onValueChange={v => setPdiForm(f => ({ ...f, employee_name: v }))} placeholder="Nome do colaborador" /></div>
               <Button onClick={createPDI} className="w-full">Criar PDI</Button>
             </div>
           </DialogContent>
