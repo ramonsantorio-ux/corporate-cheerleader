@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
 import { motion } from 'framer-motion';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { BarChart3, TrendingUp, PieChart, Download, FileText, FileSpreadsheet, User, ShieldAlert, Calendar, Clock, AlertTriangle, Users } from 'lucide-react';
