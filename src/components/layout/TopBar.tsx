@@ -140,9 +140,7 @@ export default function TopBar() {
   return (
     <header className="h-16 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-20 flex items-center justify-between px-4 md:px-6">
       <div className="flex items-center gap-3 md:hidden">
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-          <MessageCircle className="w-4 h-4 text-primary-foreground" />
-        </div>
+        <img src={busatoGlobo} alt="Busato" className="w-8 h-8" />
         <span className="font-semibold text-sm">Busato</span>
       </div>
 
