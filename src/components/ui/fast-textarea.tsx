@@ -1,4 +1,5 @@
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { Textarea } from "@/components/ui/textarea";
 
 interface FastTextareaProps extends Omit<React.ComponentProps<typeof Textarea>, "onChange" | "value"> {
@@ -19,8 +20,12 @@ const FastTextarea = React.memo(({ value, onValueChange, debounceMs = 120, onBlu
     }
   }, []);
 
-  const commit = React.useCallback((nextValue: string) => {
+  const commit = React.useCallback((nextValue: string, sync = false) => {
     valueRef.current = nextValue;
+    if (sync) {
+      flushSync(() => onValueChange(nextValue));
+      return;
+    }
     onValueChange(nextValue);
   }, [onValueChange]);
 
@@ -45,7 +50,7 @@ const FastTextarea = React.memo(({ value, onValueChange, debounceMs = 120, onBlu
       }}
       onBlur={(e) => {
         clearPending();
-        commit(local);
+        commit(local, true);
         onBlur?.(e);
       }}
     />
