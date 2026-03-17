@@ -1,4 +1,5 @@
-import { Bell, Search, MessageCircle, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock } from 'lucide-react';
+import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock } from 'lucide-react';
+import busatoGlobo from '@/assets/busato-globo.png';
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
