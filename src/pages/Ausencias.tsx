@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
-  Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert
+  Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert, Search, X
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +46,7 @@ interface Warning {
   employee_name?: string;
 }
 
-interface Func { id: string; nome: string; turno: string; letra: string; cargo: string; departamento: string; }
+interface Func { id: string; nome: string; turno: string; letra: string; cargo: string; departamento: string; foto_url?: string; }
 
 const statusLabels: Record<string, string> = {
   presente: 'Presente', falta_injustificada: 'Falta Injustificada', falta_justificada: 'Falta Justificada',
@@ -94,6 +95,17 @@ export default function PontoFerias() {
   const pontoFileRef = useRef<HTMLInputElement>(null);
   const feriasFileRef = useRef<HTMLInputElement>(null);
   const [period, setPeriod] = useState<PeriodRange>(getCurrentPeriod());
+  const navigate = useNavigate();
+
+  // Employee filter
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<Func | null>(null);
+  const [showEmpDropdown, setShowEmpDropdown] = useState(false);
+
+  const filteredSearchEmps = useMemo(() => {
+    if (!employeeSearch.trim()) return [];
+    return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
+  }, [employeeSearch, funcionarios]);
 
   const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '' });
   const [vacForm, setVacForm] = useState({
@@ -151,7 +163,7 @@ export default function PontoFerias() {
       supabase.from('daily_attendance').select('*').gte('date', period.start).lte('date', period.end).order('date', { ascending: false }),
       supabase.from('vacation_control').select('*'),
       supabase.from('overtime_control').select('*').gte('period_start', period.start).lte('period_end', period.end),
-      supabase.from('funcionarios').select('id, nome, turno, letra, cargo, departamento').order('nome'),
+      supabase.from('funcionarios').select('id, nome, turno, letra, cargo, departamento, foto_url').order('nome'),
       supabase.from('employee_warnings').select('*').order('date', { ascending: false }),
     ]);
     const funcs = (fRes.data || []) as Func[];
@@ -541,17 +553,28 @@ export default function PontoFerias() {
       }));
   }, [attendance]);
 
+  // ─── Employee-filtered data ───────────────────────────────────────────
+  const empAttendance = useMemo(() => {
+    if (!selectedEmployee) return attendance;
+    return attendance.filter(a => a.employee_id === selectedEmployee.id);
+  }, [attendance, selectedEmployee]);
+
+  const empWarnings = useMemo(() => {
+    if (!selectedEmployee) return warnings;
+    return warnings.filter(w => w.employee_id === selectedEmployee.id);
+  }, [warnings, selectedEmployee]);
+
   const statusDistribution = useMemo(() => {
     const counts: Record<string, number> = {};
-    attendance.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
+    empAttendance.forEach(a => { counts[a.status] = (counts[a.status] || 0) + 1; });
     return Object.entries(counts).map(([status, value]) => ({
       name: statusLabels[status] || status, value, fill: statusColors[status] || '#94a3b8'
     }));
-  }, [attendance]);
+  }, [empAttendance]);
 
   const dailyChartData = useMemo(() => {
     const byDate: Record<string, Record<string, number>> = {};
-    attendance.forEach(a => {
+    empAttendance.forEach(a => {
       if (!byDate[a.date]) byDate[a.date] = {};
       byDate[a.date][a.status] = (byDate[a.date][a.status] || 0) + 1;
     });
@@ -566,20 +589,20 @@ export default function PontoFerias() {
         Atestados: statuses.atestado || 0,
         Férias: statuses.ferias || 0,
       }));
-  }, [attendance]);
+  }, [empAttendance]);
 
   const extrasPerEmployee = useMemo(() => {
     const map: Record<string, { name: string; count: number; limit: number }> = {};
-    attendance.filter(a => a.status === 'extra').forEach(a => {
+    empAttendance.filter(a => a.status === 'extra').forEach(a => {
       if (!map[a.employee_id]) map[a.employee_id] = { name: a.employee_name || '', count: 0, limit: 3 };
       map[a.employee_id].count++;
     });
     return Object.values(map).sort((a, b) => b.count - a.count);
-  }, [attendance]);
+  }, [empAttendance]);
 
   const negativeHoursPerEmployee = useMemo(() => {
     const map: Record<string, { name: string; faltasInj: number; faltasJust: number; atestados: number; total: number }> = {};
-    attendance.forEach(a => {
+    empAttendance.forEach(a => {
       if (!['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)) return;
       if (!map[a.employee_id]) map[a.employee_id] = { name: a.employee_name || '', faltasInj: 0, faltasJust: 0, atestados: 0, total: 0 };
       if (a.status === 'falta_injustificada') map[a.employee_id].faltasInj++;
@@ -588,23 +611,23 @@ export default function PontoFerias() {
       map[a.employee_id].total++;
     });
     return Object.values(map).sort((a, b) => b.total - a.total);
-  }, [attendance]);
+  }, [empAttendance]);
 
   const dailyMovements = useMemo(() => {
     const byDate: Record<string, number> = {};
-    attendance.forEach(a => { byDate[a.date] = (byDate[a.date] || 0) + 1; });
+    empAttendance.forEach(a => { byDate[a.date] = (byDate[a.date] || 0) + 1; });
     const today = new Date().toISOString().split('T')[0];
     const todayCount = byDate[today] || 0;
     const totalDays = Object.keys(byDate).length;
     const daysMetGoal = Object.values(byDate).filter(c => c >= DAILY_MOVEMENT_GOAL).length;
     return { todayCount, totalDays, daysMetGoal, goalPct: totalDays > 0 ? Math.round((daysMetGoal / totalDays) * 100) : 0 };
-  }, [attendance]);
+  }, [empAttendance]);
 
-  const totalHorasNegativas = attendance.filter(a => ['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)).length;
-  const totalFaltasInj = attendance.filter(a => a.status === 'falta_injustificada').length;
-  const totalExtras = attendance.filter(a => a.status === 'extra').length;
-  const totalAtestados = attendance.filter(a => a.status === 'atestado').length;
-  const totalWarnings = warnings.length;
+  const totalHorasNegativas = empAttendance.filter(a => ['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)).length;
+  const totalFaltasInj = empAttendance.filter(a => a.status === 'falta_injustificada').length;
+  const totalExtras = empAttendance.filter(a => a.status === 'extra').length;
+  const totalAtestados = empAttendance.filter(a => a.status === 'atestado').length;
+  const totalWarnings = empWarnings.length;
 
   const statusBadge = (s: string) => {
     const colors: Record<string, string> = {
@@ -801,8 +824,71 @@ export default function PontoFerias() {
         </div>
       </motion.div>
 
-      {/* ═══ PERIOD FILTER ═══ */}
-      <PeriodFilter value={period} onChange={setPeriod} />
+      {/* ═══ PERIOD FILTER + EMPLOYEE FILTER ═══ */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start">
+        <div className="flex-1 w-full">
+          <PeriodFilter value={period} onChange={setPeriod} />
+        </div>
+        <div className="relative w-full sm:w-72">
+          <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2">
+            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+            {selectedEmployee ? (
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {selectedEmployee.foto_url ? (
+                  <img src={selectedEmployee.foto_url} className="w-6 h-6 rounded-full object-cover border border-border" alt="" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{selectedEmployee.nome.charAt(0)}</div>
+                )}
+                <span className="text-sm font-medium truncate">{selectedEmployee.nome}</span>
+                <button onClick={() => { setSelectedEmployee(null); setEmployeeSearch(''); }} className="ml-auto text-muted-foreground hover:text-foreground">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <input type="text" placeholder="Filtrar por funcionário..." value={employeeSearch}
+                onChange={e => { setEmployeeSearch(e.target.value); setShowEmpDropdown(true); }}
+                onFocus={() => setShowEmpDropdown(true)}
+                className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground" />
+            )}
+          </div>
+          {showEmpDropdown && filteredSearchEmps.length > 0 && !selectedEmployee && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+              {filteredSearchEmps.map(f => (
+                <button key={f.id} onClick={() => { setSelectedEmployee(f); setEmployeeSearch(''); setShowEmpDropdown(false); }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left">
+                  {f.foto_url ? (
+                    <img src={f.foto_url} className="w-7 h-7 rounded-full object-cover border border-border" alt="" />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{f.nome.charAt(0)}</div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{f.nome}</p>
+                    <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.turno}/{f.letra}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Employee context banner */}
+      {selectedEmployee && (
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-4 border-l-4 border-l-primary flex items-center gap-4">
+          {selectedEmployee.foto_url ? (
+            <img src={selectedEmployee.foto_url} className="w-10 h-10 rounded-full object-cover border-2 border-primary/30" alt="" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">{selectedEmployee.nome.charAt(0)}</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-foreground">{selectedEmployee.nome}</p>
+            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} · {selectedEmployee.departamento} · {selectedEmployee.turno}/{selectedEmployee.letra}</p>
+          </div>
+          <button onClick={() => navigate(`/funcionario/${selectedEmployee.id}`)} className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium shrink-0">
+            <Eye className="w-3.5 h-3.5" /> Ver Perfil
+          </button>
+        </motion.div>
+      )}
 
       {/* ═══ ALERTS BANNER ═══ */}
       {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (

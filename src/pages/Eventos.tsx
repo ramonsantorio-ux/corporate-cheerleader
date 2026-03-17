@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Plus, Search, Filter, TrendingUp, TrendingDown, Calendar, Truck, MapPin, User, ChevronDown, ChevronUp, Trash2, Eye, Download, Upload } from 'lucide-react';
+import { AlertTriangle, Plus, Search, Filter, TrendingUp, TrendingDown, Calendar, Truck, MapPin, User, ChevronDown, ChevronUp, Trash2, Eye, Download, Upload, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,7 +56,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function Eventos() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [funcionarios, setFuncionarios] = useState<{ id: string; nome: string; cargo: string; departamento: string; foto_url: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [equipmentFilter, setEquipmentFilter] = useState('all');
@@ -74,17 +77,26 @@ export default function Eventos() {
     shift: '', supervisor: '', involved_name: '',
   });
 
+  // Employee filter
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<{ id: string; nome: string; cargo: string; departamento: string; foto_url: string } | null>(null);
+  const [showEmpDropdown, setShowEmpDropdown] = useState(false);
+
+  const filteredSearchEmps = useMemo(() => {
+    if (!employeeSearch.trim()) return [];
+    return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
+  }, [employeeSearch, funcionarios]);
+
   useEffect(() => { fetchEvents(); }, [period]);
 
   async function fetchEvents() {
     setLoading(true);
-    const { data } = await supabase
-      .from('events')
-      .select('*')
-      .gte('event_date', period.start)
-      .lte('event_date', period.end)
-      .order('event_date', { ascending: false });
-    setEvents((data as EventRow[]) || []);
+    const [evtRes, fRes] = await Promise.all([
+      supabase.from('events').select('*').gte('event_date', period.start).lte('event_date', period.end).order('event_date', { ascending: false }),
+      supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url').order('nome'),
+    ]);
+    setEvents((evtRes.data as EventRow[]) || []);
+    setFuncionarios((fRes.data || []) as any[]);
     setLoading(false);
   }
 
@@ -194,9 +206,10 @@ export default function Eventos() {
         ev.equipment.toLowerCase().includes(q) ||
         ev.plate_tag.toLowerCase().includes(q);
       const matchEquip = equipmentFilter === 'all' || ev.equipment === equipmentFilter;
-      return matchSearch && matchEquip;
+      const matchEmployee = !selectedEmployee || ev.involved_name.trim().toLowerCase() === selectedEmployee.nome.trim().toLowerCase();
+      return matchSearch && matchEquip && matchEmployee;
     });
-  }, [events, search, equipmentFilter]);
+  }, [events, search, equipmentFilter, selectedEmployee]);
 
   // ========== ANALYTICS ==========
   const analytics = useMemo(() => {
@@ -372,7 +385,65 @@ export default function Eventos() {
         </Select>
       </div>
 
-      {/* KPI Cards */}
+      {/* Employee Filter */}
+      <div className="relative w-full sm:w-72">
+        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2">
+          <User className="w-4 h-4 text-muted-foreground shrink-0" />
+          {selectedEmployee ? (
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              {selectedEmployee.foto_url ? (
+                <img src={selectedEmployee.foto_url} className="w-6 h-6 rounded-full object-cover border border-border" alt="" />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{selectedEmployee.nome.charAt(0)}</div>
+              )}
+              <span className="text-sm font-medium truncate">{selectedEmployee.nome}</span>
+              <button onClick={() => { setSelectedEmployee(null); setEmployeeSearch(''); }} className="ml-auto text-muted-foreground hover:text-foreground">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <input type="text" placeholder="Filtrar por funcionário..." value={employeeSearch}
+              onChange={e => { setEmployeeSearch(e.target.value); setShowEmpDropdown(true); }}
+              onFocus={() => setShowEmpDropdown(true)}
+              className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground" />
+          )}
+        </div>
+        {showEmpDropdown && filteredSearchEmps.length > 0 && !selectedEmployee && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+            {filteredSearchEmps.map(f => (
+              <button key={f.id} onClick={() => { setSelectedEmployee(f); setEmployeeSearch(''); setShowEmpDropdown(false); }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left">
+                {f.foto_url ? (
+                  <img src={f.foto_url} className="w-7 h-7 rounded-full object-cover border border-border" alt="" />
+                ) : (
+                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{f.nome.charAt(0)}</div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{f.nome}</p>
+                  <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.departamento}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {selectedEmployee && (
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-4 border-l-4 border-l-primary flex items-center gap-4">
+          {selectedEmployee.foto_url ? (
+            <img src={selectedEmployee.foto_url} className="w-10 h-10 rounded-full object-cover border-2 border-primary/30" alt="" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">{selectedEmployee.nome.charAt(0)}</div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-foreground">{selectedEmployee.nome}</p>
+            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} · {selectedEmployee.departamento}</p>
+          </div>
+          <button onClick={() => navigate(`/funcionario/${selectedEmployee.id}`)} className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium shrink-0">
+            <Eye className="w-3.5 h-3.5" /> Ver Perfil
+          </button>
+        </motion.div>
+      )}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-primary">
           <CardContent className="p-4">
