@@ -134,10 +134,10 @@ export default function NovoFeedback() {
 
         <div>
           <label className={labelClass}>Descrição *</label>
-          <textarea
+          <FastTextarea
             placeholder="Descreva em detalhes o feedback, incluindo contexto e impacto..."
             value={form.descricao}
-            onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+            onValueChange={(v) => setForm(f => ({ ...f, descricao: v }))}
             className={`${inputClass} min-h-[120px] resize-none`}
             maxLength={1000}
           />
