@@ -799,7 +799,7 @@ export default function FuncionarioProfile() {
         </TabsContent>
 
 
-        {!CARGOS_SEM_META.includes(func.cargo) && (
+        {!cargoSemMeta && (
         <TabsContent value="metas" className="space-y-6 mt-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
