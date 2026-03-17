@@ -232,8 +232,11 @@ export default function Competencias() {
                       {expandedCargo === c.cargo && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                           className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
-                          {c.pendenteNomes.map(nome => (
-                            <p key={nome} className="text-sm text-muted-foreground py-0.5">• {nome}</p>
+                          {c.pendenteNomes.map(emp => (
+                            <button key={emp.id} onClick={() => navigate(`/funcionario/${emp.id}`)}
+                              className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
+                              • {emp.nome}
+                            </button>
                           ))}
                         </motion.div>
                       )}
