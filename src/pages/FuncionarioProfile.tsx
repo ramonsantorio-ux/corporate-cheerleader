@@ -328,7 +328,7 @@ export default function FuncionarioProfile() {
     y = y + 24;
 
     // ── DADOS CADASTRAIS ──
-    y = drawSectionHeading('DADOS CADASTRAIS', y);
+    y = drawSectionHeadingLocal('DADOS CADASTRAIS', y);
 
     const info = [
       ['Nome Completo', func.nome.toUpperCase()],
