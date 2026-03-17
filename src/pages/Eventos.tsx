@@ -355,7 +355,7 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Nome do Envolvido *</Label>
-                  <Input value={newEvent.involved_name} onChange={e => setNewEvent({ ...newEvent, involved_name: e.target.value })} placeholder="Nome completo" />
+                  <FastInput value={newEvent.involved_name} onValueChange={v => setNewEvent(p => ({ ...p, involved_name: v }))} placeholder="Nome completo" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Descrição do Evento *</Label>
