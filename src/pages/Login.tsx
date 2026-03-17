@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { MessageCircle, LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -8,6 +10,17 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 export default function Login() {
+  const { user, loading: authLoading } = useAuth();
+
+  // If already authenticated, redirect to home
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground text-sm">Carregando...</div>
+      </div>
+    );
+  }
+  if (user) return <Navigate to="/" replace />;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
