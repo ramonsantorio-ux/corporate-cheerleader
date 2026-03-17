@@ -196,7 +196,7 @@ export default function Colaboradores() {
     if (!deleteId) return;
     const { error } = await supabase.from('funcionarios').delete().eq('id', deleteId);
     if (error) { toast.error('Erro ao excluir'); return; }
-    setDeleteId(null); toast.success('Funcionário excluído!'); fetchFuncionarios();
+    setDeleteId(null); toast.success('Funcionário excluído!'); fetchFuncionarios(true);
   }
 
   function handleDocFilesChange(e: React.ChangeEvent<HTMLInputElement>, isEdit = false) {
