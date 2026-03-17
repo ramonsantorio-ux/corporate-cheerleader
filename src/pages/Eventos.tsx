@@ -206,9 +206,10 @@ export default function Eventos() {
         ev.equipment.toLowerCase().includes(q) ||
         ev.plate_tag.toLowerCase().includes(q);
       const matchEquip = equipmentFilter === 'all' || ev.equipment === equipmentFilter;
-      return matchSearch && matchEquip;
+      const matchEmployee = !selectedEmployee || ev.involved_name.trim().toLowerCase() === selectedEmployee.nome.trim().toLowerCase();
+      return matchSearch && matchEquip && matchEmployee;
     });
-  }, [events, search, equipmentFilter]);
+  }, [events, search, equipmentFilter, selectedEmployee]);
 
   // ========== ANALYTICS ==========
   const analytics = useMemo(() => {
