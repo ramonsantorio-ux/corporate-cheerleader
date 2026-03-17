@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { KeyRound, Eye, EyeOff } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -18,15 +18,12 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Listen for PASSWORD_RECOVERY event from Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setReady(true);
         setChecking(false);
       }
-      // Also handle SIGNED_IN with recovery type
       if (event === 'SIGNED_IN' && session) {
-        // Check if this came from a recovery flow
         const hash = window.location.hash;
         if (hash.includes('type=recovery')) {
           setReady(true);
@@ -35,21 +32,18 @@ export default function ResetPassword() {
       }
     });
 
-    // Check URL hash for recovery tokens
     const hash = window.location.hash;
     if (hash.includes('type=recovery')) {
       setReady(true);
       setChecking(false);
     }
 
-    // Also check URL search params (some Supabase versions use query params)
     const params = new URLSearchParams(window.location.search);
     if (params.get('type') === 'recovery') {
       setReady(true);
       setChecking(false);
     }
 
-    // Give Supabase time to process the token, then stop checking
     const timeout = setTimeout(() => {
       setChecking(false);
     }, 3000);
@@ -128,11 +122,11 @@ export default function ResetPassword() {
             <div className="space-y-2">
               <Label>Nova senha</Label>
               <div className="relative">
-                <Input
+                <FastInput
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onValueChange={setPassword}
                   autoComplete="new-password"
                 />
                 <button
@@ -146,11 +140,11 @@ export default function ResetPassword() {
             </div>
             <div className="space-y-2">
               <Label>Confirmar nova senha</Label>
-              <Input
+              <FastInput
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
+                onValueChange={setConfirmPassword}
                 autoComplete="new-password"
               />
             </div>

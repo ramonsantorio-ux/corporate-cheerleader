@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion } from 'framer-motion';
 import { MessageCircle, LogIn, Eye, EyeOff, UserPlus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -18,7 +18,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isFirstSetup, setIsFirstSetup] = useState(false);
 
-  // If already authenticated, redirect to home
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -86,10 +85,8 @@ export default function Login() {
     }
 
     if (data.user) {
-      // Make this user admin
       await supabase.from('user_roles').insert({ user_id: data.user.id, role: 'admin' });
       toast.success('Conta administrador criada! Entrando...');
-      // Auto-login
       await supabase.auth.signInWithPassword({ email, password });
     }
     setLoading(false);
@@ -117,32 +114,32 @@ export default function Login() {
             {isFirstSetup && (
               <div className="space-y-2">
                 <Label>Nome completo</Label>
-                <Input
+                <FastInput
                   type="text"
                   placeholder="Seu nome"
                   value={fullName}
-                  onChange={e => setFullName(e.target.value)}
+                  onValueChange={setFullName}
                 />
               </div>
             )}
             <div className="space-y-2">
               <Label>E-mail</Label>
-              <Input
+              <FastInput
                 type="email"
                 placeholder="seu@email.com"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onValueChange={setEmail}
                 autoComplete="email"
               />
             </div>
             <div className="space-y-2">
               <Label>Senha</Label>
               <div className="relative">
-                <Input
+                <FastInput
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onValueChange={setPassword}
                   autoComplete={isFirstSetup ? 'new-password' : 'current-password'}
                 />
                 <button
