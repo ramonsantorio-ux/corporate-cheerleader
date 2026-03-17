@@ -255,7 +255,7 @@ export default function Avaliacoes() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editGoal ? 'Editar Meta' : 'Nova Meta'}</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-2">
-            <div><Label>Descrição</Label><Input value={form.descricao} onChange={e => setForm({ ...form, descricao: e.target.value })} /></div>
+            <div><Label>Descrição</Label><FastInput value={form.descricao} onValueChange={v => setForm(f => ({ ...f, descricao: v }))} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Peso (%)</Label><Input type="number" value={form.peso} onChange={e => setForm({ ...form, peso: Number(e.target.value) })} /></div>
               <div><Label>Resultado</Label><Input type="number" value={form.resultado} onChange={e => setForm({ ...form, resultado: e.target.value })} placeholder="Ex: 85" /></div>
