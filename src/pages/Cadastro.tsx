@@ -463,13 +463,8 @@ export default function Cadastro() {
     }
   }
 
-  const FormFields = ({ data, setData, docs, setDocs, docRef }: {
-    data: typeof newData;
-    setData: (d: typeof newData) => void;
-    docs: File[];
-    setDocs: React.Dispatch<React.SetStateAction<File[]>>;
-    docRef: React.RefObject<HTMLInputElement>;
-  }) => (
+  function renderFormFields(data: typeof newData, setData: (d: typeof newData) => void, docs: File[], setDocs: React.Dispatch<React.SetStateAction<File[]>>, docRef: React.RefObject<HTMLInputElement>) {
+    return (
     <>
       <div className="space-y-2">
         <Label>Nome completo</Label>
