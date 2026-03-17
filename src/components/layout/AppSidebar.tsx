@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import busatoLogo from '@/assets/busato-logo.png';
+import busatoGlobo from '@/assets/busato-globo.jpeg';
 
 interface NavGroup {
   label: string;
