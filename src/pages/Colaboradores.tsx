@@ -189,7 +189,7 @@ export default function Colaboradores() {
     }
     setUploading(false);
     if (error) { toast.error('Erro ao atualizar'); return; }
-    setEditOpen(false); toast.success('Funcionário atualizado!'); fetchFuncionarios();
+    setEditOpen(false); toast.success('Funcionário atualizado!'); fetchFuncionarios(true);
   }
 
   async function handleDelete() {
