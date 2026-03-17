@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Plus, Search, Filter, TrendingUp, TrendingDown, Calendar, Truck, MapPin, User, ChevronDown, ChevronUp, Trash2, Eye, Download, Upload } from 'lucide-react';
+import { AlertTriangle, Plus, Search, Filter, TrendingUp, TrendingDown, Calendar, Truck, MapPin, User, ChevronDown, ChevronUp, Trash2, Eye, Download, Upload, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
