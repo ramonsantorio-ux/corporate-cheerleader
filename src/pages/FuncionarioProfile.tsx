@@ -336,7 +336,7 @@ export default function FuncionarioProfile() {
       ['Departamento', func.departamento],
       ['E-mail', func.email || '—'],
       ['Turno', func.turno],
-      ['Letra', func.letra || '—'],
+      
       ['Escolaridade', func.escolaridade || '—'],
       ['Data de Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR')],
     ];
@@ -532,7 +532,7 @@ export default function FuncionarioProfile() {
               {func.graduacao && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-accent/50 text-accent-foreground">{func.graduacao}</span>}
               {func.pos_graduacao && func.pos_graduacao_tipo && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-2/20 text-foreground">Pós: {func.pos_graduacao_tipo}</span>}
               {turnoDisplay && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-3/20 text-foreground"><Briefcase className="w-3 h-3" />Turno: {turnoDisplay}</span>}
-              {func.letra && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-4/20 text-foreground font-semibold">Letra {func.letra}</span>}
+              
               {encarregadoNome && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-4/20 text-foreground"><Users className="w-3 h-3" />Enc.: {encarregadoNome}</span>}
               {employeeEvents.length > 0 && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-warning/15 text-warning font-semibold"><AlertTriangle className="w-3 h-3" />{employeeEvents.length} evento(s)</span>}
             </div>
