@@ -790,7 +790,7 @@ export default function FuncionarioProfile() {
         </TabsContent>
 
 
-        <TabsContent value="metas" className="space-y-6 mt-4">
+        {!CARGOS_SEM_META.includes(func.cargo) && <TabsContent value="metas" className="space-y-6 mt-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
             <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
