@@ -225,11 +225,8 @@ export default function Colaboradores() {
       </div>
       <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
         <Label className="text-sm font-semibold">Turno / Escala</Label>
-        <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v })}><SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger><SelectContent>{TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
-      </div>
-      <div className="space-y-2">
-        <Label>Letra</Label>
-        <Input value={data.letra} onChange={e => setData({ ...data, letra: e.target.value })} placeholder="Ex: A, B, C..." />
+        <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v, letra: letraFromTurno(v) })}><SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger><SelectContent>{TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
+        {data.letra && <p className="text-xs text-muted-foreground mt-1">Letra: <span className="font-semibold">{data.letra}</span></p>}
       </div>
       {encarregados.length > 0 && (
         <div className="space-y-2">
