@@ -182,58 +182,38 @@ export default function Desempenho() {
         ))}
       </div>
 
-      {/* Chart */}
-      {cargoStats.length > 0 && (
+      {/* Pendentes list */}
+      {cargoStats.some(c => c.pendentes > 0) && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="corporate-section">
           <div className="corporate-section-header">
             <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Avaliações por Cargo</h2>
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Colaboradores Pendentes</h2>
             </div>
-            <span className="text-xs text-muted-foreground">{cargoStats.length} cargos</span>
           </div>
           <div className="corporate-section-body">
-            <ResponsiveContainer width="100%" height={320}>
-              <BarChart data={chartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="cargo" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
-                <Bar dataKey="Realizados" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="No Prazo" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-
-            {/* Pendentes list */}
-            {cargoStats.some(c => c.pendentes > 0) && (
-              <div className="mt-6 border-t border-border pt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Colaboradores Pendentes</p>
-                <div className="space-y-1">
-                  {cargoStats.filter(c => c.pendentes > 0).map(c => (
-                    <div key={c.cargo} className="rounded-lg border border-border overflow-hidden">
-                      <button onClick={() => setExpandedCargo(expandedCargo === c.cargo ? null : c.cargo)}
-                        className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-muted/30 transition-colors">
-                        <span className="text-sm font-medium text-foreground">{c.cargo}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="corporate-badge bg-destructive/10 text-destructive">{c.pendentes}</span>
-                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCargo === c.cargo ? 'rotate-180' : ''}`} />
-                        </div>
-                      </button>
-                      {expandedCargo === c.cargo && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                          className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
-                          {c.pendenteNomes.map(nome => (
-                            <p key={nome} className="text-sm text-muted-foreground py-0.5">• {nome}</p>
-                          ))}
-                        </motion.div>
-                      )}
+            <div className="space-y-1">
+              {cargoStats.filter(c => c.pendentes > 0).map(c => (
+                <div key={c.cargo} className="rounded-lg border border-border overflow-hidden">
+                  <button onClick={() => setExpandedCargo(expandedCargo === c.cargo ? null : c.cargo)}
+                    className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                    <span className="text-sm font-medium text-foreground">{c.cargo}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="corporate-badge bg-destructive/10 text-destructive">{c.pendentes}</span>
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCargo === c.cargo ? 'rotate-180' : ''}`} />
                     </div>
-                  ))}
+                  </button>
+                  {expandedCargo === c.cargo && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                      className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
+                      {c.pendenteNomes.map(nome => (
+                        <p key={nome} className="text-sm text-muted-foreground py-0.5">• {nome}</p>
+                      ))}
+                    </motion.div>
+                  )}
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         </motion.div>
       )}
