@@ -95,6 +95,7 @@ export default function PontoFerias() {
   const [alertsShown, setAlertsShown] = useState(false);
   const pontoFileRef = useRef<HTMLInputElement>(null);
   const feriasFileRef = useRef<HTMLInputElement>(null);
+  const extrasFileRef = useRef<HTMLInputElement>(null);
   const [period, setPeriod] = useState<PeriodRange>(getCurrentPeriod());
   const navigate = useNavigate();
 
