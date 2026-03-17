@@ -182,41 +182,7 @@ export default function Desempenho() {
         ))}
       </div>
 
-      {/* Pendentes list */}
-      {cargoStats.some(c => c.pendentes > 0) && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="corporate-section">
-          <div className="corporate-section-header">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Colaboradores Pendentes</h2>
-            </div>
-          </div>
-          <div className="corporate-section-body">
-            <div className="space-y-1">
-              {cargoStats.filter(c => c.pendentes > 0).map(c => (
-                <div key={c.cargo} className="rounded-lg border border-border overflow-hidden">
-                  <button onClick={() => setExpandedCargo(expandedCargo === c.cargo ? null : c.cargo)}
-                    className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-muted/30 transition-colors">
-                    <span className="text-sm font-medium text-foreground">{c.cargo}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="corporate-badge bg-destructive/10 text-destructive">{c.pendentes}</span>
-                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCargo === c.cargo ? 'rotate-180' : ''}`} />
-                    </div>
-                  </button>
-                  {expandedCargo === c.cargo && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                      className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
-                      {c.pendenteNomes.map(nome => (
-                        <p key={nome} className="text-sm text-muted-foreground py-0.5">• {nome}</p>
-                      ))}
-                    </motion.div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
+
 
       {/* Cycles */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="corporate-section">
