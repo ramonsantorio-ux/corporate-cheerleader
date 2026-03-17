@@ -275,7 +275,7 @@ export default function Feedbacks() {
     setCreateOpen(true);
   }
 
-
+  async function handleDelete() {
     if (!deleteId) return;
     const { error } = await supabase.from('feedbacks').delete().eq('id', deleteId);
     if (error) { toast.error('Erro ao excluir feedback.'); return; }
