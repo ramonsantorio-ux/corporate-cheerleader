@@ -337,7 +337,7 @@ export default function Colaboradores() {
                 <button onClick={() => editFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
               )}
             </div>
-            <FormFields data={editData} setData={setEditData as any} docs={editDocFiles} setDocs={setEditDocFiles} docRef={editDocFileRef as React.RefObject<HTMLInputElement>} />
+            {renderFormFields(editData, setEditData as any, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
             <Button className="w-full" onClick={handleEdit} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Salvar Alterações</Button>
           </div>
         </DialogContent>
