@@ -484,7 +484,7 @@ export default function FuncionarioProfile() {
             {[
               { label: 'Score Geral', value: score, color: 'hsl(var(--primary))' },
               { label: 'FIT Cultural', value: scoreFit, color: 'hsl(var(--chart-2))' },
-              ...(!CARGOS_SEM_META.includes(func.cargo) ? [{ label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' }] : []),
+              ...(!cargoSemMeta ? [{ label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' }] : []),
             ].map(s => (
               <div key={s.label} className="text-center">
                 <div className="relative w-16 h-16">
