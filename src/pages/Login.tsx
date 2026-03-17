@@ -11,6 +11,12 @@ import { toast } from 'sonner';
 
 export default function Login() {
   const { user, loading: authLoading } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isFirstSetup, setIsFirstSetup] = useState(false);
 
   // If already authenticated, redirect to home
   if (authLoading) {
@@ -21,12 +27,6 @@ export default function Login() {
     );
   }
   if (user) return <Navigate to="/" replace />;
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [isFirstSetup, setIsFirstSetup] = useState(false);
 
   async function handleForgotPassword() {
     if (!email) {
