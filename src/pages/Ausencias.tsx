@@ -874,6 +874,15 @@ export default function PontoFerias() {
             <Button size="sm" variant="outline" onClick={() => feriasFileRef.current?.click()}>
               <Upload className="w-4 h-4 mr-2" />Importar Férias
             </Button>
+            <Button size="sm" variant="outline" onClick={() => extrasFileRef.current?.click()}>
+              <Upload className="w-4 h-4 mr-2" />Importar Extras
+            </Button>
+            <Button size="sm" variant="outline" onClick={downloadTemplateFerias}>
+              <Download className="w-4 h-4 mr-2" />Modelo Férias
+            </Button>
+            <Button size="sm" variant="outline" onClick={downloadTemplateExtras}>
+              <Download className="w-4 h-4 mr-2" />Modelo Extras
+            </Button>
 
             {/* Deviations Report */}
             <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportDeviationsReport}>
