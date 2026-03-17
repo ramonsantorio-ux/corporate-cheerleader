@@ -685,7 +685,7 @@ export default function Feedbacks() {
             </div>
             <div>
               <label className={labelClass}>Descrição *</label>
-              <textarea placeholder="Descreva em detalhes o feedback..." value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} className={`${inputClass} min-h-[100px] resize-none`} maxLength={1000} />
+              <FastTextarea placeholder="Descreva em detalhes o feedback..." value={form.descricao} onValueChange={(v) => setForm(f => ({ ...f, descricao: v }))} className={`${inputClass} min-h-[100px] resize-none`} maxLength={1000} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
