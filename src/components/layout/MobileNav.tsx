@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, List, BarChart3, Users, Target, Calendar, Settings, AlertTriangle, CalendarDays, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Users, Target, Calendar, Settings, AlertTriangle, CalendarDays, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
