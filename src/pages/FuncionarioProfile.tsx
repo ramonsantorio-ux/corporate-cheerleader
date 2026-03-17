@@ -264,8 +264,9 @@ export default function FuncionarioProfile() {
   }, [vacationInfo]);
 
   // ─── Deviations Report PDF for this employee ────────────────────────
-  function exportEmployeeDeviationsReport() {
+  async function exportEmployeeDeviationsReport() {
     if (!func) return;
+    const logoBase64 = await getBusatoLogoBase64();
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -273,49 +274,15 @@ export default function FuncionarioProfile() {
     const tealLight = [232, 245, 243] as const;
     const margin = 14;
 
-    // ── Helper: draw header on every page ──
     function drawHeader() {
-      doc.setFillColor(...teal);
-      doc.rect(0, 0, pageWidth, 26, 'F');
-      // Thin accent bar
-      doc.setFillColor(180, 220, 216);
-      doc.rect(0, 26, pageWidth, 3, 'F');
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('GESTÃO PORTO', margin, 12);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text('SISTEMA INTEGRADO DE GESTÃO DE PESSOAS', margin, 20);
-
-      const now = new Date();
-      const dateStr = `Emitido em: ${now.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-      doc.setFontSize(8);
-      doc.text(dateStr, pageWidth - margin, 12, { align: 'right' });
-      doc.setFont('helvetica', 'bold');
-      doc.text('DOCUMENTO CONFIDENCIAL', pageWidth - margin, 20, { align: 'right' });
-
+      drawBusatoHeader(doc, logoBase64, { pageWidth });
       doc.setTextColor(0, 0, 0);
     }
 
-    // ── Helper: draw footer on every page ──
     function drawFooter(pageNum: number, totalPages: number) {
-      doc.setDrawColor(...teal);
-      doc.setLineWidth(0.5);
-      doc.line(margin, pageHeight - 14, pageWidth - margin, pageHeight - 14);
-      doc.setFontSize(7);
-      doc.setTextColor(120, 120, 120);
-      doc.setFont('helvetica', 'normal');
-      doc.text(
-        `Gestão Porto — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.`,
-        margin,
-        pageHeight - 9
-      );
-      doc.text(`Página ${pageNum}`, pageWidth - margin, pageHeight - 9, { align: 'right' });
+      drawBusatoFooter(doc, pageNum, { pageWidth, pageHeight });
     }
 
-    // ── Helper: draw section heading (teal left border + light bg) ──
     function drawSectionHeading(title: string, yPos: number) {
       doc.setFillColor(...tealLight);
       doc.rect(margin, yPos, pageWidth - margin * 2, 10, 'F');
