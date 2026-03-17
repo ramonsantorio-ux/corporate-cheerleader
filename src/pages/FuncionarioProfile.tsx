@@ -457,8 +457,8 @@ export default function FuncionarioProfile() {
           a.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLight] },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
         margin: { left: margin + 4, right: margin + 4 },
       });
       y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
