@@ -42,7 +42,7 @@ export function drawBusatoHeader(
   // Logo image
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, 'JPEG', 6, 3, 45, 20);
+      doc.addImage(logoBase64, 'PNG', 6, 3, 45, 20);
     } catch {
       // fallback to text
       doc.setTextColor(255); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
