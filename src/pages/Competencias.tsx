@@ -65,6 +65,7 @@ export default function Competencias() {
   const [form, setForm] = useState({ name: '', description: '', cycle_id: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     Promise.all([
