@@ -233,7 +233,7 @@ export default function Competencias() {
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                           className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
                           {c.pendenteNomes.map(emp => (
-                            <button key={emp.id} onClick={() => navigate(`/funcionario/${emp.id}`)}
+                            <button key={emp.id} onClick={() => navigate(`/funcionario/${emp.id}?tab=fit-cultural`)}
                               className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
                               • {emp.nome}
                             </button>

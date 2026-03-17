@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays, ShieldAlert } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
@@ -55,6 +55,8 @@ const attendanceStatusColors: Record<string, string> = {
 export default function FuncionarioProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'desempenho';
   const { toast } = useToast();
   const [func, setFunc] = useState<Funcionario | null>(null);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
@@ -525,7 +527,7 @@ export default function FuncionarioProfile() {
         </motion.div>
       )}
 
-      <Tabs defaultValue="desempenho" className="w-full">
+      <Tabs defaultValue={initialTab} className="w-full">
         <TabsList className={`grid w-full ${cargoSemMeta ? 'grid-cols-6' : 'grid-cols-7'}`}>
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
           <TabsTrigger value="ponto-ocorrencias">Ponto / Ocorrências</TabsTrigger>
