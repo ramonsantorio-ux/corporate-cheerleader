@@ -55,6 +55,8 @@ const attendanceStatusColors: Record<string, string> = {
 export default function FuncionarioProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'desempenho';
   const { toast } = useToast();
   const [func, setFunc] = useState<Funcionario | null>(null);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
