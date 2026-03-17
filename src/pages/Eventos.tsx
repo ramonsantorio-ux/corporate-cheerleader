@@ -56,7 +56,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function Eventos() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [funcionarios, setFuncionarios] = useState<{ id: string; nome: string; cargo: string; departamento: string; foto_url: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [equipmentFilter, setEquipmentFilter] = useState('all');
@@ -74,6 +76,16 @@ export default function Eventos() {
     location: '', contract: 'PORTO', equipment: '', plate_tag: '',
     shift: '', supervisor: '', involved_name: '',
   });
+
+  // Employee filter
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<{ id: string; nome: string; cargo: string; departamento: string; foto_url: string } | null>(null);
+  const [showEmpDropdown, setShowEmpDropdown] = useState(false);
+
+  const filteredSearchEmps = useMemo(() => {
+    if (!employeeSearch.trim()) return [];
+    return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
+  }, [employeeSearch, funcionarios]);
 
   useEffect(() => { fetchEvents(); }, [period]);
 
