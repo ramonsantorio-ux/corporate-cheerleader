@@ -353,10 +353,10 @@ export default function FeedbackDetail() {
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Plano de Ação (opcional)</label>
-              <textarea
+              <FastTextarea
                 placeholder="Se necessário, descreva o plano de ação para evitar recorrência..."
                 value={resolveForm.planoAcao}
-                onChange={e => setResolveForm({ ...resolveForm, planoAcao: e.target.value })}
+                onValueChange={v => setResolveForm(f => ({ ...f, planoAcao: v }))}
                 className={`${inputClass} min-h-[70px] resize-none`}
                 maxLength={1000}
               />
