@@ -336,7 +336,7 @@ export default function FuncionarioProfile() {
       ['Departamento', func.departamento],
       ['E-mail', func.email || '—'],
       ['Turno', func.turno],
-      ['Letra', func.letra || '—'],
+      
       ['Escolaridade', func.escolaridade || '—'],
       ['Data de Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR')],
     ];
