@@ -441,9 +441,9 @@ export default function Relatorios() {
       drawBusatoFooter(doc, pageNum, { pageWidth: pageW, pageHeight: pageH });
     }
     function sect(title: string, y: number) {
-      doc.setFillColor(...tealLt); doc.rect(14, y, pageW - 28, 10, 'F');
-      doc.setFillColor(...teal); doc.rect(14, y, 3, 10, 'F');
-      doc.setTextColor(...teal); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+      doc.setFillColor(...blueLt); doc.rect(14, y, pageW - 28, 10, 'F');
+      doc.setFillColor(...blue); doc.rect(14, y, 3, 10, 'F');
+      doc.setTextColor(...blue); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
       doc.text(title, 21, y + 7); doc.setTextColor(0);
       return y + 14;
     }
@@ -467,7 +467,7 @@ export default function Relatorios() {
     autoTable(doc, {
       startY: y, margin: { left: 18, right: 18 }, theme: 'plain',
       styles: { fontSize: 9, cellPadding: 3, textColor: dark },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: teal } },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: blue } },
       body: [
         ['Nome Completo', emp.nome], ['Cargo', emp.cargo], ['Departamento', emp.departamento],
         ['E-mail', emp.email || '—'], ['Turno', turnoLabels[emp.turno] || emp.turno || '—'],
@@ -484,7 +484,7 @@ export default function Relatorios() {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: teal, textColor: [255, 255, 255], fontStyle: 'bold' },
+        headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         head: [['Título', 'Status', 'Prioridade', 'Gestor', 'Data']],
         body: empFeedbacks.map(f => [f.titulo, f.status, f.prioridade, f.gestor || '—', new Date(f.criado_em).toLocaleDateString('pt-BR')]),
@@ -503,7 +503,7 @@ export default function Relatorios() {
       const stageLabels: Record<string, string> = { autoavaliacao: 'Autoavaliação', gestor: 'Gestor', calibracao: 'Calibração', validacao: 'Validação' };
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
-        headStyles: { fillColor: teal, textColor: [255, 255, 255], fontStyle: 'bold' },
+        headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         head: [['Critério', 'Etapa', 'Nota']],
         body: fitScored.map(s => [s.criteria, stageLabels[s.stage] || s.stage, String(s.score)]),
@@ -521,7 +521,7 @@ export default function Relatorios() {
     if (goalsData.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
-        headStyles: { fillColor: teal, textColor: [255, 255, 255], fontStyle: 'bold' },
+        headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         head: [['Descrição', 'Peso (%)', 'Resultado', 'Status']],
         body: goalsData.map(g => {
@@ -544,8 +544,8 @@ export default function Relatorios() {
     if (empDevs.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
-        headStyles: { fillColor: teal, textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLt] },
+        headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
         head: [['Data', 'Status', 'Observação']],
         body: empDevs.map((a: any) => [
           new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR'),
@@ -566,8 +566,8 @@ export default function Relatorios() {
     if (empWarns.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
-        headStyles: { fillColor: teal, textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLt] },
+        headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
         head: [['Data', 'Motivo', 'Aplicada', 'Observação']],
         body: empWarns.map((w: any) => [
           new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'), w.reason, w.applied ? 'SIM' : 'NÃO', w.observation || '—',
@@ -586,8 +586,8 @@ export default function Relatorios() {
     if (empEvents.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
-        headStyles: { fillColor: teal, textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [...tealLt] },
+        headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
         head: [['Data', 'Descrição', 'Local', 'Equipamento']],
         body: empEvents.map((ev: any) => [
           ev.event_date ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—',
@@ -615,7 +615,7 @@ export default function Relatorios() {
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
       if (i > 1) addHeader();
-      doc.setDrawColor(...teal); doc.setLineWidth(0.5);
+      doc.setDrawColor(...blue); doc.setLineWidth(0.5);
       doc.line(14, pageH - 14, pageW - 14, pageH - 14);
       doc.setFontSize(7); doc.setTextColor(...gray); doc.setFont('helvetica', 'normal');
       doc.text('Busato — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, pageH - 9);
