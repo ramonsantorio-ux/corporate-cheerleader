@@ -518,13 +518,14 @@ export default function FuncionarioProfile() {
       )}
 
       <Tabs defaultValue="desempenho" className="w-full">
-        <TabsList className={`grid w-full ${CARGOS_SEM_META.includes(func.cargo) ? 'grid-cols-5' : 'grid-cols-6'}`}>
+        <TabsList className={`grid w-full ${CARGOS_SEM_META.includes(func.cargo) ? 'grid-cols-6' : 'grid-cols-7'}`}>
           <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
           <TabsTrigger value="ponto-ocorrencias">Ponto / Ocorrências</TabsTrigger>
           <TabsTrigger value="eventos">Eventos ({employeeEvents.length})</TabsTrigger>
           {!CARGOS_SEM_META.includes(func.cargo) && <TabsTrigger value="metas">Metas</TabsTrigger>}
           <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
           <TabsTrigger value="fit-cultural">Fit Cultural</TabsTrigger>
+          <TabsTrigger value="documentos">Documentos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="desempenho" className="space-y-6 mt-4">
