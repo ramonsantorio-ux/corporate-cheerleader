@@ -4,8 +4,9 @@ import { Plus, Target, Trash2, TrendingUp, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
+import { FastTextarea } from '@/components/ui/fast-textarea';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -175,8 +176,8 @@ export default function Competencias() {
           <DialogContent>
             <DialogHeader><DialogTitle>Criar Competência</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
-              <div><Label>Nome</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Ex: Liderança" /></div>
-              <div><Label>Descrição</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Descreva a competência" /></div>
+              <div><Label>Nome</Label><FastInput value={form.name} onValueChange={v => setForm({ ...form, name: v })} placeholder="Ex: Liderança" /></div>
+              <div><Label>Descrição</Label><FastTextarea value={form.description} onValueChange={v => setForm({ ...form, description: v })} placeholder="Descreva a competência" /></div>
               <div>
                 <Label>Ciclo (opcional)</Label>
                 <Select value={form.cycle_id} onValueChange={v => setForm({ ...form, cycle_id: v })}>

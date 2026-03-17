@@ -4,7 +4,7 @@ import { Plus, Shield, Users, Eye, Edit, Lock, Ban, KeyRound, Check } from 'luci
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -178,7 +178,6 @@ export default function Admin() {
       toast.error(res.error.message || 'Erro');
     } else {
       toast.success(blockAction === 'ban' ? 'Usuário bloqueado!' : 'Usuário desbloqueado!');
-      // Update local state
       setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
       setBlockUser(null);
     }
@@ -235,15 +234,15 @@ export default function Admin() {
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
                 <Label>Nome completo</Label>
-                <Input value={newUser.full_name} onChange={e => setNewUser({ ...newUser, full_name: e.target.value })} placeholder="Nome do usuário" />
+                <FastInput value={newUser.full_name} onValueChange={v => setNewUser({ ...newUser, full_name: v })} placeholder="Nome do usuário" />
               </div>
               <div className="space-y-2">
                 <Label>E-mail</Label>
-                <Input type="email" value={newUser.email} onChange={e => setNewUser({ ...newUser, email: e.target.value })} placeholder="email@empresa.com" />
+                <FastInput type="email" value={newUser.email} onValueChange={v => setNewUser({ ...newUser, email: v })} placeholder="email@empresa.com" />
               </div>
               <div className="space-y-2">
                 <Label>Senha</Label>
-                <Input type="password" value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} placeholder="Mínimo 6 caracteres" />
+                <FastInput type="password" value={newUser.password} onValueChange={v => setNewUser({ ...newUser, password: v })} placeholder="Mínimo 6 caracteres" />
               </div>
               <Button onClick={createUser} className="w-full" disabled={creating}>
                 {creating ? 'Criando...' : 'Criar Usuário'}
@@ -370,11 +369,11 @@ export default function Admin() {
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label>Nome completo</Label>
-              <Input value={editName} onChange={e => setEditName(e.target.value)} />
+              <FastInput value={editName} onValueChange={setEditName} />
             </div>
             <div className="space-y-2">
               <Label>E-mail</Label>
-              <Input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} />
+              <FastInput type="email" value={editEmail} onValueChange={setEditEmail} />
             </div>
             <Button onClick={saveEditUser} className="w-full" disabled={savingEdit}>
               {savingEdit ? 'Salvando...' : 'Salvar Alterações'}
@@ -392,10 +391,10 @@ export default function Admin() {
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label>Nova senha</Label>
-              <Input
+              <FastInput
                 type="password"
                 value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
+                onValueChange={setNewPassword}
                 placeholder="Mínimo 6 caracteres"
               />
             </div>

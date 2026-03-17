@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useSearchParams } from 'react-router-dom';
@@ -137,7 +138,7 @@ export default function Desempenho() {
             <DialogContent>
               <DialogHeader><DialogTitle>Criar Ciclo de Avaliação</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-2">
-                <div><Label>Nome do Ciclo</Label><Input value={newCycle.name} onChange={e => setNewCycle({ ...newCycle, name: e.target.value })} placeholder="Ex: Avaliação Trimestral Q1 2026" /></div>
+                <div><Label>Nome do Ciclo</Label><FastInput value={newCycle.name} onValueChange={v => setNewCycle({ ...newCycle, name: v })} placeholder="Ex: Avaliação Trimestral Q1 2026" /></div>
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Início</Label><Input type="date" value={newCycle.start_date} onChange={e => setNewCycle({ ...newCycle, start_date: e.target.value })} /></div>
                   <div><Label>Fim</Label><Input type="date" value={newCycle.end_date} onChange={e => setNewCycle({ ...newCycle, end_date: e.target.value })} /></div>
