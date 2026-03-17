@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
+import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -468,7 +469,7 @@ export default function Cadastro() {
     <>
       <div className="space-y-2">
         <Label>Nome completo</Label>
-        <Input value={data.nome} onChange={e => setData({ ...data, nome: e.target.value })} placeholder="Nome do funcionário" />
+        <FastInput value={data.nome} onValueChange={v => setData({ ...data, nome: v })} placeholder="Nome do funcionário" />
       </div>
       <div className="space-y-2">
         <Label>Data de Admissão</Label>
@@ -487,7 +488,7 @@ export default function Cadastro() {
       </div>
       <div className="space-y-2">
         <Label>Graduação</Label>
-        <Input value={data.graduacao} onChange={e => setData({ ...data, graduacao: e.target.value })} placeholder="Ex: Engenharia Civil, Administração..." />
+        <FastInput value={data.graduacao} onValueChange={v => setData({ ...data, graduacao: v })} placeholder="Ex: Engenharia Civil, Administração..." />
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -495,16 +496,16 @@ export default function Cadastro() {
           <Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} />
         </div>
         {data.pos_graduacao && (
-          <Input value={data.pos_graduacao_tipo} onChange={e => setData({ ...data, pos_graduacao_tipo: e.target.value })} placeholder="Qual pós-graduação?" className="mt-2" />
+          <FastInput value={data.pos_graduacao_tipo} onValueChange={v => setData({ ...data, pos_graduacao_tipo: v })} placeholder="Qual pós-graduação?" className="mt-2" />
         )}
       </div>
       <div className="space-y-2">
         <Label>Cargo</Label>
-        <Input value={data.cargo} onChange={e => setData({ ...data, cargo: e.target.value })} placeholder="Cargo" />
+        <FastInput value={data.cargo} onValueChange={v => setData({ ...data, cargo: v })} placeholder="Cargo" />
       </div>
       <div className="space-y-2">
         <Label>E-mail</Label>
-        <Input type="email" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} placeholder="email@empresa.com" />
+        <FastInput value={data.email} onValueChange={v => setData({ ...data, email: v })} placeholder="email@empresa.com" type="email" />
       </div>
       <div className="space-y-2">
         <Label>Departamento</Label>
