@@ -96,7 +96,7 @@ export default function Competencias() {
       return normalized;
     };
 
-    const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: string[] }> = {};
+    const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: { id: string; nome: string }[] }> = {};
     funcionarios.forEach(f => {
       const cargoKey = normalizeCargo(f.cargo);
       if (!cargos[cargoKey]) cargos[cargoKey] = { cargo: cargoKey, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [] };
@@ -104,7 +104,7 @@ export default function Competencias() {
       const empEvals = evaluations.filter(e => e.evaluated_name.toLowerCase() === f.nome.toLowerCase());
       if (empEvals.length === 0) {
         cargos[cargoKey].pendentes++;
-        cargos[cargoKey].pendenteNomes.push(f.nome);
+        cargos[cargoKey].pendenteNomes.push({ id: f.id, nome: f.nome });
       } else {
         const completed = empEvals.filter(e => e.status === 'completed');
         if (completed.length > 0) {
@@ -116,7 +116,7 @@ export default function Competencias() {
           }
         } else {
           cargos[cargoKey].pendentes++;
-          cargos[cargoKey].pendenteNomes.push(f.nome);
+          cargos[cargoKey].pendenteNomes.push({ id: f.id, nome: f.nome });
         }
       }
     });
