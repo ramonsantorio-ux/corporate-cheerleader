@@ -266,46 +266,124 @@ export default function FuncionarioProfile() {
     if (!func) return;
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const teal = [13, 148, 136] as const;
+    const tealLight = [232, 245, 243] as const;
+    const margin = 14;
 
-    // Header
-    doc.setFillColor(13, 148, 136);
-    doc.rect(0, 0, pageWidth, 28, 'F');
-    doc.setTextColor(255, 255, 255);
+    // ── Helper: draw header on every page ──
+    function drawHeader() {
+      doc.setFillColor(...teal);
+      doc.rect(0, 0, pageWidth, 26, 'F');
+      // Thin accent bar
+      doc.setFillColor(180, 220, 216);
+      doc.rect(0, 26, pageWidth, 3, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('GESTÃO PORTO', margin, 12);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('SISTEMA INTEGRADO DE GESTÃO DE PESSOAS', margin, 20);
+
+      const now = new Date();
+      const dateStr = `Emitido em: ${now.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+      doc.setFontSize(8);
+      doc.text(dateStr, pageWidth - margin, 12, { align: 'right' });
+      doc.setFont('helvetica', 'bold');
+      doc.text('DOCUMENTO CONFIDENCIAL', pageWidth - margin, 20, { align: 'right' });
+
+      doc.setTextColor(0, 0, 0);
+    }
+
+    // ── Helper: draw footer on every page ──
+    function drawFooter(pageNum: number, totalPages: number) {
+      doc.setDrawColor(...teal);
+      doc.setLineWidth(0.5);
+      doc.line(margin, pageHeight - 14, pageWidth - margin, pageHeight - 14);
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.setFont('helvetica', 'normal');
+      doc.text(
+        `Gestão Porto — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.`,
+        margin,
+        pageHeight - 9
+      );
+      doc.text(`Página ${pageNum}`, pageWidth - margin, pageHeight - 9, { align: 'right' });
+    }
+
+    // ── Helper: draw section heading (teal left border + light bg) ──
+    function drawSectionHeading(title: string, yPos: number) {
+      doc.setFillColor(...tealLight);
+      doc.rect(margin, yPos, pageWidth - margin * 2, 10, 'F');
+      doc.setFillColor(...teal);
+      doc.rect(margin, yPos, 3, 10, 'F');
+      doc.setTextColor(...teal);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title, margin + 7, yPos + 7);
+      doc.setTextColor(0, 0, 0);
+      return yPos + 14;
+    }
+
+    // ── Helper: check page break ──
+    function checkPageBreak(y: number, needed: number): number {
+      if (y + needed > pageHeight - 25) {
+        doc.addPage();
+        drawHeader();
+        return 38;
+      }
+      return y;
+    }
+
+    // ══════════════════════ PAGE 1 ══════════════════════
+    drawHeader();
+
+    let y = 36;
+
+    // Title block
+    doc.setFillColor(250, 250, 250);
+    doc.setDrawColor(220, 220, 220);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 18, 2, 2, 'FD');
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('RELATÓRIO DE DESVIOS — FICHA DO COLABORADOR', 14, 12);
+    doc.setTextColor(30, 30, 30);
+    doc.text('RELATÓRIO DE DESVIOS DO COLABORADOR', margin + 6, y + 8);
     doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Emitido: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 14, 20);
-    doc.text('CONFIDENCIAL — PARA USO EXCLUSIVO DO RH', pageWidth - 14, 20, { align: 'right' });
-
+    doc.text(`Matrícula: ${func.id.slice(0, 8).toUpperCase()}`, margin + 6, y + 15);
     doc.setTextColor(0, 0, 0);
 
-    // Employee info
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DADOS DO COLABORADOR', 14, 36);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
+    y = y + 24;
+
+    // ── DADOS CADASTRAIS ──
+    y = drawSectionHeading('DADOS CADASTRAIS', y);
 
     const info = [
-      ['Nome', func.nome],
+      ['Nome Completo', func.nome.toUpperCase()],
       ['Cargo', func.cargo],
       ['Departamento', func.departamento],
-      ['Turno / Letra', `${func.turno} / ${func.letra}`],
-      ['Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR')],
       ['E-mail', func.email || '—'],
+      ['Turno', func.turno],
+      ['Letra', func.letra || '—'],
+      ['Escolaridade', func.escolaridade || '—'],
+      ['Data de Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR')],
     ];
 
     autoTable(doc, {
-      startY: 40,
+      startY: y,
       body: info,
       theme: 'plain',
-      styles: { fontSize: 9, cellPadding: 2 },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 40 } },
+      styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 6, right: 4 } },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } },
+      margin: { left: margin + 4, right: margin + 4 },
     });
 
-    // Deviations summary
+    y = (doc as any).lastAutoTable?.finalY + 6 || y + 80;
+
+    // ── RESUMO DE DESVIOS ──
     const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
     const faltasJust = attendanceRecords.filter(a => a.status === 'falta_justificada').length;
     const atestados = attendanceRecords.filter(a => a.status === 'atestado').length;
@@ -313,14 +391,11 @@ export default function FuncionarioProfile() {
     const advApplied = employeeWarnings.filter(w => w.applied).length;
     const advPending = employeeWarnings.filter(w => !w.applied).length;
 
-    let y = (doc as any).lastAutoTable?.finalY || 70;
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RESUMO DE DESVIOS', 14, y + 10);
+    y = checkPageBreak(y, 60);
+    y = drawSectionHeading('RESUMO DE DESVIOS', y);
 
     autoTable(doc, {
-      startY: y + 14,
+      startY: y,
       head: [['Indicador', 'Quantidade']],
       body: [
         ['Horas Negativas (Total)', String(hrsNeg)],
@@ -333,20 +408,21 @@ export default function FuncionarioProfile() {
         ['Eventos Registrados', String(employeeEvents.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: [255, 245, 245] },
+      headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [...tealLight] },
       columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
+      margin: { left: margin + 4, right: margin + 4 },
     });
 
-    // Warning details
-    if (employeeWarnings.length > 0) {
-      y = (doc as any).lastAutoTable?.finalY || 140;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('HISTÓRICO DE ADVERTÊNCIAS', 14, y + 10);
+    y = (doc as any).lastAutoTable?.finalY + 6 || y + 50;
 
+    // ── HISTÓRICO DE ADVERTÊNCIAS ──
+    y = checkPageBreak(y, 30);
+    y = drawSectionHeading(`HISTÓRICO DE ADVERTÊNCIAS (${employeeWarnings.length})`, y);
+
+    if (employeeWarnings.length > 0) {
       autoTable(doc, {
-        startY: y + 14,
+        startY: y,
         head: [['Data', 'Motivo', 'Aplicada', 'Observação']],
         body: employeeWarnings.map(w => [
           new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'),
@@ -355,21 +431,25 @@ export default function FuncionarioProfile() {
           w.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [180, 40, 40], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [255, 248, 248] },
+        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [...tealLight] },
+        margin: { left: margin + 4, right: margin + 4 },
       });
+      y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
+    } else {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Nenhuma advertência registrada.', margin + 6, y + 4);
+      y += 10;
     }
 
-    // Events history
-    if (employeeEvents.length > 0) {
-      y = (doc as any).lastAutoTable?.finalY || 180;
-      if (y > 240) { doc.addPage(); y = 20; }
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`HISTÓRICO DE EVENTOS (${employeeEvents.length})`, 14, y + 10);
+    // ── HISTÓRICO DE EVENTOS ──
+    y = checkPageBreak(y, 30);
+    y = drawSectionHeading(`HISTÓRICO DE EVENTOS (${employeeEvents.length})`, y);
 
+    if (employeeEvents.length > 0) {
       autoTable(doc, {
-        startY: y + 14,
+        startY: y,
         head: [['Data', 'Descrição', 'Local', 'Equipamento']],
         body: employeeEvents.map(ev => [
           new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR'),
@@ -378,61 +458,67 @@ export default function FuncionarioProfile() {
           ev.equipment || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: [200, 130, 0], textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [255, 250, 240] },
+        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [...tealLight] },
+        margin: { left: margin + 4, right: margin + 4 },
       });
+      y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
+    } else {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Nenhum evento registrado.', margin + 6, y + 4);
+      y += 10;
     }
 
-    // Attendance history
-    if (attendanceRecords.length > 0) {
-      y = (doc as any).lastAutoTable?.finalY || 180;
-      if (y > 240) { doc.addPage(); y = 20; }
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('HISTÓRICO DE REGISTROS', 14, y + 10);
+    // ── HISTÓRICO DE REGISTROS (PONTO) ──
+    const deviationRecords = attendanceRecords.filter(a =>
+      ['falta', 'falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)
+    );
 
-      const deviationRecords = attendanceRecords.filter(a =>
-        ['falta', 'falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)
-      );
+    y = checkPageBreak(y, 30);
+    y = drawSectionHeading(`HISTÓRICO DE REGISTROS (${deviationRecords.length})`, y);
 
-      if (deviationRecords.length > 0) {
-        autoTable(doc, {
-          startY: y + 14,
-          head: [['Data', 'Status', 'Observação']],
-          body: deviationRecords.map(a => [
-            new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR'),
-            attendanceStatusLabels[a.status] || a.status,
-            a.observation || '—',
-          ]),
-          styles: { fontSize: 8, cellPadding: 3 },
-          headStyles: { fillColor: [60, 60, 60], textColor: 255, fontStyle: 'bold' },
-          alternateRowStyles: { fillColor: [245, 245, 245] },
-        });
-      }
+    if (deviationRecords.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Data', 'Status', 'Observação']],
+        body: deviationRecords.map(a => [
+          new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR'),
+          attendanceStatusLabels[a.status] || a.status,
+          a.observation || '—',
+        ]),
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [...teal], textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [...tealLight] },
+        margin: { left: margin + 4, right: margin + 4 },
+      });
+      y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
+    } else {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Nenhum registro de desvio encontrado.', margin + 6, y + 4);
+      y += 10;
     }
 
-    // Signature area
-    const lastY = (doc as any).lastAutoTable?.finalY || 200;
-    const sigY = Math.max(lastY + 30, 240);
-    if (sigY > 270) { doc.addPage(); }
-    const finalSigY = sigY > 270 ? 40 : sigY;
-
+    // ── ASSINATURAS ──
+    y = checkPageBreak(y, 40);
+    y = y + 20;
     doc.setDrawColor(0);
-    doc.line(14, finalSigY, 90, finalSigY);
-    doc.line(120, finalSigY, 196, finalSigY);
+    doc.line(margin + 10, y, 85, y);
+    doc.line(pageWidth / 2 + 10, y, pageWidth - margin - 10, y);
     doc.setFontSize(8);
-    doc.setTextColor(0);
-    doc.text('Assinatura do Colaborador', 14, finalSigY + 5);
-    doc.text('Assinatura do Gestor / RH', 120, finalSigY + 5);
+    doc.setTextColor(120, 120, 120);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Assinatura do Colaborador', margin + 25, y + 5);
+    doc.text('Assinatura do Gestor', pageWidth / 2 + 30, y + 5);
 
-    // Footer
+    // ── FOOTER on all pages ──
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.setFontSize(7);
-      doc.setTextColor(120);
-      doc.text(`GESTÃO PORTO — Ficha de Desvios: ${func.nome} — Pág. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
-      doc.text('Documento confidencial de uso exclusivo do RH — Desligamento', pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
+      drawFooter(i, pageCount);
+      // Re-draw header on pages 2+ (page 1 already has it)
+      if (i > 1) drawHeader();
     }
 
     doc.save(`Desvios_${func.nome.replace(/\s+/g, '_')}.pdf`);
