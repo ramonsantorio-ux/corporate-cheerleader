@@ -648,43 +648,32 @@ export default function Index() {
         </div>
         <div className="corporate-section-body">
           {topDeviations.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Colaborador</th>
-                    <th className="text-center py-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Faltas Inj.</th>
-                    <th className="text-center py-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Atestados</th>
-                    <th className="text-center py-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Advertências</th>
-                    <th className="text-center py-2 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Eventos</th>
-                    <th className="text-center py-2 px-3 text-xs font-semibold uppercase tracking-wider text-destructive">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topDeviations.map((d, i) => (
-                    <tr key={i} className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
-                      onClick={() => { const func = funcionarios.find(f => f.id === d.id); if (func) navigate(`/funcionario/${func.id}`); }}>
-                      <td className="py-2.5 px-3 font-medium text-foreground">{d.name}</td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${d.faltas > 0 ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground'}`}>{d.faltas}</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${d.atestados > 0 ? 'bg-info/10 text-info' : 'bg-muted text-muted-foreground'}`}>{d.atestados}</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${d.advertencias > 0 ? 'bg-warning/10 text-warning' : 'bg-muted text-muted-foreground'}`}>{d.advertencias}</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${d.eventos > 0 ? 'bg-warning/10 text-warning' : 'bg-muted text-muted-foreground'}`}>{d.eventos}</span>
-                      </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-destructive/10 text-destructive text-sm font-bold">{d.total}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <ResponsiveContainer width="100%" height={Math.max(topDeviations.length * 50, 180)}>
+                <BarChart data={topDeviations} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    tick={{ fontSize: 11 }}
+                    stroke="hsl(var(--muted-foreground))"
+                    width={140}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="faltas" name="Faltas Inj." stackId="a" fill="hsl(0, 68%, 50%)" barSize={20} />
+                  <Bar dataKey="atestados" name="Atestados" stackId="a" fill="hsl(200, 80%, 38%)" barSize={20} />
+                  <Bar dataKey="advertencias" name="Advertências" stackId="a" fill="hsl(38, 90%, 50%)" barSize={20} />
+                  <Bar dataKey="eventos" name="Eventos" stackId="a" fill="hsl(280, 60%, 55%)" radius={[0, 4, 4, 0]} barSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center flex-wrap">
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(0, 68%, 50%)' }} /> Faltas Inj.</div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(200, 80%, 38%)' }} /> Atestados</div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(38, 90%, 50%)' }} /> Advertências</div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(280, 60%, 55%)' }} /> Eventos</div>
+              </div>
+            </>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-8">Nenhum desvio registrado no período</p>
           )}
