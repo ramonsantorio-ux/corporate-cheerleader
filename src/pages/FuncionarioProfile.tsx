@@ -414,7 +414,7 @@ export default function FuncionarioProfile() {
 
     // ── HISTÓRICO DE EVENTOS ──
     y = checkPageBreak(y, 30);
-    y = drawSectionHeading(`HISTÓRICO DE EVENTOS (${employeeEvents.length})`, y);
+    y = drawSectionHeadingLocal(`HISTÓRICO DE EVENTOS (${employeeEvents.length})`, y);
 
     if (employeeEvents.length > 0) {
       autoTable(doc, {
