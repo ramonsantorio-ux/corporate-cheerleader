@@ -95,6 +95,17 @@ export default function PontoFerias() {
   const pontoFileRef = useRef<HTMLInputElement>(null);
   const feriasFileRef = useRef<HTMLInputElement>(null);
   const [period, setPeriod] = useState<PeriodRange>(getCurrentPeriod());
+  const navigate = useNavigate();
+
+  // Employee filter
+  const [employeeSearch, setEmployeeSearch] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<Func | null>(null);
+  const [showEmpDropdown, setShowEmpDropdown] = useState(false);
+
+  const filteredSearchEmps = useMemo(() => {
+    if (!employeeSearch.trim()) return [];
+    return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
+  }, [employeeSearch, funcionarios]);
 
   const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '' });
   const [vacForm, setVacForm] = useState({
