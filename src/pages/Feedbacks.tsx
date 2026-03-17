@@ -674,7 +674,7 @@ export default function Feedbacks() {
             </div>
             <div>
               <label className={labelClass}>Título *</label>
-              <input type="text" placeholder="Resumo breve do feedback" value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} className={inputClass} maxLength={100} />
+              <FastInput placeholder="Resumo breve do feedback" value={form.titulo} onValueChange={(v) => setForm(f => ({ ...f, titulo: v }))} className={inputClass} maxLength={100} />
             </div>
             <div>
               <label className={labelClass}>Funcionário *</label>
