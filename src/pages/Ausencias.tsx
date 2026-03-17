@@ -747,7 +747,7 @@ export default function PontoFerias() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2"><Label>Qtd. Dias</Label><Input type="number" value={vacForm.days_count} onChange={e => setVacForm({ ...vacForm, days_count: e.target.value })} /></div>
-                    <div className="space-y-2"><Label>Mês Programado</Label><Input placeholder="Ex: Março" value={vacForm.scheduled_month} onChange={e => setVacForm({ ...vacForm, scheduled_month: e.target.value })} /></div>
+                    <div className="space-y-2"><Label>Mês Programado</Label><FastInput placeholder="Ex: Março" value={vacForm.scheduled_month} onValueChange={v => setVacForm(f => ({ ...f, scheduled_month: v }))} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2"><Label>Início</Label><Input type="date" value={vacForm.start_date} onChange={e => setVacForm({ ...vacForm, start_date: e.target.value })} /></div>
