@@ -188,7 +188,7 @@ export default function Reunioes() {
               </div>
               <div className="space-y-2">
                 <Label>Pauta / Anotações</Label>
-                <Textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="O que será discutido..." rows={3} />
+                <FastTextarea value={form.notes} onValueChange={v => setForm(f => ({ ...f, notes: v }))} placeholder="O que será discutido..." rows={3} />
               </div>
               <div className="space-y-2">
                 <Label>Ações combinadas</Label>
