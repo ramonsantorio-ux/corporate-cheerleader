@@ -87,8 +87,12 @@ export default function Competencias() {
   }
 
   const cargoStats = useMemo(() => {
-    // Normalize cargo: remove trailing Roman numerals and level numbers (e.g. "Técnico de Segurança III" -> "Técnico de Segurança")
-    const normalizeCargo = (cargo: string) => cargo.replace(/\s+(I{1,3}|IV|V|VI{0,3}|[0-9]+)\s*$/i, '').trim();
+    // Normalize cargo: remove trailing Roman numerals/levels and unify gender variants (Técnica/Técnico)
+    const normalizeCargo = (cargo: string) => {
+      let normalized = cargo.replace(/\s+(I{1,3}|IV|V|VI{0,3}|[0-9]+)\s*$/i, '').trim();
+      normalized = normalized.replace(/\bTécnica\b/gi, 'Técnico');
+      return normalized;
+    };
 
     const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: string[] }> = {};
     funcionarios.forEach(f => {
