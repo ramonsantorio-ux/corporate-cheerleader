@@ -82,8 +82,10 @@ export default function Feedbacks() {
   const [createOpen, setCreateOpen] = useState(false);
   const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
+  const [funcionariosFull, setFuncionariosFull] = useState<{ id: string; nome: string; cargo: string }[]>([]);
   const [funcionarios, setFuncionarios] = useState<string[]>([]);
   const [gestorName, setGestorName] = useState('');
+  const [expandedFbCargo, setExpandedFbCargo] = useState<string | null>(null);
   const [form, setForm] = useState({
     titulo: '', descricao: '', setor: 'contrato_porto' as FeedbackSetor,
     prioridade: 'media' as FeedbackPriority, departamento: '', funcionario: '',
@@ -92,8 +94,11 @@ export default function Feedbacks() {
 
   useEffect(() => {
     fetchFeedbacks();
-    supabase.from('funcionarios').select('nome').then(({ data }) => {
-      if (data) setFuncionarios(data.map(f => f.nome));
+    supabase.from('funcionarios').select('id, nome, cargo').then(({ data }) => {
+      if (data) {
+        setFuncionariosFull(data as { id: string; nome: string; cargo: string }[]);
+        setFuncionarios(data.map(f => f.nome));
+      }
     });
     if (user?.id) {
       supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
@@ -242,6 +247,34 @@ export default function Feedbacks() {
     return Object.values(byAuthor);
   }, [selectedDept, feedbacks]);
 
+  // ── Feedback por Cargo (mín. 1 feedback por funcionário) ──
+  const feedbackCargoStats = useMemo(() => {
+    const cargos: Record<string, { cargo: string; total: number; comFeedback: number; pendentes: number; pendenteNomes: { id: string; nome: string }[] }> = {};
+    funcionariosFull.forEach(f => {
+      if (!cargos[f.cargo]) cargos[f.cargo] = { cargo: f.cargo, total: 0, comFeedback: 0, pendentes: 0, pendenteNomes: [] };
+      cargos[f.cargo].total++;
+      const hasFb = feedbacks.some(fb => fb.autor.toLowerCase() === f.nome.toLowerCase());
+      if (hasFb) {
+        cargos[f.cargo].comFeedback++;
+      } else {
+        cargos[f.cargo].pendentes++;
+        cargos[f.cargo].pendenteNomes.push({ id: f.id, nome: f.nome });
+      }
+    });
+    return Object.values(cargos).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
+  }, [funcionariosFull, feedbacks]);
+
+  const fbCargoChartData = feedbackCargoStats.map(c => ({
+    cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + '…' : c.cargo,
+    'Com Feedback': c.comFeedback,
+    Pendentes: c.pendentes,
+  }));
+
+  function openCreateForEmployee(nome: string) {
+    setForm(prev => ({ ...prev, funcionario: nome }));
+    setCreateOpen(true);
+  }
+
   async function handleDelete() {
     if (!deleteId) return;
     const { error } = await supabase.from('feedbacks').delete().eq('id', deleteId);
@@ -328,6 +361,63 @@ export default function Feedbacks() {
           </div>
         </motion.div>
       </div>
+
+      {/* ── Acompanhamento de Feedbacks por Cargo ── */}
+      {feedbackCargoStats.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="corporate-section">
+          <div className="corporate-section-header">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Acompanhamento — Mín. 1 Feedback por Colaborador</h2>
+            </div>
+            <span className="text-xs text-muted-foreground">{feedbackCargoStats.length} cargos</span>
+          </div>
+          <div className="corporate-section-body">
+            <ResponsiveContainer width="100%" height={320}>
+              <BarChart data={fbCargoChartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="cargo" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
+                <Bar dataKey="Com Feedback" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+
+            {feedbackCargoStats.some(c => c.pendentes > 0) && (
+              <div className="mt-6 border-t border-border pt-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Colaboradores sem Feedback</p>
+                <div className="space-y-1">
+                  {feedbackCargoStats.filter(c => c.pendentes > 0).map(c => (
+                    <div key={c.cargo} className="rounded-lg border border-border overflow-hidden">
+                      <button onClick={() => setExpandedFbCargo(expandedFbCargo === c.cargo ? null : c.cargo)}
+                        className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                        <span className="text-sm font-medium text-foreground">{c.cargo}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="corporate-badge bg-destructive/10 text-destructive">{c.pendentes}</span>
+                          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedFbCargo === c.cargo ? 'rotate-180' : ''}`} />
+                        </div>
+                      </button>
+                      {expandedFbCargo === c.cargo && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                          className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
+                          {c.pendenteNomes.map(emp => (
+                            <button key={emp.id} onClick={() => openCreateForEmployee(emp.nome)}
+                              className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
+                              • {emp.nome}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Charts Row ── */}
       <div className="grid lg:grid-cols-3 gap-4">
