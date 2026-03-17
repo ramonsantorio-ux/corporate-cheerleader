@@ -387,7 +387,7 @@ export default function FuncionarioProfile() {
 
     // ── HISTÓRICO DE ADVERTÊNCIAS ──
     y = checkPageBreak(y, 30);
-    y = drawSectionHeading(`HISTÓRICO DE ADVERTÊNCIAS (${employeeWarnings.length})`, y);
+    y = drawSectionHeadingLocal(`HISTÓRICO DE ADVERTÊNCIAS (${employeeWarnings.length})`, y);
 
     if (employeeWarnings.length > 0) {
       autoTable(doc, {
