@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
-import busatoLogo from '@/assets/busato-logo.png';
+import busatoGlobo from '@/assets/busato-globo.jpeg';
 
 interface NavGroup {
   label: string;
@@ -77,7 +77,7 @@ export default function AppSidebar() {
     >
       {/* Brand */}
       <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border flex-shrink-0">
-        <img src={busatoLogo} alt="Busato" className="w-9 h-9 rounded-lg flex-shrink-0" />
+        <img src={busatoGlobo} alt="Busato" className="w-9 h-9 rounded-lg flex-shrink-0" />
         <AnimatePresence>
           {!collapsed && (
             <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.15 }}>

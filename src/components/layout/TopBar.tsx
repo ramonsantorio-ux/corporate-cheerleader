@@ -142,7 +142,7 @@ export default function TopBar() {
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
           <MessageCircle className="w-4 h-4 text-primary-foreground" />
         </div>
-        <span className="font-semibold text-sm">Gestão Porto</span>
+        <span className="font-semibold text-sm">Busato</span>
       </div>
 
       <div className="hidden md:flex items-center gap-2 bg-muted rounded-lg px-3 py-2 w-80">

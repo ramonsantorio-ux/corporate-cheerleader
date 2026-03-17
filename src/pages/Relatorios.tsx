@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
 import { motion } from 'framer-motion';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { BarChart3, TrendingUp, PieChart, Download, FileText, FileSpreadsheet, User, ShieldAlert, Calendar, Clock, AlertTriangle, Users } from 'lucide-react';
@@ -161,6 +162,7 @@ export default function Relatorios() {
   async function exportPDF() {
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
+    const logoBase64 = await getBusatoLogoBase64();
     const doc = new jsPDF();
     const pw = doc.internal.pageSize.getWidth();
     const ph = doc.internal.pageSize.getHeight();
@@ -169,24 +171,10 @@ export default function Relatorios() {
     let pageNum = 1;
 
     function header() {
-      doc.setFillColor(...teal);
-      doc.rect(0, 0, pw, 26, 'F');
-      doc.setFillColor(180, 220, 216);
-      doc.rect(0, 26, pw, 3, 'F');
-      doc.setTextColor(255); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-      doc.text('GESTÃO PORTO', 14, 12);
-      doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-      doc.text('SISTEMA INTEGRADO DE GESTÃO DE PESSOAS', 14, 20);
-      doc.text(`Emitido em: ${new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}`, pw - 14, 12, { align: 'right' });
-      doc.setFont('helvetica', 'bold');
-      doc.text('DOCUMENTO CONFIDENCIAL', pw - 14, 20, { align: 'right' });
+      drawBusatoHeader(doc, logoBase64, { pageWidth: pw });
     }
     function footer() {
-      doc.setDrawColor(...teal); doc.setLineWidth(0.5);
-      doc.line(14, ph - 14, pw - 14, ph - 14);
-      doc.setFontSize(7); doc.setTextColor(120); doc.setFont('helvetica', 'normal');
-      doc.text('Gestão Porto — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, ph - 9);
-      doc.text(`Página ${pageNum}`, pw - 14, ph - 9, { align: 'right' });
+      drawBusatoFooter(doc, pageNum, { pageWidth: pw, pageHeight: ph });
     }
     function section(title: string, y: number) {
       doc.setFillColor(...tealLight);
@@ -378,7 +366,7 @@ export default function Relatorios() {
       doc.setDrawColor(...teal); doc.setLineWidth(0.5);
       doc.line(14, ph - 14, pw - 14, ph - 14);
       doc.setFontSize(7); doc.setTextColor(120); doc.setFont('helvetica', 'normal');
-      doc.text('Gestão Porto — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, ph - 9);
+      doc.text('Busato — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, ph - 9);
       doc.text(`Página ${i} / ${totalPages}`, pw - 14, ph - 9, { align: 'right' });
     }
 
@@ -436,6 +424,7 @@ export default function Relatorios() {
 
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
+    const logoBase64 = await getBusatoLogoBase64();
     const doc = new jsPDF();
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
@@ -443,27 +432,14 @@ export default function Relatorios() {
     const tealLt: [number, number, number] = [232, 245, 243];
     const dark: [number, number, number] = [30, 40, 50];
     const gray: [number, number, number] = [120, 130, 140];
-    const now = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
     const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'Administrativo' };
     let pageNum = 1;
 
     function addHeader() {
-      doc.setFillColor(...teal); doc.rect(0, 0, pageW, 26, 'F');
-      doc.setFillColor(180, 220, 216); doc.rect(0, 26, pageW, 3, 'F');
-      doc.setTextColor(255); doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-      doc.text('GESTÃO PORTO', 14, 12);
-      doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-      doc.text('SISTEMA INTEGRADO DE GESTÃO DE PESSOAS', 14, 20);
-      doc.text(`Emitido em: ${now}`, pageW - 14, 12, { align: 'right' });
-      doc.setFont('helvetica', 'bold');
-      doc.text('DOCUMENTO CONFIDENCIAL', pageW - 14, 20, { align: 'right' });
+      drawBusatoHeader(doc, logoBase64, { pageWidth: pageW });
     }
     function addFooter() {
-      doc.setDrawColor(...teal); doc.setLineWidth(0.5);
-      doc.line(14, pageH - 14, pageW - 14, pageH - 14);
-      doc.setFontSize(7); doc.setTextColor(...gray); doc.setFont('helvetica', 'normal');
-      doc.text('Gestão Porto — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, pageH - 9);
-      doc.text(`Página ${pageNum}`, pageW - 14, pageH - 9, { align: 'right' });
+      drawBusatoFooter(doc, pageNum, { pageWidth: pageW, pageHeight: pageH });
     }
     function sect(title: string, y: number) {
       doc.setFillColor(...tealLt); doc.rect(14, y, pageW - 28, 10, 'F');
@@ -643,7 +619,7 @@ export default function Relatorios() {
       doc.setDrawColor(...teal); doc.setLineWidth(0.5);
       doc.line(14, pageH - 14, pageW - 14, pageH - 14);
       doc.setFontSize(7); doc.setTextColor(...gray); doc.setFont('helvetica', 'normal');
-      doc.text('Gestão Porto — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, pageH - 9);
+      doc.text('Busato — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, pageH - 9);
       doc.text(`Página ${i} / ${totalPages}`, pageW - 14, pageH - 9, { align: 'right' });
     }
 

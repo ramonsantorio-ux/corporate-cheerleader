@@ -21,6 +21,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Attendance {
@@ -482,21 +483,13 @@ export default function PontoFerias() {
   }
 
   // ─── Deviations Report PDF ────────────────────────────────────────────
-  function exportDeviationsReport() {
+  async function exportDeviationsReport() {
+    const logoBase64 = await getBusatoLogoBase64();
     const doc = new jsPDF('landscape');
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Header
-    doc.setFillColor(13, 148, 136);
-    doc.rect(0, 0, pageWidth, 28, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RELATÓRIO DE DESVIOS — GESTÃO À VISTA', 14, 14);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Período: ${period.label} | Emitido: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, 14, 22);
-    doc.text('CONFIDENCIAL — USO INTERNO RH', pageWidth - 14, 22, { align: 'right' });
+    // Header with Busato logo
+    drawBusatoHeader(doc, logoBase64, { pageWidth });
 
     doc.setTextColor(0, 0, 0);
 
@@ -574,7 +567,7 @@ export default function PontoFerias() {
       doc.setPage(i);
       doc.setFontSize(7);
       doc.setTextColor(120);
-      doc.text(`GESTÃO PORTO — Relatório de Desvios — Pág. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
+      doc.text(`BUSATO — Relatório de Desvios — Pág. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
       doc.text('Documento confidencial de uso exclusivo do RH', pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
     }
 
