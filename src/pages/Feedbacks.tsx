@@ -694,7 +694,7 @@ export default function Feedbacks() {
               </div>
               <div>
                 <label className={labelClass}>Pontos de Melhoria</label>
-                <textarea placeholder="Indique os pontos de melhoria..." value={form.pontos_melhoria} onChange={(e) => setForm({ ...form, pontos_melhoria: e.target.value })} className={`${inputClass} min-h-[60px] resize-none`} />
+                <FastTextarea placeholder="Indique os pontos de melhoria..." value={form.pontos_melhoria} onValueChange={(v) => setForm(f => ({ ...f, pontos_melhoria: v }))} className={`${inputClass} min-h-[60px] resize-none`} />
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
