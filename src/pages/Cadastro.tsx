@@ -104,43 +104,6 @@ export default function Cadastro() {
   // Encarregados list for dropdown
   const encarregados = funcionarios.filter(f => f.cargo.toLowerCase().includes('encarregado'));
 
-  function downloadTemplate() {
-    const templateData = [
-      {
-        Nome: 'João da Silva',
-        Email: 'joao@empresa.com',
-        Cargo: 'Encarregado Operacional',
-        Departamento: 'Contrato Porto',
-        'Data Admissão': '2024-01-15',
-        Escolaridade: 'Ensino Superior Completo',
-        Graduação: 'Engenharia Civil',
-        'Pós-Graduação': 'Não',
-        'Tipo Pós-Graduação': '',
-        Turno: 'Dia A',
-      },
-      {
-        Nome: 'Maria Santos',
-        Email: 'maria@empresa.com',
-        Cargo: 'Motorista',
-        Departamento: 'Frotas',
-        'Data Admissão': '2023-06-10',
-        Escolaridade: 'Ensino Médio',
-        Graduação: '',
-        'Pós-Graduação': 'Não',
-        'Tipo Pós-Graduação': '',
-        Turno: 'Noite B',
-      },
-    ];
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const colWidths = [
-      { wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 },
-      { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 25 }, { wch: 12 },
-    ];
-    ws['!cols'] = colWidths;
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
-    XLSX.writeFile(wb, 'modelo_cadastro_funcionarios.xlsx');
-  }
 
   function parseTurno(raw: string): string {
     const lower = raw.toLowerCase().trim();
