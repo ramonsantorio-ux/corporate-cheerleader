@@ -5,6 +5,7 @@ import {
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
   Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert, Search, X, Download
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
