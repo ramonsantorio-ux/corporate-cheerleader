@@ -679,6 +679,7 @@ export default function Relatorios() {
     XLSX.writeFile(wb, 'modelo_extras.xlsx');
   }
 
+  return (
     <div className="space-y-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between flex-wrap gap-3">
