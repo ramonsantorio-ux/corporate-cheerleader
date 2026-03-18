@@ -703,10 +703,17 @@ export default function PontoFerias() {
             <p className="text-muted-foreground text-sm mt-1">Painel de controle operacional</p>
           </div>
           <div className="flex gap-2 flex-wrap">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm"><Plus className="w-4 h-4 mr-2" />Registrar</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setDialogOpen(true)}><CalendarDays className="w-4 h-4 mr-2" />Registrar Ponto</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setVacDialogOpen(true)}><Sun className="w-4 h-4 mr-2" />Registrar Férias</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm"><Plus className="w-4 h-4 mr-2" />Registrar Ponto</Button>
-              </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Registrar Ponto Diário</DialogTitle>
