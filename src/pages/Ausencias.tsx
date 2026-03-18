@@ -843,15 +843,16 @@ export default function PontoFerias() {
               </DialogContent>
             </Dialog>
 
-            <Button size="sm" variant="outline" onClick={() => pontoFileRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />Importar Ponto
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => feriasFileRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />Importar Férias
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => extrasFileRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />Importar Extras
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline"><Upload className="w-4 h-4 mr-2" />Importar</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => pontoFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Ponto</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => feriasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Férias</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => extrasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Extras</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Deviations Report */}
             <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportDeviationsReport}>
