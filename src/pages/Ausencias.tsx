@@ -5,6 +5,7 @@ import {
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
   Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert, Search, X, Download
 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
@@ -842,15 +843,16 @@ export default function PontoFerias() {
               </DialogContent>
             </Dialog>
 
-            <Button size="sm" variant="outline" onClick={() => pontoFileRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />Importar Ponto
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => feriasFileRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />Importar Férias
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => extrasFileRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />Importar Extras
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline"><Upload className="w-4 h-4 mr-2" />Importar</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => pontoFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Ponto</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => feriasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Férias</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => extrasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Extras</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Deviations Report */}
             <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportDeviationsReport}>
