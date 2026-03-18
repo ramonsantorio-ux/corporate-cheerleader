@@ -265,7 +265,6 @@ export default function Colaboradores() {
           </SelectContent>
         </Select>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={downloadTemplate} title="Baixar modelo"><Download className="w-4 h-4 mr-2" />Modelo</Button>
           <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
           <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={importing}>{importing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}Importar</Button>
         </div>

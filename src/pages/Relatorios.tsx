@@ -642,6 +642,15 @@ export default function Relatorios() {
               <DropdownMenuItem onClick={exportExcel}><FileSpreadsheet className="w-4 h-4 mr-2" />Excel</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild><Button variant="outline" size="sm"><Download className="w-4 h-4 mr-2" />Modelos</Button></DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={downloadTemplateCadastro}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo Cadastro</DropdownMenuItem>
+              <DropdownMenuItem onClick={downloadTemplatePonto}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo Ponto</DropdownMenuItem>
+              <DropdownMenuItem onClick={downloadTemplateFerias}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo Férias</DropdownMenuItem>
+              <DropdownMenuItem onClick={downloadTemplateExtras}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo Extras</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </motion.div>
 

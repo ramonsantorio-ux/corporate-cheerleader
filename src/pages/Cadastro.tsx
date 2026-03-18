@@ -579,9 +579,6 @@ export default function Cadastro() {
           </SelectContent>
         </Select>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={downloadTemplate} title="Baixar modelo de planilha">
-            <Download className="w-4 h-4 mr-2" />Modelo
-          </Button>
           <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
           <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={importing} title="Importar planilha">
             {importing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
