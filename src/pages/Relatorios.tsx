@@ -626,7 +626,59 @@ export default function Relatorios() {
     doc.save(`ficha-${emp.nome.replace(/\s+/g, '-').toLowerCase()}.pdf`);
   }
 
-  return (
+  function downloadTemplateCadastro() {
+    const templateData = [
+      { Nome: 'João da Silva', Email: 'joao@empresa.com', Cargo: 'Encarregado Operacional', Departamento: 'Contrato Porto', 'Data Admissão': '2024-01-15', Escolaridade: 'Ensino Superior Completo', Graduação: 'Engenharia Civil', 'Pós-Graduação': 'Não', 'Tipo Pós-Graduação': '', Turno: 'Dia A' },
+      { Nome: 'Maria Santos', Email: 'maria@empresa.com', Cargo: 'Motorista', Departamento: 'Frotas', 'Data Admissão': '2023-06-10', Escolaridade: 'Ensino Médio', Graduação: '', 'Pós-Graduação': 'Não', 'Tipo Pós-Graduação': '', Turno: 'Noite B' },
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    ws['!cols'] = [{ wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 25 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
+    XLSX.writeFile(wb, 'modelo_cadastro_funcionarios.xlsx');
+  }
+
+  function downloadTemplatePonto() {
+    const header = [['Nome', 'Data', 'Status', 'Observação']];
+    const examples = [
+      ['João Silva', '2025-01-15', 'presente', ''],
+      ['Maria Souza', '2025-01-15', 'falta_injustificada', 'Não compareceu'],
+      ['Pedro Santos', '2025-01-15', 'atestado', 'Atestado médico 3 dias'],
+      ['Ana Lima', '2025-01-15', 'extra', 'Hora extra autorizada'],
+      ['Carlos Dias', '2025-01-15', 'falta_justificada', 'Consulta médica'],
+      ['José Oliveira', '2025-01-15', 'ferias', ''],
+      ['Lucas Costa', '2025-01-15', 'abono', 'Abono do gestor'],
+      ['Fernanda Rocha', '2025-01-15', 'banco_horas', 'Compensação'],
+      ['Roberto Alves', '2025-01-15', 'afastamento', 'Afastamento INSS'],
+    ];
+    const instructions = [[], ['INSTRUÇÕES:'], ['Status válidos: presente, falta_injustificada, falta_justificada, atestado, extra, ferias, afastamento, abono, banco_horas'], ['O campo Nome deve corresponder exatamente ao nome cadastrado no sistema.'], ['A Data deve estar no formato AAAA-MM-DD (ex: 2025-01-15).']];
+    const ws = XLSX.utils.aoa_to_sheet([...header, ...examples, ...instructions]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 14 }, { wch: 22 }, { wch: 35 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ponto');
+    XLSX.writeFile(wb, 'modelo_ponto.xlsx');
+  }
+
+  function downloadTemplateFerias() {
+    const header = [['Nome', 'Dias', 'Mês', 'Início', 'Fim', 'Observação']];
+    const example = [['João Silva', 30, 'Janeiro', '2025-01-05', '2025-02-04', 'Férias regulares']];
+    const ws = XLSX.utils.aoa_to_sheet([...header, ...example]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 8 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 25 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Férias');
+    XLSX.writeFile(wb, 'modelo_ferias.xlsx');
+  }
+
+  function downloadTemplateExtras() {
+    const header = [['Nome', 'Início Período', 'Fim Período', 'Extras Realizadas', 'Máximo Extras']];
+    const example = [['João Silva', '2025-01-01', '2025-01-31', 1, 3]];
+    const ws = XLSX.utils.aoa_to_sheet([...header, ...example]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 15 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Extras');
+    XLSX.writeFile(wb, 'modelo_extras.xlsx');
+  }
+
     <div className="space-y-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between flex-wrap gap-3">
