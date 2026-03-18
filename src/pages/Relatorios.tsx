@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { setorLabels, FeedbackSetor } from '@/lib/feedbackData';
+import * as XLSX from 'xlsx';
 
 interface FeedbackRow {
   id: string; titulo: string; autor: string; setor: string; status: string;
