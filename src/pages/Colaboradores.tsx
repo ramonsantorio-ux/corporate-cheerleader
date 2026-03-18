@@ -99,15 +99,6 @@ export default function Colaboradores() {
     return { url: supabase.storage.from('documentos').getPublicUrl(fileName).data.publicUrl, name: file.name };
   }
 
-  function downloadTemplate() {
-    const templateData = [
-      { Nome: 'João da Silva', Email: 'joao@empresa.com', Cargo: 'Encarregado', Departamento: 'Contrato Porto', 'Data Admissão': '2024-01-15', Escolaridade: 'Ensino Superior Completo', Graduação: 'Engenharia', 'Pós-Graduação': 'Não', 'Tipo Pós-Graduação': '', Turno: 'Dia A', Letra: 'A' },
-    ];
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
-    XLSX.writeFile(wb, 'modelo_cadastro_funcionarios.xlsx');
-  }
 
   function parseTurno(raw: string): string {
     const lower = raw.toLowerCase().trim();
