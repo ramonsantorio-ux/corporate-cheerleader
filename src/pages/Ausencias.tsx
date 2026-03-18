@@ -767,9 +767,6 @@ export default function PontoFerias() {
             </Dialog>
 
             <Dialog open={vacDialogOpen} onOpenChange={setVacDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline"><Sun className="w-4 h-4 mr-2" />Registrar Férias</Button>
-              </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Registrar / Atualizar Férias</DialogTitle>
