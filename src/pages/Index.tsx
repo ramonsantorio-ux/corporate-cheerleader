@@ -25,8 +25,10 @@ interface AttendanceRow { id: string; employee_id: string; date: string; status:
 interface VacationRow { id: string; employee_id: string; start_date: string | null; end_date: string | null; }
 interface WarningRow { id: string; employee_id: string; date: string; applied: boolean; }
 interface EvalRow { id: string; evaluated_name: string; status: string; completed_at: string | null; }
-interface MeetingRow { id: string; employee_id: string; meeting_date: string; status: string; }
+interface MeetingRow { id: string; employee_id: string; meeting_date: string; status: string; meeting_type: string; }
 interface EventRow { id: string; event_date: string; involved_name: string; }
+interface ActionItemRow { id: string; meeting_id: string; status: string; }
+interface AttendeeRow { id: string; meeting_id: string; employee_id: string; present: boolean; }
 
 const CHART_COLORS = [
   'hsl(200, 80%, 38%)', 'hsl(155, 60%, 38%)', 'hsl(38, 90%, 50%)',
@@ -62,6 +64,8 @@ export default function Index() {
   const [evaluations, setEvaluations] = useState<EvalRow[]>([]);
   const [meetings, setMeetings] = useState<MeetingRow[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [meetingActions, setMeetingActions] = useState<ActionItemRow[]>([]);
+  const [meetingAttendees, setMeetingAttendees] = useState<AttendeeRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Employee filter
@@ -72,15 +76,17 @@ export default function Index() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [fRes, fbRes, attRes, vacRes, warnRes, evalRes, meetRes, evtRes] = await Promise.all([
+      const [fRes, fbRes, attRes, vacRes, warnRes, evalRes, meetRes, evtRes, mActRes, mAttRes] = await Promise.all([
         supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, turno, letra, data_admissao').order('nome'),
         supabase.from('feedbacks').select('id, setor, status, prioridade, criado_em, autor'),
         supabase.from('daily_attendance').select('id, employee_id, date, status').gte('date', period.start).lte('date', period.end),
         supabase.from('vacation_control').select('id, employee_id, start_date, end_date'),
         supabase.from('employee_warnings').select('id, employee_id, date, applied').gte('date', period.start).lte('date', period.end),
         supabase.from('evaluations').select('id, evaluated_name, status, completed_at'),
-        supabase.from('meetings').select('id, employee_id, meeting_date, status').gte('meeting_date', period.start).lte('meeting_date', period.end),
+        supabase.from('meetings').select('id, employee_id, meeting_date, status, meeting_type').gte('meeting_date', period.start).lte('meeting_date', period.end),
         supabase.from('events').select('id, event_date, involved_name').gte('event_date', period.start).lte('event_date', period.end),
+        supabase.from('meeting_action_items').select('id, meeting_id, status'),
+        supabase.from('meeting_attendees').select('id, meeting_id, employee_id, present'),
       ]);
       setFuncionarios((fRes.data || []) as Func[]);
       setFeedbacks((fbRes.data || []) as FeedbackRow[]);
@@ -90,6 +96,8 @@ export default function Index() {
       setEvaluations((evalRes.data || []) as EvalRow[]);
       setMeetings((meetRes.data || []) as MeetingRow[]);
       setEvents((evtRes.data || []) as EventRow[]);
+      setMeetingActions((mActRes.data || []) as ActionItemRow[]);
+      setMeetingAttendees((mAttRes.data || []) as AttendeeRow[]);
       setLoading(false);
     }
     load();
@@ -170,6 +178,36 @@ export default function Index() {
   const meetingsScheduled = filteredMeetings.length;
 
   const totalEvents = filteredEvents.length;
+
+  // ─── Meeting KPIs (Mensal Operacional + Actions) ──────────────────
+  const meetingKpis = useMemo(() => {
+    const leaderCargos = ['gerente operacional', 'coordenador operacional', 'encarregado operacional', 'analista de controle', 'supervisor'];
+    const leaders = funcionarios.filter(f => leaderCargos.some(c => f.cargo.toLowerCase().includes(c)));
+
+    const mensalMeetings = filteredMeetings.filter(m => m.meeting_type === 'mensal_operacional');
+    const monthsWithMensal = new Set(mensalMeetings.map(m => m.meeting_date.substring(0, 7))).size;
+    const startDate = new Date(period.start);
+    const endDate = new Date(period.end);
+    let expectedMonths = 0;
+    const d = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (d <= endDate) { expectedMonths++; d.setMonth(d.getMonth() + 1); }
+    const mensalRate = expectedMonths > 0 ? Math.round((monthsWithMensal / expectedMonths) * 100) : 0;
+
+    const mensalIds = new Set(mensalMeetings.map(m => m.id));
+    const leaderIds = new Set(leaders.map(f => f.id));
+    const attendedLeaders = new Set(
+      meetingAttendees.filter(a => mensalIds.has(a.meeting_id) && a.present && leaderIds.has(a.employee_id)).map(a => a.employee_id)
+    );
+    const leaderCoverage = leaderIds.size > 0 ? Math.round((attendedLeaders.size / leaderIds.size) * 100) : 0;
+
+    const meetingIds = new Set(filteredMeetings.map(m => m.id));
+    const periodActions = meetingActions.filter(a => meetingIds.has(a.meeting_id));
+    const pendentes = periodActions.filter(a => a.status === 'pendente').length;
+    const concluidas = periodActions.filter(a => a.status === 'concluido').length;
+    const conclusionRate = periodActions.length > 0 ? Math.round((concluidas / periodActions.length) * 100) : 0;
+
+    return { mensalRate, monthsWithMensal, expectedMonths, leaderCoverage, attendedLeaders: attendedLeaders.size, totalLeaders: leaderIds.size, pendentes, concluidas, conclusionRate, totalActions: periodActions.length };
+  }, [filteredMeetings, funcionarios, meetingActions, meetingAttendees, period]);
 
   // ─── Chart data ───────────────────────────────────────────────────────
   const fbByPriority = useMemo(() => {
@@ -603,6 +641,14 @@ export default function Index() {
             </div>
           </div>
         </motion.div>
+      </div>
+
+      {/* ═══ ROW 5 — Meeting KPIs (Reunião Mensal Operacional) ═══ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Mensal Operacional" value={`${meetingKpis.mensalRate}%`} change={`${meetingKpis.monthsWithMensal}/${meetingKpis.expectedMonths} meses realizados`} changeType={meetingKpis.mensalRate >= 80 ? 'positive' : 'negative'} icon={CalendarDays} delay={0.57} />
+        <StatCard title="Cobertura Liderança" value={`${meetingKpis.leaderCoverage}%`} change={`${meetingKpis.attendedLeaders}/${meetingKpis.totalLeaders} líderes presentes`} changeType={meetingKpis.leaderCoverage >= 80 ? 'positive' : 'negative'} icon={UserCheck} delay={0.6} />
+        <StatCard title="Ações Pendentes" value={meetingKpis.pendentes} change={`${meetingKpis.totalActions} total de ações`} changeType={meetingKpis.pendentes > 5 ? 'negative' : 'positive'} icon={Target} delay={0.63} />
+        <StatCard title="Conclusão de Ações" value={`${meetingKpis.conclusionRate}%`} change={`${meetingKpis.concluidas}/${meetingKpis.totalActions} concluídas`} changeType={meetingKpis.conclusionRate >= 70 ? 'positive' : 'negative'} icon={CheckCircle2} delay={0.66} />
       </div>
 
       {/* ═══ Department FB Performance (only when no employee selected) ═══ */}

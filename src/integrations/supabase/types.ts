@@ -792,6 +792,136 @@ export type Database = {
         }
         Relationships: []
       }
+      meeting_action_items: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          how: string | null
+          how_much: string | null
+          id: string
+          meeting_id: string
+          status: string
+          updated_at: string
+          what: string
+          when: string | null
+          where_location: string | null
+          who: string
+          why: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          how?: string | null
+          how_much?: string | null
+          id?: string
+          meeting_id: string
+          status?: string
+          updated_at?: string
+          what?: string
+          when?: string | null
+          where_location?: string | null
+          who?: string
+          why?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          how?: string | null
+          how_much?: string | null
+          id?: string
+          meeting_id?: string
+          status?: string
+          updated_at?: string
+          what?: string
+          when?: string | null
+          where_location?: string | null
+          who?: string
+          why?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_action_items_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_attendees: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          meeting_id: string
+          present: boolean
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          meeting_id: string
+          present?: boolean
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          meeting_id?: string
+          present?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendees_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendees_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          file_name: string
+          file_url: string
+          id: string
+          meeting_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          file_url: string
+          id?: string
+          meeting_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          meeting_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_documents_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meetings: {
         Row: {
           action_items: string | null
@@ -799,9 +929,12 @@ export type Database = {
           employee_id: string
           id: string
           manager_name: string
+          material_url: string | null
           meeting_date: string
+          meeting_type: string
           notes: string | null
           status: string
+          title: string | null
         }
         Insert: {
           action_items?: string | null
@@ -809,9 +942,12 @@ export type Database = {
           employee_id: string
           id?: string
           manager_name: string
+          material_url?: string | null
           meeting_date?: string
+          meeting_type?: string
           notes?: string | null
           status?: string
+          title?: string | null
         }
         Update: {
           action_items?: string | null
@@ -819,9 +955,12 @@ export type Database = {
           employee_id?: string
           id?: string
           manager_name?: string
+          material_url?: string | null
           meeting_date?: string
+          meeting_type?: string
           notes?: string | null
           status?: string
+          title?: string | null
         }
         Relationships: [
           {
