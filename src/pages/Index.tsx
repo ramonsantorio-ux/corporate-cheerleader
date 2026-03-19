@@ -64,6 +64,8 @@ export default function Index() {
   const [evaluations, setEvaluations] = useState<EvalRow[]>([]);
   const [meetings, setMeetings] = useState<MeetingRow[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [meetingActions, setMeetingActions] = useState<ActionItemRow[]>([]);
+  const [meetingAttendees, setMeetingAttendees] = useState<AttendeeRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Employee filter
