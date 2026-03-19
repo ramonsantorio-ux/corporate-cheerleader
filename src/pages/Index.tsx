@@ -643,6 +643,14 @@ export default function Index() {
         </motion.div>
       </div>
 
+      {/* ═══ ROW 5 — Meeting KPIs (Reunião Mensal Operacional) ═══ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Mensal Operacional" value={`${meetingKpis.mensalRate}%`} change={`${meetingKpis.monthsWithMensal}/${meetingKpis.expectedMonths} meses realizados`} changeType={meetingKpis.mensalRate >= 80 ? 'positive' : 'negative'} icon={CalendarDays} delay={0.57} />
+        <StatCard title="Cobertura Liderança" value={`${meetingKpis.leaderCoverage}%`} change={`${meetingKpis.attendedLeaders}/${meetingKpis.totalLeaders} líderes presentes`} changeType={meetingKpis.leaderCoverage >= 80 ? 'positive' : 'negative'} icon={UserCheck} delay={0.6} />
+        <StatCard title="Ações Pendentes" value={meetingKpis.pendentes} change={`${meetingKpis.totalActions} total de ações`} changeType={meetingKpis.pendentes > 5 ? 'negative' : 'positive'} icon={Target} delay={0.63} />
+        <StatCard title="Conclusão de Ações" value={`${meetingKpis.conclusionRate}%`} change={`${meetingKpis.concluidas}/${meetingKpis.totalActions} concluídas`} changeType={meetingKpis.conclusionRate >= 70 ? 'positive' : 'negative'} icon={CheckCircle2} delay={0.66} />
+      </div>
+
       {/* ═══ Department FB Performance (only when no employee selected) ═══ */}
       {!sel && deptFbPerformance.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="corporate-section">
