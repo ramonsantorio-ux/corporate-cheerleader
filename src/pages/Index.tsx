@@ -96,6 +96,8 @@ export default function Index() {
       setEvaluations((evalRes.data || []) as EvalRow[]);
       setMeetings((meetRes.data || []) as MeetingRow[]);
       setEvents((evtRes.data || []) as EventRow[]);
+      setMeetingActions((mActRes.data || []) as ActionItemRow[]);
+      setMeetingAttendees((mAttRes.data || []) as AttendeeRow[]);
       setLoading(false);
     }
     load();
