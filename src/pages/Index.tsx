@@ -76,15 +76,17 @@ export default function Index() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [fRes, fbRes, attRes, vacRes, warnRes, evalRes, meetRes, evtRes] = await Promise.all([
+      const [fRes, fbRes, attRes, vacRes, warnRes, evalRes, meetRes, evtRes, mActRes, mAttRes] = await Promise.all([
         supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, turno, letra, data_admissao').order('nome'),
         supabase.from('feedbacks').select('id, setor, status, prioridade, criado_em, autor'),
         supabase.from('daily_attendance').select('id, employee_id, date, status').gte('date', period.start).lte('date', period.end),
         supabase.from('vacation_control').select('id, employee_id, start_date, end_date'),
         supabase.from('employee_warnings').select('id, employee_id, date, applied').gte('date', period.start).lte('date', period.end),
         supabase.from('evaluations').select('id, evaluated_name, status, completed_at'),
-        supabase.from('meetings').select('id, employee_id, meeting_date, status').gte('meeting_date', period.start).lte('meeting_date', period.end),
+        supabase.from('meetings').select('id, employee_id, meeting_date, status, meeting_type').gte('meeting_date', period.start).lte('meeting_date', period.end),
         supabase.from('events').select('id, event_date, involved_name').gte('event_date', period.start).lte('event_date', period.end),
+        supabase.from('meeting_action_items').select('id, meeting_id, status'),
+        supabase.from('meeting_attendees').select('id, meeting_id, employee_id, present'),
       ]);
       setFuncionarios((fRes.data || []) as Func[]);
       setFeedbacks((fbRes.data || []) as FeedbackRow[]);
