@@ -25,8 +25,10 @@ interface AttendanceRow { id: string; employee_id: string; date: string; status:
 interface VacationRow { id: string; employee_id: string; start_date: string | null; end_date: string | null; }
 interface WarningRow { id: string; employee_id: string; date: string; applied: boolean; }
 interface EvalRow { id: string; evaluated_name: string; status: string; completed_at: string | null; }
-interface MeetingRow { id: string; employee_id: string; meeting_date: string; status: string; }
+interface MeetingRow { id: string; employee_id: string; meeting_date: string; status: string; meeting_type: string; }
 interface EventRow { id: string; event_date: string; involved_name: string; }
+interface ActionItemRow { id: string; meeting_id: string; status: string; }
+interface AttendeeRow { id: string; meeting_id: string; employee_id: string; present: boolean; }
 
 const CHART_COLORS = [
   'hsl(200, 80%, 38%)', 'hsl(155, 60%, 38%)', 'hsl(38, 90%, 50%)',
