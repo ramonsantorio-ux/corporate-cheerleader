@@ -179,6 +179,36 @@ export default function Index() {
 
   const totalEvents = filteredEvents.length;
 
+  // ─── Meeting KPIs (Mensal Operacional + Actions) ──────────────────
+  const meetingKpis = useMemo(() => {
+    const leaderCargos = ['gerente operacional', 'coordenador operacional', 'encarregado operacional', 'analista de controle', 'supervisor'];
+    const leaders = funcionarios.filter(f => leaderCargos.some(c => f.cargo.toLowerCase().includes(c)));
+
+    const mensalMeetings = filteredMeetings.filter(m => m.meeting_type === 'mensal_operacional');
+    const monthsWithMensal = new Set(mensalMeetings.map(m => m.meeting_date.substring(0, 7))).size;
+    const startDate = new Date(period.start);
+    const endDate = new Date(period.end);
+    let expectedMonths = 0;
+    const d = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (d <= endDate) { expectedMonths++; d.setMonth(d.getMonth() + 1); }
+    const mensalRate = expectedMonths > 0 ? Math.round((monthsWithMensal / expectedMonths) * 100) : 0;
+
+    const mensalIds = new Set(mensalMeetings.map(m => m.id));
+    const leaderIds = new Set(leaders.map(f => f.id));
+    const attendedLeaders = new Set(
+      meetingAttendees.filter(a => mensalIds.has(a.meeting_id) && a.present && leaderIds.has(a.employee_id)).map(a => a.employee_id)
+    );
+    const leaderCoverage = leaderIds.size > 0 ? Math.round((attendedLeaders.size / leaderIds.size) * 100) : 0;
+
+    const meetingIds = new Set(filteredMeetings.map(m => m.id));
+    const periodActions = meetingActions.filter(a => meetingIds.has(a.meeting_id));
+    const pendentes = periodActions.filter(a => a.status === 'pendente').length;
+    const concluidas = periodActions.filter(a => a.status === 'concluido').length;
+    const conclusionRate = periodActions.length > 0 ? Math.round((concluidas / periodActions.length) * 100) : 0;
+
+    return { mensalRate, monthsWithMensal, expectedMonths, leaderCoverage, attendedLeaders: attendedLeaders.size, totalLeaders: leaderIds.size, pendentes, concluidas, conclusionRate, totalActions: periodActions.length };
+  }, [filteredMeetings, funcionarios, meetingActions, meetingAttendees, period]);
+
   // ─── Chart data ───────────────────────────────────────────────────────
   const fbByPriority = useMemo(() => {
     const counts: Record<string, number> = {};
