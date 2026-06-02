@@ -263,7 +263,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
     <>
             <form onSubmit={handleSaveMedicao} className="space-y-6">
               
-              <div className="bg-muted/30 p-5 rounded-xl border border-border/50 grid grid-cols-2 gap-5">
+              <div className="bg-muted/30 p-5 rounded-xl border border-border/50 grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase text-muted-foreground">Mês de Referência</Label>
                   <Input placeholder="Ex: Mai/2026" required value={formData.mes} onChange={e => setFormData({...formData, mes: e.target.value})} className="bg-background" />
@@ -276,7 +276,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
 
               <div className="bg-success/5 p-5 rounded-xl border border-success/20">
                 <h4 className="font-bold text-sm mb-4 flex items-center gap-2 text-success"><DollarSign className="w-4 h-4" /> Receitas</h4>
-                <div className="grid grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                   <div className="space-y-2">
                     <Label className="text-xs font-bold uppercase text-muted-foreground">Fat. Locação</Label>
                     <Input type="text" placeholder="R$ 0,00" required value={formatCurrencyInput(formData.fatLocacao)} onChange={e => setFormData({...formData, fatLocacao: parseCurrencyInput(e.target.value)})} className="bg-background" />
@@ -305,7 +305,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.metaFolha)} onChange={e => setFormData({...formData, metaFolha: parseCurrencyInput(e.target.value)})} className="bg-background h-6 w-28 text-xs font-bold text-primary border-primary/30" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2 border border-border/50 p-3 rounded-lg bg-muted/10">
                         <Label className="text-xs text-muted-foreground font-semibold">Folha de Pagamento</Label>
                         <div className="flex gap-2">
@@ -325,7 +325,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-3 mt-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
                       
                       
                       <div className="space-y-2">
@@ -339,7 +339,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                   {/* Encargos */}
                   <div>
                     <h5 className="text-xs font-bold uppercase text-muted-foreground mb-3 border-b border-warning/20 pb-1">Encargos</h5>
-                    <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground font-semibold">INSS</Label>
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.encargosInss)} onChange={e => setFormData({...formData, encargosInss: parseCurrencyInput(e.target.value)})} className="bg-background" />
@@ -354,7 +354,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                   {/* Benefícios */}
                   <div>
                     <h5 className="text-xs font-bold uppercase text-muted-foreground mb-3 border-b border-warning/20 pb-1">Benefícios</h5>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground font-semibold">Café da Manhã</Label>
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.beneficioCafeDaManha)} onChange={e => setFormData({...formData, beneficioCafeDaManha: parseCurrencyInput(e.target.value)})} className="bg-background" />
@@ -399,7 +399,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.metaImpostos)} onChange={e => setFormData({...formData, metaImpostos: parseCurrencyInput(e.target.value)})} className="bg-background h-6 w-28 text-xs font-bold text-primary border-primary/30" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                       <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground font-semibold">PIS</Label>
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.impostoPis)} onChange={e => setFormData({...formData, impostoPis: parseCurrencyInput(e.target.value)})} className="bg-background" />
@@ -432,7 +432,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.metaManutencao)} onChange={e => setFormData({...formData, metaManutencao: parseCurrencyInput(e.target.value)})} className="bg-background h-6 w-28 text-xs font-bold text-primary border-primary/30" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-4 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
                       <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground font-semibold">Peças</Label>
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.manutencaoPecas)} onChange={e => setFormData({...formData, manutencaoPecas: parseCurrencyInput(e.target.value)})} className="bg-background" />
@@ -469,7 +469,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.metaCombustivel)} onChange={e => setFormData({...formData, metaCombustivel: parseCurrencyInput(e.target.value)})} className="bg-background h-6 w-28 text-xs font-bold text-primary border-primary/30" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                       <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground font-semibold">Diesel S10</Label>
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.combustivelDieselS10)} onChange={e => setFormData({...formData, combustivelDieselS10: parseCurrencyInput(e.target.value)})} className="bg-background" />
@@ -494,7 +494,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.metaSeguranca)} onChange={e => setFormData({...formData, metaSeguranca: parseCurrencyInput(e.target.value)})} className="bg-background h-6 w-28 text-xs font-bold text-primary border-primary/30" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground font-semibold">Uniforme</Label>
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.uniforme)} onChange={e => setFormData({...formData, uniforme: parseCurrencyInput(e.target.value)})} className="bg-background" />
@@ -515,7 +515,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.metaMateriais)} onChange={e => setFormData({...formData, metaMateriais: parseCurrencyInput(e.target.value)})} className="bg-background h-6 w-28 text-xs font-bold text-primary border-primary/30" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
                         <Label className="text-xs text-muted-foreground font-semibold">Mat. de Escritório</Label>
                         <Input type="text" placeholder="R$ 0,00" value={formatCurrencyInput(formData.escritorioMaterial)} onChange={e => setFormData({...formData, escritorioMaterial: parseCurrencyInput(e.target.value)})} className="bg-background" />

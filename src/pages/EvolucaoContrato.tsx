@@ -712,7 +712,7 @@ export default function EvolucaoContrato() {
             <div className="space-y-6 pb-10">
               
               {/* KPIs do Mês */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl border border-primary/20 shadow-sm transition-all duration-300 hover:shadow-md">
                   <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Aderência SLA</p>
                   <p className={`text-2xl font-black ${detalhesMedicao.aderencia >= 95 ? 'text-success' : 'text-destructive'}`}>{detalhesMedicao.aderencia}%</p>
@@ -1206,7 +1206,7 @@ export default function EvolucaoContrato() {
               <Label className="text-muted-foreground text-xs uppercase">Motivo</Label>
               <p className="font-medium text-sm">{notificacaoDetalhe?.motivo}</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-muted-foreground text-xs uppercase">Data Recebimento</Label>
                 <p className="font-medium text-sm">{notificacaoDetalhe?.dataStr || 'N/A'}</p>

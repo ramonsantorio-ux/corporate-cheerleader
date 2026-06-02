@@ -480,7 +480,7 @@ export default function Index() {
                 <Legend iconType="circle" iconSize={8} formatter={(value: string) => <span className="text-xs text-muted-foreground">{value}</span>} />
               </RadialBarChart>
             </ResponsiveContainer>
-            <div className="grid grid-cols-3 gap-3 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
               {gaugeData.map(g => (
                 <div key={g.name} className="text-center">
                   <p className="text-2xl font-bold text-foreground">{g.value}%</p>
