@@ -1066,6 +1066,7 @@ export default function EvolucaoContrato() {
             />
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {dashboardContent}
