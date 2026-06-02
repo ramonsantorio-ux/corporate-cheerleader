@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff } from "lucide-react";
+import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
@@ -86,10 +86,11 @@ interface Medicao {
 }
 
 const mockData: Medicao[] = [
-  { id: 1, mes: 'Jan/2026', aderencia: 98.5, fatLocacao: 100000, fatMaoDeObra: 50000, eventuais: 5000, descontos: [], multas: [], notificacoes: [], custoFolha: 80000, horasExtras: 1500 },
-  { id: 2, mes: 'Fev/2026', aderencia: 97.0, fatLocacao: 100000, fatMaoDeObra: 50000, eventuais: 2000, descontos: [{motivo: 'Atraso na entrega', valor: 1500}], multas: [], notificacoes: [{motivo: 'Reclamação de uniforme'}], custoFolha: 81000, horasExtras: 2000 },
-  { id: 3, mes: 'Mar/2026', aderencia: 94.5, fatLocacao: 100000, fatMaoDeObra: 50000, eventuais: 0, descontos: [{motivo: 'Equipamento inoperante', valor: 5000}], multas: [{motivo: 'Descumprimento grave de SLA', valor: 2000}], notificacoes: [{motivo: 'Falta sem substituição'}, {motivo: 'Atraso reincidente'}, {motivo: 'Postura inadequada'}], custoFolha: 82000, horasExtras: 3500 },
-  { id: 4, mes: 'Abr/2026', aderencia: 99.0, fatLocacao: 100000, fatMaoDeObra: 50000, eventuais: 8000, descontos: [], multas: [], notificacoes: [], custoFolha: 80000, horasExtras: 1000 },
+  { id: 1, mes: 'Dez/2025', aderencia: 95.91, fatLocacao: 2517170.57, fatMaoDeObra: 0, eventuais: 0, descontos: [], multas: [], notificacoes: [], custoFolha: 0, horasExtras: 0, impostoInss: 0, impostoPis: 0, manutencaoPecas: 0, manutencaoServicos: 0, combustivelDieselS10: 0, escritorioMaterial: 0, uniforme: 0 },
+  { id: 2, mes: 'Jan/2026', aderencia: 96.54, fatLocacao: 2655566.89, fatMaoDeObra: 0, eventuais: 0, descontos: [], multas: [], notificacoes: [], custoFolha: 0, horasExtras: 0, impostoInss: 0, impostoPis: 0, manutencaoPecas: 0, manutencaoServicos: 0, combustivelDieselS10: 0, escritorioMaterial: 0, uniforme: 0 },
+  { id: 3, mes: 'Fev/2026', aderencia: 96.03, fatLocacao: 2653424.65, fatMaoDeObra: 0, eventuais: 0, descontos: [], multas: [], notificacoes: [], custoFolha: 0, horasExtras: 0, impostoInss: 0, impostoPis: 0, manutencaoPecas: 0, manutencaoServicos: 0, combustivelDieselS10: 0, escritorioMaterial: 0, uniforme: 0 },
+  { id: 4, mes: 'Mar/2026', aderencia: 95.25, fatLocacao: 2486654.61, fatMaoDeObra: 0, eventuais: 0, descontos: [], multas: [], notificacoes: [], custoFolha: 0, horasExtras: 0, impostoInss: 0, impostoPis: 0, manutencaoPecas: 0, manutencaoServicos: 0, combustivelDieselS10: 0, escritorioMaterial: 0, uniforme: 0 },
+  { id: 5, mes: 'Abr/2026', aderencia: 97.39, fatLocacao: 2675973.58, fatMaoDeObra: 0, eventuais: 0, descontos: [], multas: [], notificacoes: [], custoFolha: 898438.87, horasExtras: 0, impostoInss: 0, impostoPis: 0, manutencaoPecas: 175543.47, manutencaoServicos: 0, combustivelDieselS10: 232597.89, escritorioMaterial: 0, uniforme: 0 }
 ];
 
 export const LISTA_EQUIPAMENTOS = [
@@ -1043,12 +1044,18 @@ export default function EvolucaoContrato() {
           </p>
         </div>
         
-        <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); }}>
-          <DialogTrigger asChild>
-            <Button onClick={handleOpenModal} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md"><Calculator className="w-4 h-4" /> Lançar Fechamento</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader className="mb-4">
+        <div className="flex gap-2">
+          <Button onClick={() => { localStorage.removeItem('corporate_cheerleader_medicoes'); window.location.reload(); }} variant="outline" className="gap-2 border-primary/50 text-primary">
+            <RefreshCcw className="w-4 h-4" />
+            Sincronizar Dados
+          </Button>
+
+          <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); }}>
+            <DialogTrigger asChild>
+              <Button onClick={handleOpenModal} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md"><Calculator className="w-4 h-4" /> Lançar Fechamento</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader className="mb-4">
               <DialogTitle className="text-xl flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> {editingId ? 'Editar Medição Mensal' : 'Lançar Medição Mensal'}</DialogTitle>
               <p className="text-sm text-muted-foreground">Insira os resultados operacionais e financeiros referentes ao fechamento do mês.</p>
             </DialogHeader>
