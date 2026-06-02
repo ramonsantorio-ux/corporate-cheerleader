@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw } from "lucide-react";
+import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
@@ -212,6 +212,28 @@ export default function EvolucaoContrato() {
     setIsModalOpen(true);
   };
 
+  const handleExport = () => {
+    const data = localStorage.getItem('corporate_cheerleader_medicoes');
+    const blob = new Blob([data || '[]'], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'backup_corporate_cheerleader.json';
+    a.click();
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      localStorage.setItem('corporate_cheerleader_medicoes', content);
+      window.location.reload();
+    };
+    reader.readAsText(file);
+  };
+
   const handleEdit = (m: Medicao) => {
     setEditingId(m.id);
     setIsModalOpen(true);
@@ -355,7 +377,7 @@ export default function EvolucaoContrato() {
     <>
       {/* KPI TOP CARDS */}
       {lastMonth && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="flex flex-wrap gap-4 [&>*]:flex-1 [&>*]:min-w-[200px]">
           <div className={`glass-card rounded-xl p-4 border-l-4 ${lastMonth.aderencia < 95 ? 'border-l-destructive bg-destructive/5' : 'border-l-primary'}`}>
             <div className="flex items-center justify-between mb-2">
               <p className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${lastMonth.aderencia < 95 ? 'text-destructive' : 'text-muted-foreground'}`}>
@@ -1044,10 +1066,22 @@ export default function EvolucaoContrato() {
           </p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <input type="file" id="import-backup" accept=".json" className="hidden" onChange={handleImport} />
+          
+          <Button onClick={() => document.getElementById('import-backup')?.click()} variant="outline" className="gap-2 text-muted-foreground hover:text-foreground">
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">Importar Backup</span>
+          </Button>
+          
+          <Button onClick={handleExport} variant="outline" className="gap-2 text-muted-foreground hover:text-foreground">
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Exportar Backup</span>
+          </Button>
+
           <Button onClick={() => { localStorage.removeItem('corporate_cheerleader_medicoes'); window.location.reload(); }} variant="outline" className="gap-2 border-primary/50 text-primary">
             <RefreshCcw className="w-4 h-4" />
-            Sincronizar Dados
+            <span className="hidden sm:inline">Restaurar Padrão</span>
           </Button>
 
           <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); }}>
