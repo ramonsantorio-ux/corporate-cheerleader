@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Users, Eye, Plus, Edit, Trash2, Loader2, Camera, X, FileUp, FileText, Download, Upload } from 'lucide-react';
+import { Search, Users, Eye, Plus, Edit, Trash2, Loader2, Camera, X, FileUp, FileText, Download, Upload, CheckSquare } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Input } from '@/components/ui/input';
 import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -49,6 +50,9 @@ export default function Colaboradores() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const emptyForm = { nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: 'none' };
   const [newData, setNewData] = useState(emptyForm);
@@ -82,6 +86,52 @@ export default function Colaboradores() {
     const matchTurno = turnoFilter === 'todos' || f.turno === turnoFilter;
     return matchSearch && matchDept && matchTurno;
   });
+
+  const allFilteredSelected = filtered.length > 0 && filtered.every(f => selectedIds.has(f.id));
+
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (allFilteredSelected) {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        filtered.forEach(f => next.delete(f.id));
+        return next;
+      });
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        filtered.forEach(f => next.add(f.id));
+        return next;
+      });
+    }
+  }
+
+  async function handleBulkDelete() {
+    setBulkDeleting(true);
+    const ids = Array.from(selectedIds);
+    let deleted = 0;
+    for (const id of ids) {
+      const { error } = await supabase.from('funcionarios').delete().eq('id', id);
+      if (!error) deleted++;
+    }
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    setSelectedIds(new Set());
+    if (deleted > 0) {
+      toast.success(`${deleted} funcionário(s) excluído(s) com sucesso!`);
+      fetchFuncionarios(true);
+    } else {
+      toast.error('Erro ao excluir funcionários');
+    }
+  }
 
   async function uploadPhoto(file: File): Promise<string> {
     const ext = file.name.split('.').pop();
@@ -293,13 +343,43 @@ export default function Colaboradores() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground"><Users className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>Nenhum colaborador encontrado</p></div>
       ) : (
+        <>
+          {/* Bulk selection bar */}
+          <div className="flex items-center gap-3 glass-card rounded-xl p-3">
+            <Checkbox
+              checked={allFilteredSelected}
+              onCheckedChange={toggleSelectAll}
+              id="select-all-employees"
+            />
+            <label htmlFor="select-all-employees" className="text-sm font-medium cursor-pointer">
+              Selecionar todos ({filtered.length})
+            </label>
+            {selectedIds.size > 0 && (
+              <>
+                <span className="text-sm text-muted-foreground ml-auto">
+                  {selectedIds.size} selecionado(s)
+                </span>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setBulkDeleteOpen(true)}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir Selecionados
+                </Button>
+              </>
+            )}
+          </div>
         <div className="grid gap-3">
           {filtered.map((f, i) => {
             const turnoLabel = TURNOS.find(t => t.value === f.turno)?.label;
             return (
               <motion.div key={f.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                className="glass-card rounded-xl p-4 flex items-center gap-4 hover:ring-1 hover:ring-primary/30 transition-all"
+                className={`glass-card rounded-xl p-4 flex items-center gap-4 hover:ring-1 hover:ring-primary/30 transition-all ${selectedIds.has(f.id) ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
               >
+                <Checkbox
+                  checked={selectedIds.has(f.id)}
+                  onCheckedChange={() => toggleSelect(f.id)}
+                />
                 {f.foto_url ? (
                   <img src={f.foto_url} alt={f.nome} className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" />
                 ) : (
@@ -322,6 +402,7 @@ export default function Colaboradores() {
             );
           })}
         </div>
+        </>
       )}
 
       {/* Edit dialog */}
@@ -347,6 +428,24 @@ export default function Colaboradores() {
         <AlertDialogContent>
           <AlertDialogHeader><AlertDialogTitle>Excluir funcionário?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk delete confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={open => !open && setBulkDeleteOpen(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir {selectedIds.size} funcionário(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação irá excluir permanentemente os funcionários selecionados. Não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={bulkDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {bulkDeleting ? 'Excluindo...' : `Excluir ${selectedIds.size} funcionário(s)`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>

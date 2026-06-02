@@ -1,4 +1,28 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
+
+class ErrorBoundary extends React.Component<any, any> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '50px', background: 'red', color: 'white', zIndex: 9999, position: 'absolute', width: '100%', height: '100%' }}>
+          <h1>RUNTIME ERROR!</h1>
+          <pre>{this.state.error?.toString()}</pre>
+          <pre>{this.state.error?.stack}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -19,6 +43,14 @@ import Reunioes from "./pages/Reunioes";
 import Eventos from "./pages/Eventos";
 import Ausencias from "./pages/Ausencias";
 import Colaboradores from "./pages/Colaboradores";
+import Organograma from "./pages/Organograma";
+import Sucessao from "./pages/Sucessao";
+import EvolucaoContrato from "./pages/EvolucaoContrato";
+import GestaoNotificacoes from "./pages/GestaoNotificacoes";
+import DiscTest from "./pages/DiscTest";
+import Treinamentos from "./pages/Treinamentos";
+import AssessmentHub from "./pages/AssessmentHub";
+import Feedback360 from "./pages/Feedback360";
 
 
 const queryClient = new QueryClient();
@@ -55,7 +87,19 @@ function ProtectedRoutes() {
         <Route path="/reunioes" element={<Reunioes />} />
         <Route path="/eventos" element={<Eventos />} />
         <Route path="/ausencias" element={<Ausencias />} />
-        
+        <Route path="/organograma" element={<Organograma />} />
+        <Route path="/sucessao" element={<Sucessao />} />
+        <Route path="/evolucao" element={<ErrorBoundary><EvolucaoContrato /></ErrorBoundary>} />
+        <Route path="/notificacoes" element={<GestaoNotificacoes />} />
+        <Route path="/treinamentos" element={<Treinamentos />} />
+        <Route path="/assessments" element={<Treinamentos />} />
+        <Route path="/assessment/:type" element={<AssessmentHub />} />
+        <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
+        <Route path="/feedback360" element={<Feedback360 />} />
+        {/* Legacy compat */}
+        <Route path="/disc" element={<DiscTest />} />
+        <Route path="/disc/:id" element={<DiscTest />} />
+
         <Route path="/admin" element={<Admin />} />
       </Route>
       <Route path="*" element={<NotFound />} />

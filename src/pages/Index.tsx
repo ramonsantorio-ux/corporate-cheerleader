@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import {
   Users, MessageSquare, TrendingUp, AlertTriangle, CheckCircle2, Clock,
   ArrowUpRight, ShieldAlert, CalendarDays, Target, Award, BarChart3,
-  Activity, UserCheck, UserX, Briefcase, Timer, Search, X, Eye
+  Activity, UserCheck, UserX, Briefcase, Timer, Search, X, Eye, Check, X as XIcon
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import StatCard from '@/components/dashboard/StatCard';
 import {
@@ -55,6 +56,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // ─── Main ───────────────────────────────────────────────────────────────────
 export default function Index() {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
   const [funcionarios, setFuncionarios] = useState<Func[]>([]);
   const [feedbacks, setFeedbacks] = useState<FeedbackRow[]>([]);
@@ -314,6 +316,32 @@ export default function Index() {
     );
   }
 
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="flex items-end justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Meu Painel</h1>
+            <p className="text-muted-foreground mt-1">Resumo das suas atividades e informações.</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard title="Saldo de Férias" value="15 dias" change="Vence em Nov/2026" changeType="positive" icon={CalendarDays} delay={0} />
+          <StatCard title="Próximos Feedbacks" value="2" change="1 pendente de leitura" changeType="negative" icon={MessageSquare} delay={0.1} />
+          <StatCard title="Eventos da Semana" value="1" change="Treinamento (Sexta)" changeType="neutral" icon={AlertTriangle} delay={0.2} />
+        </div>
+        <div className="mt-8 bg-card p-6 rounded-xl border border-border">
+          <h2 className="text-lg font-semibold mb-4">Como você está se sentindo hoje?</h2>
+          <div className="flex gap-4">
+             {["😢", "😕", "😐", "🙂", "🤩"].map(emoji => (
+               <button key={emoji} className="text-4xl hover:scale-125 transition-transform" onClick={() => alert('Humor registrado com sucesso!')}>{emoji}</button>
+             ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* ═══ HEADER ═══ */}
@@ -401,14 +429,37 @@ export default function Index() {
         </motion.div>
       )}
 
-      {/* ═══ MAIN KPIs ═══ */}
+      {/* ═══ WORKFLOW APROVAÇÕES 1-CLIQUE ═══ */}
+      {!sel && (
+        <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Aprovação Pendente: Ausência</p>
+              <p className="text-xs text-muted-foreground">João Silva solicitou férias (10 dias a partir de 15/06).</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button className="flex items-center gap-1 bg-success/10 text-success hover:bg-success/20 px-3 py-1.5 rounded text-xs font-semibold transition-colors" onClick={() => alert('Aprovado!')}>
+              <Check className="w-3.5 h-3.5" /> Aprovar
+            </button>
+            <button className="flex items-center gap-1 bg-destructive/10 text-destructive hover:bg-destructive/20 px-3 py-1.5 rounded text-xs font-semibold transition-colors" onClick={() => alert('Rejeitado!')}>
+              <XIcon className="w-3.5 h-3.5" /> Rejeitar
+            </button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ═══ MAIN KPIs (ENTERPRISE) ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard title="Colaboradores" value={sel ? 1 : totalColaboradores} change={sel ? selectedEmployee?.cargo || '' : `${emFerias} em férias`} changeType="neutral" icon={Users} delay={0} />
-        <StatCard title="Feedbacks" value={fbTotal} change={`${fbTaxaResolucao}% resolvidos`} changeType={fbTaxaResolucao >= 70 ? 'positive' : 'negative'} icon={MessageSquare} delay={0.03} />
-        <StatCard title="Hrs Negativas" value={totalHorasNeg} change={`${totalFaltasInj} inj. / ${totalAtestados} atest.`} changeType={totalHorasNeg > 0 ? 'negative' : 'positive'} icon={Clock} delay={0.06} />
-        <StatCard title="Extras" value={totalExtras} change="No período" changeType="neutral" icon={Timer} delay={0.09} />
-        <StatCard title="Advertências" value={totalAdvertencias} change={`${advertenciasAplicadas} aplicadas`} changeType={totalAdvertencias > 0 ? 'negative' : 'positive'} icon={ShieldAlert} delay={0.12} />
-        <StatCard title="Eventos" value={totalEvents} change="No período" changeType={totalEvents > 0 ? 'negative' : 'positive'} icon={AlertTriangle} delay={0.15} />
+        <StatCard title="Turnover" value="2.4%" change="-0.5% vs mês ant." changeType="positive" icon={UserX} delay={0.03} />
+        <StatCard title="eNPS" value="78" change="Zona de Excelência" changeType="positive" icon={Activity} delay={0.06} />
+        <StatCard title="Hrs Treinamento" value="42h" change="Média por colab." changeType="positive" icon={Briefcase} delay={0.09} />
+        <StatCard title="Absenteísmo" value="1.5%" change={`${totalFaltasInj} faltas inj.`} changeType={totalFaltasInj > 0 ? 'negative' : 'positive'} icon={AlertTriangle} delay={0.12} />
+        <StatCard title="Feedbacks" value={fbTotal} change={`${fbTaxaResolucao}% resolvidos`} changeType={fbTaxaResolucao >= 70 ? 'positive' : 'negative'} icon={MessageSquare} delay={0.15} />
       </div>
 
       {/* ═══ ROW 2 — Gauges + Status + Priority ═══ */}

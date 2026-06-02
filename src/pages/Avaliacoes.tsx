@@ -131,6 +131,33 @@ export default function Avaliacoes() {
   const pieData = filtered.map(g => ({ name: g.descricao, value: g.peso }));
   const barData = filtered.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
 
+  // Agregando Resultados DISC para o cargo selecionado
+  const [discAggregation, setDiscAggregation] = useState<{name: string, value: number, fill: string}[]>([]);
+  useEffect(() => {
+    supabase.from('funcionarios').select('id, cargo').then(({ data }) => {
+      if (data) {
+        let d = 0, i = 0, s = 0, c = 0;
+        data.filter(f => !selectedCargo || f.cargo === selectedCargo).forEach(f => {
+          const savedDisc = localStorage.getItem(`disc_${f.id}`);
+          if (savedDisc) {
+            const parsed = JSON.parse(savedDisc);
+            const dom = parsed.dominant.letter;
+            if (dom === 'D') d++;
+            if (dom === 'I') i++;
+            if (dom === 'S') s++;
+            if (dom === 'C') c++;
+          }
+        });
+        setDiscAggregation([
+          { name: 'Dominância', value: d, fill: '#ef4444' },
+          { name: 'Influência', value: i, fill: '#eab308' },
+          { name: 'Estabilidade', value: s, fill: '#22c55e' },
+          { name: 'Conformidade', value: c, fill: '#3b82f6' }
+        ].filter(x => x.value > 0));
+      }
+    });
+  }, [selectedCargo]);
+
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-4">
@@ -164,7 +191,7 @@ export default function Avaliacoes() {
       ) : (
         <>
           {/* Charts row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
               className="glass-card rounded-xl p-5">
               <h2 className="text-base font-semibold text-foreground mb-4">Distribuição de Pesos</h2>
@@ -191,6 +218,26 @@ export default function Avaliacoes() {
                   <Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+              className="glass-card rounded-xl p-5 border-l-4 border-l-purple-500">
+              <h2 className="text-base font-semibold text-foreground mb-4">Perfil Comportamental (DISC)</h2>
+              {discAggregation.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={discAggregation} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={60} paddingAngle={2}>
+                      {discAggregation.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                    </Pie>
+                    <Tooltip formatter={(v: number) => `${v} Colab.`} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[280px] text-sm text-muted-foreground text-center px-4">
+                  Nenhum teste DISC realizado para os colaboradores deste cargo.
+                </div>
+              )}
             </motion.div>
           </div>
 

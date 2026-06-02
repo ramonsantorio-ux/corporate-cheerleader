@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Shield, Users, Eye, Edit, Lock, Ban, KeyRound, Check } from 'lucide-react';
+import { Plus, Shield, Users, Eye, Edit, Lock, Ban, KeyRound, Check, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -41,6 +41,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newUser, setNewUser] = useState({ email: '', password: '', full_name: '' });
+
   const [creating, setCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
   const [editPerms, setEditPerms] = useState<{ page: string; can_view: boolean; can_edit: boolean }[]>([]);
@@ -71,6 +72,9 @@ export default function Admin() {
 
     const usersWithRoles: UserWithRole[] = [];
     for (const p of profiles) {
+      // Skip deleted users
+      if (p.full_name === '__DELETED__') continue;
+
       const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', p.id);
       const { data: perms } = await supabase.from('user_permissions').select('page, can_view, can_edit').eq('user_id', p.id);
       usersWithRoles.push({
@@ -84,6 +88,35 @@ export default function Admin() {
     }
     setUsers(usersWithRoles);
     setLoading(false);
+  }
+
+  // Delete user handler
+  const [deleteUser, setDeleteUser] = useState<UserWithRole | null>(null);
+  const [savingDelete, setSavingDelete] = useState(false);
+
+  async function confirmDeleteUser() {
+    if (!deleteUser) return;
+    setSavingDelete(true);
+    try {
+      // 1. Mark profile as deleted via Edge Function (uses service role, bypasses RLS)
+      const updateRes = await supabase.functions.invoke('manage-user', {
+        body: { action: 'update', user_id: deleteUser.id, full_name: '__DELETED__', email: deleteUser.email },
+      });
+      if (updateRes.error) throw new Error(updateRes.error.message || 'Erro ao marcar perfil');
+
+      // 2. Ban the auth user so they can't login
+      const banRes = await supabase.functions.invoke('manage-user', {
+        body: { action: 'ban', user_id: deleteUser.id },
+      });
+      if (banRes.error) throw new Error(banRes.error.message || 'Erro ao desativar conta');
+
+      toast.success(`Conta de "${deleteUser.full_name}" excluída com sucesso!`);
+      setUsers(prev => prev.filter(u => u.id !== deleteUser.id));
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao excluir conta');
+    }
+    setSavingDelete(false);
+    setDeleteUser(null);
   }
 
   async function createUser() {
@@ -227,7 +260,9 @@ export default function Admin() {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Novo Usuário</Button>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" /> Novo Usuário
+            </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Criar Novo Usuário</DialogTitle></DialogHeader>
@@ -305,6 +340,14 @@ export default function Admin() {
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => openPermissions(u)}>
                   <Shield className="w-3.5 h-3.5 mr-1" /> Permissões
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteUser(u)}
+                  title="Excluir Conta"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
                 </Button>
               </div>
             </motion.div>
@@ -422,6 +465,25 @@ export default function Admin() {
             <AlertDialogCancel disabled={savingBlock}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmBlock} disabled={savingBlock}>
               {savingBlock ? 'Aguarde...' : blockAction === 'ban' ? 'Bloquear' : 'Desbloquear'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete user confirmation */}
+      <AlertDialog open={!!deleteUser} onOpenChange={(open) => !open && setDeleteUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Conta</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir permanentemente a conta de "{deleteUser?.full_name}"?
+              Esta ação não pode ser desfeita. Todos os dados do usuário serão removidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={savingDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteUser} disabled={savingDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {savingDelete ? 'Excluindo...' : 'Excluir Permanentemente'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

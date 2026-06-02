@@ -1,5 +1,6 @@
-import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock } from 'lucide-react';
+import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock, Moon, Sun } from 'lucide-react';
 import busatoGlobo from '@/assets/busato-globo.png';
+import { useTheme } from '@/components/ThemeProvider';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +30,7 @@ export default function TopBar() {
       return saved ? new Set(JSON.parse(saved)) : new Set();
     } catch { return new Set(); }
   });
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     fetchAlerts();
@@ -155,6 +157,16 @@ export default function TopBar() {
       </div>
 
       <div className="flex items-center gap-3">
+        <button
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="p-2 rounded-lg hover:bg-muted transition-colors"
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-5 h-5 text-muted-foreground" />
+          ) : (
+            <Moon className="w-5 h-5 text-muted-foreground" />
+          )}
+        </button>
         <Popover open={open} onOpenChange={handleOpen}>
           <PopoverTrigger asChild>
             <button className="relative p-2 rounded-lg hover:bg-muted transition-colors">

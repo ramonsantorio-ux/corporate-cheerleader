@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays, ShieldAlert, Award, Crown, ShieldCheck, Lightbulb, Wrench, Brain, Zap, BarChart2, CheckCircle2, User } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -18,6 +18,7 @@ import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
+import { DiscReport, MbtiReport, BigFiveReport } from '@/components/ExecutiveReports';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
@@ -188,6 +189,49 @@ export default function FuncionarioProfile() {
     if (!func) return [];
     return feedbacks.filter(f => f.autor?.toLowerCase() === func.nome.toLowerCase() || f.titulo?.toLowerCase().includes(func.nome.toLowerCase()));
   }, [feedbacks, func]);
+
+  const [badgesCounts, setBadgesCounts] = useState<Record<string, number>>({});
+  const [discResult, setDiscResult] = useState<any>(null);
+  const [mbtiResult, setMbtiResult] = useState<any>(null);
+  const [bigFiveResult, setBigFiveResult] = useState<any>(null);
+  const [gallupResult, setGallupResult] = useState<any>(null);
+  const [lpiResult, setLpiResult] = useState<any>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    const saved = localStorage.getItem(`badges_${id}`);
+    if (saved) {
+      setBadgesCounts(JSON.parse(saved));
+    } else {
+      setBadgesCounts({});
+    }
+
+    const parse = (k: string) => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch { return null; } };
+    setDiscResult(parse(`disc_${id}`));
+    setMbtiResult(parse(`mbti_${id}`));
+    setBigFiveResult(parse(`bigfive_${id}`));
+    setGallupResult(parse(`gallup_${id}`));
+    setLpiResult(parse(`lpi_${id}`));
+  }, [id]);
+
+  const handleAddBadge = (badgeId: string) => {
+    if (!id) return;
+    const newCounts = { ...badgesCounts, [badgeId]: (badgesCounts[badgeId] || 0) + 1 };
+    setBadgesCounts(newCounts);
+    localStorage.setItem(`badges_${id}`, JSON.stringify(newCounts));
+    toast({ title: 'Badge concedido!' });
+  };
+
+  const handleRemoveBadge = (e: React.MouseEvent, badgeId: string) => {
+    e.preventDefault();
+    if (!id || !badgesCounts[badgeId]) return;
+    const newCounts = { ...badgesCounts, [badgeId]: badgesCounts[badgeId] - 1 };
+    if (newCounts[badgeId] === 0) delete newCounts[badgeId];
+    setBadgesCounts(newCounts);
+    localStorage.setItem(`badges_${id}`, JSON.stringify(newCounts));
+  };
+
+  const totalBadges = useMemo(() => Object.values(badgesCounts).reduce((sum, val) => sum + val, 0), [badgesCounts]);
 
   const [fitScores, setFitScores] = useState<{ criteria: string; stage: string; score: number | null }[]>([]);
   useEffect(() => {
@@ -509,114 +553,332 @@ export default function FuncionarioProfile() {
         </Button>
       </motion.div>
 
-      {/* Header Card */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-6">
-        <div className="flex flex-col sm:flex-row gap-6 items-center">
-          <div className="relative group">
+      {/* Header Card Moderno (Bento/Lattice style) */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-2xl p-6 lg:p-8 border-t-4 border-t-primary shadow-sm relative overflow-hidden">
+        {/* Background Accent */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        
+        <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center relative z-10">
+          <div className="relative group shrink-0">
             <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
             {func.foto_url ? (
-              <img src={func.foto_url} alt={func.nome} className="w-24 h-24 rounded-full object-cover border-4 border-primary/20" />
+              <img src={func.foto_url} alt={func.nome} className="w-32 h-32 rounded-full object-cover border-4 border-background shadow-md" />
             ) : (
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-3xl">{func.nome.charAt(0)}</div>
+              <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-4xl shadow-sm border-4 border-background">{func.nome.charAt(0)}</div>
             )}
-            <button onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <button onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto} className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
               {uploadingPhoto ? <Loader2 className="w-6 h-6 text-white animate-spin" /> : <Camera className="w-6 h-6 text-white" />}
             </button>
           </div>
-          <div className="flex-1 text-center sm:text-left">
-            <h2 className="text-xl font-bold">{func.nome}</h2>
-            <p className="text-muted-foreground">{func.cargo} · {func.departamento}</p>
-            <p className="text-sm text-muted-foreground mt-1">{func.email || 'Sem e-mail'} · Admissão: {new Date(func.data_admissao).toLocaleDateString('pt-BR')}</p>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {func.escolaridade && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary"><GraduationCap className="w-3 h-3" />{func.escolaridade}</span>}
-              {func.graduacao && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-accent/50 text-accent-foreground">{func.graduacao}</span>}
-              {func.pos_graduacao && func.pos_graduacao_tipo && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-2/20 text-foreground">Pós: {func.pos_graduacao_tipo}</span>}
-              {turnoDisplay && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-3/20 text-foreground"><Briefcase className="w-3 h-3" />Turno: {turnoDisplay}</span>}
-              
-              {encarregadoNome && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-chart-4/20 text-foreground"><Users className="w-3 h-3" />Enc.: {encarregadoNome}</span>}
-              {employeeEvents.length > 0 && <span className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-warning/15 text-warning font-semibold"><AlertTriangle className="w-3 h-3" />{employeeEvents.length} evento(s)</span>}
+          
+          <div className="flex-1 space-y-3">
+            <div>
+              <h2 className="text-3xl font-black text-foreground tracking-tight">{func.nome}</h2>
+              <p className="text-lg text-primary font-medium">{func.cargo} <span className="text-muted-foreground font-normal mx-2">•</span> {func.departamento}</p>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 pt-1">
+              {func.email && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><MessageSquare className="w-3.5 h-3.5" />{func.email}</span>}
+              <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><Calendar className="w-3.5 h-3.5" />Admissão: {new Date(func.data_admissao).toLocaleDateString('pt-BR')}</span>
+              {func.escolaridade && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><GraduationCap className="w-3.5 h-3.5" />{func.escolaridade}</span>}
+              {turnoDisplay && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-chart-3/10 text-chart-3"><Briefcase className="w-3.5 h-3.5" />{turnoDisplay}</span>}
+              {encarregadoNome && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-chart-4/10 text-chart-4"><Users className="w-3.5 h-3.5" />Líder: {encarregadoNome}</span>}
             </div>
           </div>
-          <div className="flex gap-4">
-            {[
-              { label: 'Score Geral', value: score, color: 'hsl(var(--primary))' },
-              { label: 'FIT Cultural', value: scoreFit, color: 'hsl(var(--chart-2))' },
-              ...(!cargoSemMeta ? [{ label: 'Meta', value: scoreMeta, color: 'hsl(var(--chart-3))' }] : []),
-            ].map(s => (
-              <div key={s.label} className="text-center">
-                <div className="relative w-16 h-16">
-                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 80 80">
-                    <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
-                    <circle cx="40" cy="40" r="35" fill="none" stroke={s.color} strokeWidth="6" strokeDasharray={`${(s.value / 100) * 220} 220`} strokeLinecap="round" />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center"><span className="text-sm font-bold">{s.value}</span></div>
-                </div>
-                <p className="text-[10px] text-muted-foreground mt-1">{s.label}</p>
-              </div>
-            ))}
+          
+          <div className="flex flex-col gap-3 shrink-0 w-full lg:w-48">
+            <Button className="w-full justify-start shadow-sm" onClick={() => navigate('/desempenho?tab=feedbacks')}><MessageSquare className="w-4 h-4 mr-2" /> Dar Feedback</Button>
+            <Button variant="secondary" className="w-full justify-start shadow-sm" onClick={() => navigate('/reunioes')}><Calendar className="w-4 h-4 mr-2" /> Agendar 1:1</Button>
+            <Button variant="outline" className="w-full justify-start border-orange-500/30 text-orange-600 hover:bg-orange-500/10 shadow-sm" onClick={exportEmployeeDeviationsReport}>
+              <FileText className="w-4 h-4 mr-2" /> Dossiê (RH)
+            </Button>
           </div>
         </div>
       </motion.div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {[
-          { icon: MessageSquare, label: 'Feedbacks Recebidos', value: func.feedbacks_recebidos, color: 'text-primary' },
-          { icon: Target, label: 'Feedbacks Resolvidos', value: `${pctResolvido}%`, color: pctResolvido >= 70 ? 'text-success' : 'text-warning' },
-          { icon: Calendar, label: 'Reuniões 1:1', value: meetings.length, color: 'text-primary' },
-          { icon: AlertTriangle, label: 'Eventos', value: employeeEvents.length, color: employeeEvents.length > 0 ? 'text-warning' : 'text-muted-foreground' },
-          { icon: Users, label: 'Média Equipe', value: `${deptAvg}%`, color: 'text-muted-foreground' },
-        ].map((s, i) => (
-          <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="glass-card rounded-xl p-4 text-center">
-            <s.icon className={`w-6 h-6 mx-auto mb-2 ${s.color}`} />
-            <p className="text-2xl font-bold">{s.value}</p>
-            <p className="text-xs text-muted-foreground">{s.label}</p>
-          </motion.div>
-        ))}
-      </div>
-
-      {pendencias.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl p-5 border-l-4 border-warning">
-          <h3 className="font-semibold flex items-center gap-2 mb-3"><AlertTriangle className="w-5 h-5 text-warning" />Alertas e Pendências</h3>
-          <ul className="space-y-1">{pendencias.map((p, i) => <li key={i} className="text-sm text-muted-foreground flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />{p}</li>)}</ul>
-        </motion.div>
-      )}
-
-      <Tabs defaultValue={initialTab} className="w-full">
-        <TabsList className={`grid w-full ${cargoSemMeta ? 'grid-cols-6' : 'grid-cols-7'}`}>
-          <TabsTrigger value="desempenho">Desempenho</TabsTrigger>
-          <TabsTrigger value="ponto-ocorrencias">Ponto / Ocorrências</TabsTrigger>
-          <TabsTrigger value="eventos">Eventos ({employeeEvents.length})</TabsTrigger>
-          {!cargoSemMeta && <TabsTrigger value="metas">Metas</TabsTrigger>}
-          <TabsTrigger value="feedbacks">Feedbacks</TabsTrigger>
-          <TabsTrigger value="fit-cultural">Fit Cultural</TabsTrigger>
-          <TabsTrigger value="documentos">Documentos</TabsTrigger>
+      <Tabs defaultValue="visao-geral" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
+          <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
+          <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Desempenho & Metas</TabsTrigger>
+          <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil Psicométrico</TabsTrigger>
+          <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">Dossiê (RH)</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="visao-geral" className="space-y-6 mt-4">
+          {/* Bento Grid Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            
+            {/* Score Principal */}
+            <div className="kpi-card p-6 rounded-2xl md:col-span-1 flex flex-col justify-center items-center text-center space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground w-full text-left">Score de Performance</h3>
+              <div className="relative w-32 h-32 mx-auto">
+                <svg className="w-32 h-32 -rotate-90" viewBox="0 0 80 80">
+                  <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+                  <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--primary))" strokeWidth="8" strokeDasharray={`${(score / 100) * 220} 220`} strokeLinecap="round" className="drop-shadow-md" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-black">{score}</span>
+                  <span className="text-[10px] text-muted-foreground">/ 100</span>
+                </div>
+              </div>
+              <div className="flex gap-4 w-full justify-center text-xs text-muted-foreground">
+                <div className="flex flex-col"><span className="font-bold text-foreground">{scoreFit}</span> Fit</div>
+                {!cargoSemMeta && <div className="flex flex-col"><span className="font-bold text-foreground">{scoreMeta}</span> Metas</div>}
+              </div>
+            </div>
+
+            {/* Alertas e Pendências */}
+            <div className="kpi-card p-6 rounded-2xl md:col-span-2 flex flex-col">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Alertas e Pendências</h3>
+              {pendencias.length > 0 ? (
+                <ul className="space-y-3 mt-auto mb-auto">
+                  {pendencias.map((p, i) => (
+                    <li key={i} className="text-sm font-medium flex items-center gap-3 bg-warning/10 text-warning px-4 py-3 rounded-lg">
+                      <span className="w-2 h-2 rounded-full bg-warning flex-shrink-0 animate-pulse" />
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center bg-success/5 rounded-xl border border-success/10 mt-auto mb-auto py-6">
+                  <CheckCircle2 className="w-8 h-8 text-success mb-2" />
+                  <p className="text-sm font-medium text-success">Tudo em dia!</p>
+                  <p className="text-xs text-success/70">Nenhuma pendência ou alerta.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div className="md:col-span-3 lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-4">
+              <div className="kpi-card p-4 rounded-xl flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0"><MessageSquare className="w-5 h-5 text-primary" /></div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Feedbacks Recebidos</p>
+                  <p className="text-xl font-bold">{func.feedbacks_recebidos}</p>
+                </div>
+              </div>
+              <div className="kpi-card p-4 rounded-xl flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-chart-2/10 flex items-center justify-center shrink-0"><Award className="w-5 h-5 text-chart-2" /></div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Total de Badges</p>
+                  <p className="text-xl font-bold">{totalBadges}</p>
+                </div>
+              </div>
+              <div className="kpi-card p-4 rounded-xl flex items-center gap-4 col-span-2 lg:col-span-1">
+                <div className="w-10 h-10 rounded-full bg-chart-4/10 flex items-center justify-center shrink-0"><Calendar className="w-5 h-5 text-chart-4" /></div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Reuniões 1:1</p>
+                  <p className="text-xl font-bold">{meetings.length}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </TabsContent>
+
         <TabsContent value="desempenho" className="space-y-6 mt-4">
-          <div className="glass-card rounded-xl p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Comparativo com Equipe ({func.departamento})</h3>
-            <div className="space-y-3">
-              <div><div className="flex justify-between text-sm mb-1"><span>{func.nome}</span><span className="font-bold">{pctResolvido}%</span></div><Progress value={pctResolvido} className="h-3" /></div>
-              <div><div className="flex justify-between text-sm mb-1"><span>Média da equipe</span><span className="font-bold">{deptAvg}%</span></div><Progress value={deptAvg} className="h-3" /></div>
+          {/* Comparativo e Reuniões */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="glass-card rounded-xl p-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Comparativo com Equipe ({func.departamento})</h3>
+              <div className="space-y-3">
+                <div><div className="flex justify-between text-sm mb-1"><span>{func.nome}</span><span className="font-bold">{pctResolvido}%</span></div><Progress value={pctResolvido} className="h-3" /></div>
+                <div><div className="flex justify-between text-sm mb-1"><span>Média da equipe</span><span className="font-bold">{deptAvg}%</span></div><Progress value={deptAvg} className="h-3" /></div>
+              </div>
+            </div>
+            <div className="glass-card rounded-xl p-6">
+              <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Últimas Reuniões 1:1</h3>
+              {meetings.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma reunião registrada.</p> : (
+                <div className="space-y-3">{meetings.slice(0, 5).map(m => (
+                  <div key={m.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                    <Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium">{new Date(m.meeting_date).toLocaleDateString('pt-BR')} — {m.manager_name}</p><p className="text-xs text-muted-foreground truncate">{m.notes || 'Sem anotações'}</p></div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{m.status === 'completed' ? 'Concluída' : 'Agendada'}</span>
+                  </div>
+                ))}</div>
+              )}
             </div>
           </div>
-          <div className="glass-card rounded-xl p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Últimas Reuniões 1:1</h3>
-            {meetings.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma reunião registrada.</p> : (
-              <div className="space-y-3">{meetings.slice(0, 5).map(m => (
-                <div key={m.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                  <Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0"><p className="text-sm font-medium">{new Date(m.meeting_date).toLocaleDateString('pt-BR')} — {m.manager_name}</p><p className="text-xs text-muted-foreground truncate">{m.notes || 'Sem anotações'}</p></div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{m.status === 'completed' ? 'Concluída' : 'Agendada'}</span>
-                </div>
-              ))}</div>
+
+          {!cargoSemMeta && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
+                <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
+              </div>
+              {goals.length === 0 ? (
+                <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma meta encontrada para o cargo "{func.cargo}".</div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3} label={({ value }) => `${value}%`}>{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `${v}%`} /><Legend /></PieChart></ResponsiveContainer></div>
+                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Peso por Meta</h4><ResponsiveContainer width="100%" height={280}><BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tickFormatter={v => `${v}%`} /><YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} /><Tooltip formatter={(v: number) => `${v}%`} /><Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer></div>
+                  </div>
+                  <div className="glass-card rounded-xl overflow-hidden">
+                    <div className="p-4 border-b border-border bg-primary/5"><h4 className="text-base font-bold">{func.cargo}</h4></div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead><tr className="bg-muted/60"><th className="text-left p-3 font-semibold">Descrição</th><th className="text-center p-3 font-semibold">Peso</th><th className="text-center p-3 font-semibold">Resultado</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Dentro</th><th className="text-center p-3 font-semibold whitespace-nowrap">Acima</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Acima</th><th className="text-center p-3 font-semibold">Ações</th></tr></thead>
+                        <tbody>
+                          {goals.map((goal, i) => (
+                            <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
+                              <td className="p-3 font-medium">{goal.descricao}</td><td className="p-3 text-center font-semibold">{goal.peso}%</td><td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
+                              <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td><td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td><td className="p-3 text-center text-xs">{goal.dentro}</td><td className="p-3 text-center text-xs text-primary">{goal.acima}</td><td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
+                              <td className="p-3 text-center"><div className="flex items-center justify-center gap-1"><button onClick={() => openEditGoal(goal)} className="p-1 text-muted-foreground hover:text-primary" title="Editar"><Pencil className="w-4 h-4" /></button><button onClick={() => setDeleteGoalId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive" title="Excluir"><Trash2 className="w-4 h-4" /></button></div></td>
+                            </tr>
+                          ))}
+                          <tr className="bg-muted/50 font-bold"><td className="p-3">TOTAL</td><td className="p-3 text-center">{goals.reduce((s, g) => s + g.peso, 0)}%</td><td colSpan={7}></td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
+            {employeeFeedbacks.length === 0 ? (
+              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum feedback encontrado.</div>
+            ) : (
+              <div className="space-y-3">{employeeFeedbacks.map(fb => {
+                const status = fb.status as FeedbackStatus; const priority = fb.prioridade as FeedbackPriority;
+                return (
+                  <div key={fb.id} className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/feedbacks/${fb.id}`)}>
+                    <div className="flex-1 min-w-0"><p className="font-semibold text-sm truncate">{fb.titulo}</p><p className="text-xs text-muted-foreground mt-1">{new Date(fb.criado_em).toLocaleDateString('pt-BR')} · Gestor: {fb.gestor || '—'}</p></div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || 'bg-muted text-muted-foreground'}`}>{statusLabels[status] || fb.status}</span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[priority] || 'bg-muted text-muted-foreground'}`}>{priorityLabels[priority] || fb.prioridade}</span>
+                    </div>
+                  </div>
+                );
+              })}</div>
             )}
           </div>
         </TabsContent>
 
-        {/* ════ PONTO / OCORRÊNCIAS TAB (merged Ponto/Férias + Desvios) ════ */}
-        <TabsContent value="ponto-ocorrencias" className="space-y-6 mt-4">
+        <TabsContent value="talentos" className="space-y-6 mt-4">
+          <div className="flex flex-col gap-6">
+            {/* ═══ ANÁLISES COMPORTAMENTAIS ═══ */}
+            <div className="glass-card rounded-xl p-6 border-t-4 border-t-purple-500 shadow-sm flex flex-col min-h-[400px]">
+              <Tabs defaultValue="disc" className="w-full flex flex-col h-full">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                  <h3 className="font-semibold flex items-center gap-2"><Brain className="w-5 h-5 text-purple-500" />Perfil Psicométrico e Comportamental</h3>
+                  <TabsList className="h-9 w-full sm:w-auto grid grid-cols-3">
+                    <TabsTrigger value="disc" className="text-xs">DISC</TabsTrigger>
+                    <TabsTrigger value="mbti" className="text-xs">MBTI</TabsTrigger>
+                    <TabsTrigger value="bigfive" className="text-xs">Big Five</TabsTrigger>
+                  </TabsList>
+                </div>
+
+                {/* ── DISC ── */}
+                <TabsContent value="disc" className="flex-1 mt-0">
+                  {discResult ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-2">
+                      <DiscReport resultScreen={discResult} />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
+                      <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                      <p className="text-sm text-muted-foreground mb-4">Teste DISC não realizado.</p>
+                      <Button onClick={() => navigate(`/disc/${func?.id}`)} variant="outline" size="sm">Realizar Teste</Button>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* ── MBTI ── */}
+                <TabsContent value="mbti" className="flex-1 mt-0">
+                  {mbtiResult ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-2">
+                      <MbtiReport resultScreen={mbtiResult} />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
+                      <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                      <p className="text-sm text-muted-foreground mb-4">Teste MBTI (16 Personalidades) não realizado.</p>
+                      <Button onClick={() => navigate(`/mbti/${func?.id}`)} variant="outline" size="sm">Realizar Teste</Button>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* ── BIG FIVE ── */}
+                <TabsContent value="bigfive" className="flex-1 mt-0">
+                  {bigFiveResult ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-2">
+                      <BigFiveReport resultScreen={bigFiveResult} />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
+                      <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
+                      <p className="text-sm text-muted-foreground mb-4">Teste Big Five (OCEAN) não realizado.</p>
+                      <Button onClick={() => navigate(`/bigfive/${func?.id}`)} variant="outline" size="sm">Realizar Teste</Button>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* ═══ FIT CULTURAL ═══ */}
+            <div className="glass-card rounded-xl p-6 border-t-4 border-t-chart-2 shadow-sm flex flex-col">
+              <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
+            </div>
+          </div>
+
+          {/* ═══ GAMIFICAÇÃO ═══ */}
+          <div className="glass-card rounded-xl p-6 border-t-4 border-t-yellow-500 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold flex items-center gap-2"><Award className="w-5 h-5 text-yellow-500" />Conquistas e Badges</h3>
+              <span className="text-xs font-semibold bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full">{totalBadges} distribuídos</span>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">Reconheça os talentos clicando em um badge. Botão direito para remover.</p>
+            <div className="flex flex-wrap gap-4">
+               {[
+                 { id: 'batedor_metas', name: 'Batedor de Metas', icon: Award, color: 'yellow' },
+                 { id: 'ajudante_equipe', name: 'Ajudante da Equipe', icon: Star, color: 'blue' },
+                 { id: 'presenca_100', name: '100% de Presença', icon: Target, color: 'green' },
+                 { id: 'lider_nato', name: 'Líder Nato', icon: Crown, color: 'purple' },
+                 { id: 'zero_acidentes', name: 'Zero Acidentes', icon: ShieldCheck, color: 'red' },
+                 { id: 'ideia_brilhante', name: 'Ideia Brilhante', icon: Lightbulb, color: 'orange' },
+                 { id: 'mao_na_massa', name: 'Mão na Massa', icon: Wrench, color: 'slate' }
+               ].map(badge => {
+                 const count = badgesCounts[badge.id] || 0;
+                 return (
+                   <div 
+                     key={badge.id}
+                     onClick={() => handleAddBadge(badge.id)}
+                     onContextMenu={(e) => handleRemoveBadge(e, badge.id)}
+                     className={`relative flex flex-col items-center justify-center p-3 bg-${badge.color}-500/10 border border-${badge.color}-500/20 rounded-xl w-28 h-28 text-center hover:scale-105 transition-transform cursor-pointer group shadow-sm`}
+                   >
+                     {count > 0 && (
+                       <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-in zoom-in">
+                         {count}
+                       </div>
+                     )}
+                     <badge.icon className={`w-8 h-8 text-${badge.color}-500 mb-2 transition-transform group-hover:scale-110`} />
+                     <span className="text-[10px] font-bold leading-tight">{badge.name}</span>
+                     <div className="absolute inset-0 bg-black/5 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                       <span className="text-2xl text-foreground/50 font-light drop-shadow-md">+</span>
+                     </div>
+                   </div>
+                 );
+               })}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ════ DOSSIÊ (RH) TAB (Histórico Disciplinar e Assiduidade) ════ */}
+        <TabsContent value="dossie" className="space-y-6 mt-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 glass-card rounded-xl p-6 border-l-4 border-l-orange-500">
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2"><FileText className="w-6 h-6 text-orange-500" /> Dossiê Funcional (RH)</h2>
+              <p className="text-sm text-muted-foreground">Histórico completo de assiduidade, ocorrências, advertências e documentações para uso estratégico.</p>
+            </div>
+            <Button variant="default" className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm flex-shrink-0" onClick={exportEmployeeDeviationsReport}>
+              <FileText className="w-4 h-4 mr-2" /> Baixar PDF Oficial
+            </Button>
+          </div>
+
           {isOnVacation && vacationInfo && (
             <div className="flex items-center gap-3 rounded-lg p-4 border bg-teal-500/5 border-teal-500/20">
               <Sun className="w-5 h-5 text-teal-500" />
@@ -732,7 +994,7 @@ export default function FuncionarioProfile() {
             )}
           </div>
 
-          {/* ── Desvios e Advertências (dentro da aba Ponto/Ocorrências) ── */}
+          {/* ── Desvios e Advertências ── */}
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-destructive" />Desvios e Advertências</h3>
             <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600" onClick={exportEmployeeDeviationsReport}>
@@ -795,141 +1057,77 @@ export default function FuncionarioProfile() {
               ⚠️ <strong>Nota:</strong> Faltas Injustificadas NÃO contemplam banco de horas. Este relatório é anexado à ficha do colaborador para envio ao RH no momento do desligamento.
             </p>
           </div>
-        </TabsContent>
-
-        {/* ════ EVENTOS TAB ════ */}
-        <TabsContent value="eventos" className="space-y-6 mt-4">
-          <h3 className="text-lg font-bold flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-warning" />Eventos Registrados ({employeeEvents.length})</h3>
           
-          {employeeEvents.length === 0 ? (
-            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum evento registrado para este colaborador.</div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {(() => {
-                  const medical = employeeEvents.filter(e => e.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || e.location?.toUpperCase().includes('PROBLEMA PARTICULAR')).length;
-                  const operational = employeeEvents.length - medical;
-                  const years = new Set(employeeEvents.map(e => e.event_date.slice(0, 4)));
-                  return [
-                    { label: 'Total Eventos', value: employeeEvents.length, color: 'bg-warning/10 text-warning' },
-                    { label: 'Operacionais', value: operational, color: 'bg-destructive/10 text-destructive' },
-                    { label: 'Médicos/Pessoais', value: medical, color: 'bg-blue-500/10 text-blue-600' },
-                    { label: 'Anos c/ Registro', value: years.size, color: 'bg-primary/10 text-primary' },
-                  ];
-                })().map(d => (
-                  <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
-                    <p className="text-3xl font-bold">{d.value}</p>
-                    <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
+          <div className="border-t border-border/50 pt-6 mt-6">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4"><AlertTriangle className="w-5 h-5 text-warning" />Eventos Registrados ({employeeEvents.length})</h3>
+            
+            {employeeEvents.length === 0 ? (
+              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum evento registrado para este colaborador.</div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                  {(() => {
+                    const medical = employeeEvents.filter(e => e.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || e.location?.toUpperCase().includes('PROBLEMA PARTICULAR')).length;
+                    const operational = employeeEvents.length - medical;
+                    const years = new Set(employeeEvents.map(e => e.event_date.slice(0, 4)));
+                    return [
+                      { label: 'Total Eventos', value: employeeEvents.length, color: 'bg-warning/10 text-warning' },
+                      { label: 'Operacionais', value: operational, color: 'bg-destructive/10 text-destructive' },
+                      { label: 'Médicos/Pessoais', value: medical, color: 'bg-blue-500/10 text-blue-600' },
+                      { label: 'Anos c/ Registro', value: years.size, color: 'bg-primary/10 text-primary' },
+                    ];
+                  })().map(d => (
+                    <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
+                      <p className="text-3xl font-bold">{d.value}</p>
+                      <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="glass-card rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-border bg-warning/5">
+                    <h4 className="text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-warning" />Histórico de Eventos</h4>
                   </div>
-                ))}
-              </div>
-
-              <div className="glass-card rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-warning/5">
-                  <h4 className="text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-warning" />Histórico de Eventos</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead><tr className="bg-muted/30 border-b border-border">
+                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Descrição</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Local</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Equipamento</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
+                      </tr></thead>
+                      <tbody>
+                        {employeeEvents.map((ev, i) => (
+                          <tr key={ev.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
+                            <td className="px-4 py-2 text-xs whitespace-nowrap">{new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                            <td className="px-4 py-2 text-xs max-w-[300px]">{ev.description}</td>
+                            <td className="px-4 py-2 text-xs">{ev.location || '—'}</td>
+                            <td className="px-4 py-2 text-xs">{ev.equipment || '—'}</td>
+                            <td className="px-4 py-2 text-xs">{ev.shift || '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead><tr className="bg-muted/30 border-b border-border">
-                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Descrição</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Local</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Equipamento</th>
-                      <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
-                    </tr></thead>
-                    <tbody>
-                      {employeeEvents.map((ev, i) => (
-                        <tr key={ev.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
-                          <td className="px-4 py-2 text-xs whitespace-nowrap">{new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                          <td className="px-4 py-2 text-xs max-w-[300px]">{ev.description}</td>
-                          <td className="px-4 py-2 text-xs">{ev.location || '—'}</td>
-                          <td className="px-4 py-2 text-xs">{ev.equipment || '—'}</td>
-                          <td className="px-4 py-2 text-xs">{ev.shift || '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </>
-          )}
-        </TabsContent>
-
-
-        {!cargoSemMeta && (
-        <TabsContent value="metas" className="space-y-6 mt-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
-            <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
+              </>
+            )}
           </div>
-          {goals.length === 0 ? (
-            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma meta encontrada para o cargo "{func.cargo}".</div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3} label={({ value }) => `${value}%`}>{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `${v}%`} /><Legend /></PieChart></ResponsiveContainer></div>
-                <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Peso por Meta</h4><ResponsiveContainer width="100%" height={280}><BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tickFormatter={v => `${v}%`} /><YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} /><Tooltip formatter={(v: number) => `${v}%`} /><Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer></div>
-              </div>
-              <div className="glass-card rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-border bg-primary/5"><h4 className="text-base font-bold">{func.cargo}</h4></div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead><tr className="bg-muted/60"><th className="text-left p-3 font-semibold">Descrição</th><th className="text-center p-3 font-semibold">Peso</th><th className="text-center p-3 font-semibold">Resultado</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Dentro</th><th className="text-center p-3 font-semibold whitespace-nowrap">Acima</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Acima</th><th className="text-center p-3 font-semibold">Ações</th></tr></thead>
-                    <tbody>
-                      {goals.map((goal, i) => (
-                        <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
-                          <td className="p-3 font-medium">{goal.descricao}</td><td className="p-3 text-center font-semibold">{goal.peso}%</td><td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
-                          <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td><td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td><td className="p-3 text-center text-xs">{goal.dentro}</td><td className="p-3 text-center text-xs text-primary">{goal.acima}</td><td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
-                          <td className="p-3 text-center"><div className="flex items-center justify-center gap-1"><button onClick={() => openEditGoal(goal)} className="p-1 text-muted-foreground hover:text-primary" title="Editar"><Pencil className="w-4 h-4" /></button><button onClick={() => setDeleteGoalId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive" title="Excluir"><Trash2 className="w-4 h-4" /></button></div></td>
-                        </tr>
-                      ))}
-                      <tr className="bg-muted/50 font-bold"><td className="p-3">TOTAL</td><td className="p-3 text-center">{goals.reduce((s, g) => s + g.peso, 0)}%</td><td colSpan={7}></td></tr>
-                    </tbody>
-                  </table>
+          <div className="border-t border-border/50 pt-6 mt-6">
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4"><FileText className="w-5 h-5 text-primary" />Documentação Anexada</h3>
+            {documents.length === 0 ? (
+              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum documento anexado ao prontuário.</div>
+            ) : (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{documents.map(doc => (
+                <div key={doc.id} className="glass-card rounded-xl p-4 flex items-center gap-3">
+                  <FileText className="w-8 h-8 text-primary flex-shrink-0" />
+                  <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{doc.file_name}</p><p className="text-xs text-muted-foreground">{doc.document_type} · {new Date(doc.created_at).toLocaleDateString('pt-BR')}</p></div>
+                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-muted"><ExternalLink className="w-4 h-4 text-muted-foreground" /></a>
                 </div>
-              </div>
-            </>
-          )}
-        </TabsContent>
-        )}
-
-        <TabsContent value="feedbacks" className="space-y-4 mt-4">
-          <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
-          {employeeFeedbacks.length === 0 ? (
-            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum feedback encontrado.</div>
-          ) : (
-            <div className="space-y-3">{employeeFeedbacks.map(fb => {
-              const status = fb.status as FeedbackStatus; const priority = fb.prioridade as FeedbackPriority;
-              return (
-                <div key={fb.id} className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/feedbacks/${fb.id}`)}>
-                  <div className="flex-1 min-w-0"><p className="font-semibold text-sm truncate">{fb.titulo}</p><p className="text-xs text-muted-foreground mt-1">{new Date(fb.criado_em).toLocaleDateString('pt-BR')} · Gestor: {fb.gestor || '—'}</p></div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || 'bg-muted text-muted-foreground'}`}>{statusLabels[status] || fb.status}</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[priority] || 'bg-muted text-muted-foreground'}`}>{priorityLabels[priority] || fb.prioridade}</span>
-                  </div>
-                </div>
-              );
-            })}</div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="fit-cultural" className="mt-4">
-          <div className="glass-card rounded-xl p-6"><FitCulturalSection employeeId={func.id} employeeName={func.nome} /></div>
-        </TabsContent>
-
-        <TabsContent value="documentos" className="space-y-4 mt-4">
-          <h3 className="text-lg font-bold flex items-center gap-2"><FileText className="w-5 h-5 text-primary" />Documentos</h3>
-          {documents.length === 0 ? (
-            <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum documento anexado.</div>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{documents.map(doc => (
-              <div key={doc.id} className="glass-card rounded-xl p-4 flex items-center gap-3">
-                <FileText className="w-8 h-8 text-primary flex-shrink-0" />
-                <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{doc.file_name}</p><p className="text-xs text-muted-foreground">{doc.document_type} · {new Date(doc.created_at).toLocaleDateString('pt-BR')}</p></div>
-                <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-muted"><ExternalLink className="w-4 h-4 text-muted-foreground" /></a>
-              </div>
-            ))}</div>
-          )}
+              ))}</div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 

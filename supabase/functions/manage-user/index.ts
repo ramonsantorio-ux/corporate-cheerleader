@@ -102,6 +102,19 @@ serve(async (req) => {
       });
     }
 
+    if (action === 'delete') {
+      // Delete related data first, then the auth user
+      await supabaseAdmin.from('user_permissions').delete().eq('user_id', user_id);
+      await supabaseAdmin.from('user_roles').delete().eq('user_id', user_id);
+      await supabaseAdmin.from('profiles').delete().eq('id', user_id);
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(user_id);
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Ação inválida' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
