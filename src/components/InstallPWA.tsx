@@ -25,8 +25,13 @@ export function InstallPWA() {
     setIsAndroid(isAndroidDevice);
 
     // Para iOS ou Android, sempre mostrar após um pequeno atraso caso não tenha pego o evento
-    const hasSeenPrompt = sessionStorage.getItem('has_seen_install_prompt');
-    if (!hasSeenPrompt) {
+    try {
+      const hasSeenPrompt = sessionStorage.getItem('has_seen_install_prompt');
+      if (!hasSeenPrompt) {
+        setTimeout(() => setShowPrompt(true), 3000);
+      }
+    } catch (e) {
+      // Previne crash em modo anônimo
       setTimeout(() => setShowPrompt(true), 3000);
     }
 
@@ -59,7 +64,9 @@ export function InstallPWA() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    sessionStorage.setItem('has_seen_install_prompt', 'true');
+    try {
+      sessionStorage.setItem('has_seen_install_prompt', 'true');
+    } catch (e) {}
   };
 
   if (isStandalone || !showPrompt) return null;
@@ -70,7 +77,7 @@ export function InstallPWA() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white/95 backdrop-blur-md border border-sidebar-border shadow-2xl rounded-2xl p-4 z-50"
+        className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-background backdrop-blur-md border border-border shadow-2xl rounded-2xl p-4 z-50"
       >
         <button 
           onClick={handleDismiss}
