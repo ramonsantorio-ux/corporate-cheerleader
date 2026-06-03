@@ -469,30 +469,13 @@ export default function EvolucaoContrato() {
         
         const saved = localStorage.getItem('corporate_cheerleader_medicoes');
         
-        if (data && data.length === 0 && saved) {
-          // Migração automática do localStorage para o Supabase
-          const localData = JSON.parse(saved);
-          if (localData && localData.length > 0) {
-            const dataToInsert = localData.map((item: any) => ({
-               mes: item.mes,
-               dados: item
-            }));
-            const { data: insertedData, error: insertError } = await supabase.from('medicoes').insert(dataToInsert).select();
-            if (!insertError && insertedData) {
-              const mappedData = insertedData.map(d => ({ ...d.dados, _supabaseId: d.id }));
-              setMedicoes(mappedData);
-              // Apenas por segurança, não vamos apagar o localStorage agora, mas ele não será mais lido prioritariamente
-            }
-          } else {
-             setMedicoes([]);
-          }
-        } else if (data && data.length > 0) {
+        if (data && data.length > 0) {
           const mappedData = data.map(d => ({ ...d.dados, _supabaseId: d.id }));
           setMedicoes(mappedData);
         } else if (saved) {
-           setMedicoes(JSON.parse(saved));
+          setMedicoes(JSON.parse(saved));
         } else {
-           setMedicoes(mockData);
+          setMedicoes(mockData);
         }
       } catch (error) {
         console.error('Erro ao buscar do supabase:', error);
