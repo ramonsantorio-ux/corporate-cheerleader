@@ -104,7 +104,7 @@ export function InstallPWA() {
               </>
             ) : (
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Para instalar, clique nos <b>3 pontinhos</b> <MoreVertical className="inline w-3 h-3" /> do seu navegador e escolha <b>Instalar Aplicativo</b> ou <b>Adicionar à Tela Inicial</b>.
+                Para instalar, acesse as <b>opções/menu principal</b> do seu navegador e escolha <b>Adicionar à Tela Inicial</b> ou <b>Instalar App</b>.
               </p>
             )}
           </div>
