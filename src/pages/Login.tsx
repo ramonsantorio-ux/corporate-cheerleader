@@ -8,7 +8,7 @@ import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import busatoLogo from '@/assets/busato-logo-full.png';
+import busatoLogo from '@/assets/busato-logo-hcm.png';
 
 export default function Login() {
   const { user, loading: authLoading } = useAuth();
@@ -102,9 +102,8 @@ export default function Login() {
       >
         <div className="glass-card rounded-2xl p-8 space-y-6">
           <div className="text-center space-y-3">
-            <img src={busatoLogo} alt="Busato" className="h-14 mx-auto object-contain" />
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">Gestão de Contrato</p>
-            <p className="text-sm text-muted-foreground">
+            <img src={busatoLogo} alt="Busato HCM Platform" className="h-16 mx-auto object-contain" />
+            <p className="text-sm text-muted-foreground mt-4">
               {isFirstSetup ? 'Configure a conta administrador' : 'Faça login para acessar o sistema'}
             </p>
           </div>
@@ -179,6 +178,12 @@ export default function Login() {
               {isFirstSetup ? 'Já tenho conta, fazer login' : 'Primeiro acesso? Criar conta admin'}
             </button>
           </div>
+        </div>
+        
+        {/* Rodapé Adicionado */}
+        <div className="mt-8 text-center text-xs text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Busato HCM Platform.</p>
+          <p>Todos os direitos reservados.</p>
         </div>
       </motion.div>
     </div>
