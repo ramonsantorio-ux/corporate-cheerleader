@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X, Share } from 'lucide-react';
+import { Download, X, Share, MoreVertical } from 'lucide-react';
 
 export function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
 
   useEffect(() => {
     // Check if already installed
@@ -15,24 +16,23 @@ export function InstallPWA() {
       return;
     }
 
-    // Check if iOS
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    // Check device type
+    const ua = navigator.userAgent;
+    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroidDevice = /android/i.test(ua);
+    
     setIsIOS(isIOSDevice);
+    setIsAndroid(isAndroidDevice);
 
-    if (isIOSDevice) {
-      // For iOS, show the manual prompt after a short delay
-      const hasSeenPrompt = localStorage.getItem('has_seen_ios_install_prompt');
-      if (!hasSeenPrompt) {
-        setTimeout(() => setShowPrompt(true), 3000);
-      }
+    // Para iOS ou Android, sempre mostrar após um pequeno atraso caso não tenha pego o evento
+    const hasSeenPrompt = localStorage.getItem('has_seen_install_prompt');
+    if (!hasSeenPrompt) {
+      setTimeout(() => setShowPrompt(true), 3000);
     }
 
     const handler = (e: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
-      // Stash the event so it can be triggered later.
       setDeferredPrompt(e);
-      // Update UI notify the user they can install the PWA
       setShowPrompt(true);
     };
 
@@ -44,26 +44,22 @@ export function InstallPWA() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    // Show the install prompt
-    deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+        setShowPrompt(false);
+      }
     } else {
-      console.log('User dismissed the install prompt');
+      // Se clicou em instalar mas não tem o prompt (ex: navegador não suporta via botão)
+      // O texto abaixo já orientará o usuário
     }
-    // We've used the prompt, and can't use it again, throw it away
-    setDeferredPrompt(null);
-    setShowPrompt(false);
   };
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    if (isIOS) {
-      localStorage.setItem('has_seen_ios_install_prompt', 'true');
-    }
+    localStorage.setItem('has_seen_install_prompt', 'true');
   };
 
   if (isStandalone || !showPrompt) return null;
@@ -74,13 +70,13 @@ export function InstallPWA() {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white/90 backdrop-blur-md border border-sidebar-border shadow-2xl rounded-2xl p-4 z-50"
+        className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white/95 backdrop-blur-md border border-sidebar-border shadow-2xl rounded-2xl p-4 z-50"
       >
         <button 
           onClick={handleDismiss}
           className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-start gap-4 pr-6">
@@ -92,9 +88,9 @@ export function InstallPWA() {
             
             {isIOS ? (
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Para instalar no seu iPhone/iPad, toque no botão <b>Compartilhar</b> <Share className="inline w-3 h-3 mx-1" /> abaixo e selecione <b>Adicionar à Tela de Início</b>.
+                Para instalar no seu iPhone/iPad, toque em <b>Compartilhar</b> <Share className="inline w-3 h-3 mx-1" /> na barra do navegador e selecione <b>Adicionar à Tela de Início</b>.
               </p>
-            ) : (
+            ) : deferredPrompt ? (
               <>
                 <p className="text-xs text-muted-foreground mt-1 mb-3">
                   Instale o Gestão de Contratos no seu aparelho para usar o Modo Offline.
@@ -106,6 +102,10 @@ export function InstallPWA() {
                   Instalar Agora
                 </button>
               </>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Para instalar, clique nos <b>3 pontinhos</b> <MoreVertical className="inline w-3 h-3" /> do seu navegador e escolha <b>Instalar Aplicativo</b> ou <b>Adicionar à Tela Inicial</b>.
+              </p>
             )}
           </div>
         </div>
