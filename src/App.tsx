@@ -39,7 +39,6 @@ import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import FuncionarioProfile from "./pages/FuncionarioProfile";
-import Reunioes from "./pages/Reunioes";
 import Eventos from "./pages/Eventos";
 import Ausencias from "./pages/Ausencias";
 import Colaboradores from "./pages/Colaboradores";
@@ -85,7 +84,6 @@ function ProtectedRoutes() {
         <Route path="/desempenho/competencias" element={<Navigate to="/desempenho?tab=fit-cultural" replace />} />
         <Route path="/desempenho/pdi" element={<Navigate to="/desempenho?tab=pdi" replace />} />
         <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
-        <Route path="/reunioes" element={<Reunioes />} />
         <Route path="/eventos" element={<Eventos />} />
         <Route path="/ausencias" element={<Ausencias />} />
         <Route path="/organograma" element={<Organograma />} />

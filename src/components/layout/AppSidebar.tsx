@@ -26,7 +26,6 @@ const navGroups: NavGroup[] = [
       { to: '/colaboradores', icon: Users, label: 'Colaboradores' },
       { to: '/organograma', icon: GitMerge, label: 'Organograma' },
       { to: '/ausencias', icon: CalendarDays, label: 'Ponto & Férias' },
-      { to: '/reunioes', icon: Calendar, label: 'Reuniões 1:1' },
     ],
   },
   {
