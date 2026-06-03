@@ -16,9 +16,9 @@ export default function CLevelAnalytics({ funcionarios, feedbacks, attendance, w
   
   // 1. Cálculos C-Level (Financeiro & Risco)
   const stats = useMemo(() => {
-    const totalAtestados = attendance.filter(o => o.tipo_registro === 'Atestado').reduce((acc, curr) => acc + (curr.dias_afastamento || 0), 0);
+    const totalAtestados = attendance.filter(o => o.status === 'Atestado').length;
     const custoAtestados = totalAtestados * 250; // Estimativa de custo por dia não trabalhado
-    const numFaltas = attendance.filter(o => o.tipo_registro && o.tipo_registro.includes('Falta')).length;
+    const numFaltas = attendance.filter(o => o.status && o.status.includes('Falta')).length;
     const advertencias = warnings.length;
     
     const resolucaoFeedback = feedbacks.length > 0 
@@ -33,15 +33,15 @@ export default function CLevelAnalytics({ funcionarios, feedbacks, attendance, w
     const map: Record<string, { faltas: number, ads: number, feedbacksNeg: number }> = {};
     
     attendance.forEach(o => {
-      const func = funcionarios.find(f => f.id === o.funcionario_id);
+      const func = funcionarios.find(f => f.id === o.employee_id);
       if (!func) return;
       const dept = func.departamento || 'Outro';
       if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
-      if (o.tipo_registro && o.tipo_registro.includes('Falta')) map[dept].faltas++;
+      if (o.status && o.status.includes('Falta')) map[dept].faltas++;
     });
 
     warnings.forEach(w => {
-      const func = funcionarios.find(f => f.id === w.funcionario_id);
+      const func = funcionarios.find(f => f.id === w.employee_id);
       if (!func) return;
       const dept = func.departamento || 'Outro';
       if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
