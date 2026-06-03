@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
 
@@ -31,6 +32,7 @@ interface OfensorNotificacao {
 
 interface Medicao {
   id: number;
+  _supabaseId?: string;
   mes: string;
   aderencia: number;
   fatLocacao: number;
@@ -181,21 +183,53 @@ export default function EvolucaoContrato() {
   }, []);
 
   const [expandedChart, setExpandedChart] = useState<string | null>(null);
-  const [medicoes, setMedicoes] = useState<Medicao[]>(() => {
-    const saved = localStorage.getItem('corporate_cheerleader_medicoes');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return mockData;
-      }
-    }
-    return mockData;
-  });
+  const [medicoes, setMedicoes] = useState<Medicao[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem('corporate_cheerleader_medicoes', JSON.stringify(medicoes));
-  }, [medicoes]);
+    const fetchMedicoes = async () => {
+      try {
+        const { data, error } = await supabase.from('medicoes').select('*').order('created_at', { ascending: true });
+        if (error) throw error;
+        
+        const saved = localStorage.getItem('corporate_cheerleader_medicoes');
+        
+        if (data && data.length === 0 && saved) {
+          // Migração automática do localStorage para o Supabase
+          const localData = JSON.parse(saved);
+          if (localData && localData.length > 0) {
+            const dataToInsert = localData.map((item: any) => ({
+               mes: item.mes,
+               dados: item
+            }));
+            const { data: insertedData, error: insertError } = await supabase.from('medicoes').insert(dataToInsert).select();
+            if (!insertError && insertedData) {
+              const mappedData = insertedData.map(d => ({ ...d.dados, _supabaseId: d.id }));
+              setMedicoes(mappedData);
+              // Apenas por segurança, não vamos apagar o localStorage agora, mas ele não será mais lido prioritariamente
+            }
+          } else {
+             setMedicoes([]);
+          }
+        } else if (data && data.length > 0) {
+          const mappedData = data.map(d => ({ ...d.dados, _supabaseId: d.id }));
+          setMedicoes(mappedData);
+        } else if (saved) {
+           setMedicoes(JSON.parse(saved));
+        } else {
+           setMedicoes(mockData);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar do supabase:', error);
+        const saved = localStorage.getItem('corporate_cheerleader_medicoes');
+        if (saved) setMedicoes(JSON.parse(saved));
+        else setMedicoes(mockData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchMedicoes();
+  }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   
@@ -239,19 +273,36 @@ export default function EvolucaoContrato() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm('Tem certeza que deseja excluir este fechamento mensal?')) {
+      const existing = medicoes.find(m => m.id === id);
+      if (existing && existing._supabaseId) {
+        await supabase.from('medicoes').delete().eq('id', existing._supabaseId);
+      }
       setMedicoes(medicoes.filter(m => m.id !== id));
       toast({ title: 'Sucesso', description: 'Fechamento excluído com sucesso!' });
     }
   };
 
-  const handleSaveFromComponent = (novaMedicao: Medicao) => {
+  const handleSaveFromComponent = async (novaMedicao: Medicao) => {
+    const medicaoComIdLocal = editingId ? { ...novaMedicao, id: editingId } : { ...novaMedicao, id: Date.now() };
+    
     if (editingId) {
-      setMedicoes(medicoes.map(m => m.id === editingId ? { ...novaMedicao, id: editingId } : m));
+      const existing = medicoes.find(m => m.id === editingId);
+      if (existing && existing._supabaseId) {
+        await supabase.from('medicoes').update({ mes: medicaoComIdLocal.mes, dados: medicaoComIdLocal }).eq('id', existing._supabaseId);
+        setMedicoes(medicoes.map(m => m.id === editingId ? { ...medicaoComIdLocal, _supabaseId: existing._supabaseId } : m));
+      } else {
+        setMedicoes(medicoes.map(m => m.id === editingId ? medicaoComIdLocal : m));
+      }
       toast({ title: 'Sucesso', description: 'Fechamento atualizado com sucesso!' });
     } else {
-      setMedicoes([...medicoes, { ...novaMedicao, id: Date.now() }]);
+      const { data, error } = await supabase.from('medicoes').insert([{ mes: medicaoComIdLocal.mes, dados: medicaoComIdLocal }]).select();
+      if (!error && data && data.length > 0) {
+        setMedicoes([...medicoes, { ...medicaoComIdLocal, _supabaseId: data[0].id }]);
+      } else {
+        setMedicoes([...medicoes, medicaoComIdLocal]);
+      }
       toast({ title: 'Sucesso', description: 'Fechamento registrado com sucesso!' });
     }
     setIsModalOpen(false);
