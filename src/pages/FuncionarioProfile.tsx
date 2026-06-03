@@ -782,7 +782,6 @@ export default function FuncionarioProfile() {
                     <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
                       <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
                       <p className="text-sm text-muted-foreground mb-4">Teste DISC não realizado.</p>
-                      <Button onClick={() => navigate(`/disc/${func?.id}`)} variant="outline" size="sm">Realizar Teste</Button>
                     </div>
                   )}
                 </TabsContent>
@@ -797,7 +796,6 @@ export default function FuncionarioProfile() {
                     <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
                       <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
                       <p className="text-sm text-muted-foreground mb-4">Teste MBTI (16 Personalidades) não realizado.</p>
-                      <Button onClick={() => navigate(`/mbti/${func?.id}`)} variant="outline" size="sm">Realizar Teste</Button>
                     </div>
                   )}
                 </TabsContent>
@@ -812,7 +810,6 @@ export default function FuncionarioProfile() {
                     <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
                       <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
                       <p className="text-sm text-muted-foreground mb-4">Teste Big Five (OCEAN) não realizado.</p>
-                      <Button onClick={() => navigate(`/bigfive/${func?.id}`)} variant="outline" size="sm">Realizar Teste</Button>
                     </div>
                   )}
                 </TabsContent>
