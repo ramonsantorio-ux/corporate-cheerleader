@@ -472,16 +472,18 @@ export default function EvolucaoContrato() {
         if (data && data.length > 0) {
           const mappedData = data.map(d => ({ ...d.dados, _supabaseId: d.id }));
           setMedicoes(mappedData);
+        } else if (data && data.length === 0) {
+          setMedicoes([]);
         } else if (saved) {
           setMedicoes(JSON.parse(saved));
         } else {
-          setMedicoes(mockData);
+          setMedicoes([]);
         }
       } catch (error) {
         console.error('Erro ao buscar do supabase:', error);
         const saved = localStorage.getItem('corporate_cheerleader_medicoes');
         if (saved) setMedicoes(JSON.parse(saved));
-        else setMedicoes(mockData);
+        else setMedicoes([]);
       } finally {
         setIsLoading(false);
       }
