@@ -50,7 +50,7 @@ const navGroups: NavGroup[] = [
       { to: '/eventos', icon: AlertTriangle, label: 'Eventos de Campo' },
       { to: '/evolucao', icon: Briefcase, label: 'Contratos' },
       { to: '/notificacoes', icon: FileWarning, label: 'Notificações/Multas' },
-      { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
+      { to: '/relatorios', icon: BarChart3, label: 'C-Level Analytics' },
     ],
   },
   {

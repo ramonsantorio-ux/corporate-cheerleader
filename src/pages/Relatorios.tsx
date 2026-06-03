@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { setorLabels, FeedbackSetor } from '@/lib/feedbackData';
 import * as XLSX from 'xlsx';
+import CLevelAnalytics from '@/components/CLevelAnalytics';
 
 interface FeedbackRow {
   id: string; titulo: string; autor: string; setor: string; status: string;
@@ -722,99 +723,13 @@ export default function Relatorios() {
         </div>
       </motion.div>
 
-      {/* ══ KPIs: Feedbacks ══ */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <FileText className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Feedbacks</h2>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {fbMetrics.map((m, i) => (
-            <motion.div key={m.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-              className={`corporate-kpi ${i === 0 ? '' : i === 1 ? 'corporate-kpi-accent' : i === 2 ? 'corporate-kpi-accent' : 'corporate-kpi-warning'}`}>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{m.label}</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{m.value}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* ══ KPIs: Ponto / Ocorrências ══ */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Clock className="w-4 h-4 text-primary" />
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Ponto / Ocorrências</h2>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          {[
-            { label: 'Faltas Injustificadas', value: faltasInj, warn: true },
-            { label: 'Faltas Justificadas', value: faltasJust },
-            { label: 'Atestados', value: atestados },
-            { label: 'Horas Extras', value: extras },
-            { label: 'Total Desvios', value: attDeviations.length, warn: true },
-          ].map((m, i) => (
-            <motion.div key={m.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-              className={`corporate-kpi ${m.warn ? 'corporate-kpi-warning' : ''}`}>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{m.label}</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{m.value}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* ══ KPIs: Advertências + Eventos + Reuniões ══ */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Advertências */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <ShieldAlert className="w-4 h-4 text-destructive" />
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Advertências</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Aplicadas', value: warningsApplied },
-              { label: 'Pendentes', value: warningsPending },
-            ].map((m, i) => (
-              <motion.div key={m.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                className="corporate-kpi">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{m.label}</p>
-                <p className="text-2xl font-bold text-foreground mt-1">{m.value}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Eventos */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-4 h-4 text-warning" />
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Eventos</h2>
-          </div>
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-kpi">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total no Período</p>
-            <p className="text-3xl font-bold text-foreground mt-1">{filteredEvents.length}</p>
-          </motion.div>
-        </div>
-
-        {/* Reuniões */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <Users className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Reuniões</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: 'Realizadas', value: meetingsDone },
-              { label: 'Agendadas', value: meetingsScheduled },
-            ].map((m, i) => (
-              <motion.div key={m.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                className="corporate-kpi">
-                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{m.label}</p>
-                <p className="text-2xl font-bold text-foreground mt-1">{m.value}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
+      <div className="pt-6">
+        <CLevelAnalytics 
+          funcionarios={funcionarios}
+          feedbacks={feedbacks}
+          ocorrencias={ocorrencias}
+          eventos={eventos}
+        />
       </div>
 
       {/* ══ Charts: Feedbacks ══ */}
