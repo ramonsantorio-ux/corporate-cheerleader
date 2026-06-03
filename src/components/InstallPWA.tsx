@@ -25,7 +25,7 @@ export function InstallPWA() {
     setIsAndroid(isAndroidDevice);
 
     // Para iOS ou Android, sempre mostrar após um pequeno atraso caso não tenha pego o evento
-    const hasSeenPrompt = localStorage.getItem('has_seen_install_prompt');
+    const hasSeenPrompt = sessionStorage.getItem('has_seen_install_prompt');
     if (!hasSeenPrompt) {
       setTimeout(() => setShowPrompt(true), 3000);
     }
@@ -59,7 +59,7 @@ export function InstallPWA() {
 
   const handleDismiss = () => {
     setShowPrompt(false);
-    localStorage.setItem('has_seen_install_prompt', 'true');
+    sessionStorage.setItem('has_seen_install_prompt', 'true');
   };
 
   if (isStandalone || !showPrompt) return null;
