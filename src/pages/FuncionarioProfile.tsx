@@ -198,6 +198,47 @@ export default function FuncionarioProfile() {
   const [lpiResult, setLpiResult] = useState<any>(null);
 
   useEffect(() => {
+    if (func?.id) {
+      const parse = (k: string) => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch { return null; } };
+      
+      const fetchAssessments = async () => {
+        try {
+          const { data, error } = await supabase.from('assessment_results').select('*').eq('user_id', func.id);
+          
+          if (!error && data && data.length > 0) {
+            const disc = data.find(d => d.type === 'disc');
+            const mbti = data.find(d => d.type === 'mbti');
+            const bigfive = data.find(d => d.type === 'bigfive');
+            const gallup = data.find(d => d.type === 'gallup');
+            const lpi = data.find(d => d.type === 'lpi');
+            
+            setDiscResult(disc ? disc.result_data : parse(`disc_${func.id}`));
+            setMbtiResult(mbti ? mbti.result_data : parse(`mbti_${func.id}`));
+            setBigFiveResult(bigfive ? bigfive.result_data : parse(`bigfive_${func.id}`));
+            setGallupResult(gallup ? gallup.result_data : parse(`gallup_${func.id}`));
+            setLpiResult(lpi ? lpi.result_data : parse(`lpi_${func.id}`));
+          } else {
+            // Fallback
+            setDiscResult(parse(`disc_${func.id}`));
+            setMbtiResult(parse(`mbti_${func.id}`));
+            setBigFiveResult(parse(`bigfive_${func.id}`));
+            setGallupResult(parse(`gallup_${func.id}`));
+            setLpiResult(parse(`lpi_${func.id}`));
+          }
+        } catch (err) {
+          setDiscResult(parse(`disc_${func.id}`));
+          setMbtiResult(parse(`mbti_${func.id}`));
+          setBigFiveResult(parse(`bigfive_${func.id}`));
+          setGallupResult(parse(`gallup_${func.id}`));
+          setLpiResult(parse(`lpi_${func.id}`));
+        }
+      };
+      
+      fetchAssessments();
+    }
+  }, [func?.id]);
+
+  useEffect(() => {
     if (!id) return;
     const saved = localStorage.getItem(`badges_${id}`);
     if (saved) {
@@ -205,13 +246,6 @@ export default function FuncionarioProfile() {
     } else {
       setBadgesCounts({});
     }
-
-    const parse = (k: string) => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch { return null; } };
-    setDiscResult(parse(`disc_${id}`));
-    setMbtiResult(parse(`mbti_${id}`));
-    setBigFiveResult(parse(`bigfive_${id}`));
-    setGallupResult(parse(`gallup_${id}`));
-    setLpiResult(parse(`lpi_${id}`));
   }, [id]);
 
   const handleAddBadge = (badgeId: string) => {
