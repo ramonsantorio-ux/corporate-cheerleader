@@ -727,8 +727,8 @@ export default function Relatorios() {
         <CLevelAnalytics 
           funcionarios={funcionarios}
           feedbacks={feedbacks}
-          ocorrencias={ocorrencias}
-          eventos={eventos}
+          attendance={attendance}
+          warnings={warnings}
         />
       </div>
 

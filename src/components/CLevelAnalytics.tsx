@@ -8,37 +8,44 @@ import { motion } from 'framer-motion';
 interface CLevelAnalyticsProps {
   funcionarios: any[];
   feedbacks: any[];
-  ocorrencias: any[];
-  eventos: any[];
+  attendance: any[];
+  warnings: any[];
 }
 
-export default function CLevelAnalytics({ funcionarios, feedbacks, ocorrencias, eventos }: CLevelAnalyticsProps) {
+export default function CLevelAnalytics({ funcionarios, feedbacks, attendance, warnings }: CLevelAnalyticsProps) {
   
   // 1. Cálculos C-Level (Financeiro & Risco)
   const stats = useMemo(() => {
-    const totalAtestados = ocorrencias.filter(o => o.tipo === 'Atestado').reduce((acc, curr) => acc + (curr.dias_afastamento || 0), 0);
+    const totalAtestados = attendance.filter(o => o.tipo_registro === 'Atestado').reduce((acc, curr) => acc + (curr.dias_afastamento || 0), 0);
     const custoAtestados = totalAtestados * 250; // Estimativa de custo por dia não trabalhado
-    const numFaltas = ocorrencias.filter(o => o.tipo.includes('Falta')).length;
-    const advertencias = ocorrencias.filter(o => o.tipo === 'Advertência').length;
+    const numFaltas = attendance.filter(o => o.tipo_registro && o.tipo_registro.includes('Falta')).length;
+    const advertencias = warnings.length;
     
     const resolucaoFeedback = feedbacks.length > 0 
       ? Math.round((feedbacks.filter(f => f.status === 'Resolvido').length / feedbacks.length) * 100) 
       : 0;
 
     return { totalAtestados, custoAtestados, numFaltas, advertencias, resolucaoFeedback };
-  }, [ocorrencias, feedbacks]);
+  }, [attendance, warnings, feedbacks]);
 
   // 2. People Analytics (Cruzamento Setores x Problemas)
   const deptRisk = useMemo(() => {
     const map: Record<string, { faltas: number, ads: number, feedbacksNeg: number }> = {};
     
-    ocorrencias.forEach(o => {
+    attendance.forEach(o => {
       const func = funcionarios.find(f => f.id === o.funcionario_id);
       if (!func) return;
       const dept = func.departamento || 'Outro';
       if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
-      if (o.tipo.includes('Falta')) map[dept].faltas++;
-      if (o.tipo === 'Advertência') map[dept].ads++;
+      if (o.tipo_registro && o.tipo_registro.includes('Falta')) map[dept].faltas++;
+    });
+
+    warnings.forEach(w => {
+      const func = funcionarios.find(f => f.id === w.funcionario_id);
+      if (!func) return;
+      const dept = func.departamento || 'Outro';
+      if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
+      map[dept].ads++;
     });
 
     feedbacks.forEach(f => {
