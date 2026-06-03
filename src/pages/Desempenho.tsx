@@ -17,6 +17,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContaine
 import Avaliacoes from './Avaliacoes';
 import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
+import Feedback360 from './Feedback360';
 import PDIPage from './PDI';
 
 interface EvaluationCycle {
@@ -117,10 +118,11 @@ export default function Desempenho() {
   const statusLabel: Record<string, string> = { active: 'Ativo', draft: 'Rascunho', closed: 'Encerrado' };
 
   const tabs = [
-    { value: 'ciclos', label: 'Ciclos', icon: Calendar },
+    { value: 'ciclos', label: 'Ciclos de Avaliação', icon: Calendar },
+    { value: 'feedback360', label: 'Avaliações 360º', icon: Brain },
+    { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
     { value: 'metas', label: 'Gestão de Metas', icon: TrendingUp },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
-    { value: 'feedbacks', label: 'Feedbacks', icon: List },
     { value: 'pdi', label: 'PDI', icon: ClipboardList },
   ];
 
@@ -227,6 +229,10 @@ export default function Desempenho() {
         </TabsContent>
 
         {/* ═══ FEEDBACKS ═══ */}
+        <TabsContent value="feedback360" className="mt-4">
+          <Feedback360 />
+        </TabsContent>
+
         <TabsContent value="feedbacks" className="mt-4">
           <Feedbacks />
         </TabsContent>

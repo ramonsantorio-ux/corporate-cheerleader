@@ -32,7 +32,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Performance',
     items: [
-      { to: '/desempenho', icon: Target, label: 'Avaliações & Metas' },
+      { to: '/desempenho', icon: Target, label: 'Gestão de Performance' },
       { to: '/sucessao', icon: TrendingUp, label: 'Sucessão & 9Box' },
     ],
   },
@@ -40,7 +40,6 @@ const navGroups: NavGroup[] = [
     label: 'Talentos & Comportamento',
     items: [
       { to: '/treinamentos', icon: ClipboardList, label: 'Assessments Hub', badge: 'NOVO' },
-      { to: '/feedback360', icon: Brain, label: 'Feedback 360º', badge: '360' },
       { to: '/assessment/disc', icon: Brain, label: 'Teste DISC' },
       { to: '/assessment/mbti', icon: Brain, label: 'MBTI' },
       { to: '/assessment/bigfive', icon: Brain, label: 'Big Five' },

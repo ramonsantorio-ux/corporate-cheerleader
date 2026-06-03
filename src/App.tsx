@@ -96,7 +96,7 @@ function ProtectedRoutes() {
         <Route path="/assessments" element={<Treinamentos />} />
         <Route path="/assessment/:type" element={<AssessmentHub />} />
         <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
-        <Route path="/feedback360" element={<Feedback360 />} />
+        <Route path="/feedback360" element={<Navigate to="/desempenho?tab=feedback360" replace />} />
         {/* Legacy compat */}
         <Route path="/disc" element={<DiscTest />} />
         <Route path="/disc/:id" element={<DiscTest />} />
