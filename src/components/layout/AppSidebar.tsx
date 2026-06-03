@@ -94,7 +94,7 @@ export default function AppSidebar() {
           {!collapsed && (
             <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.15 }}>
               <span className="text-sidebar-foreground font-bold text-sm tracking-tight block leading-none">BUSATO</span>
-              <span className="text-sidebar-foreground/40 text-[10px] font-semibold tracking-[0.15em] uppercase">HCM Platform</span>
+              <span className="text-sidebar-foreground/40 text-[10px] font-semibold tracking-[0.15em] uppercase">Gestão de Contratos</span>
             </motion.div>
           )}
         </AnimatePresence>

@@ -14,7 +14,7 @@ export default function AppLayout() {
             <Outlet />
           </div>
           <footer className="mt-8 pt-4 border-t border-border text-center text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Busato HCM Platform. Todos os direitos reservados.
+            &copy; {new Date().getFullYear()} Gestão de Contratos. Todos os direitos reservados.
           </footer>
         </main>
       </div>

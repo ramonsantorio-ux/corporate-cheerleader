@@ -182,7 +182,7 @@ export default function Login() {
         
         {/* Rodapé Adicionado */}
         <div className="mt-8 text-center text-xs text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Busato HCM Platform.</p>
+          <p>&copy; {new Date().getFullYear()} Gestão de Contratos.</p>
           <p>Todos os direitos reservados.</p>
         </div>
       </motion.div>
