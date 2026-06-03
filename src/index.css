@@ -168,41 +168,19 @@
 
   /* ── KPI Cards ── */
   .kpi-card {
-    @apply bg-card border border-border rounded-xl p-5 relative overflow-hidden;
-    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.06);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    @apply glass-card p-4 border-l-4;
   }
 
-  .kpi-card:hover {
-    box-shadow: 0 4px 12px 0 rgba(0,0,0,0.1);
-    transform: translateY(-2px);
-  }
-
-  .kpi-card::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.4));
-    border-radius: 1.5px;
-  }
-
-  .kpi-card.success::after { background: linear-gradient(90deg, hsl(var(--success)), hsl(var(--success) / 0.4)); }
-  .kpi-card.warning::after { background: linear-gradient(90deg, hsl(var(--warning)), hsl(var(--warning) / 0.4)); }
-  .kpi-card.danger::after  { background: linear-gradient(90deg, hsl(var(--destructive)), hsl(var(--destructive) / 0.4)); }
-  .kpi-card.purple::after  { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+  .kpi-card.success { @apply border-l-success bg-success/5; }
+  .kpi-card.warning { @apply border-l-warning bg-warning/5; }
+  .kpi-card.danger  { @apply border-l-destructive bg-destructive/5; }
+  .kpi-card.purple  { @apply border-l-[#7c3aed] bg-[#7c3aed]/5; }
 
   /* ── Legacy compat ── */
-  .corporate-section        { @apply bg-card border border-border rounded-xl; }
-  .corporate-section-header { @apply px-6 py-4 border-b border-border flex items-center justify-between; }
+  .corporate-section        { @apply glass-card; }
+  .corporate-section-header { @apply px-6 py-4 border-b border-border/50 flex items-center justify-between; }
   .corporate-section-body   { @apply p-6; }
   .corporate-kpi            { @apply kpi-card; }
-  .corporate-kpi::before    { display: none; }
-  .corporate-kpi-accent::after  { background: linear-gradient(90deg, hsl(var(--success)), hsl(var(--success) / 0.4)); }
-  .corporate-kpi-warning::after { background: linear-gradient(90deg, hsl(var(--warning)), hsl(var(--warning) / 0.4)); }
-  .corporate-kpi-danger::after  { background: linear-gradient(90deg, hsl(var(--destructive)), hsl(var(--destructive) / 0.4)); }
 
   /* ── Table ── */
   .table-row-hover {

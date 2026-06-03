@@ -40,7 +40,7 @@ const CHART_COLORS = [
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload) return null;
   return (
-    <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-xs">
+    <div className="glass-card rounded-lg shadow-lg p-3 text-xs">
       <p className="font-semibold text-foreground mb-1">{label}</p>
       {payload.map((p: any) => (
         <div key={p.dataKey} className="flex items-center gap-2">
