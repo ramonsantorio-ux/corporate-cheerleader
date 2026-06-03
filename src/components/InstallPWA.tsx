@@ -31,7 +31,7 @@ export function InstallPWA() {
     }
 
     const handler = (e: Event) => {
-      e.preventDefault();
+      // Guardar o evento para o nosso botão caso o usuário perca o aviso nativo
       setDeferredPrompt(e);
       setShowPrompt(true);
     };
