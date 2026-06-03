@@ -16,53 +16,62 @@ export default function CLevelAnalytics({ funcionarios, feedbacks, attendance, w
   
   // 1. Cálculos C-Level (Financeiro & Risco)
   const stats = useMemo(() => {
-    const totalAtestados = attendance.filter(o => o.status === 'Atestado').length;
-    const custoAtestados = totalAtestados * 250; // Estimativa de custo por dia não trabalhado
-    const numFaltas = attendance.filter(o => o.status && o.status.includes('Falta')).length;
-    const advertencias = warnings.length;
-    
-    const resolucaoFeedback = feedbacks.length > 0 
-      ? Math.round((feedbacks.filter(f => f.status === 'Resolvido').length / feedbacks.length) * 100) 
-      : 0;
+    try {
+      const totalAtestados = (attendance || []).filter(o => o?.status === 'Atestado').length;
+      const custoAtestados = totalAtestados * 250; 
+      const numFaltas = (attendance || []).filter(o => o?.status && String(o.status).includes('Falta')).length;
+      const advertencias = (warnings || []).length;
+      
+      const resolucaoFeedback = (feedbacks || []).length > 0 
+        ? Math.round(((feedbacks || []).filter(f => f?.status === 'Resolvido').length / (feedbacks || []).length) * 100) 
+        : 0;
 
-    return { totalAtestados, custoAtestados, numFaltas, advertencias, resolucaoFeedback };
+      return { totalAtestados, custoAtestados, numFaltas, advertencias, resolucaoFeedback };
+    } catch (e) {
+      console.error("CLevelAnalytics Stats Error:", e);
+      return { totalAtestados: 0, custoAtestados: 0, numFaltas: 0, advertencias: 0, resolucaoFeedback: 0 };
+    }
   }, [attendance, warnings, feedbacks]);
 
   // 2. People Analytics (Cruzamento Setores x Problemas)
   const deptRisk = useMemo(() => {
-    const map: Record<string, { faltas: number, ads: number, feedbacksNeg: number }> = {};
-    
-    attendance.forEach(o => {
-      const func = funcionarios.find(f => f.id === o.employee_id);
-      if (!func) return;
-      const dept = func.departamento || 'Outro';
-      if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
-      if (o.status && o.status.includes('Falta')) map[dept].faltas++;
-    });
+    try {
+      const map: Record<string, { faltas: number, ads: number, feedbacksNeg: number }> = {};
+      
+      (attendance || []).forEach(o => {
+        const func = (funcionarios || []).find(f => f?.id === o?.employee_id);
+        if (!func) return;
+        const dept = func.departamento || 'Outro';
+        if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
+        if (o?.status && String(o.status).includes('Falta')) map[dept].faltas++;
+      });
 
-    warnings.forEach(w => {
-      const func = funcionarios.find(f => f.id === w.employee_id);
-      if (!func) return;
-      const dept = func.departamento || 'Outro';
-      if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
-      map[dept].ads++;
-    });
+      (warnings || []).forEach(w => {
+        const func = (funcionarios || []).find(f => f?.id === w?.employee_id);
+        if (!func) return;
+        const dept = func.departamento || 'Outro';
+        if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
+        map[dept].ads++;
+      });
 
-    feedbacks.forEach(f => {
-      const dept = f.setor || 'Outro';
-      if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
-      if (f.prioridade === 'Crítica') map[dept].feedbacksNeg++;
-    });
+      (feedbacks || []).forEach(f => {
+        const dept = f?.setor || 'Outro';
+        if (!map[dept]) map[dept] = { faltas: 0, ads: 0, feedbacksNeg: 0 };
+        if (f?.prioridade === 'Crítica') map[dept].feedbacksNeg++;
+      });
 
-    return Object.keys(map).map(dept => ({
-      subject: dept.substring(0, 10),
-      Faltas: map[dept].faltas,
-      Advertências: map[dept].ads,
-      Feedbacks_Críticos: map[dept].feedbacksNeg,
-      TotalRisk: map[dept].faltas + map[dept].ads + map[dept].feedbacksNeg
-    })).sort((a, b) => b.TotalRisk - a.TotalRisk).slice(0, 6); // Top 6 departamentos mais arriscados
-
-  }, [ocorrencias, feedbacks, funcionarios]);
+      return Object.keys(map).map(dept => ({
+        subject: dept.substring(0, 10),
+        Faltas: map[dept].faltas,
+        Advertências: map[dept].ads,
+        Feedbacks_Críticos: map[dept].feedbacksNeg,
+        TotalRisk: map[dept].faltas + map[dept].ads + map[dept].feedbacksNeg
+      })).sort((a, b) => b.TotalRisk - a.TotalRisk).slice(0, 6); 
+    } catch (e) {
+      console.error("CLevelAnalytics DeptRisk Error:", e);
+      return [];
+    }
+  }, [attendance, warnings, feedbacks, funcionarios]);
 
   return (
     <div className="space-y-8 animate-fade-in">

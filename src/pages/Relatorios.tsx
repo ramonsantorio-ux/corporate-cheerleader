@@ -95,13 +95,18 @@ export default function Relatorios() {
   })).sort((a, b) => b.count - a.count);
 
   const monthCounts: Record<string, number> = {};
-  filteredFeedbacks.forEach(f => { const d = new Date(f.criado_em); const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; monthCounts[key] = (monthCounts[key] || 0) + 1; });
+  filteredFeedbacks.forEach(f => { 
+    if ((f as any)?.data_criacao) {
+      const [y, m] = (f as any).data_criacao.split('-'); 
+      monthCounts[`${y}-${m}`] = (monthCounts[`${y}-${m}`] || 0) + 1; 
+    }
+  });
   const monthlyData = Object.entries(monthCounts).sort().slice(-6).map(([key, count]) => {
     const [, m] = key.split('-');
     const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     return { mes: months[parseInt(m) - 1], total: count };
   });
-  const maxVal = Math.max(...monthlyData.map(d => d.total), 1);
+  const maxVal = monthlyData.length > 0 ? Math.max(...monthlyData.map(d => d.total), 1) : 1;
 
   const gestorCounts: Record<string, number> = {};
   filteredFeedbacks.forEach(f => { const g = f.gestor || 'Sem gestor'; gestorCounts[g] = (gestorCounts[g] || 0) + 1; });
@@ -127,31 +132,36 @@ export default function Relatorios() {
 
   // ── Top desvios per employee ──
   const desviosPorFunc = useMemo(() => {
-    const map: Record<string, { nome: string; faltas: number; atestados: number; advertencias: number; eventos: number; total: number }> = {};
-    attDeviations.forEach(a => {
-      const emp = empMap[a.employee_id];
-      if (!emp) return;
-      if (!map[emp.id]) map[emp.id] = { nome: emp.nome, faltas: 0, atestados: 0, advertencias: 0, eventos: 0, total: 0 };
-      if (a.status === 'atestado') map[emp.id].atestados++;
-      else map[emp.id].faltas++;
-      map[emp.id].total++;
-    });
-    filteredWarnings.forEach(w => {
-      const emp = empMap[w.employee_id];
-      if (!emp) return;
-      if (!map[emp.id]) map[emp.id] = { nome: emp.nome, faltas: 0, atestados: 0, advertencias: 0, eventos: 0, total: 0 };
-      map[emp.id].advertencias++;
-      map[emp.id].total++;
-    });
-    filteredEvents.forEach(ev => {
-      const emp = funcionarios.find(f => f.nome.toLowerCase() === ev.involved_name?.toLowerCase());
-      if (!emp) return;
-      if (!map[emp.id]) map[emp.id] = { nome: emp.nome, faltas: 0, atestados: 0, advertencias: 0, eventos: 0, total: 0 };
-      map[emp.id].eventos++;
-      map[emp.id].total++;
-    });
-    return Object.values(map).sort((a, b) => b.total - a.total).slice(0, 10);
-  }, [attDeviations, filteredWarnings, filteredEvents, empMap, funcionarios]);
+    try {
+      const map: Record<string, { nome: string; faltas: number; atestados: number; advertencias: number; eventos: number; total: number }> = {};
+      attDeviations.forEach(a => {
+        const emp = empMap[a.employee_id];
+        if (!emp) return;
+        if (!map[emp.id]) map[emp.id] = { nome: emp.nome, faltas: 0, atestados: 0, advertencias: 0, eventos: 0, total: 0 };
+        if (a.status && String(a.status).includes('falta')) map[emp.id].faltas++;
+        else if (a.status === 'atestado') map[emp.id].atestados++;
+        map[emp.id].total++;
+      });
+      filteredWarnings.forEach(w => {
+        const emp = empMap[w.employee_id];
+        if (!emp) return;
+        if (!map[emp.id]) map[emp.id] = { nome: emp.nome, faltas: 0, atestados: 0, advertencias: 0, eventos: 0, total: 0 };
+        map[emp.id].advertencias++;
+        map[emp.id].total++;
+      });
+      filteredEvents.forEach(e => {
+        const emp = Object.values(empMap).find(x => x.nome === e.involved_name);
+        if (!emp) return;
+        if (!map[emp.id]) map[emp.id] = { nome: emp.nome, faltas: 0, atestados: 0, advertencias: 0, eventos: 0, total: 0 };
+        map[emp.id].eventos++;
+        map[emp.id].total++;
+      });
+      return Object.values(map).sort((a, b) => b.total - a.total).slice(0, 10);
+    } catch (e) {
+      console.error("Relatorios desviosPorFunc Error:", e);
+      return [];
+    }
+  }, [attDeviations, filteredWarnings, filteredEvents, empMap]);
 
   const fbMetrics = [
     { label: 'Total de Feedbacks', value: totalFb.toString() },
