@@ -51,6 +51,7 @@ import DiscTest from "./pages/DiscTest";
 import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
 import Feedback360 from "./pages/Feedback360";
+import { InstallPWA } from './components/InstallPWA';
 
 
 const queryClient = new QueryClient();
@@ -112,6 +113,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <InstallPWA />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
