@@ -7,8 +7,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter, drawPdfBarChart, drawPdfSlider } from '@/lib/pdfLogo';
 
-import { ExpandableChart } from '@/components/ui/ExpandableChart';
-
 export const discDescriptions: Record<string, any> = {
   D: {
     title: 'Dominância',
@@ -355,10 +353,7 @@ export function DiscReport({ resultScreen, employeeName = "Colaborador" }: { res
               <div className="bg-card rounded-xl border border-border/50 p-5 flex flex-col h-full shadow-sm">
                 <h3 className="font-bold text-sm text-center mb-4 uppercase tracking-wider text-muted-foreground">Intensidade do Perfil (%)</h3>
                 <div className="flex-1 min-h-[250px]">
-                  
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={sorted} margin={{ top: 20, right: 30, left: -20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
                       <XAxis dataKey="l" tick={{fontWeight: 'bold'}} />
@@ -369,19 +364,13 @@ export function DiscReport({ resultScreen, employeeName = "Colaborador" }: { res
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
-</ExpandableChart>
-
-
                 </div>
               </div>
 
               <div className="bg-card rounded-xl border border-border/50 p-5 flex flex-col h-full shadow-sm">
                 <h3 className="font-bold text-sm text-center mb-4 uppercase tracking-wider text-muted-foreground">Sua Dinâmica (Radar)</h3>
                 <div className="flex-1 min-h-[250px]">
-                  
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%">
                     <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                       <PolarGrid stroke="#e2e8f0" />
                       <PolarAngleAxis dataKey="subject" tick={{fill: '#64748b', fontSize: 11, fontWeight: 'bold'}} />
@@ -389,9 +378,6 @@ export function DiscReport({ resultScreen, employeeName = "Colaborador" }: { res
                       <RechartsTooltip />
                     </RadarChart>
                   </ResponsiveContainer>
-</ExpandableChart>
-
-
                 </div>
               </div>
 

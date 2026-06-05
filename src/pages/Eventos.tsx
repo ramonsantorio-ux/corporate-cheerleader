@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Plus, Search, Filter, TrendingUp, TrendingDown, Calendar, Truck, MapPin, User, ChevronDown, ChevronUp, Trash2, Eye, Download, Upload, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -19,8 +19,6 @@ import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
-
-import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
 interface EventRow {
   id: string;
@@ -68,7 +66,7 @@ export default function Eventos() {
   const [period, setPeriod] = useState<PeriodRange>(() => ({
     start: '2024-01-01',
     end: new Date().toISOString().slice(0, 10),
-    label: 'Todo o perÃ­odo',
+    label: 'Todo o período',
   }));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailEvent, setDetailEvent] = useState<EventRow | null>(null);
@@ -105,7 +103,7 @@ export default function Eventos() {
 
   async function handleCreate() {
     if (!newEvent.event_date || !newEvent.description || !newEvent.involved_name) {
-      toast.error('Preencha data, descriÃ§Ã£o e nome do envolvido');
+      toast.error('Preencha data, descrição e nome do envolvido');
       return;
     }
     const { error } = await supabase.from('events').insert(newEvent);
@@ -147,9 +145,9 @@ export default function Eventos() {
       
       return {
         event_date: dateVal,
-        event_time: String(r['HORÃRIO'] || r['horario'] || ''),
+        event_time: String(r['HORÁRIO'] || r['horario'] || ''),
         day_of_week: String(r['DIA DA SEMANA'] || r['dia_da_semana'] || ''),
-        description: String(r['DESCRIÃ‡ÃƒO DO EVENTO'] || r['descricao'] || ''),
+        description: String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || ''),
         location: String(r['LOCAL'] || r['local'] || ''),
         contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
         equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
@@ -160,7 +158,7 @@ export default function Eventos() {
       };
     }).filter(r => r.event_date && r.description);
 
-    if (!mapped.length) { toast.error('Nenhum dado vÃ¡lido encontrado'); return; }
+    if (!mapped.length) { toast.error('Nenhum dado válido encontrado'); return; }
 
     // Insert in batches of 50
     for (let i = 0; i < mapped.length; i += 50) {
@@ -176,9 +174,9 @@ export default function Eventos() {
   function handleExport() {
     const exportData = filtered.map(ev => ({
       'DATA': ev.event_date,
-      'HORÃRIO': ev.event_time,
+      'HORÁRIO': ev.event_time,
       'DIA DA SEMANA': ev.day_of_week,
-      'DESCRIÃ‡ÃƒO DO EVENTO': ev.description,
+      'DESCRIÇÃO DO EVENTO': ev.description,
       'LOCAL': ev.location,
       'CONTRATO': ev.contract,
       'EQUIPAMENTO': ev.equipment,
@@ -239,13 +237,13 @@ export default function Eventos() {
 
       // By location
       if (ev.location) {
-        const loc = ev.location.toUpperCase().includes('ATENDIMENTO MÃ‰DICO') || ev.location.toUpperCase().includes('PROBLEMA PARTICULAR')
-          ? 'ATENDIMENTO MÃ‰DICO / PESSOAL' : ev.location.length > 30 ? ev.location.slice(0, 30) + '...' : ev.location;
+        const loc = ev.location.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location.toUpperCase().includes('PROBLEMA PARTICULAR')
+          ? 'ATENDIMENTO MÉDICO / PESSOAL' : ev.location.length > 30 ? ev.location.slice(0, 30) + '...' : ev.location;
         byLocation[loc] = (byLocation[loc] || 0) + 1;
       }
 
       // Medical
-      if (ev.location?.toUpperCase().includes('ATENDIMENTO MÃ‰DICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR')) {
+      if (ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR')) {
         medicalCount++;
       }
 
@@ -275,7 +273,7 @@ export default function Eventos() {
       .sort(([, a], [, b]) => b - a).slice(0, 10)
       .map(([name, value]) => ({ name, value }));
 
-    const dayOfWeekOrder = ['segunda-feira', 'terÃ§a-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sÃ¡bado', 'domingo'];
+    const dayOfWeekOrder = ['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'];
     const dayData = dayOfWeekOrder.map(d => ({
       day: d.replace('-feira', '').charAt(0).toUpperCase() + d.replace('-feira', '').slice(1),
       eventos: byDayOfWeek[d] || 0,
@@ -301,7 +299,7 @@ export default function Eventos() {
             <AlertTriangle className="w-6 h-6 text-warning" />
             Controle de Eventos
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">Registro e anÃ¡lise de ocorrÃªncias operacionais</p>
+          <p className="text-muted-foreground text-sm mt-1">Registro e análise de ocorrências operacionais</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <label className="cursor-pointer">
@@ -321,7 +319,7 @@ export default function Eventos() {
                   <Input type="date" value={newEvent.event_date} onChange={e => setNewEvent({ ...newEvent, event_date: e.target.value })} />
                 </div>
                 <div className="space-y-2">
-                  <Label>HorÃ¡rio</Label>
+                  <Label>Horário</Label>
                   <FastInput value={newEvent.event_time} onValueChange={v => setNewEvent(p => ({ ...p, event_time: v }))} placeholder="Ex: 14:30" />
                 </div>
                 <div className="space-y-2">
@@ -329,7 +327,7 @@ export default function Eventos() {
                   <Select value={newEvent.day_of_week} onValueChange={v => setNewEvent({ ...newEvent, day_of_week: v })}>
                     <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                     <SelectContent>
-                      {['segunda-feira', 'terÃ§a-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sÃ¡bado', 'domingo'].map(d => (
+                      {['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'].map(d => (
                         <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</SelectItem>
                       ))}
                     </SelectContent>
@@ -337,11 +335,11 @@ export default function Eventos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Local</Label>
-                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÃTIO P" />
+                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P" />
                 </div>
                 <div className="space-y-2">
                   <Label>Equipamento</Label>
-                  <FastInput value={newEvent.equipment} onValueChange={v => setNewEvent(p => ({ ...p, equipment: v }))} placeholder="Ex: CAMINHÃƒO PIPA" />
+                  <FastInput value={newEvent.equipment} onValueChange={v => setNewEvent(p => ({ ...p, equipment: v }))} placeholder="Ex: CAMINHÃO PIPA" />
                 </div>
                 <div className="space-y-2">
                   <Label>Placa/TAG</Label>
@@ -360,7 +358,7 @@ export default function Eventos() {
                   <FastInput value={newEvent.involved_name} onValueChange={v => setNewEvent(p => ({ ...p, involved_name: v }))} placeholder="Nome completo" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>DescriÃ§Ã£o do Evento *</Label>
+                  <Label>Descrição do Evento *</Label>
                   <FastTextarea rows={4} value={newEvent.description} onValueChange={v => setNewEvent(p => ({ ...p, description: v }))} placeholder="Descreva o evento detalhadamente..." />
                 </div>
                 <div className="md:col-span-2">
@@ -377,7 +375,7 @@ export default function Eventos() {
         <PeriodFilter value={period} onChange={setPeriod} className="md:w-auto" />
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar por descriÃ§Ã£o, nome, local, equipamento..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+          <Input placeholder="Buscar por descrição, nome, local, equipamento..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
         </div>
         <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
           <SelectTrigger className="w-[200px]"><Filter className="w-4 h-4 mr-2" /><SelectValue placeholder="Equipamento" /></SelectTrigger>
@@ -405,7 +403,7 @@ export default function Eventos() {
               </button>
             </div>
           ) : (
-            <input type="text" placeholder="Filtrar por funcionÃ¡rio..." value={employeeSearch}
+            <input type="text" placeholder="Filtrar por funcionário..." value={employeeSearch}
               onChange={e => { setEmployeeSearch(e.target.value); setShowEmpDropdown(true); }}
               onFocus={() => setShowEmpDropdown(true)}
               className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground" />
@@ -423,7 +421,7 @@ export default function Eventos() {
                 )}
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{f.nome}</p>
-                  <p className="text-[10px] text-muted-foreground">{f.cargo} Â· {f.departamento}</p>
+                  <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.departamento}</p>
                 </div>
               </button>
             ))}
@@ -440,7 +438,7 @@ export default function Eventos() {
           )}
           <div className="flex-1 min-w-0">
             <p className="font-bold text-foreground">{selectedEmployee.nome}</p>
-            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} Â· {selectedEmployee.departamento}</p>
+            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} · {selectedEmployee.departamento}</p>
           </div>
           <button onClick={() => navigate(`/funcionario/${selectedEmployee.id}`)} className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium shrink-0">
             <Eye className="w-3.5 h-3.5" /> Ver Perfil
@@ -452,7 +450,7 @@ export default function Eventos() {
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground font-medium">Total de Eventos</p>
             <p className="text-3xl font-bold text-foreground mt-1">{analytics.total}</p>
-            <p className="text-xs text-muted-foreground mt-1">no perÃ­odo selecionado</p>
+            <p className="text-xs text-muted-foreground mt-1">no período selecionado</p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-warning">
@@ -464,18 +462,18 @@ export default function Eventos() {
         </Card>
         <Card className="border-l-4 border-l-destructive">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground font-medium">Atendimento MÃ©dico</p>
+            <p className="text-xs text-muted-foreground font-medium">Atendimento Médico</p>
             <p className="text-3xl font-bold text-foreground mt-1">{analytics.medicalCount}</p>
             <p className="text-xs text-destructive mt-1">{analytics.total ? ((analytics.medicalCount / analytics.total) * 100).toFixed(0) : 0}% do total</p>
           </CardContent>
         </Card>
         <Card className="border-l-4 border-l-[hsl(var(--success))]">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground font-medium">MÃ©dia Mensal</p>
+            <p className="text-xs text-muted-foreground font-medium">Média Mensal</p>
             <p className="text-3xl font-bold text-foreground mt-1">
               {analytics.monthTrend.length ? (analytics.total / analytics.monthTrend.length).toFixed(1) : 0}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">eventos/mÃªs</p>
+            <p className="text-xs text-muted-foreground mt-1">eventos/mês</p>
           </CardContent>
         </Card>
       </motion.div>
@@ -486,16 +484,12 @@ export default function Eventos() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" /> EvoluÃ§Ã£o Mensal
+              <TrendingUp className="w-4 h-4 text-primary" /> Evolução Mensal
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
-              
-
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={analytics.monthTrend}>
                   <defs>
                     <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
@@ -510,10 +504,6 @@ export default function Eventos() {
                   <Area type="monotone" dataKey="eventos" stroke="hsl(200, 80%, 38%)" fill="url(#eventGrad)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
-
             </div>
           </CardContent>
         </Card>
@@ -527,11 +517,7 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
-              
-
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.topEquipment} layout="vertical" margin={{ left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
                   <XAxis type="number" tick={{ fontSize: 11 }} />
@@ -540,10 +526,6 @@ export default function Eventos() {
                   <Bar dataKey="value" name="Eventos" fill="hsl(200, 80%, 38%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
-
             </div>
           </CardContent>
         </Card>
@@ -560,11 +542,7 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[240px]">
-              
-
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.dayData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
                   <XAxis dataKey="day" tick={{ fontSize: 10 }} />
@@ -577,10 +555,6 @@ export default function Eventos() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
-
             </div>
           </CardContent>
         </Card>
@@ -594,11 +568,7 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[240px]">
-              
-
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.yearData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
                   <XAxis dataKey="year" tick={{ fontSize: 11 }} />
@@ -607,10 +577,6 @@ export default function Eventos() {
                   <Bar dataKey="eventos" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
-
             </div>
           </CardContent>
         </Card>
@@ -624,11 +590,7 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[240px]">
-              
-
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={analytics.topLocations} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                     {analytics.topLocations.map((_, i) => (
@@ -638,10 +600,6 @@ export default function Eventos() {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
-
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {analytics.topLocations.map((loc, i) => (
@@ -659,7 +617,7 @@ export default function Eventos() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <User className="w-4 h-4 text-destructive" /> Colaboradores com Maior ReincidÃªncia
+            <User className="w-4 h-4 text-destructive" /> Colaboradores com Maior Reincidência
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -700,7 +658,7 @@ export default function Eventos() {
                     <TableHead className="hidden md:table-cell">Equipamento</TableHead>
                     <TableHead className="hidden md:table-cell">Placa</TableHead>
                     <TableHead className="hidden lg:table-cell">Local</TableHead>
-                    <TableHead className="w-[100px]">AÃ§Ãµes</TableHead>
+                    <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -713,10 +671,10 @@ export default function Eventos() {
                         <TableCell className="text-xs hidden md:table-cell">
                           {ev.equipment && ev.equipment !== 'NA' ? (
                             <Badge variant="secondary" className="text-[10px]">{ev.equipment}</Badge>
-                          ) : <span className="text-muted-foreground">â€”</span>}
+                          ) : <span className="text-muted-foreground">—</span>}
                         </TableCell>
-                        <TableCell className="text-xs hidden md:table-cell">{ev.plate_tag || 'â€”'}</TableCell>
-                        <TableCell className="text-xs hidden lg:table-cell truncate max-w-[200px]" title={ev.location}>{ev.location || 'â€”'}</TableCell>
+                        <TableCell className="text-xs hidden md:table-cell">{ev.plate_tag || '—'}</TableCell>
+                        <TableCell className="text-xs hidden lg:table-cell truncate max-w-[200px]" title={ev.location}>{ev.location || '—'}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDetailEvent(ev); }}>
@@ -736,10 +694,10 @@ export default function Eventos() {
                               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                                 <p className="text-xs text-foreground leading-relaxed">{ev.description}</p>
                                 <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
-                                  {ev.day_of_week && <span>ðŸ“… {ev.day_of_week}</span>}
-                                  {ev.supervisor && <span>ðŸ‘¤ Enc.: {ev.supervisor}</span>}
-                                  {ev.shift && <span>ðŸ”„ Turno: {ev.shift}</span>}
-                                  {ev.contract && <span>ðŸ“‹ Contrato: {ev.contract}</span>}
+                                  {ev.day_of_week && <span>📅 {ev.day_of_week}</span>}
+                                  {ev.supervisor && <span>👤 Enc.: {ev.supervisor}</span>}
+                                  {ev.shift && <span>🔄 Turno: {ev.shift}</span>}
+                                  {ev.contract && <span>📋 Contrato: {ev.contract}</span>}
                                 </div>
                               </motion.div>
                             </TableCell>
@@ -766,16 +724,16 @@ export default function Eventos() {
             <div className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div><Label className="text-muted-foreground">Data</Label><p className="font-medium">{new Date(detailEvent.event_date + 'T12:00').toLocaleDateString('pt-BR')}</p></div>
-                <div><Label className="text-muted-foreground">HorÃ¡rio</Label><p className="font-medium">{detailEvent.event_time || 'â€”'}</p></div>
+                <div><Label className="text-muted-foreground">Horário</Label><p className="font-medium">{detailEvent.event_time || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Envolvido</Label><p className="font-medium">{detailEvent.involved_name}</p></div>
-                <div><Label className="text-muted-foreground">Equipamento</Label><p className="font-medium">{detailEvent.equipment || 'â€”'}</p></div>
-                <div><Label className="text-muted-foreground">Placa/TAG</Label><p className="font-medium">{detailEvent.plate_tag || 'â€”'}</p></div>
-                <div><Label className="text-muted-foreground">Local</Label><p className="font-medium">{detailEvent.location || 'â€”'}</p></div>
-                <div><Label className="text-muted-foreground">Turno</Label><p className="font-medium">{detailEvent.shift || 'â€”'}</p></div>
-                <div><Label className="text-muted-foreground">Encarregado</Label><p className="font-medium">{detailEvent.supervisor || 'â€”'}</p></div>
+                <div><Label className="text-muted-foreground">Equipamento</Label><p className="font-medium">{detailEvent.equipment || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Placa/TAG</Label><p className="font-medium">{detailEvent.plate_tag || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Local</Label><p className="font-medium">{detailEvent.location || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Turno</Label><p className="font-medium">{detailEvent.shift || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Encarregado</Label><p className="font-medium">{detailEvent.supervisor || '—'}</p></div>
               </div>
               <div>
-                <Label className="text-muted-foreground">DescriÃ§Ã£o</Label>
+                <Label className="text-muted-foreground">Descrição</Label>
                 <p className="mt-1 text-foreground leading-relaxed bg-muted/50 rounded-lg p-3">{detailEvent.description}</p>
               </div>
             </div>

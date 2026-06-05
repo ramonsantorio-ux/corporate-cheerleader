@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter, PDF_COLORS } from '@/lib/pdfLogo';
 import { motion } from 'framer-motion';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
@@ -30,7 +30,7 @@ interface OvertimeRow { id: string; period_start: string; period_end: string; em
 
 const attendanceLabels: Record<string, string> = {
   falta: 'Falta Injustificada', falta_injustificada: 'Falta Injustificada',
-  falta_justificada: 'Falta Justificada', atestado: 'Atestado MÃ©dico',
+  falta_justificada: 'Falta Justificada', atestado: 'Atestado Médico',
   presente: 'Presente', extra: 'Hora Extra',
 };
 
@@ -71,7 +71,7 @@ export default function Relatorios() {
     return m;
   }, [funcionarios]);
 
-  // â”€â”€ Period filtering â”€â”€
+  // ── Period filtering ──
   const filteredFeedbacks = useMemo(() => feedbacks.filter(f => {
     const d = new Date(f.criado_em).toISOString().split('T')[0];
     return d >= period.start && d <= period.end;
@@ -83,7 +83,7 @@ export default function Relatorios() {
   const filteredMeetings = useMemo(() => meetings.filter(m => m.meeting_date >= period.start && m.meeting_date <= period.end), [meetings, period]);
   const filteredOvertime = useMemo(() => overtime.filter(o => o.period_start <= period.end && o.period_end >= period.start), [overtime, period]);
 
-  // â”€â”€ Feedback metrics â”€â”€
+  // ── Feedback metrics ──
   const totalFb = filteredFeedbacks.length;
   const resolvidosFb = filteredFeedbacks.filter(f => f.status === 'resolvido').length;
   const taxaResolucao = totalFb > 0 ? Math.round((resolvidosFb / totalFb) * 100) : 0;
@@ -112,25 +112,25 @@ export default function Relatorios() {
   filteredFeedbacks.forEach(f => { const g = f.gestor || 'Sem gestor'; gestorCounts[g] = (gestorCounts[g] || 0) + 1; });
   const gestorData = Object.entries(gestorCounts).map(([nome, count]) => ({ nome, count })).sort((a, b) => b.count - a.count);
 
-  // â”€â”€ Attendance metrics â”€â”€
+  // ── Attendance metrics ──
   const attDeviations = filteredAttendance.filter(a => ['falta', 'falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status));
   const faltasInj = filteredAttendance.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
   const faltasJust = filteredAttendance.filter(a => a.status === 'falta_justificada').length;
   const atestados = filteredAttendance.filter(a => a.status === 'atestado').length;
   const extras = filteredAttendance.filter(a => a.status === 'extra').length;
 
-  // â”€â”€ Warning metrics â”€â”€
+  // ── Warning metrics ──
   const warningsApplied = filteredWarnings.filter(w => w.applied).length;
   const warningsPending = filteredWarnings.filter(w => !w.applied).length;
 
-  // â”€â”€ Meeting metrics â”€â”€
+  // ── Meeting metrics ──
   const meetingsDone = filteredMeetings.filter(m => m.status === 'completed').length;
   const meetingsScheduled = filteredMeetings.filter(m => m.status === 'scheduled').length;
 
-  // â”€â”€ Overtime metrics â”€â”€
+  // ── Overtime metrics ──
   const totalExtras = filteredOvertime.reduce((s, o) => s + o.extras_count, 0);
 
-  // â”€â”€ Top desvios per employee â”€â”€
+  // ── Top desvios per employee ──
   const desviosPorFunc = useMemo(() => {
     try {
       const map: Record<string, { nome: string; faltas: number; atestados: number; advertencias: number; eventos: number; total: number }> = {};
@@ -165,12 +165,12 @@ export default function Relatorios() {
 
   const fbMetrics = [
     { label: 'Total de Feedbacks', value: totalFb.toString() },
-    { label: 'Taxa de resoluÃ§Ã£o', value: `${taxaResolucao}%` },
+    { label: 'Taxa de resolução', value: `${taxaResolucao}%` },
     { label: 'Resolvidos', value: resolvidosFb.toString() },
     { label: 'Pendentes', value: (totalFb - resolvidosFb).toString() },
   ];
 
-  // â•â•â•â•â•â•â•â•â•â• EXPORT: General PDF â•â•â•â•â•â•â•â•â•â•
+  // ══════════ EXPORT: General PDF ══════════
   async function exportPDF() {
     const { default: jsPDF } = await import('jspdf');
     const { default: autoTable } = await import('jspdf-autotable');
@@ -210,12 +210,12 @@ export default function Relatorios() {
     doc.setFillColor(250, 250, 250); doc.setDrawColor(220);
     doc.roundedRect(14, y, pw - 28, 14, 2, 2, 'FD');
     doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(30);
-    doc.text('RELATÃ“RIO GERAL CONSOLIDADO', 18, y + 9);
+    doc.text('RELATÓRIO GERAL CONSOLIDADO', 18, y + 9);
     doc.setFontSize(8); doc.setTextColor(100); doc.setFont('helvetica', 'normal');
-    doc.text(`PerÃ­odo: ${period.label}`, pw - 18, y + 9, { align: 'right' });
+    doc.text(`Período: ${period.label}`, pw - 18, y + 9, { align: 'right' });
     y += 22;
 
-    // â”€â”€ FEEDBACKS â”€â”€
+    // ── FEEDBACKS ──
     y = section('FEEDBACKS', y);
     autoTable(doc, {
       startY: y, margin: { left: 18, right: 18 },
@@ -240,18 +240,18 @@ export default function Relatorios() {
       y = (doc as any).lastAutoTable.finalY + 8;
     }
 
-    // â”€â”€ PONTO / OCORRÃŠNCIAS â”€â”€
+    // ── PONTO / OCORRÊNCIAS ──
     y = checkPage(y, 40);
-    y = section('PONTO / OCORRÃŠNCIAS', y);
+    y = section('PONTO / OCORRÊNCIAS', y);
     autoTable(doc, {
       startY: y, margin: { left: 18, right: 18 },
       head: [['Indicador', 'Quantidade']],
       body: [
         ['Faltas Injustificadas', String(faltasInj)],
         ['Faltas Justificadas', String(faltasJust)],
-        ['Atestados MÃ©dicos', String(atestados)],
+        ['Atestados Médicos', String(atestados)],
         ['Horas Extras (registros)', String(extras)],
-        ['Total Desvios no PerÃ­odo', String(attDeviations.length)],
+        ['Total Desvios no Período', String(attDeviations.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
       headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -260,16 +260,16 @@ export default function Relatorios() {
     });
     y = (doc as any).lastAutoTable.finalY + 8;
 
-    // â”€â”€ ADVERTÃŠNCIAS â”€â”€
+    // ── ADVERTÊNCIAS ──
     y = checkPage(y, 40);
-    y = section('ADVERTÃŠNCIAS', y);
+    y = section('ADVERTÊNCIAS', y);
     autoTable(doc, {
       startY: y, margin: { left: 18, right: 18 },
       head: [['Indicador', 'Quantidade']],
       body: [
-        ['AdvertÃªncias Aplicadas', String(warningsApplied)],
-        ['AdvertÃªncias Pendentes', String(warningsPending)],
-        ['Total no PerÃ­odo', String(filteredWarnings.length)],
+        ['Advertências Aplicadas', String(warningsApplied)],
+        ['Advertências Pendentes', String(warningsPending)],
+        ['Total no Período', String(filteredWarnings.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
       headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -285,9 +285,9 @@ export default function Relatorios() {
         head: [['Data', 'Colaborador', 'Motivo', 'Aplicada']],
         body: filteredWarnings.map(w => [
           new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'),
-          empMap[w.employee_id]?.nome || 'â€”',
+          empMap[w.employee_id]?.nome || '—',
           w.reason,
-          w.applied ? 'SIM' : 'NÃƒO',
+          w.applied ? 'SIM' : 'NÃO',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -296,18 +296,18 @@ export default function Relatorios() {
       y = (doc as any).lastAutoTable.finalY + 8;
     }
 
-    // â”€â”€ EVENTOS â”€â”€
+    // ── EVENTOS ──
     y = checkPage(y, 40);
     y = section(`EVENTOS (${filteredEvents.length})`, y);
     if (filteredEvents.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
-        head: [['Data', 'Envolvido', 'DescriÃ§Ã£o', 'Local']],
+        head: [['Data', 'Envolvido', 'Descrição', 'Local']],
         body: filteredEvents.slice(0, 50).map(ev => [
           new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR'),
           ev.involved_name,
           ev.description.length > 50 ? ev.description.slice(0, 47) + '...' : ev.description,
-          ev.location || 'â€”',
+          ev.location || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -316,19 +316,19 @@ export default function Relatorios() {
       y = (doc as any).lastAutoTable.finalY + 8;
     } else {
       doc.setFontSize(9); doc.setTextColor(120);
-      doc.text('Nenhum evento no perÃ­odo.', 18, y + 2); y += 10;
+      doc.text('Nenhum evento no período.', 18, y + 2); y += 10;
     }
 
-    // â”€â”€ REUNIÃ•ES â”€â”€
+    // ── REUNIÕES ──
     y = checkPage(y, 40);
-    y = section(`REUNIÃ•ES (${filteredMeetings.length})`, y);
+    y = section(`REUNIÕES (${filteredMeetings.length})`, y);
     autoTable(doc, {
       startY: y, margin: { left: 18, right: 18 },
       head: [['Indicador', 'Quantidade']],
       body: [
-        ['ReuniÃµes Realizadas', String(meetingsDone)],
-        ['ReuniÃµes Agendadas', String(meetingsScheduled)],
-        ['Total no PerÃ­odo', String(filteredMeetings.length)],
+        ['Reuniões Realizadas', String(meetingsDone)],
+        ['Reuniões Agendadas', String(meetingsScheduled)],
+        ['Total no Período', String(filteredMeetings.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
       headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -337,14 +337,14 @@ export default function Relatorios() {
     });
     y = (doc as any).lastAutoTable.finalY + 8;
 
-    // â”€â”€ HORAS EXTRAS â”€â”€
+    // ── HORAS EXTRAS ──
     y = checkPage(y, 30);
     y = section('CONTROLE DE HORAS EXTRAS', y);
     autoTable(doc, {
       startY: y, margin: { left: 18, right: 18 },
       head: [['Indicador', 'Quantidade']],
       body: [
-        ['Total Extras no PerÃ­odo', String(totalExtras)],
+        ['Total Extras no Período', String(totalExtras)],
         ['Registros de Controle', String(filteredOvertime.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
@@ -354,13 +354,13 @@ export default function Relatorios() {
     });
     y = (doc as any).lastAutoTable.finalY + 8;
 
-    // â”€â”€ TOP DESVIOS â”€â”€
+    // ── TOP DESVIOS ──
     if (desviosPorFunc.length > 0) {
       y = checkPage(y, 40);
       y = section('TOP COLABORADORES COM DESVIOS', y);
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
-        head: [['Colaborador', 'Faltas', 'Atestados', 'AdvertÃªncias', 'Eventos', 'Total']],
+        head: [['Colaborador', 'Faltas', 'Atestados', 'Advertências', 'Eventos', 'Total']],
         body: desviosPorFunc.map(d => [d.nome, String(d.faltas), String(d.atestados), String(d.advertencias), String(d.eventos), String(d.total)]),
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -377,8 +377,8 @@ export default function Relatorios() {
       doc.setDrawColor(...blue); doc.setLineWidth(0.5);
       doc.line(14, ph - 14, pw - 14, ph - 14);
       doc.setFontSize(7); doc.setTextColor(120); doc.setFont('helvetica', 'normal');
-      doc.text('Busato â€” Documento gerado automaticamente pelo sistema. Proibida a reproduÃ§Ã£o sem autorizaÃ§Ã£o.', 14, ph - 9);
-      doc.text(`PÃ¡gina ${i} / ${totalPages}`, pw - 14, ph - 9, { align: 'right' });
+      doc.text('Busato — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, ph - 9);
+      doc.text(`Página ${i} / ${totalPages}`, pw - 14, ph - 9, { align: 'right' });
     }
 
     doc.save(`Relatorio_Geral_${period.start}_${period.end}.pdf`);
@@ -387,7 +387,7 @@ export default function Relatorios() {
   async function exportExcel() {
     const XLSX = await import('xlsx');
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fbMetrics.map(m => ({ MÃ©trica: m.label, Valor: m.value }))), 'Feedbacks');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(fbMetrics.map(m => ({ Métrica: m.label, Valor: m.value }))), 'Feedbacks');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(departamentos.map(d => ({ Departamento: d.dept, Feedbacks: d.count, Percentual: `${d.pct}%` }))), 'Departamentos');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
       { Indicador: 'Faltas Injustificadas', Quantidade: faltasInj },
@@ -398,26 +398,26 @@ export default function Relatorios() {
     ]), 'Ponto');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filteredWarnings.map(w => ({
       Data: new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'),
-      Colaborador: empMap[w.employee_id]?.nome || 'â€”',
-      Motivo: w.reason, Aplicada: w.applied ? 'SIM' : 'NÃƒO',
-    }))), 'AdvertÃªncias');
+      Colaborador: empMap[w.employee_id]?.nome || '—',
+      Motivo: w.reason, Aplicada: w.applied ? 'SIM' : 'NÃO',
+    }))), 'Advertências');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filteredEvents.map(ev => ({
       Data: new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR'),
-      Envolvido: ev.involved_name, DescriÃ§Ã£o: ev.description, Local: ev.location || 'â€”',
+      Envolvido: ev.involved_name, Descrição: ev.description, Local: ev.location || '—',
     }))), 'Eventos');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filteredMeetings.map(m => ({
       Data: new Date(m.meeting_date + 'T00:00:00').toLocaleDateString('pt-BR'),
-      Gestor: m.manager_name, Status: m.status, Colaborador: empMap[m.employee_id]?.nome || 'â€”',
-    }))), 'ReuniÃµes');
+      Gestor: m.manager_name, Status: m.status, Colaborador: empMap[m.employee_id]?.nome || '—',
+    }))), 'Reuniões');
     if (desviosPorFunc.length > 0) {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(desviosPorFunc.map(d => ({
-        Colaborador: d.nome, Faltas: d.faltas, Atestados: d.atestados, AdvertÃªncias: d.advertencias, Eventos: d.eventos, Total: d.total,
+        Colaborador: d.nome, Faltas: d.faltas, Atestados: d.atestados, Advertências: d.advertencias, Eventos: d.eventos, Total: d.total,
       }))), 'Top Desvios');
     }
     XLSX.writeFile(wb, `Relatorio_Geral_${period.start}_${period.end}.xlsx`);
   }
 
-  // â•â•â•â•â•â•â•â•â•â• EXPORT: Employee Ficha PDF â•â•â•â•â•â•â•â•â•â•
+  // ══════════ EXPORT: Employee Ficha PDF ══════════
   async function exportEmployeePDF() {
     if (!selectedEmployee) return;
     const emp = funcionarios.find(f => f.id === selectedEmployee);
@@ -472,7 +472,7 @@ export default function Relatorios() {
     doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(...dark);
     doc.text('FICHA COMPLETA DO COLABORADOR', 18, y + 8);
     doc.setFontSize(9); doc.setTextColor(...gray); doc.setFont('helvetica', 'normal');
-    doc.text(`MatrÃ­cula: ${emp.id.substring(0, 8).toUpperCase()}`, 18, y + 15);
+    doc.text(`Matrícula: ${emp.id.substring(0, 8).toUpperCase()}`, 18, y + 15);
     y += 24;
 
     y = sect('DADOS CADASTRAIS', y);
@@ -482,24 +482,24 @@ export default function Relatorios() {
       columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45, textColor: blue } },
       body: [
         ['Nome Completo', emp.nome], ['Cargo', emp.cargo], ['Departamento', emp.departamento],
-        ['E-mail', emp.email || 'â€”'], ['Turno', turnoLabels[emp.turno] || emp.turno || 'â€”'],
-        ['Letra', emp.letra || 'â€”'], ['Escolaridade', emp.escolaridade || 'â€”'],
-        ['Data de AdmissÃ£o', emp.data_admissao ? new Date(emp.data_admissao).toLocaleDateString('pt-BR') : 'â€”'],
+        ['E-mail', emp.email || '—'], ['Turno', turnoLabels[emp.turno] || emp.turno || '—'],
+        ['Letra', emp.letra || '—'], ['Escolaridade', emp.escolaridade || '—'],
+        ['Data de Admissão', emp.data_admissao ? new Date(emp.data_admissao).toLocaleDateString('pt-BR') : '—'],
       ],
     });
     y = (doc as any).lastAutoTable.finalY + 10;
 
     // Feedbacks
     y = checkPage(y, 30);
-    y = sect(`HISTÃ“RICO DE FEEDBACKS (${empFeedbacks.length})`, y);
+    y = sect(`HISTÓRICO DE FEEDBACKS (${empFeedbacks.length})`, y);
     if (empFeedbacks.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        head: [['TÃ­tulo', 'Status', 'Prioridade', 'Gestor', 'Data']],
-        body: empFeedbacks.map(f => [f.titulo, f.status, f.prioridade, f.gestor || 'â€”', new Date(f.criado_em).toLocaleDateString('pt-BR')]),
+        head: [['Título', 'Status', 'Prioridade', 'Gestor', 'Data']],
+        body: empFeedbacks.map(f => [f.titulo, f.status, f.prioridade, f.gestor || '—', new Date(f.criado_em).toLocaleDateString('pt-BR')]),
       });
       y = (doc as any).lastAutoTable.finalY + 10;
     } else {
@@ -510,36 +510,36 @@ export default function Relatorios() {
     const fitData = (fitRes.data || []) as any[];
     const fitScored = fitData.filter(s => s.score != null);
     y = checkPage(y, 30);
-    y = sect('AVALIAÃ‡ÃƒO FIT CULTURAL', y);
+    y = sect('AVALIAÇÃO FIT CULTURAL', y);
     if (fitScored.length > 0) {
-      const stageLabels: Record<string, string> = { autoavaliacao: 'AutoavaliaÃ§Ã£o', gestor: 'Gestor', calibracao: 'CalibraÃ§Ã£o', validacao: 'ValidaÃ§Ã£o' };
+      const stageLabels: Record<string, string> = { autoavaliacao: 'Autoavaliação', gestor: 'Gestor', calibracao: 'Calibração', validacao: 'Validação' };
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
         headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        head: [['CritÃ©rio', 'Etapa', 'Nota']],
+        head: [['Critério', 'Etapa', 'Nota']],
         body: fitScored.map(s => [s.criteria, stageLabels[s.stage] || s.stage, String(s.score)]),
         styles: { fontSize: 8, cellPadding: 3 },
       });
       y = (doc as any).lastAutoTable.finalY + 10;
     } else {
-      doc.setFontSize(9); doc.setTextColor(...gray); doc.text('Nenhuma avaliaÃ§Ã£o FIT Cultural registrada.', 18, y + 2); y += 12;
+      doc.setFontSize(9); doc.setTextColor(...gray); doc.text('Nenhuma avaliação FIT Cultural registrada.', 18, y + 2); y += 12;
     }
 
     // Goals
     const goalsData = (goalsRes.data || []) as any[];
     y = checkPage(y, 30);
-    y = sect(`METAS â€” ${emp.cargo.toUpperCase()}`, y);
+    y = sect(`METAS — ${emp.cargo.toUpperCase()}`, y);
     if (goalsData.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
         headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        head: [['DescriÃ§Ã£o', 'Peso (%)', 'Resultado', 'Status']],
+        head: [['Descrição', 'Peso (%)', 'Resultado', 'Status']],
         body: goalsData.map(g => {
-          let status = 'â€”';
-          if (g.resultado != null) { if (g.resultado >= 100) status = 'âœ“ Atingida'; else if (g.resultado >= 80) status = 'â— Parcial'; else status = 'âœ— Abaixo'; }
-          return [g.descricao, `${g.peso}%`, g.resultado != null ? `${g.resultado}%` : 'â€”', status];
+          let status = '—';
+          if (g.resultado != null) { if (g.resultado >= 100) status = '✓ Atingida'; else if (g.resultado >= 80) status = '◐ Parcial'; else status = '✗ Abaixo'; }
+          return [g.descricao, `${g.peso}%`, g.resultado != null ? `${g.resultado}%` : '—', status];
         }),
         styles: { fontSize: 8, cellPadding: 3 },
       });
@@ -552,59 +552,59 @@ export default function Relatorios() {
     const empAtt = (attRes.data || []) as any[];
     const empDevs = empAtt.filter((a: any) => ['falta', 'falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status));
     y = checkPage(y, 30);
-    y = sect(`REGISTROS DE PONTO â€” DESVIOS (${empDevs.length})`, y);
+    y = sect(`REGISTROS DE PONTO — DESVIOS (${empDevs.length})`, y);
     if (empDevs.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
         headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: blueLt },
-        head: [['Data', 'Status', 'ObservaÃ§Ã£o']],
+        head: [['Data', 'Status', 'Observação']],
         body: empDevs.map((a: any) => [
           new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR'),
           attendanceLabels[a.status] || a.status,
-          a.observation || 'â€”',
+          a.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
       });
       y = (doc as any).lastAutoTable.finalY + 10;
     } else {
-      doc.setFontSize(9); doc.setTextColor(...gray); doc.text('Nenhum desvio de ponto no perÃ­odo.', 18, y + 2); y += 12;
+      doc.setFontSize(9); doc.setTextColor(...gray); doc.text('Nenhum desvio de ponto no período.', 18, y + 2); y += 12;
     }
 
     // Warnings
     const empWarns = (warnRes.data || []) as any[];
     y = checkPage(y, 30);
-    y = sect(`ADVERTÃŠNCIAS (${empWarns.length})`, y);
+    y = sect(`ADVERTÊNCIAS (${empWarns.length})`, y);
     if (empWarns.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
         headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: blueLt },
-        head: [['Data', 'Motivo', 'Aplicada', 'ObservaÃ§Ã£o']],
+        head: [['Data', 'Motivo', 'Aplicada', 'Observação']],
         body: empWarns.map((w: any) => [
-          new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'), w.reason, w.applied ? 'SIM' : 'NÃƒO', w.observation || 'â€”',
+          new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'), w.reason, w.applied ? 'SIM' : 'NÃO', w.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
       });
       y = (doc as any).lastAutoTable.finalY + 10;
     } else {
-      doc.setFontSize(9); doc.setTextColor(...gray); doc.text('Nenhuma advertÃªncia no perÃ­odo.', 18, y + 2); y += 12;
+      doc.setFontSize(9); doc.setTextColor(...gray); doc.text('Nenhuma advertência no período.', 18, y + 2); y += 12;
     }
 
     // Events
     const empEvents = (eventsRes.data || []) as any[];
     y = checkPage(y, 30);
-    y = sect(`HISTÃ“RICO DE EVENTOS (${empEvents.length})`, y);
+    y = sect(`HISTÓRICO DE EVENTOS (${empEvents.length})`, y);
     if (empEvents.length > 0) {
       autoTable(doc, {
         startY: y, margin: { left: 18, right: 18 },
         headStyles: { fillColor: blue, textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: blueLt },
-        head: [['Data', 'DescriÃ§Ã£o', 'Local', 'Equipamento']],
+        head: [['Data', 'Descrição', 'Local', 'Equipamento']],
         body: empEvents.map((ev: any) => [
-          ev.event_date ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR') : 'â€”',
-          ev.description?.length > 50 ? ev.description.slice(0, 47) + '...' : (ev.description || 'â€”'),
-          ev.location || 'â€”', ev.equipment || 'â€”',
+          ev.event_date ? new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—',
+          ev.description?.length > 50 ? ev.description.slice(0, 47) + '...' : (ev.description || '—'),
+          ev.location || '—', ev.equipment || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
       });
@@ -630,8 +630,8 @@ export default function Relatorios() {
       doc.setDrawColor(...blue); doc.setLineWidth(0.5);
       doc.line(14, pageH - 14, pageW - 14, pageH - 14);
       doc.setFontSize(7); doc.setTextColor(...gray); doc.setFont('helvetica', 'normal');
-      doc.text('Busato â€” Documento gerado automaticamente pelo sistema. Proibida a reproduÃ§Ã£o sem autorizaÃ§Ã£o.', 14, pageH - 9);
-      doc.text(`PÃ¡gina ${i} / ${totalPages}`, pageW - 14, pageH - 9, { align: 'right' });
+      doc.text('Busato — Documento gerado automaticamente pelo sistema. Proibida a reprodução sem autorização.', 14, pageH - 9);
+      doc.text(`Página ${i} / ${totalPages}`, pageW - 14, pageH - 9, { align: 'right' });
     }
 
     doc.save(`ficha-${emp.nome.replace(/\s+/g, '-').toLowerCase()}.pdf`);
@@ -639,8 +639,8 @@ export default function Relatorios() {
 
   function downloadTemplateCadastro() {
     const templateData = [
-      { Nome: 'JoÃ£o da Silva', Email: 'joao@empresa.com', Cargo: 'Encarregado Operacional', Departamento: 'Contrato Porto', 'Data AdmissÃ£o': '2024-01-15', Escolaridade: 'Ensino Superior Completo', GraduaÃ§Ã£o: 'Engenharia Civil', 'PÃ³s-GraduaÃ§Ã£o': 'NÃ£o', 'Tipo PÃ³s-GraduaÃ§Ã£o': '', Turno: 'Dia A' },
-      { Nome: 'Maria Santos', Email: 'maria@empresa.com', Cargo: 'Motorista', Departamento: 'Frotas', 'Data AdmissÃ£o': '2023-06-10', Escolaridade: 'Ensino MÃ©dio', GraduaÃ§Ã£o: '', 'PÃ³s-GraduaÃ§Ã£o': 'NÃ£o', 'Tipo PÃ³s-GraduaÃ§Ã£o': '', Turno: 'Noite B' },
+      { Nome: 'João da Silva', Email: 'joao@empresa.com', Cargo: 'Encarregado Operacional', Departamento: 'Contrato Porto', 'Data Admissão': '2024-01-15', Escolaridade: 'Ensino Superior Completo', Graduação: 'Engenharia Civil', 'Pós-Graduação': 'Não', 'Tipo Pós-Graduação': '', Turno: 'Dia A' },
+      { Nome: 'Maria Santos', Email: 'maria@empresa.com', Cargo: 'Motorista', Departamento: 'Frotas', 'Data Admissão': '2023-06-10', Escolaridade: 'Ensino Médio', Graduação: '', 'Pós-Graduação': 'Não', 'Tipo Pós-Graduação': '', Turno: 'Noite B' },
     ];
     const ws = XLSX.utils.json_to_sheet(templateData);
     ws['!cols'] = [{ wch: 25 }, { wch: 25 }, { wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 25 }, { wch: 12 }];
@@ -650,19 +650,19 @@ export default function Relatorios() {
   }
 
   function downloadTemplatePonto() {
-    const header = [['Nome', 'Data', 'Status', 'ObservaÃ§Ã£o']];
+    const header = [['Nome', 'Data', 'Status', 'Observação']];
     const examples = [
-      ['JoÃ£o Silva', '2025-01-15', 'presente', ''],
-      ['Maria Souza', '2025-01-15', 'falta_injustificada', 'NÃ£o compareceu'],
-      ['Pedro Santos', '2025-01-15', 'atestado', 'Atestado mÃ©dico 3 dias'],
+      ['João Silva', '2025-01-15', 'presente', ''],
+      ['Maria Souza', '2025-01-15', 'falta_injustificada', 'Não compareceu'],
+      ['Pedro Santos', '2025-01-15', 'atestado', 'Atestado médico 3 dias'],
       ['Ana Lima', '2025-01-15', 'extra', 'Hora extra autorizada'],
-      ['Carlos Dias', '2025-01-15', 'falta_justificada', 'Consulta mÃ©dica'],
-      ['JosÃ© Oliveira', '2025-01-15', 'ferias', ''],
+      ['Carlos Dias', '2025-01-15', 'falta_justificada', 'Consulta médica'],
+      ['José Oliveira', '2025-01-15', 'ferias', ''],
       ['Lucas Costa', '2025-01-15', 'abono', 'Abono do gestor'],
-      ['Fernanda Rocha', '2025-01-15', 'banco_horas', 'CompensaÃ§Ã£o'],
+      ['Fernanda Rocha', '2025-01-15', 'banco_horas', 'Compensação'],
       ['Roberto Alves', '2025-01-15', 'afastamento', 'Afastamento INSS'],
     ];
-    const instructions = [[], ['INSTRUÃ‡Ã•ES:'], ['Status vÃ¡lidos: presente, falta_injustificada, falta_justificada, atestado, extra, ferias, afastamento, abono, banco_horas'], ['O campo Nome deve corresponder exatamente ao nome cadastrado no sistema.'], ['A Data deve estar no formato AAAA-MM-DD (ex: 2025-01-15).']];
+    const instructions = [[], ['INSTRUÇÕES:'], ['Status válidos: presente, falta_injustificada, falta_justificada, atestado, extra, ferias, afastamento, abono, banco_horas'], ['O campo Nome deve corresponder exatamente ao nome cadastrado no sistema.'], ['A Data deve estar no formato AAAA-MM-DD (ex: 2025-01-15).']];
     const ws = XLSX.utils.aoa_to_sheet([...header, ...examples, ...instructions]);
     ws['!cols'] = [{ wch: 25 }, { wch: 14 }, { wch: 22 }, { wch: 35 }];
     const wb = XLSX.utils.book_new();
@@ -671,18 +671,18 @@ export default function Relatorios() {
   }
 
   function downloadTemplateFerias() {
-    const header = [['Nome', 'Dias', 'MÃªs', 'InÃ­cio', 'Fim', 'ObservaÃ§Ã£o']];
-    const example = [['JoÃ£o Silva', 30, 'Janeiro', '2025-01-05', '2025-02-04', 'FÃ©rias regulares']];
+    const header = [['Nome', 'Dias', 'Mês', 'Início', 'Fim', 'Observação']];
+    const example = [['João Silva', 30, 'Janeiro', '2025-01-05', '2025-02-04', 'Férias regulares']];
     const ws = XLSX.utils.aoa_to_sheet([...header, ...example]);
     ws['!cols'] = [{ wch: 25 }, { wch: 8 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 25 }];
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'FÃ©rias');
+    XLSX.utils.book_append_sheet(wb, ws, 'Férias');
     XLSX.writeFile(wb, 'modelo_ferias.xlsx');
   }
 
   function downloadTemplateExtras() {
-    const header = [['Nome', 'InÃ­cio PerÃ­odo', 'Fim PerÃ­odo', 'Extras Realizadas', 'MÃ¡ximo Extras']];
-    const example = [['JoÃ£o Silva', '2025-01-01', '2025-01-31', 1, 3]];
+    const header = [['Nome', 'Início Período', 'Fim Período', 'Extras Realizadas', 'Máximo Extras']];
+    const example = [['João Silva', '2025-01-01', '2025-01-31', 1, 3]];
     const ws = XLSX.utils.aoa_to_sheet([...header, ...example]);
     ws['!cols'] = [{ wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 15 }];
     const wb = XLSX.utils.book_new();
@@ -696,7 +696,7 @@ export default function Relatorios() {
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between flex-wrap gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Analytics</p>
-          <h1 className="text-2xl font-bold text-foreground">RelatÃ³rios</h1>
+          <h1 className="text-2xl font-bold text-foreground">Relatórios</h1>
         </div>
         <div className="flex gap-2 flex-wrap">
           <DropdownMenu>
@@ -711,7 +711,7 @@ export default function Relatorios() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={downloadTemplateCadastro}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo Cadastro</DropdownMenuItem>
               <DropdownMenuItem onClick={downloadTemplatePonto}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo Ponto</DropdownMenuItem>
-              <DropdownMenuItem onClick={downloadTemplateFerias}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo FÃ©rias</DropdownMenuItem>
+              <DropdownMenuItem onClick={downloadTemplateFerias}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo Férias</DropdownMenuItem>
               <DropdownMenuItem onClick={downloadTemplateExtras}><FileSpreadsheet className="w-4 h-4 mr-2" />Modelo Extras</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -724,10 +724,10 @@ export default function Relatorios() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-section">
         <div className="px-6 py-4 flex flex-col sm:flex-row items-center gap-3">
           <User className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-          <span className="text-sm font-medium text-foreground">Ficha completa por funcionÃ¡rio:</span>
+          <span className="text-sm font-medium text-foreground">Ficha completa por funcionário:</span>
           <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-            <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder="Selecione o funcionÃ¡rio" /></SelectTrigger>
-            <SelectContent>{funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} â€” {f.cargo}</SelectItem>)}</SelectContent>
+            <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder="Selecione o funcionário" /></SelectTrigger>
+            <SelectContent>{funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} — {f.cargo}</SelectItem>)}</SelectContent>
           </Select>
           <Button size="sm" onClick={exportEmployeePDF} disabled={!selectedEmployee}><Download className="w-4 h-4 mr-2" />Baixar PDF</Button>
         </div>
@@ -742,15 +742,15 @@ export default function Relatorios() {
         />
       </div>
 
-      {/* â•â• Charts: Feedbacks â•â• */}
+      {/* ══ Charts: Feedbacks ══ */}
       <div className="grid lg:grid-cols-2 gap-6">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-section">
           <div className="corporate-section-header">
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Feedbacks por MÃªs</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Feedbacks por Mês</h2>
             </div>
-            <span className="text-xs text-muted-foreground">Ãšltimos 6 meses</span>
+            <span className="text-xs text-muted-foreground">Últimos 6 meses</span>
           </div>
           <div className="corporate-section-body">
             {monthlyData.length === 0 ? <p className="text-sm text-muted-foreground">Sem dados.</p> : (
@@ -792,13 +792,13 @@ export default function Relatorios() {
         </motion.div>
       </div>
 
-      {/* â•â• Top Desvios â•â• */}
+      {/* ══ Top Desvios ══ */}
       {desviosPorFunc.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="corporate-section">
           <div className="corporate-section-header">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-destructive" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Top Colaboradores com Desvios no PerÃ­odo</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Top Colaboradores com Desvios no Período</h2>
             </div>
           </div>
           <div className="corporate-section-body overflow-auto">
@@ -808,7 +808,7 @@ export default function Relatorios() {
                   <th className="py-2 px-3 font-semibold text-muted-foreground text-xs uppercase">Colaborador</th>
                   <th className="py-2 px-3 font-semibold text-muted-foreground text-xs uppercase text-center">Faltas</th>
                   <th className="py-2 px-3 font-semibold text-muted-foreground text-xs uppercase text-center">Atestados</th>
-                  <th className="py-2 px-3 font-semibold text-muted-foreground text-xs uppercase text-center">AdvertÃªncias</th>
+                  <th className="py-2 px-3 font-semibold text-muted-foreground text-xs uppercase text-center">Advertências</th>
                   <th className="py-2 px-3 font-semibold text-muted-foreground text-xs uppercase text-center">Eventos</th>
                   <th className="py-2 px-3 font-semibold text-muted-foreground text-xs uppercase text-center">Total</th>
                 </tr>
@@ -835,7 +835,7 @@ export default function Relatorios() {
         <div className="corporate-section-header">
           <div className="flex items-center gap-2">
             <PieChart className="w-4 h-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">DistribuiÃ§Ã£o por Departamento</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Distribuição por Departamento</h2>
           </div>
         </div>
         <div className="corporate-section-body">

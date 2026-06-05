@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -16,7 +16,7 @@ import {
   PieChart, Pie, Cell, Legend, AreaChart, Area, RadialBarChart, RadialBar,
 } from 'recharts';
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Types ──────────────────────────────────────────────────────────────────
 interface Func {
   id: string; nome: string; cargo: string; departamento: string;
   foto_url: string; feedbacks_recebidos: number; feedbacks_resolvidos: number;
@@ -54,7 +54,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
-// â”€â”€â”€ Main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main ───────────────────────────────────────────────────────────────────
 export default function Index() {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
@@ -112,7 +112,7 @@ export default function Index() {
     return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
   }, [employeeSearch, funcionarios]);
 
-  // â”€â”€â”€ Data filtering by selected employee â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Data filtering by selected employee ──────────────────────────────
   const sel = selectedEmployee;
 
   const periodFeedbacks = useMemo(() => {
@@ -152,7 +152,7 @@ export default function Index() {
     return evaluations.filter(e => e.evaluated_name.trim().toLowerCase() === sel.nome.trim().toLowerCase());
   }, [evaluations, sel]);
 
-  // â”€â”€â”€ KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── KPIs ──────────────────────────────────────────────────────────────
   const totalColaboradores = funcionarios.length;
   const fbTotal = periodFeedbacks.length;
   const fbResolvidos = periodFeedbacks.filter(f => f.status === 'resolvido').length;
@@ -182,7 +182,7 @@ export default function Index() {
 
   const totalEvents = filteredEvents.length;
 
-  // â”€â”€â”€ Meeting KPIs (Mensal Operacional + Actions) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Meeting KPIs (Mensal Operacional + Actions) ──────────────────
   const meetingKpis = useMemo(() => {
     const leaderCargos = ['gerente operacional', 'coordenador operacional', 'encarregado operacional', 'analista de controle', 'supervisor'];
     const leaders = funcionarios.filter(f => leaderCargos.some(c => f.cargo.toLowerCase().includes(c)));
@@ -212,18 +212,18 @@ export default function Index() {
     return { mensalRate, monthsWithMensal, expectedMonths, leaderCoverage, attendedLeaders: attendedLeaders.size, totalLeaders: leaderIds.size, pendentes, concluidas, conclusionRate, totalActions: periodActions.length };
   }, [filteredMeetings, funcionarios, meetingActions, meetingAttendees, period]);
 
-  // â”€â”€â”€ Chart data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Chart data ───────────────────────────────────────────────────────
   const fbByPriority = useMemo(() => {
     const counts: Record<string, number> = {};
     periodFeedbacks.forEach(f => { counts[f.prioridade] = (counts[f.prioridade] || 0) + 1; });
-    const labels: Record<string, string> = { alta: 'Alta', media: 'MÃ©dia', baixa: 'Baixa', critica: 'CrÃ­tica' };
+    const labels: Record<string, string> = { alta: 'Alta', media: 'Média', baixa: 'Baixa', critica: 'Crítica' };
     return Object.entries(counts).map(([k, v]) => ({ name: labels[k] || k, value: v }));
   }, [periodFeedbacks]);
 
   const fbByStatus = useMemo(() => {
     const counts: Record<string, number> = {};
     periodFeedbacks.forEach(f => { counts[f.status] = (counts[f.status] || 0) + 1; });
-    const labels: Record<string, string> = { novo: 'Novo', em_analise: 'Em AnÃ¡lise', em_andamento: 'Em Andamento', resolvido: 'Resolvido', arquivado: 'Arquivado' };
+    const labels: Record<string, string> = { novo: 'Novo', em_analise: 'Em Análise', em_andamento: 'Em Andamento', resolvido: 'Resolvido', arquivado: 'Arquivado' };
     return Object.entries(counts).map(([k, v]) => ({ name: labels[k] || k, value: v }));
   }, [periodFeedbacks]);
 
@@ -286,9 +286,9 @@ export default function Index() {
   }, [filteredAttendance, filteredWarnings, filteredEvents, funcionarios]);
 
   const gaugeData = useMemo(() => [
-    { name: 'ResoluÃ§Ã£o FB', value: fbTaxaResolucao, fill: 'hsl(155, 60%, 38%)' },
-    { name: 'AvaliaÃ§Ãµes', value: filteredEvaluations.length > 0 ? Math.round((evalsCompleted / filteredEvaluations.length) * 100) : 0, fill: 'hsl(200, 80%, 38%)' },
-    { name: 'ReuniÃµes 1:1', value: meetingsScheduled > 0 ? Math.round((meetingsCompleted / meetingsScheduled) * 100) : 0, fill: 'hsl(280, 60%, 55%)' },
+    { name: 'Resolução FB', value: fbTaxaResolucao, fill: 'hsl(155, 60%, 38%)' },
+    { name: 'Avaliações', value: filteredEvaluations.length > 0 ? Math.round((evalsCompleted / filteredEvaluations.length) * 100) : 0, fill: 'hsl(200, 80%, 38%)' },
+    { name: 'Reuniões 1:1', value: meetingsScheduled > 0 ? Math.round((meetingsCompleted / meetingsScheduled) * 100) : 0, fill: 'hsl(280, 60%, 55%)' },
   ], [fbTaxaResolucao, evalsCompleted, filteredEvaluations, meetingsCompleted, meetingsScheduled]);
 
   // Department feedback performance
@@ -301,8 +301,8 @@ export default function Index() {
       if (f.status === 'resolvido') deptMap[f.setor].resolvidos++;
     });
     const labels: Record<string, string> = {
-      contrato_porto: 'Porto', contrato_usina: 'Usina', frotas: 'Frotas', medicao: 'MediÃ§Ã£o',
-      seguranca: 'SeguranÃ§a', cco: 'CCO', ccm: 'CCM', manutencao: 'ManutenÃ§Ã£o', rh: 'RH', financeiro: 'Financeiro'
+      contrato_porto: 'Porto', contrato_usina: 'Usina', frotas: 'Frotas', medicao: 'Medição',
+      seguranca: 'Segurança', cco: 'CCO', ccm: 'CCM', manutencao: 'Manutenção', rh: 'RH', financeiro: 'Financeiro'
     };
     return Object.entries(deptMap).map(([k, v]) => ({
       name: labels[k] || k, Resolvidos: v.resolvidos, Pendentes: v.total - v.resolvidos,
@@ -323,18 +323,18 @@ export default function Index() {
         <div className="flex items-end justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Meu Painel</h1>
-            <p className="text-muted-foreground mt-1">Resumo das suas atividades e informaÃ§Ãµes.</p>
+            <p className="text-muted-foreground mt-1">Resumo das suas atividades e informações.</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard title="Saldo de FÃ©rias" value="15 dias" change="Vence em Nov/2026" changeType="positive" icon={CalendarDays} delay={0} />
-          <StatCard title="PrÃ³ximos Feedbacks" value="2" change="1 pendente de leitura" changeType="negative" icon={MessageSquare} delay={0.1} />
+          <StatCard title="Saldo de Férias" value="15 dias" change="Vence em Nov/2026" changeType="positive" icon={CalendarDays} delay={0} />
+          <StatCard title="Próximos Feedbacks" value="2" change="1 pendente de leitura" changeType="negative" icon={MessageSquare} delay={0.1} />
           <StatCard title="Eventos da Semana" value="1" change="Treinamento (Sexta)" changeType="neutral" icon={AlertTriangle} delay={0.2} />
         </div>
         <div className="mt-8 bg-card p-6 rounded-xl border border-border">
-          <h2 className="text-lg font-semibold mb-4">Como vocÃª estÃ¡ se sentindo hoje?</h2>
+          <h2 className="text-lg font-semibold mb-4">Como você está se sentindo hoje?</h2>
           <div className="flex gap-4">
-             {["ðŸ˜¢", "ðŸ˜•", "ðŸ˜", "ðŸ™‚", "ðŸ¤©"].map(emoji => (
+             {["😢", "😕", "😐", "🙂", "🤩"].map(emoji => (
                <button key={emoji} className="text-4xl hover:scale-125 transition-transform" onClick={() => alert('Humor registrado com sucesso!')}>{emoji}</button>
              ))}
           </div>
@@ -345,18 +345,18 @@ export default function Index() {
 
   return (
     <div className="space-y-6">
-      {/* â•â•â• HEADER â•â•â• */}
+      {/* ═══ HEADER ═══ */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between flex-wrap gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Painel Executivo</p>
-          <h1 className="text-2xl font-bold text-foreground">VisÃ£o Geral</h1>
+          <h1 className="text-2xl font-bold text-foreground">Visão Geral</h1>
         </div>
         <p className="text-xs text-muted-foreground">
           Atualizado em {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
         </p>
       </motion.div>
 
-      {/* â•â•â• FILTERS ROW â•â•â• */}
+      {/* ═══ FILTERS ROW ═══ */}
       <div className="flex flex-col sm:flex-row gap-3 items-start">
         <div className="flex-1 w-full">
           <PeriodFilter value={period} onChange={setPeriod} />
@@ -380,7 +380,7 @@ export default function Index() {
             ) : (
               <input
                 type="text"
-                placeholder="Filtrar por funcionÃ¡rio..."
+                placeholder="Filtrar por funcionário..."
                 value={employeeSearch}
                 onChange={e => { setEmployeeSearch(e.target.value); setShowEmployeeDropdown(true); }}
                 onFocus={() => setShowEmployeeDropdown(true)}
@@ -403,7 +403,7 @@ export default function Index() {
                   )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{f.nome}</p>
-                    <p className="text-[10px] text-muted-foreground">{f.cargo} Â· {f.departamento}</p>
+                    <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.departamento}</p>
                   </div>
                 </button>
               ))}
@@ -422,7 +422,7 @@ export default function Index() {
           )}
           <div className="flex-1 min-w-0">
             <p className="font-bold text-foreground">{selectedEmployee.nome}</p>
-            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} Â· {selectedEmployee.departamento} Â· Turno {selectedEmployee.turno || 'â€”'}</p>
+            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} · {selectedEmployee.departamento} · Turno {selectedEmployee.turno || '—'}</p>
           </div>
           <button onClick={() => navigate(`/funcionario/${selectedEmployee.id}`)} className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium shrink-0">
             <Eye className="w-3.5 h-3.5" /> Ver Perfil
@@ -430,7 +430,7 @@ export default function Index() {
         </motion.div>
       )}
 
-      {/* â•â•â• WORKFLOW APROVAÃ‡Ã•ES 1-CLIQUE â•â•â• */}
+      {/* ═══ WORKFLOW APROVAÇÕES 1-CLIQUE ═══ */}
       {!sel && (
         <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -438,8 +438,8 @@ export default function Index() {
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-foreground">AprovaÃ§Ã£o Pendente: AusÃªncia</p>
-              <p className="text-xs text-muted-foreground">JoÃ£o Silva solicitou fÃ©rias (10 dias a partir de 15/06).</p>
+              <p className="text-sm font-semibold text-foreground">Aprovação Pendente: Ausência</p>
+              <p className="text-xs text-muted-foreground">João Silva solicitou férias (10 dias a partir de 15/06).</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -453,40 +453,34 @@ export default function Index() {
         </motion.div>
       )}
 
-      {/* â•â•â• MAIN KPIs (ENTERPRISE) â•â•â• */}
+      {/* ═══ MAIN KPIs (ENTERPRISE) ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <StatCard title="Colaboradores" value={sel ? 1 : totalColaboradores} change={sel ? selectedEmployee?.cargo || '' : `${emFerias} em fÃ©rias`} changeType="neutral" icon={Users} delay={0} />
-        <StatCard title="Turnover" value="2.4%" change="-0.5% vs mÃªs ant." changeType="positive" icon={UserX} delay={0.03} />
-        <StatCard title="eNPS" value="78" change="Zona de ExcelÃªncia" changeType="positive" icon={Activity} delay={0.06} />
-        <StatCard title="Hrs Treinamento" value="42h" change="MÃ©dia por colab." changeType="positive" icon={Briefcase} delay={0.09} />
-        <StatCard title="AbsenteÃ­smo" value="1.5%" change={`${totalFaltasInj} faltas inj.`} changeType={totalFaltasInj > 0 ? 'negative' : 'positive'} icon={AlertTriangle} delay={0.12} />
+        <StatCard title="Colaboradores" value={sel ? 1 : totalColaboradores} change={sel ? selectedEmployee?.cargo || '' : `${emFerias} em férias`} changeType="neutral" icon={Users} delay={0} />
+        <StatCard title="Turnover" value="2.4%" change="-0.5% vs mês ant." changeType="positive" icon={UserX} delay={0.03} />
+        <StatCard title="eNPS" value="78" change="Zona de Excelência" changeType="positive" icon={Activity} delay={0.06} />
+        <StatCard title="Hrs Treinamento" value="42h" change="Média por colab." changeType="positive" icon={Briefcase} delay={0.09} />
+        <StatCard title="Absenteísmo" value="1.5%" change={`${totalFaltasInj} faltas inj.`} changeType={totalFaltasInj > 0 ? 'negative' : 'positive'} icon={AlertTriangle} delay={0.12} />
         <StatCard title="Feedbacks" value={fbTotal} change={`${fbTaxaResolucao}% resolvidos`} changeType={fbTaxaResolucao >= 70 ? 'positive' : 'negative'} icon={MessageSquare} delay={0.15} />
       </div>
 
-      {/* â•â•â• ROW 2 â€” Gauges + Status + Priority â•â•â• */}
+      {/* ═══ ROW 2 — Gauges + Status + Priority ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Radial Gauge */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="corporate-section lg:col-span-1">
           <div className="corporate-section-header">
             <div className="flex items-center gap-2">
               <Target className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Indicadores de AderÃªncia</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Indicadores de Aderência</h2>
             </div>
           </div>
           <div className="corporate-section-body">
-            
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={220}>
               <RadialBarChart cx="50%" cy="50%" innerRadius="25%" outerRadius="90%" barSize={14} data={gaugeData} startAngle={180} endAngle={0}>
                 <RadialBar dataKey="value" cornerRadius={6} background={{ fill: 'hsl(var(--muted))' }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend iconType="circle" iconSize={8} formatter={(value: string) => <span className="text-xs text-muted-foreground">{value}</span>} />
               </RadialBarChart>
             </ResponsiveContainer>
-</ExpandableChart>
-
-
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
               {gaugeData.map(g => (
                 <div key={g.name} className="text-center">
@@ -511,10 +505,7 @@ export default function Index() {
           </div>
           <div className="corporate-section-body flex items-center justify-center">
             {fbByStatus.length > 0 ? (
-              
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie data={fbByStatus} cx="50%" cy="50%" innerRadius={55} outerRadius={95} paddingAngle={3} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} style={{ fontSize: '10px' }}>
                     {fbByStatus.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
@@ -522,11 +513,8 @@ export default function Index() {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
             ) : (
-              <p className="text-sm text-muted-foreground py-12">Sem feedbacks no perÃ­odo</p>
+              <p className="text-sm text-muted-foreground py-12">Sem feedbacks no período</p>
             )}
           </div>
         </motion.div>
@@ -541,10 +529,7 @@ export default function Index() {
           </div>
           <div className="corporate-section-body flex items-center justify-center">
             {fbByPriority.length > 0 ? (
-              
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie data={fbByPriority} cx="50%" cy="50%" innerRadius={55} outerRadius={95} paddingAngle={3} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} style={{ fontSize: '10px' }}>
                     {fbByPriority.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
@@ -552,36 +537,30 @@ export default function Index() {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
             ) : (
-              <p className="text-sm text-muted-foreground py-12">Sem feedbacks no perÃ­odo</p>
+              <p className="text-sm text-muted-foreground py-12">Sem feedbacks no período</p>
             )}
           </div>
         </motion.div>
       </div>
 
-      {/* â•â•â• ROW 3 â€” Attendance Trend + Headcount â•â•â• */}
+      {/* ═══ ROW 3 — Attendance Trend + Headcount ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="corporate-section lg:col-span-2">
           <div className="corporate-section-header">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-muted-foreground" />
               <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
-                EvoluÃ§Ã£o DiÃ¡ria â€” Ponto {sel ? `(${sel.nome})` : ''}
+                Evolução Diária — Ponto {sel ? `(${sel.nome})` : ''}
               </h2>
             </div>
             <button onClick={() => navigate('/ausencias')} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
-              GestÃ£o Ã  Vista <ArrowUpRight className="w-3 h-3" />
+              Gestão à Vista <ArrowUpRight className="w-3 h-3" />
             </button>
           </div>
           <div className="corporate-section-body">
             {attendanceTrend.length > 0 ? (
-              
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={260}>
                 <AreaChart data={attendanceTrend}>
                   <defs>
                     <linearGradient id="gradHrsNeg" x1="0" y1="0" x2="0" y2="1">
@@ -603,11 +582,8 @@ export default function Index() {
                   <Area type="monotone" dataKey="Atestados" stroke="hsl(200, 70%, 50%)" fill="hsl(200, 70%, 50%)" fillOpacity={0.1} strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
             ) : (
-              <p className="text-sm text-muted-foreground py-12 text-center">Sem registros de ponto no perÃ­odo</p>
+              <p className="text-sm text-muted-foreground py-12 text-center">Sem registros de ponto no período</p>
             )}
           </div>
         </motion.div>
@@ -632,9 +608,9 @@ export default function Index() {
                   { label: 'Feedbacks Resolvidos', value: fbResolvidos, color: 'text-success' },
                   { label: 'Horas Negativas', value: totalHorasNeg, color: totalHorasNeg > 0 ? 'text-destructive' : 'text-success' },
                   { label: 'Extras', value: totalExtras, color: 'text-foreground' },
-                  { label: 'AdvertÃªncias', value: totalAdvertencias, color: totalAdvertencias > 0 ? 'text-destructive' : 'text-success' },
+                  { label: 'Advertências', value: totalAdvertencias, color: totalAdvertencias > 0 ? 'text-destructive' : 'text-success' },
                   { label: 'Eventos', value: totalEvents, color: totalEvents > 0 ? 'text-warning' : 'text-success' },
-                  { label: 'ReuniÃµes 1:1', value: meetingsScheduled, color: 'text-foreground' },
+                  { label: 'Reuniões 1:1', value: meetingsScheduled, color: 'text-foreground' },
                 ].map(item => (
                   <div key={item.label} className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">{item.label}</span>
@@ -663,12 +639,12 @@ export default function Index() {
         </motion.div>
       </div>
 
-      {/* â•â•â• ROW 4 â€” Secondary KPIs â•â•â• */}
+      {/* ═══ ROW 4 — Secondary KPIs ═══ */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="corporate-kpi corporate-kpi-accent">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">AvaliaÃ§Ãµes ConcluÃ­das</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Avaliações Concluídas</p>
               <p className="text-3xl font-bold text-foreground mt-1">{evalsCompleted}</p>
               <p className="text-xs text-muted-foreground mt-1">{evalsPending} pendentes</p>
             </div>
@@ -681,7 +657,7 @@ export default function Index() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }} className="corporate-kpi">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">ReuniÃµes 1:1</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Reuniões 1:1</p>
               <p className="text-3xl font-bold text-foreground mt-1">{meetingsCompleted}</p>
               <p className="text-xs text-muted-foreground mt-1">{meetingsScheduled} agendadas</p>
             </div>
@@ -697,7 +673,7 @@ export default function Index() {
             <div>
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Colabs. em Risco</p>
               <p className="text-3xl font-bold text-foreground mt-1">{riskEmployees}</p>
-              <p className="text-xs text-destructive mt-1">â‰¥2 advertÃªncias</p>
+              <p className="text-xs text-destructive mt-1">≥2 advertências</p>
             </div>
             <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
               <UserX className="w-5 h-5 text-destructive" />
@@ -708,7 +684,7 @@ export default function Index() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.54 }} className="corporate-kpi">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Em FÃ©rias</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Em Férias</p>
               <p className="text-3xl font-bold text-foreground mt-1">{emFerias}</p>
               <p className="text-xs text-muted-foreground mt-1">colaboradores hoje</p>
             </div>
@@ -719,15 +695,15 @@ export default function Index() {
         </motion.div>
       </div>
 
-      {/* â•â•â• ROW 5 â€” Meeting KPIs (ReuniÃ£o Mensal Operacional) â•â•â• */}
+      {/* ═══ ROW 5 — Meeting KPIs (Reunião Mensal Operacional) ═══ */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="Mensal Operacional" value={`${meetingKpis.mensalRate}%`} change={`${meetingKpis.monthsWithMensal}/${meetingKpis.expectedMonths} meses realizados`} changeType={meetingKpis.mensalRate >= 80 ? 'positive' : 'negative'} icon={CalendarDays} delay={0.57} />
-        <StatCard title="Cobertura LideranÃ§a" value={`${meetingKpis.leaderCoverage}%`} change={`${meetingKpis.attendedLeaders}/${meetingKpis.totalLeaders} lÃ­deres presentes`} changeType={meetingKpis.leaderCoverage >= 80 ? 'positive' : 'negative'} icon={UserCheck} delay={0.6} />
-        <StatCard title="AÃ§Ãµes Pendentes" value={meetingKpis.pendentes} change={`${meetingKpis.totalActions} total de aÃ§Ãµes`} changeType={meetingKpis.pendentes > 5 ? 'negative' : 'positive'} icon={Target} delay={0.63} />
-        <StatCard title="ConclusÃ£o de AÃ§Ãµes" value={`${meetingKpis.conclusionRate}%`} change={`${meetingKpis.concluidas}/${meetingKpis.totalActions} concluÃ­das`} changeType={meetingKpis.conclusionRate >= 70 ? 'positive' : 'negative'} icon={CheckCircle2} delay={0.66} />
+        <StatCard title="Cobertura Liderança" value={`${meetingKpis.leaderCoverage}%`} change={`${meetingKpis.attendedLeaders}/${meetingKpis.totalLeaders} líderes presentes`} changeType={meetingKpis.leaderCoverage >= 80 ? 'positive' : 'negative'} icon={UserCheck} delay={0.6} />
+        <StatCard title="Ações Pendentes" value={meetingKpis.pendentes} change={`${meetingKpis.totalActions} total de ações`} changeType={meetingKpis.pendentes > 5 ? 'negative' : 'positive'} icon={Target} delay={0.63} />
+        <StatCard title="Conclusão de Ações" value={`${meetingKpis.conclusionRate}%`} change={`${meetingKpis.concluidas}/${meetingKpis.totalActions} concluídas`} changeType={meetingKpis.conclusionRate >= 70 ? 'positive' : 'negative'} icon={CheckCircle2} delay={0.66} />
       </div>
 
-      {/* â•â•â• Department FB Performance (only when no employee selected) â•â•â• */}
+      {/* ═══ Department FB Performance (only when no employee selected) ═══ */}
       {!sel && deptFbPerformance.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="corporate-section">
           <div className="corporate-section-header">
@@ -737,10 +713,7 @@ export default function Index() {
             </div>
           </div>
           <div className="corporate-section-body">
-            
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={220}>
               <BarChart data={deptFbPerformance} margin={{ left: -5, right: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" angle={-20} textAnchor="end" height={50} />
@@ -750,9 +723,6 @@ export default function Index() {
                 <Bar dataKey="Pendentes" stackId="a" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} barSize={24} />
               </BarChart>
             </ResponsiveContainer>
-</ExpandableChart>
-
-
             <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center">
               <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(155, 60%, 38%)' }} /> Resolvidos</div>
               <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(38, 90%, 50%)' }} /> Pendentes</div>
@@ -761,13 +731,13 @@ export default function Index() {
         </motion.div>
       )}
 
-      {/* â•â•â• Top Deviations Table â•â•â• */}
+      {/* ═══ Top Deviations Table ═══ */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="corporate-section">
         <div className="corporate-section-header">
           <div className="flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 text-destructive" />
             <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
-              {sel ? 'Desvios do Colaborador' : 'Top 7 â€” Colaboradores com Desvios'}
+              {sel ? 'Desvios do Colaborador' : 'Top 7 — Colaboradores com Desvios'}
             </h2>
           </div>
           <button onClick={() => navigate('/ausencias')} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
@@ -777,10 +747,7 @@ export default function Index() {
         <div className="corporate-section-body">
           {topDeviations.length > 0 ? (
             <>
-              
-
-<ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height={Math.max(topDeviations.length * 50, 180)}>
+              <ResponsiveContainer width="100%" height={Math.max(topDeviations.length * 50, 180)}>
                 <BarChart data={topDeviations} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
@@ -794,27 +761,24 @@ export default function Index() {
                   <Tooltip content={<CustomTooltip />} />
                   <Bar dataKey="faltas" name="Faltas Inj." stackId="a" fill="hsl(0, 68%, 50%)" barSize={20} />
                   <Bar dataKey="atestados" name="Atestados" stackId="a" fill="hsl(200, 80%, 38%)" barSize={20} />
-                  <Bar dataKey="advertencias" name="AdvertÃªncias" stackId="a" fill="hsl(38, 90%, 50%)" barSize={20} />
+                  <Bar dataKey="advertencias" name="Advertências" stackId="a" fill="hsl(38, 90%, 50%)" barSize={20} />
                   <Bar dataKey="eventos" name="Eventos" stackId="a" fill="hsl(280, 60%, 55%)" radius={[0, 4, 4, 0]} barSize={20} />
                 </BarChart>
               </ResponsiveContainer>
-</ExpandableChart>
-
-
               <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center flex-wrap">
                 <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(0, 68%, 50%)' }} /> Faltas Inj.</div>
                 <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(200, 80%, 38%)' }} /> Atestados</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(38, 90%, 50%)' }} /> AdvertÃªncias</div>
+                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(38, 90%, 50%)' }} /> Advertências</div>
                 <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(280, 60%, 55%)' }} /> Eventos</div>
               </div>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">Nenhum desvio registrado no perÃ­odo</p>
+            <p className="text-sm text-muted-foreground text-center py-8">Nenhum desvio registrado no período</p>
           )}
         </div>
       </motion.div>
 
-      {/* â•â•â• Employee Grid (only when no filter) â•â•â• */}
+      {/* ═══ Employee Grid (only when no filter) ═══ */}
       {!sel && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }} className="corporate-section">
           <div className="corporate-section-header">
@@ -853,7 +817,7 @@ export default function Index() {
                         <p className="text-xs font-bold text-foreground">{func.feedbacks_recebidos}</p>
                       </div>
                       <div className="flex-1 text-right">
-                        <p className="text-[10px] text-muted-foreground">ResoluÃ§Ã£o</p>
+                        <p className="text-[10px] text-muted-foreground">Resolução</p>
                         <p className={`text-xs font-bold ${pct >= 70 ? 'text-success' : pct >= 40 ? 'text-warning' : 'text-destructive'}`}>{pct}%</p>
                       </div>
                     </div>
@@ -864,7 +828,7 @@ export default function Index() {
             {funcionarios.length > 12 && (
               <div className="text-center mt-4">
                 <button onClick={() => navigate('/colaboradores')} className="text-xs text-primary hover:underline font-medium">
-                  Ver todos os {funcionarios.length} colaboradores â†’
+                  Ver todos os {funcionarios.length} colaboradores →
                 </button>
               </div>
             )}

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain } from 'lucide-react';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
@@ -19,8 +19,6 @@ import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
 import Feedback360 from './Feedback360';
 import PDIPage from './PDI';
-
-import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
 interface EvaluationCycle {
   id: string; name: string; start_date: string; end_date: string; status: string; created_at: string;
@@ -120,10 +118,10 @@ export default function Desempenho() {
   const statusLabel: Record<string, string> = { active: 'Ativo', draft: 'Rascunho', closed: 'Encerrado' };
 
   const tabs = [
-    { value: 'ciclos', label: 'Ciclos de AvaliaÃ§Ã£o', icon: Calendar },
-    { value: 'feedback360', label: 'AvaliaÃ§Ãµes 360Âº', icon: Brain },
-    { value: 'feedbacks', label: 'Feedback ContÃ­nuo', icon: List },
-    { value: 'metas', label: 'GestÃ£o de Metas', icon: TrendingUp },
+    { value: 'ciclos', label: 'Ciclos de Avaliação', icon: Calendar },
+    { value: 'feedback360', label: 'Avaliações 360º', icon: Brain },
+    { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
+    { value: 'metas', label: 'Gestão de Metas', icon: TrendingUp },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
     { value: 'pdi', label: 'PDI', icon: ClipboardList },
   ];
@@ -133,18 +131,18 @@ export default function Desempenho() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">GestÃ£o de Pessoas</p>
-          <h1 className="text-2xl font-bold text-foreground">AvaliaÃ§Ãµes</h1>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Gestão de Pessoas</p>
+          <h1 className="text-2xl font-bold text-foreground">Avaliações</h1>
         </div>
         {activeTab === 'ciclos' && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild><Button size="sm"><Plus className="w-4 h-4 mr-2" />Novo Ciclo</Button></DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle>Criar Ciclo de AvaliaÃ§Ã£o</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Criar Ciclo de Avaliação</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-2">
-                <div><Label>Nome do Ciclo</Label><FastInput value={newCycle.name} onValueChange={v => setNewCycle({ ...newCycle, name: v })} placeholder="Ex: AvaliaÃ§Ã£o Trimestral Q1 2026" /></div>
+                <div><Label>Nome do Ciclo</Label><FastInput value={newCycle.name} onValueChange={v => setNewCycle({ ...newCycle, name: v })} placeholder="Ex: Avaliação Trimestral Q1 2026" /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><Label>InÃ­cio</Label><Input type="date" value={newCycle.start_date} onChange={e => setNewCycle({ ...newCycle, start_date: e.target.value })} /></div>
+                  <div><Label>Início</Label><Input type="date" value={newCycle.start_date} onChange={e => setNewCycle({ ...newCycle, start_date: e.target.value })} /></div>
                   <div><Label>Fim</Label><Input type="date" value={newCycle.end_date} onChange={e => setNewCycle({ ...newCycle, end_date: e.target.value })} /></div>
                 </div>
                 <p className="text-xs text-muted-foreground">Tipos: Trimestral (2x ao semestre) e Anual</p>
@@ -166,7 +164,7 @@ export default function Desempenho() {
           ))}
         </TabsList>
 
-        {/* â•â•â• CICLOS â•â•â• */}
+        {/* ═══ CICLOS ═══ */}
         <TabsContent value="ciclos" className="space-y-6 mt-4">
           <PeriodFilter value={period} onChange={setPeriod} />
 
@@ -191,7 +189,7 @@ export default function Desempenho() {
             <div className="corporate-section-header">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Ciclos de AvaliaÃ§Ã£o</h2>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Ciclos de Avaliação</h2>
               </div>
               <span className="text-xs text-muted-foreground">{cycles.length} ciclos</span>
             </div>
@@ -207,7 +205,7 @@ export default function Desempenho() {
                     <div>
                       <h3 className="font-medium text-sm text-foreground">{cycle.name}</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(cycle.start_date).toLocaleDateString('pt-BR')} â†’ {new Date(cycle.end_date).toLocaleDateString('pt-BR')}
+                        {new Date(cycle.start_date).toLocaleDateString('pt-BR')} → {new Date(cycle.end_date).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
                     <span className={`corporate-badge ${statusColor[cycle.status] || 'bg-muted text-muted-foreground'}`}>
@@ -220,17 +218,17 @@ export default function Desempenho() {
           </motion.div>
         </TabsContent>
 
-        {/* â•â•â• GESTÃƒO DE METAS â•â•â• */}
+        {/* ═══ GESTÃO DE METAS ═══ */}
         <TabsContent value="metas" className="mt-4">
           <Avaliacoes />
         </TabsContent>
 
-        {/* â•â•â• FIT CULTURAL â•â•â• */}
+        {/* ═══ FIT CULTURAL ═══ */}
         <TabsContent value="fit-cultural" className="mt-4">
           <Competencias />
         </TabsContent>
 
-        {/* â•â•â• FEEDBACKS â•â•â• */}
+        {/* ═══ FEEDBACKS ═══ */}
         <TabsContent value="feedback360" className="mt-4">
           <Feedback360 />
         </TabsContent>
@@ -239,7 +237,7 @@ export default function Desempenho() {
           <Feedbacks />
         </TabsContent>
 
-        {/* â•â•â• PDI â•â•â• */}
+        {/* ═══ PDI ═══ */}
         <TabsContent value="pdi" className="mt-4">
           <PDIPage />
         </TabsContent>
