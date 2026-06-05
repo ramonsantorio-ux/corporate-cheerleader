@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Plus, Search, Filter, TrendingUp, TrendingDown, Calendar, Truck, MapPin, User, ChevronDown, ChevronUp, Trash2, Eye, Download, Upload, X } from 'lucide-react';
+import { AlertTriangle, Plus, Search, Pencil, Filter, TrendingUp, TrendingDown, Calendar, Truck, MapPin, User, ChevronDown, ChevronUp, Trash2, Eye, Download, Upload, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -70,6 +70,7 @@ export default function Eventos() {
     label: 'Todo o período',
   }));
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
   const [detailEvent, setDetailEvent] = useState<EventRow | null>(null);
   const [deleteEvent, setDeleteEvent] = useState<EventRow | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -107,7 +108,14 @@ export default function Eventos() {
       toast.error('Preencha data, descrição e nome do envolvido');
       return;
     }
-    const { error } = await supabase.from('events').insert(newEvent);
+    let error;
+    if (editingEvent) {
+      const res = await supabase.from('events').update(newEvent).eq('id', editingEvent.id);
+      error = res.error;
+    } else {
+      const res = await supabase.from('events').insert(newEvent);
+      error = res.error;
+    }
     if (error) { toast.error('Erro ao salvar evento'); return; }
     toast.success('Evento registrado!');
     setDialogOpen(false);
@@ -313,7 +321,7 @@ export default function Eventos() {
               <Button size="sm"><Plus className="w-4 h-4 mr-1" /> Novo Evento</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>Registrar Novo Evento</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editingEvent ? "Editar Evento" : "Registrar Novo Evento"}</DialogTitle></DialogHeader>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
                   <Label>Data *</Label>
@@ -659,7 +667,20 @@ export default function Eventos() {
                     <TableHead className="w-[100px]">Data</TableHead>
                     <TableHead className="w-[60px]">Hora</TableHead>
                     <TableHead>Envolvido</TableHead>
-                    <TableHead className="hidden md:table-cell">Equipamento</TableHead>
+                    <TableHead className="hidden md:table-cell">
+                      <div className="flex items-center gap-2">
+                        Equipamento
+                        <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
+                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none [&>svg]:opacity-0">
+                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer opacity-100 absolute" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {equipmentTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
                     <TableHead className="hidden md:table-cell">Placa</TableHead>
                     <TableHead className="hidden lg:table-cell">Local</TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
