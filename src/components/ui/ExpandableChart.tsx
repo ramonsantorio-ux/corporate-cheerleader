@@ -13,20 +13,20 @@ export function ExpandableChart({ title, description, children }: ExpandableChar
 
   return (
     <>
-      <div className="relative group w-full h-full min-h-[250px] flex flex-col">
-        {/* Ícone de Lupa sempre visível (destaca no hover) */}
-        <div className="absolute top-2 right-2 z-20 opacity-70 hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => setOpen(true)}
-            className="p-2 bg-background/90 hover:bg-muted border border-border rounded-lg shadow-sm flex items-center justify-center transition-colors"
-            title="Expandir Gráfico"
-          >
+      <div 
+        className="relative group w-full h-full min-h-[250px] flex flex-col cursor-pointer rounded-xl transition-all duration-300 hover:bg-muted/10"
+        onClickCapture={() => setOpen(true)}
+        title="Clique para expandir o gráfico"
+      >
+        {/* Ícone de Lupa que aparece no hover suavemente (apenas visual) */}
+        <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+          <div className="p-2 bg-background/90 border border-border rounded-lg shadow-sm flex items-center justify-center">
             <ZoomIn className="w-4 h-4 text-primary" />
-          </button>
+          </div>
         </div>
         
-        {/* Gráfico Original (clicável opcionalmente) */}
-        <div className="flex-1 w-full h-full min-h-0 relative">
+        {/* Gráfico Original */}
+        <div className="flex-1 w-full h-full min-h-0 relative pointer-events-auto">
           {children}
         </div>
       </div>
