@@ -5,6 +5,8 @@ import { Activity, ShieldAlert, Users, TrendingDown, TrendingUp, AlertOctagon, H
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { motion } from 'framer-motion';
 
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
+
 interface CLevelAnalyticsProps {
   funcionarios: any[];
   feedbacks: any[];
@@ -155,7 +157,10 @@ export default function CLevelAnalytics({ funcionarios, feedbacks, attendance, w
             </CardHeader>
             <CardContent className="h-[300px] pt-4 flex items-center justify-center">
               {deptRisk.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                   <RadarChart cx="50%" cy="50%" outerRadius="70%" data={deptRisk}>
                     <PolarGrid stroke="#333" />
                     <PolarAngleAxis dataKey="subject" tick={{ fill: '#888', fontSize: 11 }} />
@@ -164,6 +169,9 @@ export default function CLevelAnalytics({ funcionarios, feedbacks, attendance, w
                     <Tooltip contentStyle={{ backgroundColor: '#1a1a1a', border: 'none', borderRadius: '8px' }} />
                   </RadarChart>
                 </ResponsiveContainer>
+</ExpandableChart>
+
+
               ) : (
                 <p className="text-muted-foreground text-sm">Sem dados suficientes para correlação.</p>
               )}
@@ -178,7 +186,10 @@ export default function CLevelAnalytics({ funcionarios, feedbacks, attendance, w
             </CardHeader>
             <CardContent className="h-[300px] pt-4">
               {deptRisk.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                   <BarChart data={deptRisk} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#333" />
                     <XAxis type="number" hide />
@@ -189,6 +200,9 @@ export default function CLevelAnalytics({ funcionarios, feedbacks, attendance, w
                     <Bar dataKey="Feedbacks_Críticos" stackId="a" fill="#eab308" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+</ExpandableChart>
+
+
               ) : (
                  <div className="h-full flex items-center justify-center"><p className="text-muted-foreground text-sm">Sem dados no período.</p></div>
               )}

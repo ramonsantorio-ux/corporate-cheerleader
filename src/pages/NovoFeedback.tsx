@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+﻿import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -39,7 +39,7 @@ export default function NovoFeedback() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.titulo.trim() || !form.descricao.trim() || !form.funcionario) {
-      toast.error('Preencha todos os campos obrigatórios.');
+      toast.error('Preencha todos os campos obrigatÃ³rios.');
       return;
     }
 
@@ -86,7 +86,7 @@ export default function NovoFeedback() {
     <div className="max-w-2xl mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold">Novo Feedback</h1>
-        <p className="text-muted-foreground text-sm mt-1">Compartilhe sua sugestão, problema ou ideia</p>
+        <p className="text-muted-foreground text-sm mt-1">Compartilhe sua sugestÃ£o, problema ou ideia</p>
       </motion.div>
 
       <motion.form
@@ -97,18 +97,18 @@ export default function NovoFeedback() {
         className="glass-card rounded-xl p-6 space-y-5"
       >
         <div>
-          <label className={labelClass}>Gestor Responsável</label>
+          <label className={labelClass}>Gestor ResponsÃ¡vel</label>
           <input
             type="text"
             value={gestorName}
             readOnly
             className={`${inputClass} opacity-70 cursor-not-allowed`}
           />
-          <p className="text-xs text-muted-foreground mt-1">Preenchido automaticamente com o usuário logado</p>
+          <p className="text-xs text-muted-foreground mt-1">Preenchido automaticamente com o usuÃ¡rio logado</p>
         </div>
 
         <div>
-          <label className={labelClass}>Título *</label>
+          <label className={labelClass}>TÃ­tulo *</label>
           <FastInput
             placeholder="Resumo breve do feedback"
             value={form.titulo}
@@ -119,13 +119,13 @@ export default function NovoFeedback() {
         </div>
 
         <div>
-          <label className={labelClass}>Funcionário *</label>
+          <label className={labelClass}>FuncionÃ¡rio *</label>
           <select
             value={form.funcionario}
             onChange={(e) => setForm({ ...form, funcionario: e.target.value })}
             className={inputClass}
           >
-            <option value="">Selecione o funcionário</option>
+            <option value="">Selecione o funcionÃ¡rio</option>
             {funcionarios.map((nome) => (
               <option key={nome} value={nome}>{nome}</option>
             ))}
@@ -133,7 +133,7 @@ export default function NovoFeedback() {
         </div>
 
         <div>
-          <label className={labelClass}>Descrição *</label>
+          <label className={labelClass}>DescriÃ§Ã£o *</label>
           <FastTextarea
             placeholder="Descreva em detalhes o feedback, incluindo contexto e impacto..."
             value={form.descricao}
@@ -194,9 +194,9 @@ export default function NovoFeedback() {
         </div>
 
         <div>
-          <label className={labelClass}>Observações</label>
+          <label className={labelClass}>ObservaÃ§Ãµes</label>
           <FastTextarea
-            placeholder="Observações adicionais..."
+            placeholder="ObservaÃ§Ãµes adicionais..."
             value={form.departamento}
             onValueChange={(v) => setForm(f => ({ ...f, departamento: v }))}
             className={`${inputClass} min-h-[80px] resize-none`}

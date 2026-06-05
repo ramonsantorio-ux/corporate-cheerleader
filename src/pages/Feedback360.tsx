@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Search, Plus, Play, CheckCircle2, AlertCircle, RefreshCw, BarChart } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,7 +24,7 @@ export default function Feedback360() {
     if (!error && data) {
       setCycles(data);
     } else {
-      // Dummy data se tabela não existe ainda (fallback para demonstração UI)
+      // Dummy data se tabela nÃ£o existe ainda (fallback para demonstraÃ§Ã£o UI)
       setCycles([
         { id: '1', title: 'Ciclo Q2 2026', start_date: '2026-04-01', end_date: '2026-06-30', status: 'active' },
         { id: '2', title: 'Ciclo Q1 2026', start_date: '2026-01-01', end_date: '2026-03-31', status: 'completed' },
@@ -61,7 +61,7 @@ export default function Feedback360() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active': return <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold uppercase rounded-full border border-green-200">Ativo</span>;
-      case 'completed': return <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold uppercase rounded-full border border-blue-200">Concluído</span>;
+      case 'completed': return <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold uppercase rounded-full border border-blue-200">ConcluÃ­do</span>;
       default: return <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-bold uppercase rounded-full border border-gray-200">Rascunho</span>;
     }
   };
@@ -70,8 +70,8 @@ export default function Feedback360() {
     <div className="max-w-6xl mx-auto space-y-8 pb-20 animate-fade-in">
       <div className="page-header flex justify-between items-end">
         <div>
-          <h1 className="flex items-center gap-2"><Target className="w-6 h-6 text-primary" /> Avaliação 360º</h1>
-          <p>Gerencie ciclos de feedback e resultados das lideranças.</p>
+          <h1 className="flex items-center gap-2"><Target className="w-6 h-6 text-primary" /> AvaliaÃ§Ã£o 360Âº</h1>
+          <p>Gerencie ciclos de feedback e resultados das lideranÃ§as.</p>
         </div>
         <Button onClick={() => setIsCreating(true)}><Plus className="w-4 h-4 mr-2" /> Novo Ciclo</Button>
       </div>
@@ -82,7 +82,7 @@ export default function Feedback360() {
           <div className="flex gap-4">
             <input 
               type="text" 
-              placeholder="Ex: Avaliação Liderança Q3 2026" 
+              placeholder="Ex: AvaliaÃ§Ã£o LideranÃ§a Q3 2026" 
               className="flex-1 bg-background border border-input rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:outline-none"
               value={newTitle}
               onChange={e => setNewTitle(e.target.value)}
@@ -101,7 +101,7 @@ export default function Feedback360() {
               {getStatusBadge(c.status)}
             </div>
             <div className="text-sm text-muted-foreground">
-              <p>Início: {c.start_date}</p>
+              <p>InÃ­cio: {c.start_date}</p>
               <p>Fim: {c.end_date}</p>
             </div>
             

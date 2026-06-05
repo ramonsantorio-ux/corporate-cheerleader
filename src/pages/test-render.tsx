@@ -1,4 +1,4 @@
-import { renderToString } from 'react-dom/server';
+﻿import { renderToString } from 'react-dom/server';
 import EvolucaoContrato from './EvolucaoContrato';
 import React from 'react';
 import { StaticRouter } from 'react-router-dom/server';

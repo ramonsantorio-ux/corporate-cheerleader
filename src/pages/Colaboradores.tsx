@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Users, Eye, Plus, Edit, Trash2, Loader2, Camera, X, FileUp, FileText, Download, Upload, CheckSquare } from 'lucide-react';
@@ -23,8 +23,8 @@ interface Funcionario {
   foto_url: string; turno: string; letra: string; encarregado_id: string | null;
 }
 
-const departamentos = ['Contrato Porto', 'Contrato Usina', 'Frotas', 'Medição', 'Segurança', 'CCO', 'CCM', 'Manutenção', 'RH', 'Financeiro'];
-const escolaridades = ['Ensino Fundamental', 'Ensino Médio', 'Ensino Superior Cursando', 'Ensino Superior Completo', 'Pós-Graduação', 'Mestrado', 'Doutorado'];
+const departamentos = ['Contrato Porto', 'Contrato Usina', 'Frotas', 'MediÃ§Ã£o', 'SeguranÃ§a', 'CCO', 'CCM', 'ManutenÃ§Ã£o', 'RH', 'Financeiro'];
+const escolaridades = ['Ensino Fundamental', 'Ensino MÃ©dio', 'Ensino Superior Cursando', 'Ensino Superior Completo', 'PÃ³s-GraduaÃ§Ã£o', 'Mestrado', 'Doutorado'];
 const TURNOS = [
   { value: 'dia_a', label: 'Dia A' }, { value: 'dia_b', label: 'Dia B' },
   { value: 'noite_a', label: 'Noite A' }, { value: 'noite_b', label: 'Noite B' },
@@ -126,10 +126,10 @@ export default function Colaboradores() {
     setBulkDeleteOpen(false);
     setSelectedIds(new Set());
     if (deleted > 0) {
-      toast.success(`${deleted} funcionário(s) excluído(s) com sucesso!`);
+      toast.success(`${deleted} funcionÃ¡rio(s) excluÃ­do(s) com sucesso!`);
       fetchFuncionarios(true);
     } else {
-      toast.error('Erro ao excluir funcionários');
+      toast.error('Erro ao excluir funcionÃ¡rios');
     }
   }
 
@@ -172,14 +172,14 @@ export default function Colaboradores() {
       const records = rows.map(row => ({
         nome: String(row['Nome'] || '').trim(), email: String(row['Email'] || '').trim(),
         cargo: String(row['Cargo'] || '').trim(), departamento: String(row['Departamento'] || '').trim(),
-        data_admissao: String(row['Data Admissão'] || row['Data Admissao'] || '').trim() || undefined,
-        escolaridade: String(row['Escolaridade'] || '').trim(), graduacao: String(row['Graduação'] || row['Graduacao'] || '').trim(),
-        pos_graduacao: String(row['Pós-Graduação'] || '').toLowerCase() === 'sim',
-        pos_graduacao_tipo: String(row['Tipo Pós-Graduação'] || '').trim(),
+        data_admissao: String(row['Data AdmissÃ£o'] || row['Data Admissao'] || '').trim() || undefined,
+        escolaridade: String(row['Escolaridade'] || '').trim(), graduacao: String(row['GraduaÃ§Ã£o'] || row['Graduacao'] || '').trim(),
+        pos_graduacao: String(row['PÃ³s-GraduaÃ§Ã£o'] || '').toLowerCase() === 'sim',
+        pos_graduacao_tipo: String(row['Tipo PÃ³s-GraduaÃ§Ã£o'] || '').trim(),
         turno: parseTurno(String(row['Turno'] || '')),
         letra: String(row['Letra'] || '').trim(),
       })).filter(r => r.nome && r.cargo && r.departamento);
-      if (records.length === 0) { toast.error('Nenhum registro válido encontrado.'); setImporting(false); return; }
+      if (records.length === 0) { toast.error('Nenhum registro vÃ¡lido encontrado.'); setImporting(false); return; }
       const toInsert = records.map(r => {
         const obj: any = { nome: r.nome, email: r.email, cargo: r.cargo, departamento: r.departamento, escolaridade: r.escolaridade, graduacao: r.graduacao, pos_graduacao: r.pos_graduacao, pos_graduacao_tipo: r.pos_graduacao_tipo, turno: r.turno, letra: r.letra };
         if (r.data_admissao) obj.data_admissao = r.data_admissao;
@@ -187,14 +187,14 @@ export default function Colaboradores() {
       });
       const { error } = await supabase.from('funcionarios').insert(toInsert);
       if (error) toast.error('Erro ao importar: ' + error.message);
-      else { toast.success(`${records.length} funcionário(s) importado(s)!`); fetchFuncionarios(true); }
+      else { toast.success(`${records.length} funcionÃ¡rio(s) importado(s)!`); fetchFuncionarios(true); }
     } catch { toast.error('Erro ao ler arquivo.'); }
     setImporting(false);
     if (importFileRef.current) importFileRef.current.value = '';
   }
 
   async function handleCreate() {
-    if (!newData.nome || !newData.cargo || !newData.departamento) { toast.error('Preencha campos obrigatórios'); return; }
+    if (!newData.nome || !newData.cargo || !newData.departamento) { toast.error('Preencha campos obrigatÃ³rios'); return; }
     setUploading(true);
     let foto_url = '';
     try { if (newPhotoFile) foto_url = await uploadPhoto(newPhotoFile); } catch { toast.error('Erro ao enviar foto'); setUploading(false); return; }
@@ -209,7 +209,7 @@ export default function Colaboradores() {
       }
     }
     setUploading(false); setNewData(emptyForm); setNewPhotoFile(null); setNewPhotoPreview(''); setDocFiles([]); setCreateOpen(false);
-    toast.success('Funcionário cadastrado!'); fetchFuncionarios(true);
+    toast.success('FuncionÃ¡rio cadastrado!'); fetchFuncionarios(true);
   }
 
   function openEdit(f: Funcionario) {
@@ -218,7 +218,7 @@ export default function Colaboradores() {
   }
 
   async function handleEdit() {
-    if (!editData.nome || !editData.cargo || !editData.departamento) { toast.error('Preencha campos obrigatórios'); return; }
+    if (!editData.nome || !editData.cargo || !editData.departamento) { toast.error('Preencha campos obrigatÃ³rios'); return; }
     setUploading(true);
     let foto_url = editData.foto_url;
     try { if (editPhotoFile) foto_url = await uploadPhoto(editPhotoFile); } catch { toast.error('Erro foto'); setUploading(false); return; }
@@ -232,14 +232,14 @@ export default function Colaboradores() {
     }
     setUploading(false);
     if (error) { toast.error('Erro ao atualizar'); return; }
-    setEditOpen(false); toast.success('Funcionário atualizado!'); fetchFuncionarios(true);
+    setEditOpen(false); toast.success('FuncionÃ¡rio atualizado!'); fetchFuncionarios(true);
   }
 
   async function handleDelete() {
     if (!deleteId) return;
     const { error } = await supabase.from('funcionarios').delete().eq('id', deleteId);
     if (error) { toast.error('Erro ao excluir'); return; }
-    setDeleteId(null); toast.success('Funcionário excluído!'); fetchFuncionarios(true);
+    setDeleteId(null); toast.success('FuncionÃ¡rio excluÃ­do!'); fetchFuncionarios(true);
   }
 
   function handleDocFilesChange(e: React.ChangeEvent<HTMLInputElement>, isEdit = false) {
@@ -251,16 +251,16 @@ export default function Colaboradores() {
   function renderFormFields(data: typeof newData, setData: (d: typeof newData) => void, docs: File[], setDocs: React.Dispatch<React.SetStateAction<File[]>>, docRef: React.RefObject<HTMLInputElement>) {
     return (
       <>
-        <div className="space-y-2"><Label>Nome completo</Label><FastInput value={data.nome} onValueChange={v => setData({ ...data, nome: v })} placeholder="Nome do funcionário" /></div>
-        <div className="space-y-2"><Label>Data de Admissão</Label><Input type="date" value={data.data_admissao} onChange={e => setData({ ...data, data_admissao: e.target.value })} /></div>
+        <div className="space-y-2"><Label>Nome completo</Label><FastInput value={data.nome} onValueChange={v => setData({ ...data, nome: v })} placeholder="Nome do funcionÃ¡rio" /></div>
+        <div className="space-y-2"><Label>Data de AdmissÃ£o</Label><Input type="date" value={data.data_admissao} onChange={e => setData({ ...data, data_admissao: e.target.value })} /></div>
         <div className="space-y-2">
           <Label>Escolaridade</Label>
           <Select value={data.escolaridade} onValueChange={v => setData({ ...data, escolaridade: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{escolaridades.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select>
         </div>
-        <div className="space-y-2"><Label>Graduação</Label><FastInput value={data.graduacao} onValueChange={v => setData({ ...data, graduacao: v })} placeholder="Ex: Engenharia Civil" /></div>
+        <div className="space-y-2"><Label>GraduaÃ§Ã£o</Label><FastInput value={data.graduacao} onValueChange={v => setData({ ...data, graduacao: v })} placeholder="Ex: Engenharia Civil" /></div>
         <div className="space-y-2">
-          <div className="flex items-center justify-between"><Label>Possui Pós-Graduação?</Label><Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} /></div>
-          {data.pos_graduacao && <FastInput value={data.pos_graduacao_tipo} onValueChange={v => setData({ ...data, pos_graduacao_tipo: v })} placeholder="Qual pós-graduação?" className="mt-2" />}
+          <div className="flex items-center justify-between"><Label>Possui PÃ³s-GraduaÃ§Ã£o?</Label><Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} /></div>
+          {data.pos_graduacao && <FastInput value={data.pos_graduacao_tipo} onValueChange={v => setData({ ...data, pos_graduacao_tipo: v })} placeholder="Qual pÃ³s-graduaÃ§Ã£o?" className="mt-2" />}
         </div>
         <div className="space-y-2"><Label>Cargo</Label><FastInput value={data.cargo} onValueChange={v => setData({ ...data, cargo: v })} placeholder="Cargo" /></div>
         <div className="space-y-2"><Label>E-mail</Label><FastInput value={data.email} onValueChange={v => setData({ ...data, email: v })} placeholder="email@empresa.com" type="email" /></div>
@@ -295,7 +295,7 @@ export default function Colaboradores() {
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-bold">Colaboradores</h1>
-        <p className="text-muted-foreground text-sm mt-1">Lista e cadastro de funcionários</p>
+        <p className="text-muted-foreground text-sm mt-1">Lista e cadastro de funcionÃ¡rios</p>
       </motion.div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -319,9 +319,9 @@ export default function Colaboradores() {
           <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={importing}>{importing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}Importar</Button>
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" />Novo Funcionário</Button></DialogTrigger>
+          <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" />Novo FuncionÃ¡rio</Button></DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Cadastrar Funcionário</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Cadastrar FuncionÃ¡rio</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="flex flex-col items-center gap-2">
                 <input ref={newFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) { setNewPhotoFile(file); setNewPhotoPreview(URL.createObjectURL(file)); }}} />
@@ -388,8 +388,8 @@ export default function Colaboradores() {
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{f.nome}</p>
                   <p className="text-xs text-muted-foreground">
-                    {f.cargo} · {f.departamento}
-                    {turnoLabel && <span className="ml-1">· {turnoLabel}</span>}
+                    {f.cargo} Â· {f.departamento}
+                    {turnoLabel && <span className="ml-1">Â· {turnoLabel}</span>}
                     
                   </p>
                 </div>
@@ -408,7 +408,7 @@ export default function Colaboradores() {
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Editar Funcionário</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Editar FuncionÃ¡rio</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="flex flex-col items-center gap-2">
               <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) { setEditPhotoFile(file); setEditPhotoPreview(URL.createObjectURL(file)); }}} />
@@ -419,14 +419,14 @@ export default function Colaboradores() {
               )}
             </div>
             {renderFormFields(editData, setEditData as any, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
-            <Button className="w-full" onClick={handleEdit} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Salvar Alterações</Button>
+            <Button className="w-full" onClick={handleEdit} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Salvar AlteraÃ§Ãµes</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={open => !open && setDeleteId(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader><AlertDialogTitle>Excluir funcionário?</AlertDialogTitle><AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>Excluir funcionÃ¡rio?</AlertDialogTitle><AlertDialogDescription>Esta aÃ§Ã£o nÃ£o pode ser desfeita.</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -435,15 +435,15 @@ export default function Colaboradores() {
       <AlertDialog open={bulkDeleteOpen} onOpenChange={open => !open && setBulkDeleteOpen(false)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir {selectedIds.size} funcionário(s)?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir {selectedIds.size} funcionÃ¡rio(s)?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação irá excluir permanentemente os funcionários selecionados. Não pode ser desfeita.
+              Esta aÃ§Ã£o irÃ¡ excluir permanentemente os funcionÃ¡rios selecionados. NÃ£o pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={bulkDeleting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete} disabled={bulkDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {bulkDeleting ? 'Excluindo...' : `Excluir ${selectedIds.size} funcionário(s)`}
+              {bulkDeleting ? 'Excluindo...' : `Excluir ${selectedIds.size} funcionÃ¡rio(s)`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

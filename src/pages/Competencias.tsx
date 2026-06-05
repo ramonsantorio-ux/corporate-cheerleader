@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+﻿import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Target, Trash2, TrendingUp, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
+
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
 interface Competency {
   id: string;
@@ -90,10 +92,10 @@ export default function Competencias() {
   }
 
   const cargoStats = useMemo(() => {
-    // Normalize cargo: remove trailing Roman numerals/levels and unify gender variants (Técnica/Técnico)
+    // Normalize cargo: remove trailing Roman numerals/levels and unify gender variants (TÃ©cnica/TÃ©cnico)
     const normalizeCargo = (cargo: string) => {
       let normalized = cargo.replace(/\s+(I{1,3}|IV|V|VI{0,3}|[0-9]+)\s*$/i, '').trim();
-      normalized = normalized.replace(/\bTécnica\b/gi, 'Técnico');
+      normalized = normalized.replace(/\bTÃ©cnica\b/gi, 'TÃ©cnico');
       return normalized;
     };
 
@@ -125,7 +127,7 @@ export default function Competencias() {
   }, [funcionarios, evaluations, evalCycles]);
 
   const chartData = cargoStats.map(c => ({
-    cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + '…' : c.cargo,
+    cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + 'â€¦' : c.cargo,
     Realizados: c.realizados,
     'No Prazo': c.noPrazo,
     Pendentes: c.pendentes,
@@ -133,7 +135,7 @@ export default function Competencias() {
 
   async function createCompetency() {
     if (!form.name) {
-      toast({ title: 'Informe o nome da competência', variant: 'destructive' });
+      toast({ title: 'Informe o nome da competÃªncia', variant: 'destructive' });
       return;
     }
     const { error } = await supabase.from('competencies').insert([{
@@ -144,7 +146,7 @@ export default function Competencias() {
     if (error) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Competência criada!' });
+      toast({ title: 'CompetÃªncia criada!' });
       setDialogOpen(false);
       setForm({ name: '', description: '', cycle_id: '' });
       fetchCompetencies();
@@ -167,17 +169,17 @@ export default function Competencias() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Fit Cultural</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerencie competências e fit cultural por ciclo</p>
+          <p className="text-muted-foreground text-sm mt-1">Gerencie competÃªncias e fit cultural por ciclo</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Nova Competência</Button>
+            <Button><Plus className="w-4 h-4 mr-2" /> Nova CompetÃªncia</Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Criar Competência</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Criar CompetÃªncia</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
-              <div><Label>Nome</Label><FastInput value={form.name} onValueChange={v => setForm({ ...form, name: v })} placeholder="Ex: Liderança" /></div>
-              <div><Label>Descrição</Label><FastTextarea value={form.description} onValueChange={v => setForm({ ...form, description: v })} placeholder="Descreva a competência" /></div>
+              <div><Label>Nome</Label><FastInput value={form.name} onValueChange={v => setForm({ ...form, name: v })} placeholder="Ex: LideranÃ§a" /></div>
+              <div><Label>DescriÃ§Ã£o</Label><FastTextarea value={form.description} onValueChange={v => setForm({ ...form, description: v })} placeholder="Descreva a competÃªncia" /></div>
               <div>
                 <Label>Ciclo (opcional)</Label>
                 <Select value={form.cycle_id} onValueChange={v => setForm({ ...form, cycle_id: v })}>
@@ -191,18 +193,22 @@ export default function Competencias() {
         </Dialog>
       </motion.div>
 
-      {/* Avaliações por Cargo Chart */}
+      {/* AvaliaÃ§Ãµes por Cargo Chart */}
       {cargoStats.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-section">
           <div className="corporate-section-header">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Avaliações por Cargo</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">AvaliaÃ§Ãµes por Cargo</h2>
             </div>
             <span className="text-xs text-muted-foreground">{cargoStats.length} cargos</span>
           </div>
           <div className="corporate-section-body">
-            <ResponsiveContainer width="100%" height={320}>
+            
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={320}>
               <BarChart data={chartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="cargo" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
@@ -214,6 +220,10 @@ export default function Competencias() {
                 <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+</ExpandableChart>
+
+
+
 
             {/* Pendentes expandable list */}
             {cargoStats.some(c => c.pendentes > 0) && (
@@ -236,7 +246,7 @@ export default function Competencias() {
                           {c.pendenteNomes.map(emp => (
                             <button key={emp.id} onClick={() => navigate(`/funcionario/${emp.id}?tab=fit-cultural`)}
                               className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
-                              • {emp.nome}
+                              â€¢ {emp.nome}
                             </button>
                           ))}
                         </motion.div>
@@ -264,7 +274,7 @@ export default function Competencias() {
       {loading ? (
         <p className="text-muted-foreground text-sm">Carregando...</p>
       ) : filtered.length === 0 ? (
-        <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma competência encontrada.</div>
+        <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma competÃªncia encontrada.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {filtered.map((comp, i) => (

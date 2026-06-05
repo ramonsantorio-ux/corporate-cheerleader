@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Brain, User, BarChart2, Zap, ClipboardList, Award, Star, Plus, CheckCircle2, Search } from 'lucide-react';
@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/components/ExecutiveReports';
+
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
 const assessments = [
   {
@@ -15,7 +17,7 @@ const assessments = [
     border: 'border-blue-200 dark:border-blue-800',
     text: 'text-blue-700 dark:text-blue-400',
     questions: 30,
-    desc: 'Mapeia Dominância, Influência, Estabilidade e Conformidade.',
+    desc: 'Mapeia DominÃ¢ncia, InfluÃªncia, Estabilidade e Conformidade.',
     tags: ['Comportamental', '30 perguntas'],
   },
   {
@@ -35,8 +37,8 @@ const assessments = [
     border: 'border-emerald-200 dark:border-emerald-800',
     text: 'text-emerald-700 dark:text-emerald-400',
     questions: 25,
-    desc: 'Modelo mais validado cientificamente — Abertura, Conscienciosidade, Extroversão, Amabilidade e Neuroticismo.',
-    tags: ['Científico', '25 questões', 'Escala 1–5'],
+    desc: 'Modelo mais validado cientificamente â€” Abertura, Conscienciosidade, ExtroversÃ£o, Amabilidade e Neuroticismo.',
+    tags: ['CientÃ­fico', '25 questÃµes', 'Escala 1â€“5'],
   },
   {
     id: 'gallup', label: 'CliftonStrengths (Gallup)', icon: Zap,
@@ -45,35 +47,35 @@ const assessments = [
     border: 'border-amber-200 dark:border-amber-800',
     text: 'text-amber-700 dark:text-amber-400',
     questions: 0,
-    desc: 'Identifica as 5 maiores forças naturais do colaborador (Top 5 Gallup). Resultado inserido pelo RH.',
-    tags: ['Forças', 'Resultado Manual', 'Gallup®'],
+    desc: 'Identifica as 5 maiores forÃ§as naturais do colaborador (Top 5 Gallup). Resultado inserido pelo RH.',
+    tags: ['ForÃ§as', 'Resultado Manual', 'GallupÂ®'],
   },
   {
-    id: 'lpi', label: 'LPI — Práticas de Liderança', icon: Award,
+    id: 'lpi', label: 'LPI â€” PrÃ¡ticas de LideranÃ§a', icon: Award,
     color: 'from-rose-600 to-pink-600',
     bg: 'bg-rose-50 dark:bg-rose-950/30',
     border: 'border-rose-200 dark:border-rose-800',
     text: 'text-rose-700 dark:text-rose-400',
     questions: 0,
-    desc: 'Mensura 5 práticas de liderança: Modelar o Caminho, Inspirar Visão, Desafiar, Capacitar e Encorajar.',
-    tags: ['Liderança', 'Resultado Manual', 'LPI®'],
+    desc: 'Mensura 5 prÃ¡ticas de lideranÃ§a: Modelar o Caminho, Inspirar VisÃ£o, Desafiar, Capacitar e Encorajar.',
+    tags: ['LideranÃ§a', 'Resultado Manual', 'LPIÂ®'],
   },
 ];
 
 const gallupStrengths = [
-  'Realizador','Ativador','Adaptabilidade','Analítico','Crença','Comando','Comunicação','Competição',
-  'Conectividade','Consistência','Contexto','Deliberativo','Desenvolvedor','Disciplina','Empatia',
-  'Estudioso','Estratégico','Excelência','Foco','Futurista','Harmonia','Idealismo','Individualização',
-  'Intelecção','Maximizador','Positivo','Relacionamento','Responsabilidade','Restaurador','Significância',
+  'Realizador','Ativador','Adaptabilidade','AnalÃ­tico','CrenÃ§a','Comando','ComunicaÃ§Ã£o','CompetiÃ§Ã£o',
+  'Conectividade','ConsistÃªncia','Contexto','Deliberativo','Desenvolvedor','Disciplina','Empatia',
+  'Estudioso','EstratÃ©gico','ExcelÃªncia','Foco','Futurista','Harmonia','Idealismo','IndividualizaÃ§Ã£o',
+  'IntelecÃ§Ã£o','Maximizador','Positivo','Relacionamento','Responsabilidade','Restaurador','SignificÃ¢ncia',
   'Sociabilidade','Vencedor','Woo'
 ];
 
 const lpiDimensions = [
   { key: 'modelar', label: 'Modelar o Caminho' },
-  { key: 'inspirar', label: 'Inspirar Visão Compartilhada' },
+  { key: 'inspirar', label: 'Inspirar VisÃ£o Compartilhada' },
   { key: 'desafiar', label: 'Desafiar o Processo' },
   { key: 'capacitar', label: 'Capacitar os Outros' },
-  { key: 'encorajar', label: 'Encorajar o Coração' },
+  { key: 'encorajar', label: 'Encorajar o CoraÃ§Ã£o' },
 ];
 
 export default function Treinamentos() {
@@ -98,14 +100,14 @@ export default function Treinamentos() {
       // Fallback para mock data se o banco estiver vazio
       if (!employeesList || employeesList.length === 0) {
         employeesList = [
-          { id: 'mock-1', nome: 'Eduardo Silva', cargo: 'Analista Sênior', departamento: 'TI', foto_url: '' },
+          { id: 'mock-1', nome: 'Eduardo Silva', cargo: 'Analista SÃªnior', departamento: 'TI', foto_url: '' },
           { id: 'mock-2', nome: 'Ramon Leonard', cargo: 'Diretor', departamento: 'Diretoria', foto_url: '' },
           { id: 'mock-3', nome: 'Mariana Costa', cargo: 'Gerente de Projetos', departamento: 'Projetos', foto_url: '' }
         ];
       }
 
       if (error) {
-        console.error("Erro ao buscar funcionários:", error);
+        console.error("Erro ao buscar funcionÃ¡rios:", error);
       }
 
       const { data: assessments } = await supabase.from('assessment_results').select('user_id, type, result_data').catch(() => ({ data: [] }));
@@ -119,7 +121,7 @@ export default function Treinamentos() {
         
         if (f.id === 'mock-1') {
            mockDisc = { dominant: { letter: 'D' }, D: 85, I: 40, S: 15, C: 60 };
-           mockMbti = { type: 'ENTJ', desc: { title: 'Comandante', traits: ['Decisivo', 'Estratégico', 'Ambicioso'], desc: 'Líderes natos com visão estratégica e alto poder de execução.' } };
+           mockMbti = { type: 'ENTJ', desc: { title: 'Comandante', traits: ['Decisivo', 'EstratÃ©gico', 'Ambicioso'], desc: 'LÃ­deres natos com visÃ£o estratÃ©gica e alto poder de execuÃ§Ã£o.' } };
            mockBigFive = { O: 85, C: 75, E: 90, A: 40, N: 30 };
         }
 
@@ -173,7 +175,7 @@ export default function Treinamentos() {
     <div className="max-w-7xl mx-auto space-y-8 pb-20">
       <div className="page-header">
         <h1 className="flex items-center gap-2"><ClipboardList className="w-6 h-6 text-primary" />Central de Assessments</h1>
-        <p>Mapeamento comportamental e de competências da sua equipe.</p>
+        <p>Mapeamento comportamental e de competÃªncias da sua equipe.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -214,7 +216,7 @@ export default function Treinamentos() {
         })}
       </div>
 
-      {/* ── Employee Table ── */}
+      {/* â”€â”€ Employee Table â”€â”€ */}
       <div className="glass-card rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center justify-between flex-wrap gap-3">
           <h2 className="font-semibold text-foreground">Mapeamento da Equipe</h2>
@@ -235,7 +237,7 @@ export default function Treinamentos() {
                 <th className="px-4 py-3 text-center font-medium">Gallup</th>
                 <th className="px-4 py-3 text-center font-medium">LPI</th>
                 <th className="px-4 py-3 text-center font-medium">Completude</th>
-                <th className="px-4 py-3 text-center font-medium">Ações</th>
+                <th className="px-4 py-3 text-center font-medium">AÃ§Ãµes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -258,14 +260,14 @@ export default function Treinamentos() {
                     {[
                       { key: 'disc', val: f.disc?.dominant?.letter, fullData: f.disc },
                       { key: 'mbti', val: f.mbti?.type, fullData: f.mbti },
-                      { key: 'bigfive', val: f.bigfive ? '✓' : null, fullData: f.bigfive },
-                      { key: 'gallup', val: f.gallup ? '✓' : null, fullData: f.gallup },
-                      { key: 'lpi', val: f.lpi ? '✓' : null, fullData: f.lpi },
+                      { key: 'bigfive', val: f.bigfive ? 'âœ“' : null, fullData: f.bigfive },
+                      { key: 'gallup', val: f.gallup ? 'âœ“' : null, fullData: f.gallup },
+                      { key: 'lpi', val: f.lpi ? 'âœ“' : null, fullData: f.lpi },
                     ].map(col => (
                       <td key={col.key} className="px-4 py-3 text-center">
                         {col.val
                           ? <button onClick={() => setReportModal({open: true, type: col.key, data: col.fullData, empName: f.nome})} className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-colors cursor-pointer">{col.val}</button>
-                          : <span className="text-muted-foreground/40 text-lg">—</span>}
+                          : <span className="text-muted-foreground/40 text-lg">â€”</span>}
                       </td>
                     ))}
                     <td className="px-4 py-3">
@@ -290,14 +292,14 @@ export default function Treinamentos() {
         </div>
       </div>
 
-      {/* ── Gallup Modal ── */}
+      {/* â”€â”€ Gallup Modal â”€â”€ */}
       {gallupModal.open && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl">
-            <h2 className="font-bold text-lg mb-1 flex items-center gap-2"><Zap className="w-5 h-5 text-amber-500" />CliftonStrengths — Top 5</h2>
-            <p className="text-sm text-muted-foreground mb-4">Selecione exatamente 5 forças do relatório oficial do Gallup.</p>
+            <h2 className="font-bold text-lg mb-1 flex items-center gap-2"><Zap className="w-5 h-5 text-amber-500" />CliftonStrengths â€” Top 5</h2>
+            <p className="text-sm text-muted-foreground mb-4">Selecione exatamente 5 forÃ§as do relatÃ³rio oficial do Gallup.</p>
 
-            <label className="text-sm font-medium block mb-2">Funcionário:</label>
+            <label className="text-sm font-medium block mb-2">FuncionÃ¡rio:</label>
             <select className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm mb-4"
               value={gallupModal.empId} onChange={e => setGallupModal(m => ({ ...m, empId: e.target.value }))}>
               <option value="" disabled>Selecione...</option>
@@ -313,12 +315,12 @@ export default function Treinamentos() {
                     else if (gallupSelected.length < 5) setGallupSelected(prev => [...prev, s]);
                   }}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${sel ? 'bg-amber-500 text-white border-amber-500' : 'bg-background border-border hover:border-amber-400'}`}>
-                    {sel && <span className="mr-1">✓</span>}{s}
+                    {sel && <span className="mr-1">âœ“</span>}{s}
                   </button>
                 );
               })}
             </div>
-            <p className="text-xs text-muted-foreground mb-4">{gallupSelected.length}/5 forças selecionadas</p>
+            <p className="text-xs text-muted-foreground mb-4">{gallupSelected.length}/5 forÃ§as selecionadas</p>
             <div className="flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => { setGallupModal({ open:false, empId:'' }); setGallupSelected([]); }}>Cancelar</Button>
               <Button className="flex-1" disabled={gallupSelected.length !== 5 || !gallupModal.empId} onClick={saveGallup}>Salvar</Button>
@@ -327,14 +329,14 @@ export default function Treinamentos() {
         </div>
       )}
 
-      {/* ── LPI Modal ── */}
+      {/* â”€â”€ LPI Modal â”€â”€ */}
       {lpiModal.open && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl">
-            <h2 className="font-bold text-lg mb-1 flex items-center gap-2"><Award className="w-5 h-5 text-rose-500" />Práticas de Liderança LPI</h2>
-            <p className="text-sm text-muted-foreground mb-4">Insira o score (escala recomendada 0 a 50) para cada uma das 5 práticas de liderança de Kouzes e Posner.</p>
+            <h2 className="font-bold text-lg mb-1 flex items-center gap-2"><Award className="w-5 h-5 text-rose-500" />PrÃ¡ticas de LideranÃ§a LPI</h2>
+            <p className="text-sm text-muted-foreground mb-4">Insira o score (escala recomendada 0 a 50) para cada uma das 5 prÃ¡ticas de lideranÃ§a de Kouzes e Posner.</p>
             
-            <label className="text-sm font-medium block mb-2">Funcionário:</label>
+            <label className="text-sm font-medium block mb-2">FuncionÃ¡rio:</label>
             <select className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm mb-4"
               value={lpiModal.empId} onChange={e => setLpiModal(m => ({ ...m, empId: e.target.value }))}>
               <option value="" disabled>Selecione...</option>
@@ -361,17 +363,17 @@ export default function Treinamentos() {
         </div>
       )}
 
-      {/* ── Report Modal ── */}
+      {/* â”€â”€ Report Modal â”€â”€ */}
       <Dialog open={reportModal.open} onOpenChange={(open) => !open && setReportModal({ open: false, type: '', data: null, empName: '' })}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <div className="mb-4 pb-4 border-b">
-            <h3 className="text-lg font-bold text-foreground">Relatório de {reportModal.empName}</h3>
+            <h3 className="text-lg font-bold text-foreground">RelatÃ³rio de {reportModal.empName}</h3>
           </div>
           {reportModal.type === 'disc' && reportModal.data && <DiscReport resultScreen={reportModal.data} />}
           {reportModal.type === 'mbti' && reportModal.data && <MbtiReport resultScreen={reportModal.data} />}
           {reportModal.type === 'bigfive' && reportModal.data && <BigFiveReport resultScreen={reportModal.data} />}
           {(reportModal.type === 'gallup' || reportModal.type === 'lpi') && (
-            <div className="text-center py-10 text-muted-foreground">O relatório executivo para este assessment está sendo processado.</div>
+            <div className="text-center py-10 text-muted-foreground">O relatÃ³rio executivo para este assessment estÃ¡ sendo processado.</div>
           )}
         </DialogContent>
       </Dialog>

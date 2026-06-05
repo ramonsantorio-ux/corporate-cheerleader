@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,7 +40,7 @@ export default function Login() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
+      toast.success('E-mail de recuperaÃ§Ã£o enviado! Verifique sua caixa de entrada.');
     }
     setLoading(false);
   }
@@ -68,7 +68,7 @@ export default function Login() {
       return;
     }
     if (password.length < 6) {
-      toast.error('Senha deve ter no mínimo 6 caracteres');
+      toast.error('Senha deve ter no mÃ­nimo 6 caracteres');
       return;
     }
     setLoading(true);
@@ -104,7 +104,7 @@ export default function Login() {
           <div className="text-center space-y-3">
             <img src={busatoLogo} alt="Busato HCM Platform" className="h-16 mx-auto object-contain" />
             <p className="text-sm text-muted-foreground mt-4">
-              {isFirstSetup ? 'Configure a conta administrador' : 'Faça login para acessar o sistema'}
+              {isFirstSetup ? 'Configure a conta administrador' : 'FaÃ§a login para acessar o sistema'}
             </p>
           </div>
 
@@ -135,7 +135,7 @@ export default function Login() {
               <div className="relative">
                 <FastInput
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   value={password}
                   onValueChange={setPassword}
                   autoComplete={isFirstSetup ? 'new-password' : 'current-password'}
@@ -175,14 +175,14 @@ export default function Login() {
               onClick={() => setIsFirstSetup(!isFirstSetup)}
               className="text-xs text-primary hover:underline"
             >
-              {isFirstSetup ? 'Já tenho conta, fazer login' : 'Primeiro acesso? Criar conta admin'}
+              {isFirstSetup ? 'JÃ¡ tenho conta, fazer login' : 'Primeiro acesso? Criar conta admin'}
             </button>
           </div>
         </div>
         
-        {/* Rodapé Adicionado */}
+        {/* RodapÃ© Adicionado */}
         <div className="mt-8 text-center text-xs text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Gestão de Contratos.</p>
+          <p>&copy; {new Date().getFullYear()} GestÃ£o de Contratos.</p>
           <p>Todos os direitos reservados.</p>
         </div>
       </motion.div>

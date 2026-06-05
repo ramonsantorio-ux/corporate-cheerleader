@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Shield, Users, Eye, Edit, Lock, Ban, KeyRound, Check, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,12 +18,12 @@ const PAGES = [
   { key: 'feedbacks', label: 'Feedbacks' },
   { key: 'novo_feedback', label: 'Novo Feedback' },
   { key: 'desempenho', label: 'Desempenho' },
-  { key: 'relatorios', label: 'Relatórios' },
-  { key: 'reunioes', label: 'Reuniões 1:1' },
+  { key: 'relatorios', label: 'RelatÃ³rios' },
+  { key: 'reunioes', label: 'ReuniÃµes 1:1' },
   { key: 'eventos', label: 'Eventos' },
-  { key: 'ausencias', label: 'Ausências' },
-  { key: 'cco', label: 'CCO / Informações' },
-  { key: 'configuracoes', label: 'Configurações' },
+  { key: 'ausencias', label: 'AusÃªncias' },
+  { key: 'cco', label: 'CCO / InformaÃ§Ãµes' },
+  { key: 'configuracoes', label: 'ConfiguraÃ§Ãµes' },
 ];
 
 interface UserWithRole {
@@ -110,7 +110,7 @@ export default function Admin() {
       });
       if (banRes.error) throw new Error(banRes.error.message || 'Erro ao desativar conta');
 
-      toast.success(`Conta de "${deleteUser.full_name}" excluída com sucesso!`);
+      toast.success(`Conta de "${deleteUser.full_name}" excluÃ­da com sucesso!`);
       setUsers(prev => prev.filter(u => u.id !== deleteUser.id));
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao excluir conta');
@@ -125,7 +125,7 @@ export default function Admin() {
       return;
     }
     if (newUser.password.length < 6) {
-      toast.error('Senha deve ter no mínimo 6 caracteres');
+      toast.error('Senha deve ter no mÃ­nimo 6 caracteres');
       return;
     }
     setCreating(true);
@@ -133,9 +133,9 @@ export default function Admin() {
       body: { email: newUser.email, password: newUser.password, full_name: newUser.full_name },
     });
     if (res.error) {
-      toast.error(res.error.message || 'Erro ao criar usuário');
+      toast.error(res.error.message || 'Erro ao criar usuÃ¡rio');
     } else {
-      toast.success('Usuário criado com sucesso!');
+      toast.success('UsuÃ¡rio criado com sucesso!');
       setNewUser({ email: '', password: '', full_name: '' });
       setDialogOpen(false);
       const userId = res.data?.user_id;
@@ -169,7 +169,7 @@ export default function Admin() {
     await supabase.from('user_permissions').insert(
       editPerms.map(p => ({ user_id: editingUser.id, ...p }))
     );
-    toast.success('Permissões atualizadas!');
+    toast.success('PermissÃµes atualizadas!');
     setEditingUser(null);
     fetchUsers();
   }
@@ -189,7 +189,7 @@ export default function Admin() {
     if (res.error) {
       toast.error(res.error.message || 'Erro ao atualizar');
     } else {
-      toast.success('Usuário atualizado com sucesso!');
+      toast.success('UsuÃ¡rio atualizado com sucesso!');
       setEditUserDialog(null);
       fetchUsers();
     }
@@ -210,7 +210,7 @@ export default function Admin() {
     if (res.error) {
       toast.error(res.error.message || 'Erro');
     } else {
-      toast.success(blockAction === 'ban' ? 'Usuário bloqueado!' : 'Usuário desbloqueado!');
+      toast.success(blockAction === 'ban' ? 'UsuÃ¡rio bloqueado!' : 'UsuÃ¡rio desbloqueado!');
       setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
       setBlockUser(null);
     }
@@ -225,7 +225,7 @@ export default function Admin() {
   async function savePassword() {
     if (!passwordUser) return;
     if (!newPassword || newPassword.length < 6) {
-      toast.error('Senha deve ter no mínimo 6 caracteres');
+      toast.error('Senha deve ter no mÃ­nimo 6 caracteres');
       return;
     }
     setSavingPassword(true);
@@ -255,21 +255,21 @@ export default function Admin() {
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Administração</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerenciar usuários e permissões</p>
+          <h1 className="text-2xl font-bold">AdministraÃ§Ã£o</h1>
+          <p className="text-muted-foreground text-sm mt-1">Gerenciar usuÃ¡rios e permissÃµes</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="w-4 h-4 mr-2" /> Novo Usuário
+              <Plus className="w-4 h-4 mr-2" /> Novo UsuÃ¡rio
             </Button>
           </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Criar Novo Usuário</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>Criar Novo UsuÃ¡rio</DialogTitle></DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="space-y-2">
                 <Label>Nome completo</Label>
-                <FastInput value={newUser.full_name} onValueChange={v => setNewUser({ ...newUser, full_name: v })} placeholder="Nome do usuário" />
+                <FastInput value={newUser.full_name} onValueChange={v => setNewUser({ ...newUser, full_name: v })} placeholder="Nome do usuÃ¡rio" />
               </div>
               <div className="space-y-2">
                 <Label>E-mail</Label>
@@ -277,10 +277,10 @@ export default function Admin() {
               </div>
               <div className="space-y-2">
                 <Label>Senha</Label>
-                <FastInput type="password" value={newUser.password} onValueChange={v => setNewUser({ ...newUser, password: v })} placeholder="Mínimo 6 caracteres" />
+                <FastInput type="password" value={newUser.password} onValueChange={v => setNewUser({ ...newUser, password: v })} placeholder="MÃ­nimo 6 caracteres" />
               </div>
               <Button onClick={createUser} className="w-full" disabled={creating}>
-                {creating ? 'Criando...' : 'Criar Usuário'}
+                {creating ? 'Criando...' : 'Criar UsuÃ¡rio'}
               </Button>
             </div>
           </DialogContent>
@@ -291,7 +291,7 @@ export default function Admin() {
         <p className="text-muted-foreground text-sm">Carregando...</p>
       ) : users.length === 0 ? (
         <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">
-          Nenhum usuário cadastrado.
+          Nenhum usuÃ¡rio cadastrado.
         </div>
       ) : (
         <div className="space-y-3">
@@ -314,7 +314,7 @@ export default function Admin() {
                 <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                   u.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                 }`}>
-                  {u.role === 'admin' ? 'Admin' : 'Usuário'}
+                  {u.role === 'admin' ? 'Admin' : 'UsuÃ¡rio'}
                 </span>
                 {u.banned && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-destructive/10 text-destructive">
@@ -339,7 +339,7 @@ export default function Admin() {
                   {u.banned ? 'Desbloquear' : 'Bloquear'}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => openPermissions(u)}>
-                  <Shield className="w-3.5 h-3.5 mr-1" /> Permissões
+                  <Shield className="w-3.5 h-3.5 mr-1" /> PermissÃµes
                 </Button>
                 <Button
                   variant="destructive"
@@ -359,7 +359,7 @@ export default function Admin() {
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Permissões — {editingUser?.full_name}</DialogTitle>
+            <DialogTitle>PermissÃµes â€” {editingUser?.full_name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 pt-2">
             {editPerms.map((perm, idx) => {
@@ -397,7 +397,7 @@ export default function Admin() {
               );
             })}
             <Button onClick={savePermissions} className="w-full mt-2">
-              Salvar Permissões
+              Salvar PermissÃµes
             </Button>
           </div>
         </DialogContent>
@@ -407,7 +407,7 @@ export default function Admin() {
       <Dialog open={!!editUserDialog} onOpenChange={(open) => !open && setEditUserDialog(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Editar Usuário</DialogTitle>
+            <DialogTitle>Editar UsuÃ¡rio</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
@@ -419,7 +419,7 @@ export default function Admin() {
               <FastInput type="email" value={editEmail} onValueChange={setEditEmail} />
             </div>
             <Button onClick={saveEditUser} className="w-full" disabled={savingEdit}>
-              {savingEdit ? 'Salvando...' : 'Salvar Alterações'}
+              {savingEdit ? 'Salvando...' : 'Salvar AlteraÃ§Ãµes'}
             </Button>
           </div>
         </DialogContent>
@@ -429,7 +429,7 @@ export default function Admin() {
       <Dialog open={!!passwordUser} onOpenChange={(open) => !open && setPasswordUser(null)}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Alterar Senha — {passwordUser?.full_name}</DialogTitle>
+            <DialogTitle>Alterar Senha â€” {passwordUser?.full_name}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
@@ -438,7 +438,7 @@ export default function Admin() {
                 type="password"
                 value={newPassword}
                 onValueChange={setNewPassword}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="MÃ­nimo 6 caracteres"
               />
             </div>
             <Button onClick={savePassword} className="w-full" disabled={savingPassword}>
@@ -453,11 +453,11 @@ export default function Admin() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {blockAction === 'ban' ? 'Bloquear Usuário' : 'Desbloquear Usuário'}
+              {blockAction === 'ban' ? 'Bloquear UsuÃ¡rio' : 'Desbloquear UsuÃ¡rio'}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {blockAction === 'ban'
-                ? `Tem certeza que deseja bloquear "${blockUser?.full_name}"? O usuário não conseguirá fazer login.`
+                ? `Tem certeza que deseja bloquear "${blockUser?.full_name}"? O usuÃ¡rio nÃ£o conseguirÃ¡ fazer login.`
                 : `Tem certeza que deseja desbloquear "${blockUser?.full_name}"?`}
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -477,7 +477,7 @@ export default function Admin() {
             <AlertDialogTitle>Excluir Conta</AlertDialogTitle>
             <AlertDialogDescription>
               Tem certeza que deseja excluir permanentemente a conta de "{deleteUser?.full_name}"?
-              Esta ação não pode ser desfeita. Todos os dados do usuário serão removidos.
+              Esta aÃ§Ã£o nÃ£o pode ser desfeita. Todos os dados do usuÃ¡rio serÃ£o removidos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,4 +1,4 @@
-import { renderToString } from 'react-dom/server';
+﻿import { renderToString } from 'react-dom/server';
 import GestaoNotificacoes from './GestaoNotificacoes';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';

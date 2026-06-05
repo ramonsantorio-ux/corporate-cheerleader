@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { UserCircle2, Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
@@ -72,11 +72,11 @@ export default function Organograma() {
       
       const gerentes = funcs.filter(f => isRole(f, 'gerente operacional'));
       const supervisores = funcs.filter(f => isRole(f, 'supervisor de campo'));
-      const encarregados = funcs.filter(f => isRole(f, 'encarregado') || isRole(f, 'ténico de segurança') || isRole(f, 'tecnico de seguranca'));
+      const encarregados = funcs.filter(f => isRole(f, 'encarregado') || isRole(f, 'tÃ©nico de seguranÃ§a') || isRole(f, 'tecnico de seguranca'));
 
       const encarregadosNodes = encarregados.length > 0 
         ? encarregados.map(e => ({ id: e.id, name: e.nome, role: e.cargo, children: [] }))
-        : [{ id: 'vaga-enc', name: 'Vaga em Aberto', role: 'Encarregado / Téc. Segurança', children: [] }];
+        : [{ id: 'vaga-enc', name: 'Vaga em Aberto', role: 'Encarregado / TÃ©c. SeguranÃ§a', children: [] }];
 
       const supervisoresNodes = supervisores.length > 0
         ? supervisores.map(s => ({ id: s.id, name: s.nome, role: s.cargo, children: encarregadosNodes }))
@@ -97,7 +97,7 @@ export default function Organograma() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Organograma</h1>
         <p className="text-muted-foreground mt-2">
-          Estrutura hierárquica baseada nos cargos cadastrados na base de dados.
+          Estrutura hierÃ¡rquica baseada nos cargos cadastrados na base de dados.
         </p>
       </div>
 

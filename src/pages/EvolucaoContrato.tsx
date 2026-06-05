@@ -16,6 +16,8 @@ import { supabase } from "@/lib/supabase";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell } from 'recharts';
 import * as XLSX from 'xlsx';
 
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
+
 interface OfensorFinanceiro {
   motivo: string;
   valor: number;
@@ -599,9 +601,9 @@ export default function EvolucaoContrato() {
       const sumDescontos = m.descontos.reduce((acc, curr) => acc + curr.valor, 0);
       const sumMultas = todasMultas.reduce((acc, curr) => acc + curr.valor, 0);
       
-      const receitaTotal = m.fatLocacao + m.fatMaoDeObra + m.eventuais;
+      const receitaTotal = (m.fatLocacao || 0) + (m.fatMaoDeObra || 0) + (m.eventuais || 0);
       const impostosTotal = (m.impostoIrrf || 0) + (m.impostoPis || 0) + (m.impostoCofins || 0) + (m.impostoCsll || 0) + (m.impostoIss || 0) + (m.impostoInss || 0) + (m.impostoInssAdSat || 0);
-      const folhaTotal = m.custoFolha + m.horasExtras + (m.folhaInss || 0) + (m.folhaFgts || 0) + (m.folhaIrrf || 0) + (m.custoTurnover || 0) + (m.beneficioCafeDaManha || 0) + (m.beneficioSeguroDeVida || 0) + (m.beneficioPlanoDeSaude || 0) + (m.beneficioPlanoOdontologico || 0) + (m.beneficioTicketAlimentacao || 0) + (m.beneficioValeTransporte || 0) + (m.beneficioMaisParaTodos || 0) + (m.beneficioRefeicao || 0);
+      const folhaTotal = (m.custoFolha || 0) + (m.horasExtras || 0) + (m.folhaInss || 0) + (m.folhaFgts || 0) + (m.folhaIrrf || 0) + (m.custoTurnover || 0) + (m.beneficioCafeDaManha || 0) + (m.beneficioSeguroDeVida || 0) + (m.beneficioPlanoDeSaude || 0) + (m.beneficioPlanoOdontologico || 0) + (m.beneficioTicketAlimentacao || 0) + (m.beneficioValeTransporte || 0) + (m.beneficioMaisParaTodos || 0) + (m.beneficioRefeicao || 0);
       const manutencaoTotal = (m.manutencaoPecas || 0) + (m.manutencaoServicos || 0) + (m.manutencaoPneus || 0) + (m.manutencaoLubrificacao || 0) + (m.manutencaoLavador || 0) + (m.manutencaoPreventiva || 0);
       const combustivelTotal = (m.combustivelDiesel || 0) + (m.combustivelDieselS10 || 0) + (m.combustivelDieselS500 || 0) + (m.combustivelGasolina || 0);
       const uniformeTotal = (m.uniforme || 0) + (m.epi || 0);
@@ -790,7 +792,8 @@ export default function EvolucaoContrato() {
             </CardHeader>
             <CardContent>
               <div className="h-[350px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
+                <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                     <defs>
                       <linearGradient id="colorSlaArea" x1="0" y1="0" x2="0" y2="1">
@@ -809,6 +812,7 @@ export default function EvolucaoContrato() {
                     </Area>
                   </ComposedChart>
                 </ResponsiveContainer>
+</ExpandableChart>
               </div>
             </CardContent>
           </Card>
@@ -820,7 +824,8 @@ export default function EvolucaoContrato() {
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
+                <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                     <defs>
                       <linearGradient id="colorSla" x1="0" y1="0" x2="0" y2="1">
@@ -838,6 +843,7 @@ export default function EvolucaoContrato() {
                     <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--blue-500))" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
+</ExpandableChart>
               </div>
             </CardContent>
           </Card>
@@ -849,7 +855,8 @@ export default function EvolucaoContrato() {
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
+                <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                     <defs>
                       <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
@@ -867,6 +874,7 @@ export default function EvolucaoContrato() {
                     <Area type="monotone" dataKey="saldo" name="Lucro Líquido Real" fill="url(#colorSaldo)" stroke="hsl(var(--success))" strokeWidth={3} />
                   </ComposedChart>
                 </ResponsiveContainer>
+</ExpandableChart>
               </div>
             </CardContent>
           </Card>
@@ -879,7 +887,8 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[300px] w-full mt-4">
                 {ofensoresData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={ofensoresData}
@@ -898,6 +907,7 @@ export default function EvolucaoContrato() {
                       <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
                     </PieChart>
                   </ResponsiveContainer>
+</ExpandableChart>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                     Sem ofensores financeiros registrados.
@@ -937,7 +947,8 @@ export default function EvolucaoContrato() {
               {['impostos', 'folha', 'manutencao', 'combustivel', 'seguranca', 'materiais'].map(tab => (
                 <TabsContent key={tab} value={tab}>
                   <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                         <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
@@ -948,6 +959,7 @@ export default function EvolucaoContrato() {
                         <Line type="monotone" dataKey={tab === 'impostos' ? 'metaImpostos' : tab === 'folha' ? 'metaFolha' : tab === 'manutencao' ? 'metaManutencao' : tab === 'combustivel' ? 'metaCombustivel' : tab === 'seguranca' ? 'metaSeguranca' : 'metaMateriais'} name="Meta" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                       </ComposedChart>
                     </ResponsiveContainer>
+</ExpandableChart>
                   </div>
                 </TabsContent>
               ))}
@@ -1433,7 +1445,8 @@ export default function EvolucaoContrato() {
           <div className="h-[70vh] w-full mt-4">
             
             {expandedChart === 'sla' && (
-              <ResponsiveContainer width="100%" height="100%">
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                     <defs>
                       <linearGradient id="colorSlaAreaBig" x1="0" y1="0" x2="0" y2="1">
@@ -1452,10 +1465,12 @@ export default function EvolucaoContrato() {
                     </Area>
                   </ComposedChart>
                 </ResponsiveContainer>
+</ExpandableChart>
             )}
 
             {expandedChart === 'resumo' && (
-              <ResponsiveContainer width="100%" height="100%">
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                     <defs>
                       <linearGradient id="colorSlaBig" x1="0" y1="0" x2="0" y2="1">
@@ -1473,10 +1488,12 @@ export default function EvolucaoContrato() {
                     <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--blue-500))" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
+</ExpandableChart>
             )}
 
             {expandedChart === 'rentabilidade' && (
-              <ResponsiveContainer width="100%" height="100%">
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                     <defs>
                       <linearGradient id="colorSaldoBig" x1="0" y1="0" x2="0" y2="1">
@@ -1494,12 +1511,14 @@ export default function EvolucaoContrato() {
                     <Area type="monotone" dataKey="saldo" name="Lucro Líquido Real" fill="url(#colorSaldoBig)" stroke="hsl(var(--success))" strokeWidth={3} />
                   </ComposedChart>
                 </ResponsiveContainer>
+</ExpandableChart>
             )}
 
             {expandedChart === 'ofensores' && (
               <div className="w-full h-full">
                 {ofensoresData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={ofensoresData} cx="50%" cy="50%" innerRadius={120} outerRadius={180} paddingAngle={2} dataKey="value">
                         {ofensoresData.map((entry, index) => (
@@ -1510,6 +1529,7 @@ export default function EvolucaoContrato() {
                       <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '14px' }} />
                     </PieChart>
                   </ResponsiveContainer>
+</ExpandableChart>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-muted-foreground">Sem ofensores financeiros registrados.</div>
                 )}
@@ -1528,7 +1548,8 @@ export default function EvolucaoContrato() {
                 </TabsList>
                 {['impostos', 'folha', 'manutencao', 'combustivel', 'seguranca', 'materiais'].map(tab => (
                   <TabsContent key={tab} value={tab} className="flex-1 mt-0">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                         <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
@@ -1539,6 +1560,7 @@ export default function EvolucaoContrato() {
                         <Line type="monotone" dataKey={tab === 'impostos' ? 'metaImpostos' : tab === 'folha' ? 'metaFolha' : tab === 'manutencao' ? 'metaManutencao' : tab === 'combustivel' ? 'metaCombustivel' : tab === 'seguranca' ? 'metaSeguranca' : 'metaMateriais'} name="Meta" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                       </ComposedChart>
                     </ResponsiveContainer>
+</ExpandableChart>
                   </TabsContent>
                 ))}
               </Tabs>

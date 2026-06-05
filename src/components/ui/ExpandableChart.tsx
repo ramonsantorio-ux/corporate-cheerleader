@@ -14,8 +14,8 @@ export function ExpandableChart({ title, description, children }: ExpandableChar
   return (
     <>
       <div className="relative group w-full h-full min-h-[250px] flex flex-col">
-        {/* Ícone de Lupa que aparece no hover */}
-        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Ícone de Lupa sempre visível (destaca no hover) */}
+        <div className="absolute top-2 right-2 z-20 opacity-70 hover:opacity-100 transition-opacity">
           <button
             onClick={() => setOpen(true)}
             className="p-2 bg-background/90 hover:bg-muted border border-border rounded-lg shadow-sm flex items-center justify-center transition-colors"

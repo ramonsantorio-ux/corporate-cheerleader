@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+﻿import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, BarChart3, Target, Activity } from 'lucide-react';
 import { FastInput } from '@/components/ui/fast-input';
@@ -14,6 +14,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, AreaChart, Area, CartesianGrid, RadialBarChart, RadialBar, Legend } from 'recharts';
+
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
 const departamentos = Object.entries(setorLabels) as [FeedbackSetor, string][];
 
@@ -126,7 +128,7 @@ export default function Feedbacks() {
   async function handleCreateFeedback(e: React.FormEvent) {
     e.preventDefault();
     if (!form.titulo.trim() || !form.descricao.trim() || !form.funcionario) {
-      toast.error('Preencha todos os campos obrigatórios.');
+      toast.error('Preencha todos os campos obrigatÃ³rios.');
       return;
     }
     const { error } = await supabase.from('feedbacks').insert({
@@ -157,7 +159,7 @@ export default function Feedbacks() {
 
   const alertFeedbacks = useMemo(() => feedbacks.filter(fb => getAlertType(fb) !== null), [feedbacks]);
 
-  // ── KPI Computations ──
+  // â”€â”€ KPI Computations â”€â”€
   const kpis = useMemo(() => {
     const total = filtered.length;
     const resolvidos = filtered.filter(fb => fb.status === 'resolvido').length;
@@ -181,7 +183,7 @@ export default function Feedbacks() {
     return { total, resolvidos, criticos, abertos, taxaResolucao, avgDays, slaRate };
   }, [filtered]);
 
-  // ── Chart Data ──
+  // â”€â”€ Chart Data â”€â”€
   const statusChartData = useMemo(() => {
     const counts: Record<string, number> = {};
     filtered.forEach(fb => { counts[fb.status] = (counts[fb.status] || 0) + 1; });
@@ -249,7 +251,7 @@ export default function Feedbacks() {
     return Object.values(byAuthor);
   }, [selectedDept, feedbacks]);
 
-  // ── Feedback por Cargo (mín. 1 feedback por funcionário) ──
+  // â”€â”€ Feedback por Cargo (mÃ­n. 1 feedback por funcionÃ¡rio) â”€â”€
   const feedbackCargoStats = useMemo(() => {
     const cargos: Record<string, { cargo: string; total: number; comFeedback: number; pendentes: number; pendenteNomes: { id: string; nome: string }[] }> = {};
     funcionariosFull.forEach(f => {
@@ -267,7 +269,7 @@ export default function Feedbacks() {
   }, [funcionariosFull, feedbacks]);
 
   const fbCargoChartData = feedbackCargoStats.map(c => ({
-    cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + '…' : c.cargo,
+    cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + 'â€¦' : c.cargo,
     'Com Feedback': c.comFeedback,
     Pendentes: c.pendentes,
   }));
@@ -283,7 +285,7 @@ export default function Feedbacks() {
     if (error) { toast.error('Erro ao excluir feedback.'); return; }
     setFeedbacks(feedbacks.filter(fb => fb.id !== deleteId));
     setDeleteId(null);
-    toast.success('Feedback excluído!');
+    toast.success('Feedback excluÃ­do!');
   }
 
   const inputClass = "w-full bg-muted rounded-lg px-4 py-3 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 transition-shadow";
@@ -294,22 +296,22 @@ export default function Feedbacks() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Gestão de Feedbacks</h1>
-          <p className="text-muted-foreground text-sm mt-1">Painel analítico de acompanhamento e resolução</p>
+          <h1 className="text-2xl font-bold">GestÃ£o de Feedbacks</h1>
+          <p className="text-muted-foreground text-sm mt-1">Painel analÃ­tico de acompanhamento e resoluÃ§Ã£o</p>
         </div>
         <Button onClick={() => setCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Novo Feedback</Button>
       </motion.div>
 
       <PeriodFilter value={period} onChange={setPeriod} />
 
-      {/* ── KPI Cards ── */}
+      {/* â”€â”€ KPI Cards â”€â”€ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} className="corporate-kpi">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total no Período</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total no PerÃ­odo</p>
               <p className="text-3xl font-bold tracking-tight text-foreground">{kpis.total}</p>
-              <p className="text-xs text-muted-foreground">{kpis.abertos} abertos · {kpis.resolvidos} resolvidos</p>
+              <p className="text-xs text-muted-foreground">{kpis.abertos} abertos Â· {kpis.resolvidos} resolvidos</p>
             </div>
             <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center">
               <BarChart3 className="w-5 h-5 text-primary" />
@@ -321,10 +323,10 @@ export default function Feedbacks() {
           className={`corporate-kpi ${kpis.taxaResolucao >= 70 ? 'corporate-kpi-accent' : kpis.taxaResolucao < 40 ? 'corporate-kpi-danger' : ''}`}>
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Taxa de Resolução</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Taxa de ResoluÃ§Ã£o</p>
               <p className="text-3xl font-bold tracking-tight text-foreground">{kpis.taxaResolucao}%</p>
               <p className={`text-xs font-medium ${kpis.taxaResolucao >= 70 ? 'text-success' : kpis.taxaResolucao < 40 ? 'text-destructive' : 'text-warning'}`}>
-                {kpis.taxaResolucao >= 70 ? '↑ Dentro da meta' : kpis.taxaResolucao >= 40 ? '→ Atenção necessária' : '↓ Abaixo da meta'}
+                {kpis.taxaResolucao >= 70 ? 'â†‘ Dentro da meta' : kpis.taxaResolucao >= 40 ? 'â†’ AtenÃ§Ã£o necessÃ¡ria' : 'â†“ Abaixo da meta'}
               </p>
             </div>
             <div className="w-11 h-11 rounded-lg bg-success/10 flex items-center justify-center">
@@ -337,9 +339,9 @@ export default function Feedbacks() {
           className={`corporate-kpi ${kpis.slaRate >= 80 ? 'corporate-kpi-accent' : 'corporate-kpi-danger'}`}>
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">SLA (≤15 dias)</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">SLA (â‰¤15 dias)</p>
               <p className="text-3xl font-bold tracking-tight text-foreground">{kpis.slaRate}%</p>
-              <p className="text-xs text-muted-foreground">Tempo médio: {kpis.avgDays}d</p>
+              <p className="text-xs text-muted-foreground">Tempo mÃ©dio: {kpis.avgDays}d</p>
             </div>
             <div className="w-11 h-11 rounded-lg bg-info/10 flex items-center justify-center">
               <Clock className="w-5 h-5 text-info" />
@@ -351,10 +353,10 @@ export default function Feedbacks() {
           className={`corporate-kpi ${kpis.criticos > 0 ? 'corporate-kpi-danger' : ''}`}>
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Críticos Abertos</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">CrÃ­ticos Abertos</p>
               <p className="text-3xl font-bold tracking-tight text-foreground">{kpis.criticos}</p>
               <p className={`text-xs font-medium ${kpis.criticos > 0 ? 'text-destructive' : 'text-success'}`}>
-                {kpis.criticos > 0 ? '⚠ Requer ação imediata' : '✓ Nenhum pendente'}
+                {kpis.criticos > 0 ? 'âš  Requer aÃ§Ã£o imediata' : 'âœ“ Nenhum pendente'}
               </p>
             </div>
             <div className="w-11 h-11 rounded-lg bg-destructive/10 flex items-center justify-center">
@@ -364,18 +366,22 @@ export default function Feedbacks() {
         </motion.div>
       </div>
 
-      {/* ── Acompanhamento de Feedbacks por Cargo ── */}
+      {/* â”€â”€ Acompanhamento de Feedbacks por Cargo â”€â”€ */}
       {feedbackCargoStats.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="corporate-section">
           <div className="corporate-section-header">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Acompanhamento — Mín. 1 Feedback por Colaborador</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Acompanhamento â€” MÃ­n. 1 Feedback por Colaborador</h2>
             </div>
             <span className="text-xs text-muted-foreground">{feedbackCargoStats.length} cargos</span>
           </div>
           <div className="corporate-section-body">
-            <ResponsiveContainer width="100%" height={320}>
+            
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={320}>
               <BarChart data={fbCargoChartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="cargo" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
@@ -386,6 +392,10 @@ export default function Feedbacks() {
                 <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+</ExpandableChart>
+
+
+
 
             {feedbackCargoStats.some(c => c.pendentes > 0) && (
               <div className="mt-6 border-t border-border pt-4">
@@ -407,7 +417,7 @@ export default function Feedbacks() {
                           {c.pendenteNomes.map(emp => (
                             <button key={emp.id} onClick={() => openCreateForEmployee(emp.nome)}
                               className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
-                              • {emp.nome}
+                              â€¢ {emp.nome}
                             </button>
                           ))}
                         </motion.div>
@@ -421,16 +431,20 @@ export default function Feedbacks() {
         </motion.div>
       )}
 
-      {/* ── Charts Row ── */}
+      {/* â”€â”€ Charts Row â”€â”€ */}
       <div className="grid lg:grid-cols-3 gap-4">
         {/* Status Donut */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl p-5">
           <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-primary" />Distribuição por Status
+            <Activity className="w-4 h-4 text-primary" />DistribuiÃ§Ã£o por Status
           </h3>
           {statusChartData.length > 0 ? (
             <div className="flex items-center gap-2">
-              <ResponsiveContainer width="50%" height={160}>
+              
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="50%" height={160}>
                 <PieChart>
                   <Pie data={statusChartData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={2} stroke="hsl(var(--card))">
                     {statusChartData.map((entry, i) => (
@@ -440,6 +454,10 @@ export default function Feedbacks() {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
+</ExpandableChart>
+
+
+
               <div className="flex-1 space-y-1.5">
                 {statusChartData.map((d, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
@@ -451,17 +469,21 @@ export default function Feedbacks() {
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no período</p>
+            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no perÃ­odo</p>
           )}
         </motion.div>
 
         {/* Priority Bar */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card rounded-xl p-5">
           <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-warning" />Distribuição por Prioridade
+            <AlertTriangle className="w-4 h-4 text-warning" />DistribuiÃ§Ã£o por Prioridade
           </h3>
           {priorityChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={160}>
+            
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={160}>
               <BarChart data={priorityChartData} layout="vertical" margin={{ left: 0, right: 10 }}>
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" width={60} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
@@ -473,18 +495,26 @@ export default function Feedbacks() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+</ExpandableChart>
+
+
+
           ) : (
-            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no período</p>
+            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no perÃ­odo</p>
           )}
         </motion.div>
 
         {/* Trend Area */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-5">
           <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-success" />Tendência Mensal
+            <TrendingUp className="w-4 h-4 text-success" />TendÃªncia Mensal
           </h3>
           {trendData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={160}>
+            
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={160}>
               <AreaChart data={trendData} margin={{ left: -10, right: 5, top: 5, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradAbertos" x1="0" y1="0" x2="0" y2="1">
@@ -504,19 +534,27 @@ export default function Feedbacks() {
                 <Area type="monotone" dataKey="Resolvidos" stroke="hsl(var(--success))" fill="url(#gradResolvidos)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
+</ExpandableChart>
+
+
+
           ) : (
-            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no período</p>
+            <p className="text-xs text-muted-foreground text-center py-8">Sem dados no perÃ­odo</p>
           )}
         </motion.div>
       </div>
 
-      {/* ── Department Performance Chart ── */}
+      {/* â”€â”€ Department Performance Chart â”€â”€ */}
       {deptChartData.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="glass-card rounded-xl p-5">
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />Performance por Departamento
           </h3>
-          <ResponsiveContainer width="100%" height={220}>
+          
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={220}>
             <BarChart data={deptChartData} margin={{ left: -5, right: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} angle={-25} textAnchor="end" height={60} />
@@ -526,6 +564,10 @@ export default function Feedbacks() {
               <Bar dataKey="Pendentes" stackId="a" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} barSize={28} />
             </BarChart>
           </ResponsiveContainer>
+</ExpandableChart>
+
+
+
           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center">
             <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(var(--success))' }} /> Resolvidos</div>
             <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(var(--warning))' }} /> Pendentes</div>
@@ -558,10 +600,10 @@ export default function Feedbacks() {
                         <AlertCircle className={`w-4 h-4 flex-shrink-0 ${alertType === 'mensal' ? 'text-destructive' : 'text-warning'}`} />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{fb.titulo}</p>
-                          <p className="text-xs text-muted-foreground">{fb.autor} · {setorLabels[fb.setor]}</p>
+                          <p className="text-xs text-muted-foreground">{fb.autor} Â· {setorLabels[fb.setor]}</p>
                         </div>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${alertType === 'mensal' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}>
-                          {days}d · {alertType === 'mensal' ? 'Mensal' : 'Quinzenal'}
+                          {days}d Â· {alertType === 'mensal' ? 'Mensal' : 'Quinzenal'}
                         </span>
                       </div>
                     );
@@ -634,7 +676,7 @@ export default function Feedbacks() {
                       <motion.div initial={{ width: 0 }} animate={{ width: `${(dept.resolved / maxTotal) * 100}%` }} transition={{ duration: 0.5 }} className="h-full bg-success" />
                       <motion.div initial={{ width: 0 }} animate={{ width: `${(dept.pending / maxTotal) * 100}%` }} transition={{ duration: 0.5 }} className="h-full bg-warning" />
                     </div>
-                    <span className="text-xs w-16 text-right text-muted-foreground">{dept.resolved}✓ {dept.pending}⏳</span>
+                    <span className="text-xs w-16 text-right text-muted-foreground">{dept.resolved}âœ“ {dept.pending}â³</span>
                     <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isSelected ? 'rotate-180' : ''}`} />
                   </div>
                 </button>
@@ -669,22 +711,22 @@ export default function Feedbacks() {
           <DialogHeader><DialogTitle>Novo Feedback</DialogTitle></DialogHeader>
           <form onSubmit={handleCreateFeedback} className="space-y-4 pt-2">
             <div>
-              <label className={labelClass}>Gestor Responsável</label>
+              <label className={labelClass}>Gestor ResponsÃ¡vel</label>
               <input type="text" value={gestorName} readOnly className={`${inputClass} opacity-70 cursor-not-allowed`} />
             </div>
             <div>
-              <label className={labelClass}>Título *</label>
+              <label className={labelClass}>TÃ­tulo *</label>
               <FastInput placeholder="Resumo breve do feedback" value={form.titulo} onValueChange={(v) => setForm(f => ({ ...f, titulo: v }))} className={inputClass} maxLength={100} />
             </div>
             <div>
-              <label className={labelClass}>Funcionário *</label>
+              <label className={labelClass}>FuncionÃ¡rio *</label>
               <select value={form.funcionario} onChange={(e) => setForm({ ...form, funcionario: e.target.value })} className={inputClass}>
-                <option value="">Selecione o funcionário</option>
+                <option value="">Selecione o funcionÃ¡rio</option>
                 {funcionarios.map((nome) => (<option key={nome} value={nome}>{nome}</option>))}
               </select>
             </div>
             <div>
-              <label className={labelClass}>Descrição *</label>
+              <label className={labelClass}>DescriÃ§Ã£o *</label>
               <FastTextarea placeholder="Descreva em detalhes o feedback..." value={form.descricao} onValueChange={(v) => setForm(f => ({ ...f, descricao: v }))} className={`${inputClass} min-h-[100px] resize-none`} maxLength={1000} />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -712,8 +754,8 @@ export default function Feedbacks() {
               </div>
             </div>
             <div>
-              <label className={labelClass}>Observações</label>
-              <FastTextarea placeholder="Observações adicionais..." value={form.departamento} onValueChange={(v) => setForm(f => ({ ...f, departamento: v }))} className={`${inputClass} min-h-[60px] resize-none`} maxLength={500} />
+              <label className={labelClass}>ObservaÃ§Ãµes</label>
+              <FastTextarea placeholder="ObservaÃ§Ãµes adicionais..." value={form.departamento} onValueChange={(v) => setForm(f => ({ ...f, departamento: v }))} className={`${inputClass} min-h-[60px] resize-none`} maxLength={500} />
             </div>
             <Button type="submit" className="w-full"><Send className="w-4 h-4 mr-2" />Enviar Feedback</Button>
           </form>
@@ -725,7 +767,7 @@ export default function Feedbacks() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir feedback?</AlertDialogTitle>
-            <AlertDialogDescription>Esta ação não pode ser desfeita. O feedback será removido permanentemente.</AlertDialogDescription>
+            <AlertDialogDescription>Esta aÃ§Ã£o nÃ£o pode ser desfeita. O feedback serÃ¡ removido permanentemente.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>

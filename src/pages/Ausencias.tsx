@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+﻿import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
@@ -24,7 +24,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
+
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface Attendance {
   id: string; employee_id: string; date: string; status: string;
   observation: string; created_at: string; employee_name?: string;
@@ -53,7 +55,7 @@ interface Func { id: string; nome: string; turno: string; letra: string; cargo: 
 
 const statusLabels: Record<string, string> = {
   presente: 'Presente', falta_injustificada: 'Falta Injustificada', falta_justificada: 'Falta Justificada',
-  atestado: 'Atestado', extra: 'Extra', ferias: 'Férias', afastamento: 'Afastamento',
+  atestado: 'Atestado', extra: 'Extra', ferias: 'FÃ©rias', afastamento: 'Afastamento',
   abono: 'Abono', banco_horas: 'Banco de Horas',
 };
 
@@ -75,11 +77,11 @@ function getCurrentPeriod() {
 }
 
 function formatDate(d: string | null) {
-  if (!d) return '—';
+  if (!d) return 'â€”';
   return new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
 }
 
-// ─── Main Component ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function PontoFerias() {
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [vacations, setVacations] = useState<VacationRecord[]>([]);
@@ -124,7 +126,7 @@ export default function PontoFerias() {
 
   useEffect(() => { fetchAll(); }, [period]);
 
-  // ─── Leader alert popups ──────────────────────────────────────────────
+  // â”€â”€â”€ Leader alert popups â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (alertsShown || loading || attendance.length === 0) return;
 
@@ -135,7 +137,7 @@ export default function PontoFerias() {
     });
     const blocked = Object.values(extrasMap).filter(e => e.count >= 3);
     blocked.forEach(emp => {
-      toast.warning(`⛔ ALERTA: ${emp.name} atingiu ${emp.count}/3 extras no período. Novas extras BLOQUEADAS.`, {
+      toast.warning(`â›” ALERTA: ${emp.name} atingiu ${emp.count}/3 extras no perÃ­odo. Novas extras BLOQUEADAS.`, {
         duration: 8000,
         icon: <Shield className="w-4 h-4" />,
       });
@@ -147,12 +149,12 @@ export default function PontoFerias() {
       const start = new Date(v.start_date);
       const end = new Date(v.end_date);
       if (today >= start && today <= end) {
-        toast.info(`🏖️ ${v.employee_name} está em FÉRIAS até ${formatDate(v.end_date)}`, {
+        toast.info(`ðŸ–ï¸ ${v.employee_name} estÃ¡ em FÃ‰RIAS atÃ© ${formatDate(v.end_date)}`, {
           duration: 6000,
           icon: <Sun className="w-4 h-4" />,
         });
       } else if (start.getTime() - today.getTime() <= 7 * 86400000 && start > today) {
-        toast.info(`📅 ${v.employee_name} inicia férias em ${formatDate(v.start_date)}`, {
+        toast.info(`ðŸ“… ${v.employee_name} inicia fÃ©rias em ${formatDate(v.start_date)}`, {
           duration: 6000,
         });
       }
@@ -197,7 +199,7 @@ export default function PontoFerias() {
   }
 
   async function handleCreateAttendance() {
-    if (!form.employee_id || !form.date) { toast.error('Preencha os campos obrigatórios'); return; }
+    if (!form.employee_id || !form.date) { toast.error('Preencha os campos obrigatÃ³rios'); return; }
 
     // Falta injustificada does NOT count for banco de horas
     const statusToSave = form.status === 'falta_injustificada' ? 'falta' : form.status;
@@ -210,7 +212,7 @@ export default function PontoFerias() {
         .gte('date', period.start).lte('date', period.end);
 
       if ((count || 0) >= 3) {
-        toast.error('⚠️ LIMITE ATINGIDO: Este colaborador já realizou 3 extras neste período.');
+        toast.error('âš ï¸ LIMITE ATINGIDO: Este colaborador jÃ¡ realizou 3 extras neste perÃ­odo.');
         return;
       }
     }
@@ -219,7 +221,7 @@ export default function PontoFerias() {
       employee_id: form.employee_id, date: form.date, status: statusToSave, observation: form.observation,
     });
     if (error) {
-      if (error.code === '23505') toast.error('Já existe registro para este colaborador nesta data');
+      if (error.code === '23505') toast.error('JÃ¡ existe registro para este colaborador nesta data');
       else toast.error('Erro ao registrar ponto');
       return;
     }
@@ -242,7 +244,7 @@ export default function PontoFerias() {
       const newCount = (existing ? (existing as any).extras_count + 1 : 1);
       if (newCount >= 3) {
         const empName = funcionarios.find(f => f.id === form.employee_id)?.nome || '';
-        toast.warning(`⛔ ALERTA LÍDER: ${empName} atingiu o LIMITE de 3 extras! Novas extras BLOQUEADAS.`, { duration: 10000 });
+        toast.warning(`â›” ALERTA LÃDER: ${empName} atingiu o LIMITE de 3 extras! Novas extras BLOQUEADAS.`, { duration: 10000 });
       }
     }
 
@@ -253,7 +255,7 @@ export default function PontoFerias() {
   }
 
   async function handleCreateVacation() {
-    if (!vacForm.employee_id) { toast.error('Selecione o funcionário'); return; }
+    if (!vacForm.employee_id) { toast.error('Selecione o funcionÃ¡rio'); return; }
     const { error } = await supabase.from('vacation_control').upsert({
       employee_id: vacForm.employee_id,
       days_count: parseInt(vacForm.days_count) || 30,
@@ -265,14 +267,14 @@ export default function PontoFerias() {
         : null,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'employee_id' });
-    if (error) { toast.error('Erro ao registrar férias'); return; }
+    if (error) { toast.error('Erro ao registrar fÃ©rias'); return; }
     setVacDialogOpen(false);
     setVacForm({ employee_id: '', days_count: '30', scheduled_month: '', start_date: '', end_date: '', observation: '' });
-    toast.success('Férias registradas!');
+    toast.success('FÃ©rias registradas!');
 
     const empName = funcionarios.find(f => f.id === vacForm.employee_id)?.nome || '';
     if (vacForm.start_date) {
-      toast.info(`📅 ALERTA: Férias programadas para ${empName} — Início: ${formatDate(vacForm.start_date)}`, { duration: 8000 });
+      toast.info(`ðŸ“… ALERTA: FÃ©rias programadas para ${empName} â€” InÃ­cio: ${formatDate(vacForm.start_date)}`, { duration: 8000 });
     }
     fetchAll();
   }
@@ -290,9 +292,9 @@ export default function PontoFerias() {
         : null,
       updated_at: new Date().toISOString(),
     }).eq('id', editVacForm.id);
-    if (error) { toast.error('Erro ao atualizar férias'); return; }
+    if (error) { toast.error('Erro ao atualizar fÃ©rias'); return; }
     setEditVacDialogOpen(false);
-    toast.success('Férias atualizadas!');
+    toast.success('FÃ©rias atualizadas!');
     fetchAll();
   }
 
@@ -317,9 +319,9 @@ export default function PontoFerias() {
     fetchAll();
   }
 
-  // ─── Warning handlers ─────────────────────────────────────────────────
+  // â”€â”€â”€ Warning handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleCreateWarning() {
-    if (!warningForm.employee_id || !warningForm.reason) { toast.error('Preencha funcionário e motivo'); return; }
+    if (!warningForm.employee_id || !warningForm.reason) { toast.error('Preencha funcionÃ¡rio e motivo'); return; }
     const { error } = await supabase.from('employee_warnings').insert({
       employee_id: warningForm.employee_id,
       date: warningForm.date,
@@ -327,20 +329,20 @@ export default function PontoFerias() {
       applied: warningForm.applied === 'true',
       observation: warningForm.observation,
     });
-    if (error) { toast.error('Erro ao registrar advertência'); return; }
+    if (error) { toast.error('Erro ao registrar advertÃªncia'); return; }
     setWarningDialogOpen(false);
     setWarningForm({ employee_id: '', date: new Date().toISOString().split('T')[0], reason: '', applied: 'true', observation: '' });
-    toast.success('Advertência registrada!');
+    toast.success('AdvertÃªncia registrada!');
     fetchAll();
   }
 
   async function deleteWarning(id: string) {
     await supabase.from('employee_warnings').delete().eq('id', id);
-    toast.success('Advertência removida');
+    toast.success('AdvertÃªncia removida');
     fetchAll();
   }
 
-  // ─── Import handlers ──────────────────────────────────────────────────
+  // â”€â”€â”€ Import handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function handleImportPonto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -359,7 +361,7 @@ export default function PontoFerias() {
         if (!empId) continue;
         const date = row['Data'] || row['data'] || '';
         const status = String(row['Status'] || row['status'] || 'presente').toLowerCase().trim();
-        const obs = row['Observação'] || row['observacao'] || row['Obs'] || '';
+        const obs = row['ObservaÃ§Ã£o'] || row['observacao'] || row['Obs'] || '';
 
         if (!date) continue;
         let dateStr = date;
@@ -398,7 +400,7 @@ export default function PontoFerias() {
         const empId = nameToId[nome];
         if (!empId) continue;
 
-        let startDate = row['Início'] || row['inicio'] || row['Start'] || '';
+        let startDate = row['InÃ­cio'] || row['inicio'] || row['Start'] || '';
         let endDate = row['Fim'] || row['fim'] || row['End'] || '';
         if (typeof startDate === 'number') {
           const d = XLSX.SSF.parse_date_code(startDate);
@@ -412,17 +414,17 @@ export default function PontoFerias() {
         await supabase.from('vacation_control').upsert({
           employee_id: empId,
           days_count: parseInt(row['Dias'] || row['dias'] || '30') || 30,
-          scheduled_month: row['Mês'] || row['mes'] || '',
+          scheduled_month: row['MÃªs'] || row['mes'] || '',
           start_date: startDate || null, end_date: endDate || null,
-          observation: row['Observação'] || row['observacao'] || '',
+          observation: row['ObservaÃ§Ã£o'] || row['observacao'] || '',
           updated_at: new Date().toISOString(),
         }, { onConflict: 'employee_id' });
         imported++;
       }
-      toast.success(`${imported} registros de férias importados com sucesso!`);
+      toast.success(`${imported} registros de fÃ©rias importados com sucesso!`);
       fetchAll();
     } catch {
-      toast.error('Erro ao importar arquivo de férias');
+      toast.error('Erro ao importar arquivo de fÃ©rias');
     }
     if (feriasFileRef.current) feriasFileRef.current.value = '';
   }
@@ -441,8 +443,8 @@ export default function PontoFerias() {
         const nome = String(row['Nome'] || row['nome'] || row['Colaborador'] || '').toLowerCase().trim();
         const empId = nameToId[nome];
         if (!empId) continue;
-        let periodStart = row['Início Período'] || row['inicio_periodo'] || '';
-        let periodEnd = row['Fim Período'] || row['fim_periodo'] || '';
+        let periodStart = row['InÃ­cio PerÃ­odo'] || row['inicio_periodo'] || '';
+        let periodEnd = row['Fim PerÃ­odo'] || row['fim_periodo'] || '';
         if (typeof periodStart === 'number') { const d = XLSX.SSF.parse_date_code(periodStart); periodStart = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
         if (typeof periodEnd === 'number') { const d = XLSX.SSF.parse_date_code(periodEnd); periodEnd = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
         if (!periodStart || !periodEnd) continue;
@@ -451,7 +453,7 @@ export default function PontoFerias() {
           period_start: periodStart,
           period_end: periodEnd,
           extras_count: parseInt(row['Extras Realizadas'] || row['extras_count'] || '0') || 0,
-          max_extras: parseInt(row['Máximo Extras'] || row['max_extras'] || '3') || 3,
+          max_extras: parseInt(row['MÃ¡ximo Extras'] || row['max_extras'] || '3') || 3,
         });
         imported++;
       }
@@ -464,7 +466,7 @@ export default function PontoFerias() {
   }
 
 
-  // ─── Deviations Report PDF ────────────────────────────────────────────
+  // â”€â”€â”€ Deviations Report PDF â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function exportDeviationsReport() {
     const logoBase64 = await getBusatoLogoBase64();
     const doc = new jsPDF('landscape');
@@ -498,16 +500,16 @@ export default function PontoFerias() {
           faltasJust,
           atestados,
           extras,
-          advApplied > 0 ? `${advApplied} aplicada(s)` : '—',
-          advPending > 0 ? `${advPending} pendente(s)` : '—',
+          advApplied > 0 ? `${advApplied} aplicada(s)` : 'â€”',
+          advPending > 0 ? `${advPending} pendente(s)` : 'â€”',
         ]);
       }
     });
 
     autoTable(doc, {
       startY: 34,
-      head: [['Colaborador', 'Cargo', 'Turno/Letra', 'Hrs Neg.', 'Faltas Inj.', 'Faltas Just.', 'Atestados', 'Extras', 'Advertências', 'Pendentes']],
-      body: deviationRows.length > 0 ? deviationRows : [['Nenhum desvio registrado no período', '', '', '', '', '', '', '', '', '']],
+      head: [['Colaborador', 'Cargo', 'Turno/Letra', 'Hrs Neg.', 'Faltas Inj.', 'Faltas Just.', 'Atestados', 'Extras', 'AdvertÃªncias', 'Pendentes']],
+      body: deviationRows.length > 0 ? deviationRows : [['Nenhum desvio registrado no perÃ­odo', '', '', '', '', '', '', '', '', '']],
       styles: { fontSize: 8, cellPadding: 3 },
       headStyles: { fillColor: [59, 130, 187], textColor: 255, fontStyle: 'bold', fontSize: 7 },
       alternateRowStyles: { fillColor: [245, 245, 245] },
@@ -525,17 +527,17 @@ export default function PontoFerias() {
       const finalY = (doc as any).lastAutoTable?.finalY || 120;
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
-      doc.text('DETALHAMENTO DE ADVERTÊNCIAS', 14, finalY + 12);
+      doc.text('DETALHAMENTO DE ADVERTÃŠNCIAS', 14, finalY + 12);
 
       autoTable(doc, {
         startY: finalY + 18,
-        head: [['Colaborador', 'Data', 'Motivo', 'Aplicada', 'Observação']],
+        head: [['Colaborador', 'Data', 'Motivo', 'Aplicada', 'ObservaÃ§Ã£o']],
         body: warnings.map(w => [
           w.employee_name,
           formatDate(w.date),
           w.reason,
-          w.applied ? 'SIM' : 'NÃO',
-          w.observation || '—',
+          w.applied ? 'SIM' : 'NÃƒO',
+          w.observation || 'â€”',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: [220, 38, 38], textColor: 255, fontStyle: 'bold', fontSize: 7 },
@@ -549,15 +551,15 @@ export default function PontoFerias() {
       doc.setPage(i);
       doc.setFontSize(7);
       doc.setTextColor(120);
-      doc.text(`BUSATO — Relatório de Desvios — Pág. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
+      doc.text(`BUSATO â€” RelatÃ³rio de Desvios â€” PÃ¡g. ${i}/${pageCount}`, 14, doc.internal.pageSize.getHeight() - 8);
       doc.text('Documento confidencial de uso exclusivo do RH', pageWidth - 14, doc.internal.pageSize.getHeight() - 8, { align: 'right' });
     }
 
     doc.save(`Relatorio_Desvios_${period.start}_${period.end}.pdf`);
-    toast.success('Relatório de desvios exportado com sucesso!');
+    toast.success('RelatÃ³rio de desvios exportado com sucesso!');
   }
 
-  // ─── Computed ──────────────────────────────────────────────────────────
+  // â”€â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const vacationAlerts = useMemo(() => {
     const today = new Date();
     return vacations.filter(v => {
@@ -586,7 +588,7 @@ export default function PontoFerias() {
       }));
   }, [attendance]);
 
-  // ─── Employee-filtered data ───────────────────────────────────────────
+  // â”€â”€â”€ Employee-filtered data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const empAttendance = useMemo(() => {
     if (!selectedEmployee) return attendance;
     return attendance.filter(a => a.employee_id === selectedEmployee.id);
@@ -620,7 +622,7 @@ export default function PontoFerias() {
         'Faltas Inj.': statuses.falta_injustificada || 0,
         Extras: statuses.extra || 0,
         Atestados: statuses.atestado || 0,
-        Férias: statuses.ferias || 0,
+        FÃ©rias: statuses.ferias || 0,
       }));
   }, [empAttendance]);
 
@@ -695,11 +697,11 @@ export default function PontoFerias() {
       <input ref={feriasFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFerias} />
       <input ref={extrasFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportExtras} />
 
-      {/* ═══ HEADER + ACTIONS ═══ */}
+      {/* â•â•â• HEADER + ACTIONS â•â•â• */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Gestão à Vista — Ponto / Férias</h1>
+            <h1 className="text-2xl font-bold tracking-tight">GestÃ£o Ã  Vista â€” Ponto / FÃ©rias</h1>
             <p className="text-muted-foreground text-sm mt-1">Painel de controle operacional</p>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -709,19 +711,19 @@ export default function PontoFerias() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setDialogOpen(true)}><CalendarDays className="w-4 h-4 mr-2" />Registrar Ponto</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setVacDialogOpen(true)}><Sun className="w-4 h-4 mr-2" />Registrar Férias</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setVacDialogOpen(true)}><Sun className="w-4 h-4 mr-2" />Registrar FÃ©rias</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Registrar Ponto Diário</DialogTitle>
-                  <DialogDescription>Registre o ponto para um colaborador no período atual.</DialogDescription>
+                  <DialogTitle>Registrar Ponto DiÃ¡rio</DialogTitle>
+                  <DialogDescription>Registre o ponto para um colaborador no perÃ­odo atual.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label>Funcionário</Label>
+                    <Label>FuncionÃ¡rio</Label>
                     <Select value={form.employee_id} onValueChange={v => setForm({ ...form, employee_id: v })}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
@@ -746,19 +748,19 @@ export default function PontoFerias() {
                       </SelectContent>
                     </Select>
                     {form.status === 'falta_injustificada' && (
-                      <p className="text-xs text-destructive mt-1 font-medium">⚠️ Falta Injustificada NÃO contempla banco de horas</p>
+                      <p className="text-xs text-destructive mt-1 font-medium">âš ï¸ Falta Injustificada NÃƒO contempla banco de horas</p>
                     )}
                     {form.status === 'extra' && form.employee_id && (() => {
                       const extrasUsed = attendance.filter(a => a.employee_id === form.employee_id && a.status === 'extra').length;
                       return (
                         <p className={`text-xs mt-1 ${extrasUsed >= 3 ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
-                          {extrasUsed}/3 extras utilizadas neste período {extrasUsed >= 3 ? '— ⛔ BLOQUEADO' : ''}
+                          {extrasUsed}/3 extras utilizadas neste perÃ­odo {extrasUsed >= 3 ? 'â€” â›” BLOQUEADO' : ''}
                         </p>
                       );
                     })()}
                   </div>
                   <div className="space-y-2">
-                    <Label>Observação</Label>
+                    <Label>ObservaÃ§Ã£o</Label>
                     <FastTextarea value={form.observation} onValueChange={v => setForm(f => ({ ...f, observation: v }))} rows={2} />
                   </div>
                   <Button className="w-full" onClick={handleCreateAttendance}>Registrar</Button>
@@ -769,12 +771,12 @@ export default function PontoFerias() {
             <Dialog open={vacDialogOpen} onOpenChange={setVacDialogOpen}>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Registrar / Atualizar Férias</DialogTitle>
-                  <DialogDescription>Gerencie o período de férias de um colaborador.</DialogDescription>
+                  <DialogTitle>Registrar / Atualizar FÃ©rias</DialogTitle>
+                  <DialogDescription>Gerencie o perÃ­odo de fÃ©rias de um colaborador.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label>Funcionário</Label>
+                    <Label>FuncionÃ¡rio</Label>
                     <Select value={vacForm.employee_id} onValueChange={v => setVacForm({ ...vacForm, employee_id: v })}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
@@ -784,13 +786,13 @@ export default function PontoFerias() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2"><Label>Qtd. Dias</Label><Input type="number" value={vacForm.days_count} onChange={e => setVacForm({ ...vacForm, days_count: e.target.value })} /></div>
-                    <div className="space-y-2"><Label>Mês Programado</Label><FastInput placeholder="Ex: Março" value={vacForm.scheduled_month} onValueChange={v => setVacForm(f => ({ ...f, scheduled_month: v }))} /></div>
+                    <div className="space-y-2"><Label>MÃªs Programado</Label><FastInput placeholder="Ex: MarÃ§o" value={vacForm.scheduled_month} onValueChange={v => setVacForm(f => ({ ...f, scheduled_month: v }))} /></div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2"><Label>Início</Label><Input type="date" value={vacForm.start_date} onChange={e => setVacForm({ ...vacForm, start_date: e.target.value })} /></div>
+                    <div className="space-y-2"><Label>InÃ­cio</Label><Input type="date" value={vacForm.start_date} onChange={e => setVacForm({ ...vacForm, start_date: e.target.value })} /></div>
                     <div className="space-y-2"><Label>Fim</Label><Input type="date" value={vacForm.end_date} onChange={e => setVacForm({ ...vacForm, end_date: e.target.value })} /></div>
                   </div>
-                  <div className="space-y-2"><Label>Observação</Label><FastTextarea value={vacForm.observation} onValueChange={v => setVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
+                  <div className="space-y-2"><Label>ObservaÃ§Ã£o</Label><FastTextarea value={vacForm.observation} onValueChange={v => setVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
                   <Button className="w-full" onClick={handleCreateVacation}>Salvar</Button>
                 </div>
               </DialogContent>
@@ -800,17 +802,17 @@ export default function PontoFerias() {
             <Dialog open={warningDialogOpen} onOpenChange={setWarningDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/5">
-                  <ShieldAlert className="w-4 h-4 mr-2" />Advertência
+                  <ShieldAlert className="w-4 h-4 mr-2" />AdvertÃªncia
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Registrar Advertência</DialogTitle>
-                  <DialogDescription>Aplique uma advertência formal a um colaborador.</DialogDescription>
+                  <DialogTitle>Registrar AdvertÃªncia</DialogTitle>
+                  <DialogDescription>Aplique uma advertÃªncia formal a um colaborador.</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 pt-2">
                   <div className="space-y-2">
-                    <Label>Funcionário</Label>
+                    <Label>FuncionÃ¡rio</Label>
                     <Select value={warningForm.employee_id} onValueChange={v => setWarningForm({ ...warningForm, employee_id: v })}>
                       <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
                       <SelectContent>
@@ -828,21 +830,21 @@ export default function PontoFerias() {
                       <Select value={warningForm.applied} onValueChange={v => setWarningForm({ ...warningForm, applied: v })}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="true">Sim — Aplicada</SelectItem>
-                          <SelectItem value="false">Não — Pendente</SelectItem>
+                          <SelectItem value="true">Sim â€” Aplicada</SelectItem>
+                          <SelectItem value="false">NÃ£o â€” Pendente</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Motivo</Label>
-                    <FastTextarea value={warningForm.reason} onValueChange={v => setWarningForm(f => ({ ...f, reason: v }))} rows={2} placeholder="Descreva o motivo da advertência" />
+                    <FastTextarea value={warningForm.reason} onValueChange={v => setWarningForm(f => ({ ...f, reason: v }))} rows={2} placeholder="Descreva o motivo da advertÃªncia" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Observação</Label>
+                    <Label>ObservaÃ§Ã£o</Label>
                     <FastTextarea value={warningForm.observation} onValueChange={v => setWarningForm(f => ({ ...f, observation: v }))} rows={2} />
                   </div>
-                  <Button className="w-full" onClick={handleCreateWarning}>Registrar Advertência</Button>
+                  <Button className="w-full" onClick={handleCreateWarning}>Registrar AdvertÃªncia</Button>
                 </div>
               </DialogContent>
             </Dialog>
@@ -853,20 +855,20 @@ export default function PontoFerias() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => pontoFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Ponto</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => feriasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Férias</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => feriasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar FÃ©rias</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => extrasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Extras</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             {/* Deviations Report */}
             <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportDeviationsReport}>
-              <FileText className="w-4 h-4 mr-2" />Relatório de Desvios
+              <FileText className="w-4 h-4 mr-2" />RelatÃ³rio de Desvios
             </Button>
           </div>
         </div>
       </motion.div>
 
-      {/* ═══ PERIOD FILTER + EMPLOYEE FILTER ═══ */}
+      {/* â•â•â• PERIOD FILTER + EMPLOYEE FILTER â•â•â• */}
       <div className="flex flex-col sm:flex-row gap-3 items-start">
         <div className="flex-1 w-full">
           <PeriodFilter value={period} onChange={setPeriod} />
@@ -887,7 +889,7 @@ export default function PontoFerias() {
                 </button>
               </div>
             ) : (
-              <input type="text" placeholder="Filtrar por funcionário..." value={employeeSearch}
+              <input type="text" placeholder="Filtrar por funcionÃ¡rio..." value={employeeSearch}
                 onChange={e => { setEmployeeSearch(e.target.value); setShowEmpDropdown(true); }}
                 onFocus={() => setShowEmpDropdown(true)}
                 className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground" />
@@ -905,7 +907,7 @@ export default function PontoFerias() {
                   )}
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{f.nome}</p>
-                    <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.turno}/{f.letra}</p>
+                    <p className="text-[10px] text-muted-foreground">{f.cargo} Â· {f.turno}/{f.letra}</p>
                   </div>
                 </button>
               ))}
@@ -924,7 +926,7 @@ export default function PontoFerias() {
           )}
           <div className="flex-1 min-w-0">
             <p className="font-bold text-foreground">{selectedEmployee.nome}</p>
-            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} · {selectedEmployee.departamento} · {selectedEmployee.turno}/{selectedEmployee.letra}</p>
+            <p className="text-sm text-muted-foreground">{selectedEmployee.cargo} Â· {selectedEmployee.departamento} Â· {selectedEmployee.turno}/{selectedEmployee.letra}</p>
           </div>
           <button onClick={() => navigate(`/funcionario/${selectedEmployee.id}`)} className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium shrink-0">
             <Eye className="w-3.5 h-3.5" /> Ver Perfil
@@ -932,7 +934,7 @@ export default function PontoFerias() {
         </motion.div>
       )}
 
-      {/* ═══ ALERTS BANNER ═══ */}
+      {/* â•â•â• ALERTS BANNER â•â•â• */}
       {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {vacationAlerts.map(v => {
@@ -944,7 +946,7 @@ export default function PontoFerias() {
                 <Sun className={`w-4 h-4 flex-shrink-0 ${isOnVacation ? 'text-teal-500' : 'text-warning'}`} />
                 <p className="text-sm">
                   <span className="font-semibold">{v.employee_name}</span>
-                  {isOnVacation ? ` em férias até ${formatDate(v.end_date)}` : ` inicia férias em ${formatDate(v.start_date)}`}
+                  {isOnVacation ? ` em fÃ©rias atÃ© ${formatDate(v.end_date)}` : ` inicia fÃ©rias em ${formatDate(v.start_date)}`}
                 </p>
               </div>
             );
@@ -953,14 +955,14 @@ export default function PontoFerias() {
             <div key={o.employee_name} className="flex items-center gap-3 rounded-lg p-3 border bg-destructive/5 border-destructive/20">
               <Shield className="w-4 h-4 flex-shrink-0 text-destructive" />
               <p className="text-sm">
-                <span className="font-semibold">{o.employee_name}</span> — <strong>{o.count}/3 extras</strong> ⛔ BLOQUEADO
+                <span className="font-semibold">{o.employee_name}</span> â€” <strong>{o.count}/3 extras</strong> â›” BLOQUEADO
               </p>
             </div>
           ))}
         </motion.div>
       )}
 
-      {/* ═══ KPI CARDS ═══ */}
+      {/* â•â•â• KPI CARDS â•â•â• */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
         {[
           { label: 'Total Registros', value: attendance.length, icon: CalendarDays, color: 'border-t-primary' },
@@ -968,9 +970,9 @@ export default function PontoFerias() {
           { label: 'Faltas Injust.', value: totalFaltasInj, icon: AlertTriangle, color: 'border-t-destructive' },
           { label: 'Extras', value: totalExtras, icon: TrendingUp, color: 'border-t-purple-500' },
           { label: 'Atestados', value: totalAtestados, icon: Clock, color: 'border-t-blue-500' },
-          { label: 'Em Férias', value: onVacationNow.length, icon: Sun, color: 'border-t-teal-500' },
+          { label: 'Em FÃ©rias', value: onVacationNow.length, icon: Sun, color: 'border-t-teal-500' },
           { label: 'Bloqueados', value: overtimeLimitAlerts.length, icon: Shield, color: 'border-t-destructive' },
-          { label: 'Advertências', value: totalWarnings, icon: ShieldAlert, color: 'border-t-red-600' },
+          { label: 'AdvertÃªncias', value: totalWarnings, icon: ShieldAlert, color: 'border-t-red-600' },
         ].map((kpi, idx) => (
           <motion.div key={kpi.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
             className={`corporate-kpi ${kpi.color}`}>
@@ -983,18 +985,18 @@ export default function PontoFerias() {
         ))}
       </div>
 
-      {/* ═══ META DIÁRIA ═══ */}
+      {/* â•â•â• META DIÃRIA â•â•â• */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
         className="corporate-section">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Meta Diária — {DAILY_MOVEMENT_GOAL} Movimentações / Dia
+            Meta DiÃ¡ria â€” {DAILY_MOVEMENT_GOAL} MovimentaÃ§Ãµes / Dia
           </h3>
           <span className="text-xs text-muted-foreground">Hoje: {dailyMovements.todayCount}/{DAILY_MOVEMENT_GOAL}</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="rounded-lg p-4 border border-border bg-card">
-            <p className="text-xs text-muted-foreground mb-2">Movimentações Hoje</p>
+            <p className="text-xs text-muted-foreground mb-2">MovimentaÃ§Ãµes Hoje</p>
             <div className="flex items-center gap-3">
               <p className={`text-3xl font-bold ${dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? 'text-success' : 'text-warning'}`}>
                 {dailyMovements.todayCount}
@@ -1004,7 +1006,7 @@ export default function PontoFerias() {
                   className={`h-2 ${dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? '[&>div]:bg-success' : '[&>div]:bg-warning'}`} />
               </div>
               {dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-success/10 text-success">✓ META</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-success/10 text-success">âœ“ META</span>
               ) : (
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
               )}
@@ -1015,7 +1017,7 @@ export default function PontoFerias() {
             <p className="text-3xl font-bold text-foreground">{dailyMovements.daysMetGoal}<span className="text-sm text-muted-foreground">/{dailyMovements.totalDays}</span></p>
           </div>
           <div className="rounded-lg p-4 border border-border bg-card">
-            <p className="text-xs text-muted-foreground mb-2">Aderência à Meta</p>
+            <p className="text-xs text-muted-foreground mb-2">AderÃªncia Ã  Meta</p>
             <p className={`text-3xl font-bold ${dailyMovements.goalPct >= 80 ? 'text-success' : dailyMovements.goalPct >= 50 ? 'text-warning' : 'text-destructive'}`}>
               {dailyMovements.goalPct}%
             </p>
@@ -1023,15 +1025,19 @@ export default function PontoFerias() {
         </div>
       </motion.div>
 
-      {/* ═══ CHARTS ROW ═══ */}
+      {/* â•â•â• CHARTS ROW â•â•â• */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}
           className="corporate-section lg:col-span-2">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-            Movimentação Diária — Últimos 15 dias
+            MovimentaÃ§Ã£o DiÃ¡ria â€” Ãšltimos 15 dias
           </h3>
           {dailyChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
+            
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={260}>
               <BarChart data={dailyChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
@@ -1041,13 +1047,17 @@ export default function PontoFerias() {
                 <Bar dataKey="Faltas Inj." stackId="a" fill="hsl(var(--destructive))" />
                 <Bar dataKey="Extras" stackId="a" fill="hsl(260, 60%, 55%)" />
                 <Bar dataKey="Atestados" stackId="a" fill="hsl(200, 70%, 50%)" />
-                <Bar dataKey="Férias" stackId="a" fill="hsl(160, 60%, 45%)" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="FÃ©rias" stackId="a" fill="hsl(160, 60%, 45%)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+</ExpandableChart>
+
+
+
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <CalendarDays className="w-10 h-10 mb-3 opacity-20" />
-              <p className="text-sm">Nenhum registro de ponto no período</p>
+              <p className="text-sm">Nenhum registro de ponto no perÃ­odo</p>
             </div>
           )}
         </motion.div>
@@ -1055,10 +1065,14 @@ export default function PontoFerias() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
           className="corporate-section">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-            Distribuição por Status
+            DistribuiÃ§Ã£o por Status
           </h3>
           {statusDistribution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
+            
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie data={statusDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={40}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
@@ -1070,6 +1084,10 @@ export default function PontoFerias() {
                 <Legend wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
+</ExpandableChart>
+
+
+
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <Eye className="w-10 h-10 mb-3 opacity-20" />
@@ -1079,12 +1097,12 @@ export default function PontoFerias() {
         </motion.div>
       </div>
 
-      {/* ═══ HORAS NEGATIVAS POR COLABORADOR ═══ */}
+      {/* â•â•â• HORAS NEGATIVAS POR COLABORADOR â•â•â• */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.22 }}
         className="corporate-section">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
           <MinusCircle className="w-3.5 h-3.5 inline mr-1.5" />
-          Horas Negativas por Colaborador — {period.label}
+          Horas Negativas por Colaborador â€” {period.label}
         </h3>
         {negativeHoursPerEmployee.length > 0 ? (
           <div className="overflow-x-auto">
@@ -1118,17 +1136,17 @@ export default function PontoFerias() {
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <MinusCircle className="w-8 h-8 mx-auto mb-2 opacity-20" />
-            <p className="text-sm">Nenhuma hora negativa registrada no período</p>
+            <p className="text-sm">Nenhuma hora negativa registrada no perÃ­odo</p>
           </div>
         )}
       </motion.div>
 
-      {/* ═══ EXTRAS CONTROL ═══ */}
+      {/* â•â•â• EXTRAS CONTROL â•â•â• */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}
         className="corporate-section">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Controle de Horas Extras — Limite: 3 por Período
+            Controle de Horas Extras â€” Limite: 3 por PerÃ­odo
           </h3>
           <span className="text-xs text-muted-foreground">{period.label}</span>
         </div>
@@ -1144,7 +1162,7 @@ export default function PontoFerias() {
                     <span className="font-medium text-sm truncate mr-2">{emp.name}</span>
                     <span className={`text-xs font-bold whitespace-nowrap ${isBlocked ? 'text-destructive' : 'text-foreground'}`}>
                       {emp.count}/{emp.limit}
-                      {isBlocked && ' ⛔'}
+                      {isBlocked && ' â›”'}
                     </span>
                   </div>
                   <Progress value={Math.min(pct, 100)} className={`h-2 ${isBlocked ? '[&>div]:bg-destructive' : pct >= 66 ? '[&>div]:bg-warning' : '[&>div]:bg-success'}`} />
@@ -1156,26 +1174,26 @@ export default function PontoFerias() {
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-20" />
-            <p className="text-sm">Nenhuma extra registrada no período atual</p>
+            <p className="text-sm">Nenhuma extra registrada no perÃ­odo atual</p>
           </div>
         )}
       </motion.div>
 
-      {/* ═══ ADVERTÊNCIAS ═══ */}
+      {/* â•â•â• ADVERTÃŠNCIAS â•â•â• */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.27 }}
         className="corporate-section">
         <button onClick={() => setShowWarningsTable(!showWarningsTable)}
           className="w-full flex items-center justify-between text-left">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
             <ShieldAlert className="w-3.5 h-3.5" />
-            Advertências Registradas ({warnings.length})
+            AdvertÃªncias Registradas ({warnings.length})
           </h3>
           {showWarningsTable ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
         </button>
         {showWarningsTable && (
           <div className="mt-4 overflow-x-auto">
             {warnings.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground text-sm">Nenhuma advertência registrada</p>
+              <p className="text-center py-8 text-muted-foreground text-sm">Nenhuma advertÃªncia registrada</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
@@ -1184,8 +1202,8 @@ export default function PontoFerias() {
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Motivo</th>
                     <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Aplicada</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ação</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">ObservaÃ§Ã£o</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">AÃ§Ã£o</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1201,7 +1219,7 @@ export default function PontoFerias() {
                           <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{w.observation || '—'}</td>
+                      <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{w.observation || 'â€”'}</td>
                       <td className="px-4 py-2.5 text-right">
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteWarning(w.id)}>
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1216,12 +1234,12 @@ export default function PontoFerias() {
         )}
       </motion.div>
 
-      {/* ═══ VACATION OVERVIEW ═══ */}
+      {/* â•â•â• VACATION OVERVIEW â•â•â• */}
       {vacations.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
           className="corporate-section">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-            Programação de Férias — {vacations.length} colaboradores
+            ProgramaÃ§Ã£o de FÃ©rias â€” {vacations.length} colaboradores
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {vacations.slice(0, 9).map(v => {
@@ -1234,7 +1252,7 @@ export default function PontoFerias() {
                     <span className="font-medium text-sm truncate">{v.employee_name}</span>
                     <div className="flex items-center gap-1">
                       {isOnVac ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/10 text-teal-600 whitespace-nowrap">EM FÉRIAS</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/10 text-teal-600 whitespace-nowrap">EM FÃ‰RIAS</span>
                       ) : isPending ? (
                         <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning whitespace-nowrap">PROGRAMADA</span>
                       ) : null}
@@ -1243,12 +1261,12 @@ export default function PontoFerias() {
                       </Button>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">{v.cargo} · {v.letra}-{v.turno}</p>
+                  <p className="text-xs text-muted-foreground">{v.cargo} Â· {v.letra}-{v.turno}</p>
                   <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
-                    <span>Início: {formatDate(v.start_date)}</span>
+                    <span>InÃ­cio: {formatDate(v.start_date)}</span>
                     <span>Fim: {formatDate(v.end_date)}</span>
                   </div>
-                  {v.scheduled_month && <p className="text-xs text-muted-foreground mt-1">Mês prog.: {v.scheduled_month}</p>}
+                  {v.scheduled_month && <p className="text-xs text-muted-foreground mt-1">MÃªs prog.: {v.scheduled_month}</p>}
                 </div>
               );
             })}
@@ -1261,18 +1279,18 @@ export default function PontoFerias() {
         </motion.div>
       )}
 
-      {/* ═══ EMPLOYEE ROSTER ═══ */}
+      {/* â•â•â• EMPLOYEE ROSTER â•â•â• */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
         className="corporate-section">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
-          Quadro de Colaboradores — {funcionarios.length} cadastrados
+          Quadro de Colaboradores â€” {funcionarios.length} cadastrados
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
                 <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
-                <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
+                <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">FunÃ§Ã£o</th>
                 <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno / Letra</th>
                 <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Hrs Negativas</th>
                 <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Faltas Inj.</th>
@@ -1306,7 +1324,7 @@ export default function PontoFerias() {
                     <td className="px-4 py-2.5 text-center text-xs font-semibold text-blue-600">{atestados}</td>
                     <td className="px-4 py-2.5 text-center">
                       <span className={`text-xs font-bold ${isBlocked ? 'text-destructive' : ''}`}>
-                        {extras}/3 {isBlocked ? '⛔' : ''}
+                        {extras}/3 {isBlocked ? 'â›”' : ''}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-center">
@@ -1318,7 +1336,7 @@ export default function PontoFerias() {
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       {isOnVac ? (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/10 text-teal-600">EM FÉRIAS</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-teal-500/10 text-teal-600">EM FÃ‰RIAS</span>
                       ) : isBlocked ? (
                         <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">BLOQUEADO</span>
                       ) : (
@@ -1333,7 +1351,7 @@ export default function PontoFerias() {
         </div>
       </motion.div>
 
-      {/* ═══ COLLAPSIBLE TABLES ═══ */}
+      {/* â•â•â• COLLAPSIBLE TABLES â•â•â• */}
       <div className="corporate-section">
         <button onClick={() => setShowPontoTable(!showPontoTable)}
           className="w-full flex items-center justify-between text-left">
@@ -1345,18 +1363,18 @@ export default function PontoFerias() {
         {showPontoTable && (
           <div className="mt-4 overflow-x-auto">
             {attendance.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground text-sm">Nenhum registro de ponto no período</p>
+              <p className="text-center py-8 text-muted-foreground text-sm">Nenhum registro de ponto no perÃ­odo</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">FunÃ§Ã£o</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Obs.</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ação</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">AÃ§Ã£o</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1371,7 +1389,7 @@ export default function PontoFerias() {
                           {statusLabels[a.status] || a.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{a.observation || '—'}</td>
+                      <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{a.observation || 'â€”'}</td>
                       <td className="px-4 py-2.5 text-right">
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteAttendance(a.id)}>
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1386,31 +1404,31 @@ export default function PontoFerias() {
         )}
       </div>
 
-      {/* Férias Table */}
+      {/* FÃ©rias Table */}
       <div className="corporate-section">
         <button onClick={() => setShowFeriasTable(!showFeriasTable)}
           className="w-full flex items-center justify-between text-left">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Registros de Férias Detalhados ({vacations.length})
+            Registros de FÃ©rias Detalhados ({vacations.length})
           </h3>
           {showFeriasTable ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
         </button>
         {showFeriasTable && (
           <div className="mt-4 overflow-x-auto">
             {vacations.length === 0 ? (
-              <p className="text-center py-8 text-muted-foreground text-sm">Nenhum registro de férias</p>
+              <p className="text-center py-8 text-muted-foreground text-sm">Nenhum registro de fÃ©rias</p>
             ) : (
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Colaborador</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">FunÃ§Ã£o</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Dias</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Início</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">InÃ­cio</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Fim</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
-                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ações</th>
+                    <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">AÃ§Ãµes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1428,11 +1446,11 @@ export default function PontoFerias() {
                         <td className="px-4 py-2.5 text-xs">{formatDate(v.end_date)}</td>
                         <td className="px-4 py-2.5">
                           {isOnVac ? (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-teal-500/10 text-teal-600">Em Férias</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-teal-500/10 text-teal-600">Em FÃ©rias</span>
                           ) : isPending ? (
                             <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-warning/10 text-warning">Programada</span>
                           ) : (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground">—</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground">â€”</span>
                           )}
                         </td>
                         <td className="px-4 py-2.5 text-right flex justify-end gap-1">
@@ -1453,25 +1471,25 @@ export default function PontoFerias() {
         )}
       </div>
 
-      {/* ═══ EDIT VACATION DIALOG ═══ */}
+      {/* â•â•â• EDIT VACATION DIALOG â•â•â• */}
       <Dialog open={editVacDialogOpen} onOpenChange={setEditVacDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar Férias</DialogTitle>
-            <DialogDescription>Altere as datas ou informações das férias do colaborador.</DialogDescription>
+            <DialogTitle>Editar FÃ©rias</DialogTitle>
+            <DialogDescription>Altere as datas ou informaÃ§Ãµes das fÃ©rias do colaborador.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2"><Label>Qtd. Dias</Label><Input type="number" value={editVacForm.days_count} onChange={e => setEditVacForm({ ...editVacForm, days_count: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Mês Programado</Label><Input value={editVacForm.scheduled_month} onChange={e => setEditVacForm({ ...editVacForm, scheduled_month: e.target.value })} /></div>
+              <div className="space-y-2"><Label>MÃªs Programado</Label><Input value={editVacForm.scheduled_month} onChange={e => setEditVacForm({ ...editVacForm, scheduled_month: e.target.value })} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2"><Label>Início</Label><Input type="date" value={editVacForm.start_date} onChange={e => setEditVacForm({ ...editVacForm, start_date: e.target.value })} /></div>
+              <div className="space-y-2"><Label>InÃ­cio</Label><Input type="date" value={editVacForm.start_date} onChange={e => setEditVacForm({ ...editVacForm, start_date: e.target.value })} /></div>
               <div className="space-y-2"><Label>Fim</Label><Input type="date" value={editVacForm.end_date} onChange={e => setEditVacForm({ ...editVacForm, end_date: e.target.value })} /></div>
             </div>
-            <div className="space-y-2"><Label>Observação</Label><FastTextarea value={editVacForm.observation} onValueChange={v => setEditVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
+            <div className="space-y-2"><Label>ObservaÃ§Ã£o</Label><FastTextarea value={editVacForm.observation} onValueChange={v => setEditVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
             <div className="flex gap-2">
-              <Button className="flex-1" onClick={handleEditVacation}>Salvar Alterações</Button>
+              <Button className="flex-1" onClick={handleEditVacation}>Salvar AlteraÃ§Ãµes</Button>
               <Button variant="destructive" onClick={() => { deleteVacation(editVacForm.id); setEditVacDialogOpen(false); }}>
                 <Trash2 className="w-4 h-4 mr-1" /> Excluir
               </Button>

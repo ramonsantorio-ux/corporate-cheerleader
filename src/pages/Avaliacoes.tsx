@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Target, Filter, Pencil, Trash2, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +11,8 @@ import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
 interface Goal {
   id: string;
@@ -30,7 +32,7 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3
 const emptyForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
 
 const MONTHS = [
-  { value: '01', label: 'Janeiro' }, { value: '02', label: 'Fevereiro' }, { value: '03', label: 'Março' },
+  { value: '01', label: 'Janeiro' }, { value: '02', label: 'Fevereiro' }, { value: '03', label: 'MarÃ§o' },
   { value: '04', label: 'Abril' }, { value: '05', label: 'Maio' }, { value: '06', label: 'Junho' },
   { value: '07', label: 'Julho' }, { value: '08', label: 'Agosto' }, { value: '09', label: 'Setembro' },
   { value: '10', label: 'Outubro' }, { value: '11', label: 'Novembro' }, { value: '12', label: 'Dezembro' },
@@ -85,7 +87,7 @@ export default function Avaliacoes() {
 
   async function saveGoal() {
     if (!form.descricao || !form.peso) {
-      toast({ title: 'Preencha descrição e peso', variant: 'destructive' });
+      toast({ title: 'Preencha descriÃ§Ã£o e peso', variant: 'destructive' });
       return;
     }
     if (editGoal) {
@@ -123,13 +125,13 @@ export default function Avaliacoes() {
     if (!deleteId) return;
     await supabase.from('goals').delete().eq('id', deleteId);
     setDeleteId(null);
-    toast({ title: 'Meta excluída' });
+    toast({ title: 'Meta excluÃ­da' });
     fetchGoals();
   }
 
   const filtered = goals.filter(g => g.cargo === selectedCargo);
   const pieData = filtered.map(g => ({ name: g.descricao, value: g.peso }));
-  const barData = filtered.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + '…' : g.descricao, Peso: g.peso }));
+  const barData = filtered.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + 'â€¦' : g.descricao, Peso: g.peso }));
 
   // Agregando Resultados DISC para o cargo selecionado
   const [discAggregation, setDiscAggregation] = useState<{name: string, value: number, fill: string}[]>([]);
@@ -149,8 +151,8 @@ export default function Avaliacoes() {
           }
         });
         setDiscAggregation([
-          { name: 'Dominância', value: d, fill: '#ef4444' },
-          { name: 'Influência', value: i, fill: '#eab308' },
+          { name: 'DominÃ¢ncia', value: d, fill: '#ef4444' },
+          { name: 'InfluÃªncia', value: i, fill: '#eab308' },
           { name: 'Estabilidade', value: s, fill: '#22c55e' },
           { name: 'Conformidade', value: c, fill: '#3b82f6' }
         ].filter(x => x.value > 0));
@@ -162,8 +164,8 @@ export default function Avaliacoes() {
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Target className="w-6 h-6 text-primary" /> Gestão de Metas</h1>
-          <p className="text-muted-foreground text-sm mt-1">Metas por cargo — Contrato Porto</p>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><Target className="w-6 h-6 text-primary" /> GestÃ£o de Metas</h1>
+          <p className="text-muted-foreground text-sm mt-1">Metas por cargo â€” Contrato Porto</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Button size="sm" onClick={openNew}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
@@ -194,8 +196,12 @@ export default function Avaliacoes() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
               className="glass-card rounded-xl p-5">
-              <h2 className="text-base font-semibold text-foreground mb-4">Distribuição de Pesos</h2>
-              <ResponsiveContainer width="100%" height={280}>
+              <h2 className="text-base font-semibold text-foreground mb-4">DistribuiÃ§Ã£o de Pesos</h2>
+              
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={50} paddingAngle={3} label={({ name, value }) => `${value}%`}>
                     {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -204,12 +210,20 @@ export default function Avaliacoes() {
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
+</ExpandableChart>
+
+
+
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
               className="glass-card rounded-xl p-5">
               <h2 className="text-base font-semibold text-foreground mb-4">Peso por Meta</h2>
-              <ResponsiveContainer width="100%" height={280}>
+              
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={280}>
                 <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" tickFormatter={v => `${v}%`} />
@@ -218,13 +232,21 @@ export default function Avaliacoes() {
                   <Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+</ExpandableChart>
+
+
+
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
               className="glass-card rounded-xl p-5 border-l-4 border-l-purple-500">
               <h2 className="text-base font-semibold text-foreground mb-4">Perfil Comportamental (DISC)</h2>
               {discAggregation.length > 0 ? (
-                <ResponsiveContainer width="100%" height={280}>
+                
+
+
+<ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={280}>
                   <PieChart>
                     <Pie data={discAggregation} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={60} paddingAngle={2}>
                       {discAggregation.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
@@ -233,6 +255,10 @@ export default function Avaliacoes() {
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
+</ExpandableChart>
+
+
+
               ) : (
                 <div className="flex items-center justify-center h-[280px] text-sm text-muted-foreground text-center px-4">
                   Nenhum teste DISC realizado para os colaboradores deste cargo.
@@ -251,15 +277,15 @@ export default function Avaliacoes() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-muted/60">
-                    <th className="text-left p-3 font-semibold text-foreground">Descrição</th>
+                    <th className="text-left p-3 font-semibold text-foreground">DescriÃ§Ã£o</th>
                     <th className="text-center p-3 font-semibold text-foreground">Peso</th>
                     <th className="text-center p-3 font-semibold text-foreground">Resultado</th>
                     <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Abaixo do Esperado</th>
                     <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Abaixo do Esperado</th>
-                    <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Dentro Esperado (Aceitável)</th>
+                    <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Dentro Esperado (AceitÃ¡vel)</th>
                     <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Acima do Esperado</th>
                     <th className="text-center p-3 font-semibold text-foreground whitespace-nowrap">Muito Acima do Esperado</th>
-                    <th className="text-center p-3 font-semibold text-foreground">Ações</th>
+                    <th className="text-center p-3 font-semibold text-foreground">AÃ§Ãµes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -267,7 +293,7 @@ export default function Avaliacoes() {
                     <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
                       <td className="p-3 font-medium text-foreground">{goal.descricao}</td>
                       <td className="p-3 text-center font-semibold text-foreground">{goal.peso}%</td>
-                      <td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
+                      <td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : 'â€”'}</td>
                       <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td>
                       <td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td>
                       <td className="p-3 text-center text-xs text-foreground">{goal.dentro}</td>
@@ -302,7 +328,7 @@ export default function Avaliacoes() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editGoal ? 'Editar Meta' : 'Nova Meta'}</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-2">
-            <div><Label>Descrição</Label><FastInput value={form.descricao} onValueChange={v => setForm(f => ({ ...f, descricao: v }))} /></div>
+            <div><Label>DescriÃ§Ã£o</Label><FastInput value={form.descricao} onValueChange={v => setForm(f => ({ ...f, descricao: v }))} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Peso (%)</Label><Input type="number" value={form.peso} onChange={e => setForm({ ...form, peso: Number(e.target.value) })} /></div>
               <div><Label>Resultado</Label><Input type="number" value={form.resultado} onChange={e => setForm({ ...form, resultado: e.target.value })} placeholder="Ex: 85" /></div>
@@ -324,7 +350,7 @@ export default function Avaliacoes() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir meta?</AlertDialogTitle>
-            <AlertDialogDescription>Essa ação não pode ser desfeita.</AlertDialogDescription>
+            <AlertDialogDescription>Essa aÃ§Ã£o nÃ£o pode ser desfeita.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
