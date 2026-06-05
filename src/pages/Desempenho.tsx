@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain } from 'lucide-react';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { supabase } from '@/integrations/supabase/client';

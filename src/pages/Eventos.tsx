@@ -19,6 +19,7 @@ import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, Legend } from 'recharts';
 import * as XLSX from 'xlsx';
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
 interface EventRow {
   id: string;
@@ -489,7 +490,8 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={analytics.monthTrend}>
                   <defs>
                     <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
@@ -504,6 +506,7 @@ export default function Eventos() {
                   <Area type="monotone" dataKey="eventos" stroke="hsl(200, 80%, 38%)" fill="url(#eventGrad)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
+</ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -517,7 +520,8 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.topEquipment} layout="vertical" margin={{ left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
                   <XAxis type="number" tick={{ fontSize: 11 }} />
@@ -526,6 +530,7 @@ export default function Eventos() {
                   <Bar dataKey="value" name="Eventos" fill="hsl(200, 80%, 38%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+</ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -542,7 +547,8 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.dayData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
                   <XAxis dataKey="day" tick={{ fontSize: 10 }} />
@@ -555,6 +561,7 @@ export default function Eventos() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+</ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -568,7 +575,8 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.yearData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
                   <XAxis dataKey="year" tick={{ fontSize: 11 }} />
@@ -577,6 +585,7 @@ export default function Eventos() {
                   <Bar dataKey="eventos" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+</ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -590,7 +599,8 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={analytics.topLocations} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
                     {analytics.topLocations.map((_, i) => (
@@ -600,6 +610,7 @@ export default function Eventos() {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
+</ExpandableChart>
             </div>
             <div className="flex flex-wrap gap-2 mt-2">
               {analytics.topLocations.map((loc, i) => (

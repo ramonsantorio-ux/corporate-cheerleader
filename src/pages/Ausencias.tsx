@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
@@ -1031,7 +1032,8 @@ export default function PontoFerias() {
             Movimentação Diária — Últimos 15 dias
           </h3>
           {dailyChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
+            <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={260}>
               <BarChart data={dailyChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
@@ -1044,6 +1046,7 @@ export default function PontoFerias() {
                 <Bar dataKey="Férias" stackId="a" fill="hsl(160, 60%, 45%)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+</ExpandableChart>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <CalendarDays className="w-10 h-10 mb-3 opacity-20" />
@@ -1058,7 +1061,8 @@ export default function PontoFerias() {
             Distribuição por Status
           </h3>
           {statusDistribution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={260}>
+            <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie data={statusDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={40}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
@@ -1070,6 +1074,7 @@ export default function PontoFerias() {
                 <Legend wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
+</ExpandableChart>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <Eye className="w-10 h-10 mb-3 opacity-20" />

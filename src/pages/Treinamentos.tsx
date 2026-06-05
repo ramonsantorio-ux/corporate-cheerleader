@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { useNavigate } from 'react-router-dom';
 import { Brain, User, BarChart2, Zap, ClipboardList, Award, Star, Plus, CheckCircle2, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';

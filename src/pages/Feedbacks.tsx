@@ -1,3 +1,4 @@
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, BarChart3, Target, Activity } from 'lucide-react';
@@ -375,7 +376,8 @@ export default function Feedbacks() {
             <span className="text-xs text-muted-foreground">{feedbackCargoStats.length} cargos</span>
           </div>
           <div className="corporate-section-body">
-            <ResponsiveContainer width="100%" height={320}>
+            <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={320}>
               <BarChart data={fbCargoChartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                 <XAxis dataKey="cargo" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
@@ -386,6 +388,7 @@ export default function Feedbacks() {
                 <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+</ExpandableChart>
 
             {feedbackCargoStats.some(c => c.pendentes > 0) && (
               <div className="mt-6 border-t border-border pt-4">
@@ -430,7 +433,8 @@ export default function Feedbacks() {
           </h3>
           {statusChartData.length > 0 ? (
             <div className="flex items-center gap-2">
-              <ResponsiveContainer width="50%" height={160}>
+              <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="50%" height={160}>
                 <PieChart>
                   <Pie data={statusChartData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={2} stroke="hsl(var(--card))">
                     {statusChartData.map((entry, i) => (
@@ -440,6 +444,7 @@ export default function Feedbacks() {
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
+</ExpandableChart>
               <div className="flex-1 space-y-1.5">
                 {statusChartData.map((d, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
@@ -461,7 +466,8 @@ export default function Feedbacks() {
             <AlertTriangle className="w-4 h-4 text-warning" />Distribuição por Prioridade
           </h3>
           {priorityChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={160}>
+            <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={160}>
               <BarChart data={priorityChartData} layout="vertical" margin={{ left: 0, right: 10 }}>
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="name" width={60} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
@@ -473,6 +479,7 @@ export default function Feedbacks() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+</ExpandableChart>
           ) : (
             <p className="text-xs text-muted-foreground text-center py-8">Sem dados no período</p>
           )}
@@ -484,7 +491,8 @@ export default function Feedbacks() {
             <TrendingUp className="w-4 h-4 text-success" />Tendência Mensal
           </h3>
           {trendData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={160}>
+            <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={160}>
               <AreaChart data={trendData} margin={{ left: -10, right: 5, top: 5, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradAbertos" x1="0" y1="0" x2="0" y2="1">
@@ -504,6 +512,7 @@ export default function Feedbacks() {
                 <Area type="monotone" dataKey="Resolvidos" stroke="hsl(var(--success))" fill="url(#gradResolvidos)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
+</ExpandableChart>
           ) : (
             <p className="text-xs text-muted-foreground text-center py-8">Sem dados no período</p>
           )}
@@ -516,7 +525,8 @@ export default function Feedbacks() {
           <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
             <Users className="w-4 h-4 text-primary" />Performance por Departamento
           </h3>
-          <ResponsiveContainer width="100%" height={220}>
+          <ExpandableChart title="Visualização Ampliada">
+<ResponsiveContainer width="100%" height={220}>
             <BarChart data={deptChartData} margin={{ left: -5, right: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} angle={-25} textAnchor="end" height={60} />
@@ -526,6 +536,7 @@ export default function Feedbacks() {
               <Bar dataKey="Pendentes" stackId="a" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} barSize={28} />
             </BarChart>
           </ResponsiveContainer>
+</ExpandableChart>
           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center">
             <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(var(--success))' }} /> Resolvidos</div>
             <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(var(--warning))' }} /> Pendentes</div>
