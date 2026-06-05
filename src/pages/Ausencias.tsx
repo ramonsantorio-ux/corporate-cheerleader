@@ -1064,7 +1064,7 @@ export default function PontoFerias() {
             <ExpandableChart title="Visualização Ampliada">
 <ResponsiveContainer width="100%" height={260}>
               <PieChart>
-                <Pie data={statusDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={40}
+                <Pie data={statusDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="50%"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
                   {statusDistribution.map((entry, i) => (
                     <Cell key={i} fill={entry.fill || PIE_COLORS[i % PIE_COLORS.length]} />

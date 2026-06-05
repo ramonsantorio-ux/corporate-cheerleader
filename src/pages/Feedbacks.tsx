@@ -436,7 +436,7 @@ export default function Feedbacks() {
               <ExpandableChart title="Visualização Ampliada">
 <ResponsiveContainer width="50%" height={160}>
                 <PieChart>
-                  <Pie data={statusChartData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={2} stroke="hsl(var(--card))">
+                  <Pie data={statusChartData} cx="50%" cy="50%" innerRadius="50%" outerRadius="80%" dataKey="value" strokeWidth={2} stroke="hsl(var(--card))">
                     {statusChartData.map((entry, i) => (
                       <Cell key={i} fill={entry.fill} />
                     ))}

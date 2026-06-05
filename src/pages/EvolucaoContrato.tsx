@@ -886,7 +886,7 @@ export default function EvolucaoContrato() {
                         cx="50%"
                         cy="50%"
                         innerRadius={80}
-                        outerRadius={110}
+                        outerRadius="80%"
                         paddingAngle={2}
                         dataKey="value"
                       >
@@ -1501,7 +1501,7 @@ export default function EvolucaoContrato() {
                 {ofensoresData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={ofensoresData} cx="50%" cy="50%" innerRadius={120} outerRadius={180} paddingAngle={2} dataKey="value">
+                      <Pie data={ofensoresData} cx="50%" cy="50%" innerRadius="50%" outerRadius="80%" paddingAngle={2} dataKey="value">
                         {ofensoresData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
