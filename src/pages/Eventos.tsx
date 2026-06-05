@@ -671,8 +671,8 @@ export default function Eventos() {
                       <div className="flex items-center gap-2">
                         Equipamento
                         <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
-                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none [&>svg]:opacity-0">
-                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer opacity-100 absolute" />
+                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none focus:ring-0 [&>svg:not(:first-child)]:hidden">
+                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">Todos</SelectItem>
