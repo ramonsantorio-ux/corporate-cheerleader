@@ -11,9 +11,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import StatCard from '@/components/dashboard/StatCard';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, AreaChart, Area, RadialBarChart, RadialBar,
+  PieChart, Pie, Cell, Legend, AreaChart, Area, RadialBarChart, RadialBar, LabelList
 } from 'recharts';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -456,327 +457,338 @@ export default function Index() {
       {/* ═══ MAIN KPIs (ENTERPRISE) ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard title="Colaboradores" value={sel ? 1 : totalColaboradores} change={sel ? selectedEmployee?.cargo || '' : `${emFerias} em férias`} changeType="neutral" icon={Users} delay={0} />
-        <StatCard title="Turnover" value="2.4%" change="-0.5% vs mês ant." changeType="positive" icon={UserX} delay={0.03} />
-        <StatCard title="eNPS" value="78" change="Zona de Excelência" changeType="positive" icon={Activity} delay={0.06} />
-        <StatCard title="Hrs Treinamento" value="42h" change="Média por colab." changeType="positive" icon={Briefcase} delay={0.09} />
-        <StatCard title="Absenteísmo" value="1.5%" change={`${totalFaltasInj} faltas inj.`} changeType={totalFaltasInj > 0 ? 'negative' : 'positive'} icon={AlertTriangle} delay={0.12} />
-        <StatCard title="Feedbacks" value={fbTotal} change={`${fbTaxaResolucao}% resolvidos`} changeType={fbTaxaResolucao >= 70 ? 'positive' : 'negative'} icon={MessageSquare} delay={0.15} />
-      </div>
+        <StatCard title="Turnover" value="2.4%" change="      {/* ═══ DASHBOARD TABS ═══ */}
+      <Tabs defaultValue="corporativo" className="w-full mb-8">
+        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
+          <TabsTrigger value="corporativo" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <Activity className="w-4 h-4" /> Painel Corporativo
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-warning data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" /> Gestão & Performance
+          </TabsTrigger>
+          <TabsTrigger value="operacao" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <Users className="w-4 h-4" /> Operação & Pessoas
+          </TabsTrigger>
+        </TabsList>
 
-      {/* ═══ ROW 2 — Gauges + Status + Priority ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Radial Gauge */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="corporate-section lg:col-span-1">
-          <div className="corporate-section-header">
-            <div className="flex items-center gap-2">
-              <Target className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Indicadores de Aderência</h2>
-            </div>
-          </div>
-          <div className="corporate-section-body">
-            <ResponsiveContainer width="100%" height={220}>
-              <RadialBarChart cx="50%" cy="50%" innerRadius="25%" outerRadius="90%" barSize={14} data={gaugeData} startAngle={180} endAngle={0}>
-                <RadialBar dataKey="value" cornerRadius={6} background={{ fill: 'hsl(var(--muted))' }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" iconSize={8} formatter={(value: string) => <span className="text-xs text-muted-foreground">{value}</span>} />
-              </RadialBarChart>
-            </ResponsiveContainer>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
-              {gaugeData.map(g => (
-                <div key={g.name} className="text-center">
-                  <p className="text-2xl font-bold text-foreground">{g.value}%</p>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{g.name}</p>
+        {/* 1. PAINEL CORPORATIVO */}
+        <TabsContent value="corporativo" className="mt-0 focus-visible:outline-none focus-visible:ring-0 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Radial Gauge */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="corporate-section lg:col-span-1">
+              <div className="corporate-section-header">
+                <div className="flex items-center gap-2">
+                  <Target className="w-4 h-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Indicadores de Aderência</h2>
                 </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Feedback by Status */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="corporate-section">
-          <div className="corporate-section-header">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Feedbacks por Status</h2>
-            </div>
-            <button onClick={() => navigate('/feedbacks')} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
-              Detalhar <ArrowUpRight className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="corporate-section-body flex items-center justify-center">
-            {fbByStatus.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie data={fbByStatus} cx="50%" cy="50%" innerRadius="50%" outerRadius="80%" paddingAngle={3} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} style={{ fontSize: '10px' }}>
-                    {fbByStatus.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-sm text-muted-foreground py-12">Sem feedbacks no período</p>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Feedback by Priority */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="corporate-section">
-          <div className="corporate-section-header">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Feedbacks por Prioridade</h2>
-            </div>
-          </div>
-          <div className="corporate-section-body flex items-center justify-center">
-            {fbByPriority.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie data={fbByPriority} cx="50%" cy="50%" innerRadius="50%" outerRadius="80%" paddingAngle={3} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} style={{ fontSize: '10px' }}>
-                    {fbByPriority.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-sm text-muted-foreground py-12">Sem feedbacks no período</p>
-            )}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ═══ ROW 3 — Attendance Trend + Headcount ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="corporate-section lg:col-span-2">
-          <div className="corporate-section-header">
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
-                Evolução Diária — Ponto {sel ? `(${sel.nome})` : ''}
-              </h2>
-            </div>
-            <button onClick={() => navigate('/ausencias')} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
-              Gestão à Vista <ArrowUpRight className="w-3 h-3" />
-            </button>
-          </div>
-          <div className="corporate-section-body">
-            {attendanceTrend.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <AreaChart data={attendanceTrend}>
-                  <defs>
-                    <linearGradient id="gradHrsNeg" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(0, 68%, 50%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(0, 68%, 50%)" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gradExtras" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(280, 60%, 55%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(280, 60%, 55%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
-                  <Area type="monotone" dataKey="Hrs Negativas" stroke="hsl(0, 68%, 50%)" fill="url(#gradHrsNeg)" strokeWidth={2} />
-                  <Area type="monotone" dataKey="Extras" stroke="hsl(280, 60%, 55%)" fill="url(#gradExtras)" strokeWidth={2} />
-                  <Area type="monotone" dataKey="Atestados" stroke="hsl(200, 70%, 50%)" fill="hsl(200, 70%, 50%)" fillOpacity={0.1} strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-sm text-muted-foreground py-12 text-center">Sem registros de ponto no período</p>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Headcount or Dept FB Performance */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="corporate-section">
-          <div className="corporate-section-header">
-            <div className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
-                {sel ? 'Resumo Individual' : 'Headcount por Depto.'}
-              </h2>
-            </div>
-            {!sel && <span className="text-xs text-muted-foreground">{totalColaboradores} total</span>}
-          </div>
-          <div className="corporate-section-body space-y-3">
-            {sel ? (
-              // Individual summary
-              <div className="space-y-4">
-                {[
-                  { label: 'Feedbacks Recebidos', value: fbTotal, color: 'text-primary' },
-                  { label: 'Feedbacks Resolvidos', value: fbResolvidos, color: 'text-success' },
-                  { label: 'Horas Negativas', value: totalHorasNeg, color: totalHorasNeg > 0 ? 'text-destructive' : 'text-success' },
-                  { label: 'Extras', value: totalExtras, color: 'text-foreground' },
-                  { label: 'Advertências', value: totalAdvertencias, color: totalAdvertencias > 0 ? 'text-destructive' : 'text-success' },
-                  { label: 'Eventos', value: totalEvents, color: totalEvents > 0 ? 'text-warning' : 'text-success' },
-                  { label: 'Reuniões 1:1', value: meetingsScheduled, color: 'text-foreground' },
-                ].map(item => (
-                  <div key={item.label} className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{item.label}</span>
-                    <span className={`text-lg font-bold ${item.color}`}>{item.value}</span>
-                  </div>
-                ))}
               </div>
-            ) : (
-              headcountByDept.map((d, i) => (
-                <div key={d.dept} className="flex items-center gap-3">
-                  <span className="text-xs text-foreground w-32 truncate font-medium">{d.dept}</span>
-                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${totalColaboradores > 0 ? (d.total / totalColaboradores) * 100 : 0}%` }}
-                      transition={{ duration: 0.5, delay: 0.4 + i * 0.04 }}
-                      className="h-full rounded-full"
-                      style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
-                    />
-                  </div>
-                  <span className="text-xs font-bold text-foreground w-8 text-right">{d.total}</span>
+              <div className="corporate-section-body">
+                <ResponsiveContainer width="100%" height={220}>
+                  <RadialBarChart cx="50%" cy="50%" innerRadius="25%" outerRadius="90%" barSize={14} data={gaugeData} startAngle={180} endAngle={0}>
+                    <RadialBar dataKey="value" cornerRadius={6} background={{ fill: 'hsl(var(--muted))' }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend iconType="circle" iconSize={8} formatter={(value: string) => <span className="text-xs text-muted-foreground">{value}</span>} />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
+                  {gaugeData.map(g => (
+                    <div key={g.name} className="text-center">
+                      <p className="text-2xl font-bold text-foreground">{g.value}%</p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{g.name}</p>
+                    </div>
+                  ))}
                 </div>
-              ))
-            )}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ═══ ROW 4 — Secondary KPIs ═══ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="corporate-kpi corporate-kpi-accent">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Avaliações Concluídas</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{evalsCompleted}</p>
-              <p className="text-xs text-muted-foreground mt-1">{evalsPending} pendentes</p>
-            </div>
-            <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
-              <CheckCircle2 className="w-5 h-5 text-success" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }} className="corporate-kpi">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Reuniões 1:1</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{meetingsCompleted}</p>
-              <p className="text-xs text-muted-foreground mt-1">{meetingsScheduled} agendadas</p>
-            </div>
-            <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
-              <CalendarDays className="w-5 h-5 text-muted-foreground" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.51 }}
-          className={`corporate-kpi ${riskEmployees > 0 ? 'corporate-kpi-danger' : ''}`}>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Colabs. em Risco</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{riskEmployees}</p>
-              <p className="text-xs text-destructive mt-1">≥2 advertências</p>
-            </div>
-            <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
-              <UserX className="w-5 h-5 text-destructive" />
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.54 }} className="corporate-kpi">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Em Férias</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{emFerias}</p>
-              <p className="text-xs text-muted-foreground mt-1">colaboradores hoje</p>
-            </div>
-            <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
-              <UserCheck className="w-5 h-5 text-muted-foreground" />
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ═══ ROW 5 — Meeting KPIs (Reunião Mensal Operacional) ═══ */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Mensal Operacional" value={`${meetingKpis.mensalRate}%`} change={`${meetingKpis.monthsWithMensal}/${meetingKpis.expectedMonths} meses realizados`} changeType={meetingKpis.mensalRate >= 80 ? 'positive' : 'negative'} icon={CalendarDays} delay={0.57} />
-        <StatCard title="Cobertura Liderança" value={`${meetingKpis.leaderCoverage}%`} change={`${meetingKpis.attendedLeaders}/${meetingKpis.totalLeaders} líderes presentes`} changeType={meetingKpis.leaderCoverage >= 80 ? 'positive' : 'negative'} icon={UserCheck} delay={0.6} />
-        <StatCard title="Ações Pendentes" value={meetingKpis.pendentes} change={`${meetingKpis.totalActions} total de ações`} changeType={meetingKpis.pendentes > 5 ? 'negative' : 'positive'} icon={Target} delay={0.63} />
-        <StatCard title="Conclusão de Ações" value={`${meetingKpis.conclusionRate}%`} change={`${meetingKpis.concluidas}/${meetingKpis.totalActions} concluídas`} changeType={meetingKpis.conclusionRate >= 70 ? 'positive' : 'negative'} icon={CheckCircle2} delay={0.66} />
-      </div>
-
-      {/* ═══ Department FB Performance (only when no employee selected) ═══ */}
-      {!sel && deptFbPerformance.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="corporate-section">
-          <div className="corporate-section-header">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Performance de Feedbacks por Setor</h2>
-            </div>
-          </div>
-          <div className="corporate-section-body">
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={deptFbPerformance} margin={{ left: -5, right: 10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" angle={-20} textAnchor="end" height={50} />
-                <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="Resolvidos" stackId="a" fill="hsl(155, 60%, 38%)" radius={[0, 0, 0, 0]} barSize={24} />
-                <Bar dataKey="Pendentes" stackId="a" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} barSize={24} />
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center">
-              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(155, 60%, 38%)' }} /> Resolvidos</div>
-              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(38, 90%, 50%)' }} /> Pendentes</div>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* ═══ Top Deviations Table ═══ */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="corporate-section">
-        <div className="corporate-section-header">
-          <div className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-destructive" />
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
-              {sel ? 'Desvios do Colaborador' : 'Top 7 — Colaboradores com Desvios'}
-            </h2>
-          </div>
-          <button onClick={() => navigate('/ausencias')} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
-            Ver Todos <ArrowUpRight className="w-3 h-3" />
-          </button>
-        </div>
-        <div className="corporate-section-body">
-          {topDeviations.length > 0 ? (
-            <>
-              <ResponsiveContainer width="100%" height={Math.max(topDeviations.length * 50, 180)}>
-                <BarChart data={topDeviations} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fontSize: 11 }}
-                    stroke="hsl(var(--muted-foreground))"
-                    width={140}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="faltas" name="Faltas Inj." stackId="a" fill="hsl(0, 68%, 50%)" barSize={20} />
-                  <Bar dataKey="atestados" name="Atestados" stackId="a" fill="hsl(200, 80%, 38%)" barSize={20} />
-                  <Bar dataKey="advertencias" name="Advertências" stackId="a" fill="hsl(38, 90%, 50%)" barSize={20} />
-                  <Bar dataKey="eventos" name="Eventos" stackId="a" fill="hsl(280, 60%, 55%)" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
-              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center flex-wrap">
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(0, 68%, 50%)' }} /> Faltas Inj.</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(200, 80%, 38%)' }} /> Atestados</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(38, 90%, 50%)' }} /> Advertências</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(280, 60%, 55%)' }} /> Eventos</div>
               </div>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-8">Nenhum desvio registrado no período</p>
+            </motion.div>
+
+            {/* Headcount */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="corporate-section lg:col-span-2">
+              <div className="corporate-section-header">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                    {sel ? 'Resumo Individual' : 'Headcount por Depto.'}
+                  </h2>
+                </div>
+                {!sel && <span className="text-xs text-muted-foreground">{totalColaboradores} total</span>}
+              </div>
+              <div className="corporate-section-body space-y-3">
+                {sel ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { label: 'Feedbacks Recebidos', value: fbTotal, color: 'text-primary' },
+                      { label: 'Feedbacks Resolvidos', value: fbResolvidos, color: 'text-success' },
+                      { label: 'Horas Negativas', value: totalHorasNeg, color: totalHorasNeg > 0 ? 'text-destructive' : 'text-success' },
+                      { label: 'Extras', value: totalExtras, color: 'text-foreground' },
+                      { label: 'Advertências', value: totalAdvertencias, color: totalAdvertencias > 0 ? 'text-destructive' : 'text-success' },
+                      { label: 'Eventos', value: totalEvents, color: totalEvents > 0 ? 'text-warning' : 'text-success' },
+                      { label: 'Reuniões 1:1', value: meetingsScheduled, color: 'text-foreground' },
+                    ].map(item => (
+                      <div key={item.label} className="flex items-center justify-between border-b pb-2">
+                        <span className="text-sm text-muted-foreground">{item.label}</span>
+                        <span className={`text-lg font-bold ${item.color}`}>{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  headcountByDept.map((d, i) => (
+                    <div key={d.dept} className="flex items-center gap-3">
+                      <span className="text-xs text-foreground w-32 truncate font-medium">{d.dept}</span>
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${totalColaboradores > 0 ? (d.total / totalColaboradores) * 100 : 0}%` }}
+                          transition={{ duration: 0.5, delay: 0.4 + i * 0.04 }}
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
+                        />
+                      </div>
+                      <span className="text-xs font-bold text-foreground w-8 text-right">{d.total}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="corporate-kpi corporate-kpi-accent">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Avaliações Concluídas</p>
+                  <p className="text-3xl font-bold text-foreground mt-1">{evalsCompleted}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{evalsPending} pendentes</p>
+                </div>
+                <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-success" />
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.48 }} className="corporate-kpi">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Reuniões 1:1</p>
+                  <p className="text-3xl font-bold text-foreground mt-1">{meetingsCompleted}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{meetingsScheduled} agendadas</p>
+                </div>
+                <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
+                  <CalendarDays className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.51 }}
+              className={`corporate-kpi ${riskEmployees > 0 ? 'corporate-kpi-danger' : ''}`}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Colabs. em Risco</p>
+                  <p className="text-3xl font-bold text-foreground mt-1">{riskEmployees}</p>
+                  <p className="text-xs text-destructive mt-1">≥2 advertências</p>
+                </div>
+                <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
+                  <UserX className="w-5 h-5 text-destructive" />
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.54 }} className="corporate-kpi">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Em Férias</p>
+                  <p className="text-3xl font-bold text-foreground mt-1">{emFerias}</p>
+                  <p className="text-xs text-muted-foreground mt-1">hoje</p>
+                </div>
+                <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center">
+                  <UserCheck className="w-5 h-5 text-muted-foreground" />
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </TabsContent>
+
+        {/* 2. GESTÃO & PERFORMANCE */}
+        <TabsContent value="performance" className="mt-0 focus-visible:outline-none focus-visible:ring-0 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Feedback by Status */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="corporate-section">
+              <div className="corporate-section-header">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Feedbacks por Status</h2>
+                </div>
+                <button onClick={() => navigate('/feedbacks')} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+                  Detalhar <ArrowUpRight className="w-3 h-3" />
+                </button>
+              </div>
+              <div className="corporate-section-body flex items-center justify-center">
+                {fbByStatus.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie data={fbByStatus} cx="50%" cy="50%" innerRadius="50%" outerRadius="80%" paddingAngle={3} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} style={{ fontSize: '10px' }}>
+                        {fbByStatus.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-12">Sem feedbacks no período</p>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Feedback by Priority */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="corporate-section">
+              <div className="corporate-section-header">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Feedbacks por Prioridade</h2>
+                </div>
+              </div>
+              <div className="corporate-section-body flex items-center justify-center">
+                {fbByPriority.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie data={fbByPriority} cx="50%" cy="50%" innerRadius="50%" outerRadius="80%" paddingAngle={3} dataKey="value" nameKey="name" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} style={{ fontSize: '10px' }}>
+                        {fbByPriority.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p className="text-sm text-muted-foreground py-12">Sem feedbacks no período</p>
+                )}
+              </div>
+            </motion.div>
+          </div>
+
+          {!sel && deptFbPerformance.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="corporate-section">
+              <div className="corporate-section-header">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Performance de Feedbacks por Setor</h2>
+                </div>
+              </div>
+              <div className="corporate-section-body">
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={deptFbPerformance} margin={{ left: -5, right: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" angle={-20} textAnchor="end" height={50} />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="Resolvidos" stackId="a" fill="hsl(155, 60%, 38%)" radius={[0, 0, 0, 0]} barSize={24} />
+                    <Bar dataKey="Pendentes" stackId="a" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} barSize={24} />
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center">
+                  <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(155, 60%, 38%)' }} /> Resolvidos</div>
+                  <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(38, 90%, 50%)' }} /> Pendentes</div>
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
-      </motion.div>
+        </TabsContent>
+
+        {/* 3. OPERAÇÃO E PESSOAS */}
+        <TabsContent value="operacao" className="mt-0 focus-visible:outline-none focus-visible:ring-0 space-y-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="corporate-section">
+            <div className="corporate-section-header">
+              <div className="flex items-center gap-2">
+                <Activity className="w-4 h-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                  Evolução Diária — Ponto {sel ? `(${sel.nome})` : ''}
+                </h2>
+              </div>
+              <button onClick={() => navigate('/ausencias')} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+                Gestão à Vista <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="corporate-section-body">
+              {attendanceTrend.length > 0 ? (
+                <ResponsiveContainer width="100%" height={260}>
+                  <AreaChart data={attendanceTrend}>
+                    <defs>
+                      <linearGradient id="gradHrsNeg" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(0, 68%, 50%)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(0, 68%, 50%)" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gradExtras" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(280, 60%, 55%)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(280, 60%, 55%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '11px' }} />
+                    <Area type="monotone" dataKey="Hrs Negativas" stroke="hsl(0, 68%, 50%)" fill="url(#gradHrsNeg)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="Extras" stroke="hsl(280, 60%, 55%)" fill="url(#gradExtras)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="Atestados" stroke="hsl(200, 70%, 50%)" fill="hsl(200, 70%, 50%)" fillOpacity={0.1} strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-muted-foreground py-12 text-center">Sem registros de ponto no período</p>
+              )}
+            </div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard title="Mensal Operacional" value={`${meetingKpis.mensalRate}%`} change={`${meetingKpis.monthsWithMensal}/${meetingKpis.expectedMonths} meses`} changeType={meetingKpis.mensalRate >= 80 ? 'positive' : 'negative'} icon={CalendarDays} delay={0.57} />
+            <StatCard title="Cobertura Liderança" value={`${meetingKpis.leaderCoverage}%`} change={`${meetingKpis.attendedLeaders}/${meetingKpis.totalLeaders} presentes`} changeType={meetingKpis.leaderCoverage >= 80 ? 'positive' : 'negative'} icon={UserCheck} delay={0.6} />
+            <StatCard title="Ações Pendentes" value={meetingKpis.pendentes} change={`${meetingKpis.totalActions} total ações`} changeType={meetingKpis.pendentes > 5 ? 'negative' : 'positive'} icon={Target} delay={0.63} />
+            <StatCard title="Conclusão de Ações" value={`${meetingKpis.conclusionRate}%`} change={`${meetingKpis.concluidas}/${meetingKpis.totalActions} prontas`} changeType={meetingKpis.conclusionRate >= 70 ? 'positive' : 'negative'} icon={CheckCircle2} delay={0.66} />
+          </div>
+
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="corporate-section">
+            <div className="corporate-section-header">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-destructive" />
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">
+                  {sel ? 'Desvios do Colaborador' : 'Top 7 — Colaboradores com Desvios'}
+                </h2>
+              </div>
+              <button onClick={() => navigate('/ausencias')} className="flex items-center gap-1 text-xs text-primary hover:underline font-medium">
+                Ver Todos <ArrowUpRight className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="corporate-section-body">
+              {topDeviations.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="100%" height={Math.max(topDeviations.length * 50, 180)}>
+                    <BarChart data={topDeviations} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        tick={{ fontSize: 11 }}
+                        stroke="hsl(var(--muted-foreground))"
+                        width={140}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="faltas" name="Faltas Inj." stackId="a" fill="hsl(0, 68%, 50%)" barSize={20} />
+                      <Bar dataKey="atestados" name="Atestados" stackId="a" fill="hsl(200, 80%, 38%)" barSize={20} />
+                      <Bar dataKey="advertencias" name="Advertências" stackId="a" fill="hsl(38, 90%, 50%)" barSize={20} />
+                      <Bar dataKey="eventos" name="Eventos" stackId="a" fill="hsl(280, 60%, 55%)" radius={[0, 4, 4, 0]} barSize={20} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center flex-wrap">
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(0, 68%, 50%)' }} /> Faltas Inj.</div>
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(200, 80%, 38%)' }} /> Atestados</div>
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(38, 90%, 50%)' }} /> Advertências</div>
+                    <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(280, 60%, 55%)' }} /> Eventos de Campo</div>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground py-12 text-center">Nenhum desvio registrado no período</p>
+              )}
+            </div>
+          </motion.div>
+        </TabsContent>
+      </Tabs>
+
 
       {/* ═══ Employee Grid (only when no filter) ═══ */}
       {!sel && (
