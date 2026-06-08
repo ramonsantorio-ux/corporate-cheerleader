@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BarChart3, Settings, ChevronLeft, ChevronRight,
   Users, Target, Shield, LogOut, Calendar, AlertTriangle, CalendarDays,
-  Briefcase, Brain, ClipboardList, GitMerge, TrendingUp, FileText, FileWarning
+  Briefcase, Brain, ClipboardList, GitMerge, TrendingUp, FileText, FileWarning, MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,6 +48,7 @@ const navGroups: NavGroup[] = [
     label: 'Operações',
     items: [
       { to: '/eventos', icon: AlertTriangle, label: 'Eventos de Campo' },
+      { to: '/dds', icon: MessageSquare, label: 'DDS Diário' },
       { to: '/evolucao', icon: Briefcase, label: 'Contratos' },
       { to: '/notificacoes', icon: FileWarning, label: 'Notificações/Multas' },
       { to: '/relatorios', icon: BarChart3, label: 'C-Level Analytics' },

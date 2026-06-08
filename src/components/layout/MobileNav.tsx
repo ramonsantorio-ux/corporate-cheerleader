@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Users, Target, Calendar, Settings, AlertTriangle, CalendarDays, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Users, Target, Calendar, Settings, AlertTriangle, CalendarDays, MoreHorizontal, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -13,6 +13,7 @@ const mainItems = [
 const moreItems = [
   { to: '/desempenho', icon: Target, label: 'Avaliações' },
   { to: '/eventos', icon: AlertTriangle, label: 'Eventos' },
+  { to: '/dds', icon: MessageSquare, label: 'DDS' },
   { to: '/reunioes', icon: Calendar, label: 'Reuniões' },
   { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
   { to: '/configuracoes', icon: Settings, label: 'Config.' },

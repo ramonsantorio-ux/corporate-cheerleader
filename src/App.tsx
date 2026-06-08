@@ -26,6 +26,7 @@ import EvolucaoContrato from "./pages/EvolucaoContrato";
 import GestaoNotificacoes from "./pages/GestaoNotificacoes";
 import DiscTest from "./pages/DiscTest";
 import Treinamentos from "./pages/Treinamentos";
+import DDS from "./pages/DDS";
 import AssessmentHub from "./pages/AssessmentHub";
 import Feedback360 from "./pages/Feedback360";
 import { InstallPWA } from './components/InstallPWA';
@@ -92,6 +93,7 @@ function ProtectedRoutes() {
         <Route path="/evolucao" element={<ErrorBoundary><EvolucaoContrato /></ErrorBoundary>} />
         <Route path="/notificacoes" element={<GestaoNotificacoes />} />
         <Route path="/treinamentos" element={<Treinamentos />} />
+        <Route path="/dds" element={<DDS />} />
         <Route path="/assessments" element={<Treinamentos />} />
         <Route path="/assessment/:type" element={<AssessmentHub />} />
         <Route path="/assessment/:type/:id" element={<AssessmentHub />} />

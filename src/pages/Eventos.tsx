@@ -34,6 +34,11 @@ interface EventRow {
   shift: string;
   supervisor: string;
   involved_name: string;
+  tipo_acidente?: string;
+  agente_lesao?: string;
+  parte_corpo?: string;
+  genero_envolvido?: string;
+  custo?: number;
   created_at: string;
 }
 
@@ -77,7 +82,7 @@ export default function Eventos() {
   const [newEvent, setNewEvent] = useState({
     event_date: '', event_time: '', day_of_week: '', description: '',
     location: '', contract: 'PORTO', equipment: '', plate_tag: '',
-    shift: '', supervisor: '', involved_name: '',
+    shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
   });
 
   // Employee filter
@@ -119,7 +124,7 @@ export default function Eventos() {
     if (error) { toast.error('Erro ao salvar evento'); return; }
     toast.success('Evento registrado!');
     setDialogOpen(false);
-    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '' });
+    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0 });
     fetchEvents();
   }
 
@@ -223,12 +228,19 @@ export default function Eventos() {
 
   // ========== ANALYTICS ==========
   const analytics = useMemo(() => {
-    const byMonth: Record<string, number> = {};
+        const byMonth: Record<string, number> = {};
     const byEquipment: Record<string, number> = {};
     const byLocation: Record<string, number> = {};
     const byPerson: Record<string, number> = {};
     const byDayOfWeek: Record<string, number> = {};
     const byYear: Record<string, number> = {};
+    // New SST metrics
+    const byTipoAcidente: Record<string, number> = {};
+    const byAgenteLesao: Record<string, number> = {};
+    const byParteCorpo: Record<string, number> = {};
+    const byGenero: Record<string, number> = {};
+    const byTurno: Record<string, number> = {};
+    let totalCusto = 0;
     let medicalCount = 0;
 
     for (const ev of events) {
@@ -294,9 +306,17 @@ export default function Eventos() {
 
     const yearData = Object.entries(byYear).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, eventos: count }));
 
+        const topTipos = Object.entries(byTipoAcidente).map(([name, value]) => ({ name, value }));
+    const topAgentes = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
+    const topPartes = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
+
     const operationalCount = events.length - medicalCount;
 
-    return { monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, medicalCount, operationalCount, total: events.length };
+    return { 
+      monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
+      medicalCount, operationalCount, total: events.length,
+      topTipos, topAgentes, topPartes, byGenero, byTurno, totalCusto
+    };
   }, [events]);
 
   return (
@@ -625,6 +645,102 @@ export default function Eventos() {
         </Card>
       </div>
 
+            {/* Indicadores SST Adicionais */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="border-l-4 border-l-purple-500">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Custo Total</p>
+              <p className="text-xl font-bold text-foreground mt-1">R$ {analytics.totalCusto.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground font-medium text-center">Gênero Atingido</p>
+            <div className="flex justify-around items-center mt-2">
+              <div className="text-center"><p className="text-lg font-bold text-blue-600">{analytics.byGenero['Masculino'] || 0}</p><p className="text-[10px]">Masc</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-pink-600">{analytics.byGenero['Feminino'] || 0}</p><p className="text-[10px]">Fem</p></div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-orange-500 md:col-span-2">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground font-medium text-center mb-2">Turnos com Mais Eventos</p>
+            <div className="flex justify-around items-center">
+              <div className="text-center"><p className="text-lg font-bold text-orange-500">{analytics.byTurno['Manhã'] || 0}</p><p className="text-[10px]">Manhã</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-yellow-500">{analytics.byTurno['Tarde'] || 0}</p><p className="text-[10px]">Tarde</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-slate-500">{analytics.byTurno['Noite'] || 0}</p><p className="text-[10px]">Noite</p></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Tipos de Acidentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[240px]">
+              <ExpandableChart title="Tipos de Acidentes">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={analytics.topTipos} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="60%" outerRadius="80%" label={false}>
+                      {analytics.topTipos.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: "10px" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Top Agentes da Lesão</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[240px]">
+              <ExpandableChart title="Top Agentes da Lesão">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.topAgentes} layout="vertical" margin={{ left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" name="Qtd" fill="hsl(180, 45%, 40%)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Partes do Corpo Atingidas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[240px]">
+              <ExpandableChart title="Partes do Corpo Atingidas">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.topPartes} layout="vertical" margin={{ left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" name="Qtd" fill="hsl(270, 60%, 55%)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Top reincidentes */}
       <Card>
         <CardHeader className="pb-2">
@@ -705,7 +821,7 @@ export default function Eventos() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDetailEvent(ev); }}>
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: ev.event_time, day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name }); setDialogOpen(true); }}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: ev.event_time, day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0 }); setDialogOpen(true); }}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteEvent(ev); }}>
@@ -757,6 +873,10 @@ export default function Eventos() {
                 <div><Label className="text-muted-foreground">Equipamento</Label><p className="font-medium">{detailEvent.equipment || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Placa/TAG</Label><p className="font-medium">{detailEvent.plate_tag || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Local</Label><p className="font-medium">{detailEvent.location || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Tipo</Label><p className="font-medium">{detailEvent.tipo_acidente || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Agente da Lesão</Label><p className="font-medium">{detailEvent.agente_lesao || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Parte do Corpo</Label><p className="font-medium">{detailEvent.parte_corpo || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Gênero</Label><p className="font-medium">{detailEvent.genero_envolvido || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Turno</Label><p className="font-medium">{detailEvent.shift || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Encarregado</Label><p className="font-medium">{detailEvent.supervisor || '—'}</p></div>
               </div>

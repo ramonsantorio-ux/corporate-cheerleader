@@ -29,7 +29,7 @@ import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/p
 interface Attendance {
   id: string; employee_id: string; date: string; status: string;
   observation: string; created_at: string; employee_name?: string;
-  turno?: string; letra?: string; cargo?: string;
+  turno?: string; letra?: string; cargo?: string; cid?: string; crm?: string; dias_afastamento?: number;
 }
 
 interface VacationRecord {
@@ -112,7 +112,7 @@ export default function PontoFerias() {
     return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
   }, [employeeSearch, funcionarios]);
 
-  const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '' });
+  const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '', cid: '', crm: '', dias_afastamento: '0' });
   const [vacForm, setVacForm] = useState({
     employee_id: '', days_count: '30', scheduled_month: '', start_date: '', end_date: '', observation: ''
   });
@@ -217,7 +217,7 @@ export default function PontoFerias() {
     }
 
     const { error } = await supabase.from('daily_attendance').insert({
-      employee_id: form.employee_id, date: form.date, status: statusToSave, observation: form.observation,
+      employee_id: form.employee_id, date: form.date, status: statusToSave, observation: form.observation, cid: form.status === 'atestado' ? form.cid : null, crm: form.status === 'atestado' ? form.crm : null, dias_afastamento: form.status === 'atestado' ? parseInt(form.dias_afastamento) || 0 : 0,
     });
     if (error) {
       if (error.code === '23505') toast.error('Já existe registro para este colaborador nesta data');
@@ -248,7 +248,7 @@ export default function PontoFerias() {
     }
 
     setDialogOpen(false);
-    setForm({ employee_id: '', date: '', status: 'presente', observation: '' });
+    setForm({ employee_id: '', date: '', status: 'presente', observation: '', cid: '', crm: '', dias_afastamento: '0' });
     toast.success('Ponto registrado com sucesso');
     fetchAll();
   }
@@ -656,6 +656,39 @@ export default function PontoFerias() {
     const daysMetGoal = Object.values(byDate).filter(c => c >= DAILY_MOVEMENT_GOAL).length;
     return { todayCount, totalDays, daysMetGoal, goalPct: totalDays > 0 ? Math.round((daysMetGoal / totalDays) * 100) : 0 };
   }, [empAttendance]);
+
+    // ─── Atestados Analytics ──────────────────────────────────────────────
+  const atestadosAnalytics = useMemo(() => {
+    let diasPerdidos = 0;
+    const cidCount: Record<string, number> = {};
+    const empAtestados: Record<string, { name: string, count: number, days: number }> = {};
+    const cargoAtestados: Record<string, number> = {};
+
+    attendance.forEach(a => {
+      if (a.status === 'atestado') {
+        const dias = a.dias_afastamento || 1; // assumindo 1 dia se não preenchido
+        diasPerdidos += dias;
+        
+        if (a.cid) cidCount[a.cid.toUpperCase()] = (cidCount[a.cid.toUpperCase()] || 0) + 1;
+        
+        if (a.employee_id) {
+          if (!empAtestados[a.employee_id]) empAtestados[a.employee_id] = { name: a.employee_name || '', count: 0, days: 0 };
+          empAtestados[a.employee_id].count += 1;
+          empAtestados[a.employee_id].days += dias;
+        }
+
+        if (a.cargo) {
+          cargoAtestados[a.cargo] = (cargoAtestados[a.cargo] || 0) + 1;
+        }
+      }
+    });
+
+    const topCids = Object.entries(cidCount).sort(([,a], [,b]) => b - a).slice(0, 7).map(([name, value]) => ({ name, value }));
+    const topEmpAtestados = Object.values(empAtestados).sort((a, b) => b.count - a.count).slice(0, 10);
+    const topCargos = Object.entries(cargoAtestados).sort(([,a], [,b]) => b - a).slice(0, 5).map(([name, value]) => ({ name: name.length > 15 ? name.slice(0, 15) + '...' : name, value }));
+
+    return { diasPerdidos, topCids, topEmpAtestados, topCargos };
+  }, [attendance]);
 
   const totalHorasNegativas = empAttendance.filter(a => ['falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)).length;
   const totalFaltasInj = empAttendance.filter(a => a.status === 'falta_injustificada').length;
@@ -1084,6 +1117,61 @@ export default function PontoFerias() {
         </motion.div>
       </div>
 
+            {/* ═══ PAINEL CLÍNICO - ATESTADOS ═══ */}
+      {totalAtestados > 0 && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.21 }} className="corporate-section bg-blue-50/20 border-blue-100">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-blue-600 mb-4 flex items-center gap-2">
+            <Clock className="w-4 h-4" /> Painel Clínico de Atestados
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+             <div className="bg-card border border-border rounded-lg p-4 flex flex-col justify-center items-center text-center">
+               <p className="text-xs text-muted-foreground font-medium">Dias Perdidos (Afastamento)</p>
+               <p className="text-4xl font-bold text-blue-600 mt-2">{atestadosAnalytics.diasPerdidos}</p>
+             </div>
+             
+             <div className="md:col-span-3 bg-card border border-border rounded-lg p-4">
+               <p className="text-xs text-muted-foreground font-medium mb-3">Top Funcionários (Qtd. de Atestados)</p>
+               <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+                 {atestadosAnalytics.topEmpAtestados.map((emp, idx) => (
+                   <div key={idx} className="p-2 bg-muted/30 rounded border text-center">
+                     <p className="text-xs font-semibold truncate" title={emp.name}>{emp.name}</p>
+                     <p className="text-sm text-blue-600 font-bold">{emp.count} <span className="text-[10px] font-normal text-muted-foreground">({emp.days}d)</span></p>
+                   </div>
+                 ))}
+               </div>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-card border border-border rounded-lg p-4 h-[250px]">
+               <p className="text-xs text-muted-foreground font-medium mb-2">Top 7 CIDs</p>
+               <ResponsiveContainer width="100%" height="90%">
+                 <BarChart data={atestadosAnalytics.topCids} layout="vertical" margin={{ left: 10 }}>
+                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                   <XAxis type="number" tick={{ fontSize: 10 }} />
+                   <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={60} />
+                   <Tooltip content={<CustomTooltip />} />
+                   <Bar dataKey="value" name="Atestados" fill="hsl(200, 70%, 50%)" radius={[0, 4, 4, 0]} />
+                 </BarChart>
+               </ResponsiveContainer>
+            </div>
+            <div className="bg-card border border-border rounded-lg p-4 h-[250px]">
+               <p className="text-xs text-muted-foreground font-medium mb-2">Atestados por Função</p>
+               <ResponsiveContainer width="100%" height="90%">
+                 <PieChart>
+                   <Pie data={atestadosAnalytics.topCargos} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%" label={false}>
+                     {atestadosAnalytics.topCargos.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                   </Pie>
+                   <Tooltip content={<CustomTooltip />} />
+                   <Legend wrapperStyle={{ fontSize: 10 }} layout="vertical" verticalAlign="middle" align="right" />
+                 </PieChart>
+               </ResponsiveContainer>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* ═══ HORAS NEGATIVAS POR COLABORADOR ═══ */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.22 }}
         className="corporate-section">
@@ -1360,6 +1448,7 @@ export default function PontoFerias() {
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Função</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
+<th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Detalhe Médico</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Obs.</th>
                     <th className="text-right px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Ação</th>
                   </tr>
@@ -1376,7 +1465,14 @@ export default function PontoFerias() {
                           {statusLabels[a.status] || a.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{a.observation || '—'}</td>
+                      <td className="px-4 py-2.5 text-center">
+    {a.status === 'atestado' ? (
+      <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+        CID: {a.cid || '—'} | {a.dias_afastamento || 0}d
+      </span>
+    ) : <span className="text-muted-foreground">—</span>}
+  </td>
+  <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{a.observation || '—'}</td>
                       <td className="px-4 py-2.5 text-right">
                         <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteAttendance(a.id)}>
                           <Trash2 className="w-3.5 h-3.5" />
