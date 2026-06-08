@@ -108,7 +108,21 @@ export default function Eventos() {
       supabase.from('events').select('*').gte('event_date', period.start).lte('event_date', period.end).order('event_date', { ascending: false }),
       supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url').order('nome'),
     ]);
-    setEvents((evtRes.data as EventRow[]) || []);
+    
+    const evtData = evtRes.data || [];
+    const parsedEvents = evtData.map((ev: any) => {
+      if (ev.description && ev.description.includes('||EXTRA||')) {
+        const parts = ev.description.split('||EXTRA||');
+        ev.description = parts[0].trim();
+        try {
+          const extra = JSON.parse(parts[1]);
+          return { ...ev, ...extra };
+        } catch(e){}
+      }
+      return ev;
+    });
+
+    setEvents(parsedEvents as any[]);
     setFuncionarios((fRes.data || []) as any[]);
     setLoading(false);
   }
@@ -131,6 +145,15 @@ export default function Eventos() {
         eventToSave.event_time = eventToSave.event_time.substring(0, 8);
       }
     }
+
+    const extraData = { cid: eventToSave.cid, atestado: eventToSave.atestado, afastamento: eventToSave.afastamento, danos_materiais: eventToSave.danos_materiais };
+    delete eventToSave.cid;
+    delete eventToSave.atestado;
+    delete eventToSave.afastamento;
+    delete eventToSave.danos_materiais;
+
+    const cleanDesc = (eventToSave.description || '').split('||EXTRA||')[0].trim();
+    eventToSave.description = cleanDesc + " ||EXTRA||" + JSON.stringify(extraData);
 
     let error;
     if (editingEvent) {
@@ -176,25 +199,28 @@ export default function Eventos() {
           dateVal = `${yr}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
         }
       }
-      
+      const extraData = {
+        cid: String(r['CID'] || r['cid'] || ''),
+        atestado: String(r['ATESTADO'] || r['atestado'] || '').trim().toLowerCase() === 'sim',
+        afastamento: String(r['AFASTAMENTO'] || r['afastamento'] || '').trim().toLowerCase() === 'sim',
+        danos_materiais: String(r['DANOS MATERIAIS'] || r['danos_materiais'] || r['danos materiais'] || '').trim().toLowerCase() === 'sim',
+      };
+      const cleanDesc = String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || '').split('||EXTRA||')[0].trim();
+
       return {
         event_date: dateVal,
         event_time: String(r['HORÁRIO'] || r['horario'] || ''),
         day_of_week: String(r['DIA DA SEMANA'] || r['dia_da_semana'] || ''),
-        description: String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || ''),
+        description: cleanDesc + " ||EXTRA||" + JSON.stringify(extraData),
         location: String(r['LOCAL'] || r['local'] || ''),
         contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
         equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
         plate_tag: String(r['PLACA/TAG'] || r['placa_tag'] || ''),
         shift: String(r['TURNO'] || r['turno'] || ''),
         supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
-        involved_name: String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || ''),
-        cid: String(r['CID'] || r['cid'] || ''),
-        atestado: String(r['ATESTADO'] || r['atestado'] || '').trim().toLowerCase() === 'sim',
-        afastamento: String(r['AFASTAMENTO'] || r['afastamento'] || '').trim().toLowerCase() === 'sim',
-        danos_materiais: String(r['DANOS MATERIAIS'] || r['danos_materiais'] || r['danos materiais'] || '').trim().toLowerCase() === 'sim',
+        involved_name: String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || '')
       };
-    }).filter(r => r.event_date && r.description);
+    }).filter(r => r.event_date && (r.description.replace('||EXTRA||', '').trim()));
 
     if (!mapped.length) { toast.error('Nenhum dado válido encontrado'); return; }
 
