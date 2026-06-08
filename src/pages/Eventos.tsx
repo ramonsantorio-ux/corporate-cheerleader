@@ -239,6 +239,7 @@ export default function Eventos() {
     const byAgenteLesao: Record<string, number> = {};
     const byParteCorpo: Record<string, number> = {};
     const byGenero: Record<string, number> = {};
+    const byTurno: Record<string, number> = {};
     const byLetra: Record<string, number> = {};
     const byHour: Record<string, number> = {};
     let totalCusto = 0;
@@ -323,19 +324,21 @@ export default function Eventos() {
       .map(([name, value]) => ({ name, value }));
     const yearData = Object.entries(byYear).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, eventos: count }));
 
-    const tipoAcidenteData = Object.entries(byTipoAcidente).map(([name, value]) => ({ name, value }));
-    const agenteLesaoData = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
-    const parteCorpoData = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
-    const generoData = Object.entries(byGenero).map(([name, value]) => ({ name, value }));
+    const topTipos = Object.entries(byTipoAcidente).map(([name, value]) => ({ name, value }));
+    const topAgentes = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
+    const topPartes = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
+
+    const operationalCount = events.length - medicalCount;
     const turnoData = Object.entries(byTurno || {}).sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value }));
 
     const heatmapData = Object.entries(byHour).sort(([a], [b]) => a.localeCompare(b)).map(([hour, count]) => ({ hour, count }));
     const maxHourCount = Math.max(...heatmapData.map(d => d.count), 1);
 
-    return {
-      monthTrend, topEquipment, topPeople, dayData, totalEvents: events.length, medicalCount,
-      tipoAcidenteData, agenteLesaoData, parteCorpoData, generoData, turnoData, totalCusto,
-      byLetra, heatmapData, maxHourCount, byGenero
+    return { 
+      monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
+      medicalCount, operationalCount, total: events.length,
+      topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData, totalCusto,
+      byLetra, heatmapData, maxHourCount
     };
   }, [events]);
 
