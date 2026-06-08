@@ -810,63 +810,26 @@ export default function Eventos() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Top reincidentes */}
+      <div className="mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Tipos de Acidentes</CardTitle>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <User className="w-4 h-4 text-[#3b82f6]" /> Colaboradores com Maior Reincidência
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[240px]">
-              <ExpandableChart title="Tipos de Acidentes">
+            <div className="h-[350px]">
+              <ExpandableChart title="Colaboradores com Maior Reincidência">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={analytics.topTipos} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="60%" outerRadius="80%" label={false}>
-                      {analytics.topTipos.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: "10px" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Top Agentes da Lesão</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[240px]">
-              <ExpandableChart title="Top Agentes da Lesão">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.topAgentes} layout="vertical" margin={{ left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                  <BarChart data={analytics.topPeople} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" horizontal={false} />
                     <XAxis type="number" tick={{ fontSize: 11 }} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={150} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="Qtd" fill="hsl(180, 45%, 40%)" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Partes do Corpo Atingidas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[240px]">
-              <ExpandableChart title="Partes do Corpo Atingidas">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.topPartes} layout="vertical" margin={{ left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={100} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="Qtd" fill="hsl(270, 60%, 55%)" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="value" name="Eventos" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                      <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </ExpandableChart>
@@ -874,26 +837,6 @@ export default function Eventos() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Top reincidentes */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <User className="w-4 h-4 text-destructive" /> Colaboradores com Maior Reincidência
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {analytics.topPeople.map((p, i) => (
-              <div key={p.name} className={`p-3 rounded-lg border ${i === 0 ? 'border-destructive/30 bg-destructive/5' : 'border-border'}`}>
-                <p className="text-xs font-medium text-foreground truncate" title={p.name}>{p.name}</p>
-                <p className={`text-2xl font-bold mt-1 ${i === 0 ? 'text-destructive' : 'text-foreground'}`}>{p.value}</p>
-                <p className="text-[10px] text-muted-foreground">eventos</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Painel Médico e Severidade */}
       <div className="mt-12 mb-6">
