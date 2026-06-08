@@ -43,6 +43,7 @@ interface EventRow {
   atestado?: boolean;
   afastamento?: boolean;
   danos_materiais?: boolean;
+  atendimento_medico?: boolean;
   created_at: string;
 }
 
@@ -92,7 +93,7 @@ export default function Eventos() {
     event_date: '', event_time: '', day_of_week: '', description: '',
     location: '', contract: 'PORTO', equipment: '', plate_tag: '',
     shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
-    cid: '', atestado: false, afastamento: false, danos_materiais: false,
+    cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false,
   });
 
   // Employee filter
@@ -156,6 +157,7 @@ export default function Eventos() {
       atestado: eventToSave.atestado, 
       afastamento: eventToSave.afastamento, 
       danos_materiais: eventToSave.danos_materiais,
+      atendimento_medico: eventToSave.atendimento_medico,
       tipo_acidente: eventToSave.tipo_acidente,
       agente_lesao: eventToSave.agente_lesao,
       parte_corpo: eventToSave.parte_corpo,
@@ -166,6 +168,7 @@ export default function Eventos() {
     delete eventToSave.atestado;
     delete eventToSave.afastamento;
     delete eventToSave.danos_materiais;
+    delete eventToSave.atendimento_medico;
     delete eventToSave.tipo_acidente;
     delete eventToSave.agente_lesao;
     delete eventToSave.parte_corpo;
@@ -364,7 +367,7 @@ export default function Eventos() {
         byLocation[loc] = (byLocation[loc] || 0) + 1;
       }
 
-      if (ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR')) {
+      if (ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico) {
         medicalCount++;
       }
 
@@ -496,7 +499,7 @@ export default function Eventos() {
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => {
                 setEditingEvent(null);
-                setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false });
+                setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false });
               }}>
                 <Plus className="w-4 h-4 mr-1" /> Novo Evento
               </Button>
@@ -552,6 +555,10 @@ export default function Eventos() {
                 <div className="space-y-2">
                   <Label>CID (Opcional)</Label>
                   <FastInput value={newEvent.cid || ''} onValueChange={v => setNewEvent(p => ({ ...p, cid: v }))} placeholder="Ex: S60" />
+                </div>
+                <div className="flex items-center gap-2 mt-8">
+                  <input type="checkbox" id="atendimento" className="w-4 h-4 cursor-pointer" checked={newEvent.atendimento_medico} onChange={e => setNewEvent(p => ({ ...p, atendimento_medico: e.target.checked }))} />
+                  <Label htmlFor="atendimento" className="cursor-pointer">Com Atendimento Médico</Label>
                 </div>
                 <div className="flex items-center gap-2 mt-8">
                   <input type="checkbox" id="atestado" className="w-4 h-4 cursor-pointer" checked={newEvent.atestado} onChange={e => setNewEvent(p => ({ ...p, atestado: e.target.checked }))} />
