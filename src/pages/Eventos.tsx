@@ -379,13 +379,13 @@ export default function Eventos() {
       .map(([name, count]) => ({ name, count }));
 
     const afastamentoData = [
-      { name: 'Com Afastamento', value: afastamentoCom, fill: '#ef4444' },
-      { name: 'Sem Afastamento', value: afastamentoSem, fill: '#10b981' }
+      { name: 'Eventos com Afastamento', value: afastamentoCom, fill: '#ef4444' },
+      { name: 'Eventos sem Afastamento', value: afastamentoSem, fill: '#10b981' }
     ].filter(d => d.value > 0);
 
     const danosData = [
-      { name: 'Com Danos Materiais', value: danosCom, fill: '#f59e0b' },
-      { name: 'Sem Danos Materiais', value: danosSem, fill: '#3b82f6' }
+      { name: 'Eventos Materiais', value: danosCom, fill: '#f59e0b' },
+      { name: 'Eventos Sem Perda', value: danosSem, fill: '#3b82f6' }
     ].filter(d => d.value > 0);
 
     return { 
