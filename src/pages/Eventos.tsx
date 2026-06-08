@@ -4,6 +4,7 @@ import { Upload, Download, Search, Filter, Plus, User, AlertTriangle, TrendingUp
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { FastInput } from '@/components/ui/fast-input';
 import { FastTextarea } from '@/components/ui/fast-textarea';
@@ -761,349 +762,374 @@ export default function Eventos() {
         </Card>
       </motion.div>
 
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly trend */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" /> Evolução Mensal
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px]">
-              <ExpandableChart title="Visualização Ampliada">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={analytics.monthTrend}>
-                    <defs>
-                      <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="eventos" stroke="hsl(200, 80%, 38%)" fill="url(#eventGrad)" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
+      {/* --- DASHBOARD TABS --- */}
+      <Tabs defaultValue="visao-geral" className="w-full mb-8">
+        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
+          <TabsTrigger value="visao-geral" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <Activity className="w-4 h-4" /> Visão Geral
+          </TabsTrigger>
+          <TabsTrigger value="operacao" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-warning data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <Wrench className="w-4 h-4" /> Operação & Turnos
+          </TabsTrigger>
+          <TabsTrigger value="sst" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-destructive data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <Stethoscope className="w-4 h-4" /> Saúde & Segurança (SST)
+          </TabsTrigger>
+          <TabsTrigger value="colaboradores" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <User className="w-4 h-4" /> Colaboradores
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Equipment distribution */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Truck className="w-4 h-4 text-primary" /> Por Tipo de Equipamento
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px]">
-              <ExpandableChart title="Visualização Ampliada">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.topEquipment} layout="vertical" margin={{ left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={140} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="Eventos" fill="hsl(200, 80%, 38%)" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Day of week */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-primary" /> Por Dia da Semana
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[240px]">
-              <ExpandableChart title="Visualização Ampliada">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.dayData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                    <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="eventos" name="Eventos" radius={[4, 4, 0, 0]}>
-                      {analytics.dayData.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Year comparison */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <TrendingDown className="w-4 h-4 text-primary" /> Comparativo Anual
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[240px]">
-              <ExpandableChart title="Visualização Ampliada">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.yearData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                    <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="eventos" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top locations */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" /> Principais Locais
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[240px]">
-              <ExpandableChart title="Visualização Ampliada">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={analytics.topLocations} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                      {analytics.topLocations.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: "10px" }} formatter={(value, entry, index) => `${value} (${analytics.topLocations[index].value})`} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Indicadores SST Adicionais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        <Card className="border-l-4 border-l-emerald-500 bg-gradient-to-br from-emerald-500/10 to-transparent">
-          <CardContent className="p-6 flex flex-col justify-center items-center text-center h-full">
-            <p className="text-sm text-emerald-700 font-semibold mb-2 uppercase tracking-wider">Status de Segurança</p>
-            <p className="text-5xl font-black text-emerald-600 mb-2">{analytics.daysWithoutAccident}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase">Dias sem Ocorrências</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-l-4 border-l-[#4472c4] lg:col-span-2">
-          <CardContent className="p-4 flex flex-col justify-center h-full">
-            <p className="text-sm font-semibold mb-4">Eventos por Letra</p>
-            <div className="h-[220px] w-full">
-              <ExpandableChart title="Eventos por Letra">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.letraData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      <LabelList dataKey="value" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
-                      {analytics.letraData?.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-[#eb7d5b]" /> Horário dos Eventos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[250px] w-full">
-              <ExpandableChart title="Horário dos Eventos">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                    <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]}>
-                      <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Top reincidentes */}
-      <div className="mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <User className="w-4 h-4 text-[#3b82f6]" /> Colaboradores com Maior Reincidência
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[350px]">
-              <ExpandableChart title="Colaboradores com Maior Reincidência">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.topPeople} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 11 }} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={150} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="value" name="Eventos" fill="#3b82f6" radius={[0, 4, 4, 0]}>
-                      <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </ExpandableChart>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Painel Médico e Severidade */}
-      <div className="mt-12 mb-6">
-        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground border-b pb-2">
-          <AlertTriangle className="w-5 h-5 text-destructive" />
-          Saúde, Gravidade e Ocorrências Médicas
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Top CIDs (Doenças/Lesões)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                {analytics.topCids.length > 0 ? (
-                  <ExpandableChart title="Top CIDs">
+        {/* 1. VISÃO GERAL */}
+        <TabsContent value="visao-geral" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" /> Evolução Mensal
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[280px]">
+                  <ExpandableChart title="Evolução Mensal">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.topCids} layout="vertical" margin={{ left: 0, right: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" vertical={false} />
-                        <XAxis type="number" tick={{ fontSize: 10 }} />
-                        <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={50} />
+                      <AreaChart data={analytics.monthTrend}>
+                        <defs>
+                          <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                        <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="value" fill="hsl(0, 68%, 50%)" radius={[0, 4, 4, 0]}>
-                          <LabelList dataKey="value" position="right" style={{ fontSize: '10px' }} />
+                        <Area type="monotone" dataKey="eventos" stroke="hsl(200, 80%, 38%)" fill="url(#eventGrad)" strokeWidth={2} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary" /> Principais Locais
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[280px]">
+                  <ExpandableChart title="Principais Locais">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={analytics.topLocations} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                          {analytics.topLocations.map((_, i) => (
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ fontSize: "10px" }} formatter={(value, entry, index) => `${value} (${analytics.topLocations[index].value})`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mt-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <TrendingDown className="w-4 h-4 text-primary" /> Comparativo Anual
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[240px]">
+                  <ExpandableChart title="Comparativo Anual">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.yearData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                        <XAxis dataKey="year" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="eventos" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* 2. OPERAÇÃO E TURNOS */}
+        <TabsContent value="operacao" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-warning" /> Por Tipo de Equipamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[280px]">
+                  <ExpandableChart title="Por Tipo de Equipamento">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.topEquipment} layout="vertical" margin={{ left: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                        <XAxis type="number" tick={{ fontSize: 11 }} />
+                        <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={140} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="value" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-warning" /> Por Dia da Semana
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[280px]">
+                  <ExpandableChart title="Por Dia da Semana">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.dayData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                        <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="eventos" name="Eventos" radius={[4, 4, 0, 0]}>
+                          {analytics.dayData.map((_, i) => (
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          ))}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados de CID</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Afastamento</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                {analytics.afastamentoData.length > 0 ? (
-                  <ExpandableChart title="Afastamentos">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#eb7d5b]" /> Horário dos Eventos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] w-full">
+                  <ExpandableChart title="Horário dos Eventos">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={analytics.afastamentoData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
-                          {analytics.afastamentoData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ fontSize: "10px" }} />
-                      </PieChart>
+                      <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                        <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]}>
+                          <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
+                        </Bar>
+                      </BarChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Eventos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                {analytics.danosData.length > 0 ? (
-                  <ExpandableChart title="Eventos">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#4472c4]" /> Eventos por Letra (Turno)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] w-full">
+                  <ExpandableChart title="Eventos por Letra">
                     <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
-                          {analytics.danosData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ fontSize: "10px" }} />
-                      </PieChart>
+                      <BarChart data={analytics.letraData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          <LabelList dataKey="value" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
+                          {analytics.letraData?.map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                          ))}
+                        </Bar>
+                      </BarChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Top 10 Atestados</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[200px] overflow-y-auto px-4 pb-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="h-8 text-xs">Colaborador</TableHead>
-                      <TableHead className="h-8 text-xs text-right">Qtd</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {analytics.topAtestados.length === 0 ? (
-                      <TableRow><TableCell colSpan={2} className="text-center text-xs text-muted-foreground py-6">Nenhum atestado registrado</TableCell></TableRow>
+        {/* 3. SAÚDE & SEGURANÇA (SST) */}
+        <TabsContent value="sst" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <Card className="border-none bg-gradient-to-br from-emerald-500/10 to-transparent shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+              <CardContent className="p-8 flex flex-col justify-center items-center text-center h-full">
+                <p className="text-sm text-emerald-700 font-bold mb-2 uppercase tracking-wider">Status de Segurança</p>
+                <p className="text-6xl font-black text-emerald-600 mb-2">{analytics.daysWithoutAccident}</p>
+                <p className="text-sm text-muted-foreground font-medium uppercase">Dias sem Ocorrências</p>
+              </CardContent>
+            </Card>
+
+            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <HeartPulse className="w-4 h-4 text-destructive" /> Top CIDs (Doenças/Lesões)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px]">
+                    {analytics.topCids.length > 0 ? (
+                      <ExpandableChart title="Top CIDs">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={analytics.topCids} layout="vertical" margin={{ left: 0, right: 20 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" vertical={false} />
+                            <XAxis type="number" tick={{ fontSize: 10 }} />
+                            <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={50} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Bar dataKey="value" fill="hsl(0, 68%, 50%)" radius={[0, 4, 4, 0]}>
+                              <LabelList dataKey="value" position="right" style={{ fontSize: '10px' }} />
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </ExpandableChart>
                     ) : (
-                      analytics.topAtestados.map((a, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-xs py-2">{a.name}</TableCell>
-                          <TableCell className="text-xs py-2 text-right font-medium">{a.count}</TableCell>
-                        </TableRow>
-                      ))
+                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados de CID</div>
                     )}
-                  </TableBody>
-                </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-destructive" /> Severidade dos Eventos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px]">
+                    {analytics.danosData.length > 0 ? (
+                      <ExpandableChart title="Eventos com Danos">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
+                              {analytics.danosData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                            <Legend wrapperStyle={{ fontSize: "10px" }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </ExpandableChart>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold">Proporção de Afastamentos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px]">
+                  {analytics.afastamentoData.length > 0 ? (
+                    <ExpandableChart title="Afastamentos">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={analytics.afastamentoData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
+                            {analytics.afastamentoData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: "10px" }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </ExpandableChart>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold">Top 10 Atestados Médicos</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="h-[250px] overflow-y-auto px-4 pb-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="h-8 text-xs">Colaborador</TableHead>
+                        <TableHead className="h-8 text-xs text-right">Qtd de Atestados</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {analytics.topAtestados.length === 0 ? (
+                        <TableRow><TableCell colSpan={2} className="text-center text-xs text-muted-foreground py-6">Nenhum atestado registrado</TableCell></TableRow>
+                      ) : (
+                        analytics.topAtestados.map((a, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="text-xs py-2">{a.name}</TableCell>
+                            <TableCell className="text-xs py-2 text-right font-medium">{a.count}</TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* 4. COLABORADORES */}
+        <TabsContent value="colaboradores" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <User className="w-4 h-4 text-[#3b82f6]" /> Colaboradores com Maior Reincidência de Eventos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px]">
+                <ExpandableChart title="Colaboradores com Maior Reincidência">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={analytics.topPeople} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={150} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" name="Eventos" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                        <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ExpandableChart>
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Events Table */}
       <Card id="events-table" className="scroll-mt-24">
