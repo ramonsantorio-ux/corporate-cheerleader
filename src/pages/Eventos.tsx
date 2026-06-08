@@ -39,6 +39,10 @@ interface EventRow {
   parte_corpo?: string;
   genero_envolvido?: string;
   custo?: number;
+  cid?: string;
+  atestado?: boolean;
+  afastamento?: boolean;
+  danos_materiais?: boolean;
   created_at: string;
 }
 
@@ -83,6 +87,7 @@ export default function Eventos() {
     event_date: '', event_time: '', day_of_week: '', description: '',
     location: '', contract: 'PORTO', equipment: '', plate_tag: '',
     shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
+    cid: '', atestado: false, afastamento: false, danos_materiais: false,
   });
 
   // Employee filter
@@ -124,7 +129,7 @@ export default function Eventos() {
     if (error) { toast.error('Erro ao salvar evento'); return; }
     toast.success('Evento registrado!');
     setDialogOpen(false);
-    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0 });
+    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false });
     fetchEvents();
   }
 
@@ -169,6 +174,10 @@ export default function Eventos() {
         shift: String(r['TURNO'] || r['turno'] || ''),
         supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
         involved_name: String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || ''),
+        cid: String(r['CID'] || r['cid'] || ''),
+        atestado: String(r['ATESTADO'] || r['atestado'] || '').trim().toLowerCase() === 'sim',
+        afastamento: String(r['AFASTAMENTO'] || r['afastamento'] || '').trim().toLowerCase() === 'sim',
+        danos_materiais: String(r['DANOS MATERIAIS'] || r['danos_materiais'] || r['danos materiais'] || '').trim().toLowerCase() === 'sim',
       };
     }).filter(r => r.event_date && r.description);
 
@@ -198,6 +207,10 @@ export default function Eventos() {
       'TURNO': ev.shift,
       'ENCARREGADO': ev.supervisor,
       'NOME DO ENVOLVIDO': ev.involved_name,
+      'CID': ev.cid || '',
+      'ATESTADO': ev.atestado ? 'Sim' : 'Não',
+      'AFASTAMENTO': ev.afastamento ? 'Sim' : 'Não',
+      'DANOS MATERIAIS': ev.danos_materiais ? 'Sim' : 'Não',
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
@@ -346,11 +359,30 @@ export default function Eventos() {
         name, value, fill: CHART_COLORS[i % CHART_COLORS.length]
       }));
 
+    const topCids = Object.entries(byCid)
+      .sort(([, a], [, b]) => b - a).slice(0, 5)
+      .map(([name, value], i) => ({ name, value, fill: CHART_COLORS[i % CHART_COLORS.length] }));
+
+    const topAtestados = Object.entries(byAtestado)
+      .sort(([, a], [, b]) => b - a).slice(0, 10)
+      .map(([name, count]) => ({ name, count }));
+
+    const afastamentoData = [
+      { name: 'Com Afastamento', value: afastamentoCom, fill: '#ef4444' },
+      { name: 'Sem Afastamento', value: afastamentoSem, fill: '#10b981' }
+    ].filter(d => d.value > 0);
+
+    const danosData = [
+      { name: 'Com Danos Materiais', value: danosCom, fill: '#f59e0b' },
+      { name: 'Sem Danos Materiais', value: danosSem, fill: '#3b82f6' }
+    ].filter(d => d.value > 0);
+
     return { 
       monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
       medicalCount, operationalCount, total: events.length,
       topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
-      byLetra, letraData, hourlyData, daysWithoutAccident
+      byLetra, letraData, hourlyData, daysWithoutAccident,
+      topCids, topAtestados, afastamentoData, danosData
     };
   }, [events]);
 
@@ -427,6 +459,25 @@ export default function Eventos() {
                   <Label>Nome do Envolvido *</Label>
                   <FastInput value={newEvent.involved_name} onValueChange={v => setNewEvent(p => ({ ...p, involved_name: v }))} placeholder="Nome completo" />
                 </div>
+                
+                {/* Novos campos médicos e de severidade */}
+                <div className="space-y-2">
+                  <Label>CID (Opcional)</Label>
+                  <FastInput value={newEvent.cid || ''} onValueChange={v => setNewEvent(p => ({ ...p, cid: v }))} placeholder="Ex: S60" />
+                </div>
+                <div className="flex items-center gap-2 mt-8">
+                  <input type="checkbox" id="atestado" className="w-4 h-4 cursor-pointer" checked={newEvent.atestado} onChange={e => setNewEvent(p => ({ ...p, atestado: e.target.checked }))} />
+                  <Label htmlFor="atestado" className="cursor-pointer">Gerou Atestado Médico</Label>
+                </div>
+                <div className="flex items-center gap-2 mt-8">
+                  <input type="checkbox" id="afastamento" className="w-4 h-4 cursor-pointer" checked={newEvent.afastamento} onChange={e => setNewEvent(p => ({ ...p, afastamento: e.target.checked }))} />
+                  <Label htmlFor="afastamento" className="cursor-pointer">Com Afastamento</Label>
+                </div>
+                <div className="flex items-center gap-2 mt-8">
+                  <input type="checkbox" id="danos" className="w-4 h-4 cursor-pointer" checked={newEvent.danos_materiais} onChange={e => setNewEvent(p => ({ ...p, danos_materiais: e.target.checked }))} />
+                  <Label htmlFor="danos" className="cursor-pointer">Danos Materiais</Label>
+                </div>
+
                 <div className="space-y-2 md:col-span-2">
                   <Label>Descrição do Evento *</Label>
                   <FastTextarea rows={4} value={newEvent.description} onValueChange={v => setNewEvent(p => ({ ...p, description: v }))} placeholder="Descreva o evento detalhadamente..." />
@@ -832,6 +883,110 @@ export default function Eventos() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Painel Médico e Severidade */}
+      <div className="mt-12 mb-6">
+        <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-foreground border-b pb-2">
+          <AlertTriangle className="w-5 h-5 text-destructive" />
+          Saúde, Gravidade e Ocorrências Médicas
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Top CIDs (Doenças/Lesões)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px]">
+                <ExpandableChart title="Top CIDs">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={analytics.topCids} layout="vertical" margin={{ left: 0, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" vertical={false} />
+                      <XAxis type="number" tick={{ fontSize: 10 }} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={50} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Bar dataKey="value" fill="hsl(0, 68%, 50%)" radius={[0, 4, 4, 0]}>
+                        <LabelList dataKey="value" position="right" style={{ fontSize: '10px' }} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ExpandableChart>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Afastamento</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px]">
+                <ExpandableChart title="Afastamentos">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={analytics.afastamentoData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
+                        {analytics.afastamentoData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: "10px" }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ExpandableChart>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Danos Materiais</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px]">
+                <ExpandableChart title="Danos Materiais">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
+                        {analytics.danosData.map((d, i) => <Cell key={i} fill={d.fill} />)}
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: "10px" }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ExpandableChart>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Top 10 Atestados</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="h-[200px] overflow-y-auto px-4 pb-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="h-8 text-xs">Colaborador</TableHead>
+                      <TableHead className="h-8 text-xs text-right">Qtd</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {analytics.topAtestados.length === 0 ? (
+                      <TableRow><TableCell colSpan={2} className="text-center text-xs text-muted-foreground py-6">Nenhum atestado registrado</TableCell></TableRow>
+                    ) : (
+                      analytics.topAtestados.map((a, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-xs py-2">{a.name}</TableCell>
+                          <TableCell className="text-xs py-2 text-right font-medium">{a.count}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* Events Table */}
       <Card>
