@@ -86,7 +86,7 @@ function ProtectedRoutes() {
         <Route path="/desempenho/competencias" element={<Navigate to="/desempenho?tab=fit-cultural" replace />} />
         <Route path="/desempenho/pdi" element={<Navigate to="/desempenho?tab=pdi" replace />} />
         <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
-        <Route path="/eventos" element={<Eventos />} />
+        <Route path="/eventos" element={<ErrorBoundary><Eventos /></ErrorBoundary>} />
         <Route path="/ausencias" element={<Ausencias />} />
         <Route path="/organograma" element={<Organograma />} />
         <Route path="/sucessao" element={<Sucessao />} />
