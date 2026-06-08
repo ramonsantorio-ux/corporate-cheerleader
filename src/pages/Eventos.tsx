@@ -290,6 +290,12 @@ export default function Eventos() {
         byLetra[ev.shift] = (byLetra[ev.shift] || 0) + 1;
       }
 
+      // SST Metrics
+      if (ev.tipo_acidente) byTipoAcidente[ev.tipo_acidente] = (byTipoAcidente[ev.tipo_acidente] || 0) + 1;
+      if (ev.agente_lesao) byAgenteLesao[ev.agente_lesao] = (byAgenteLesao[ev.agente_lesao] || 0) + 1;
+      if (ev.parte_corpo) byParteCorpo[ev.parte_corpo] = (byParteCorpo[ev.parte_corpo] || 0) + 1;
+      totalCusto += ev.custo || 0;
+
       // By Hour
       if (ev.event_time) {
         const hour = ev.event_time.split(':')[0];
