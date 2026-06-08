@@ -234,73 +234,70 @@ export default function Eventos() {
     const byPerson: Record<string, number> = {};
     const byDayOfWeek: Record<string, number> = {};
     const byYear: Record<string, number> = {};
-    // New SST metrics
     const byTipoAcidente: Record<string, number> = {};
     const byAgenteLesao: Record<string, number> = {};
     const byParteCorpo: Record<string, number> = {};
     const byGenero: Record<string, number> = {};
     const byTurno: Record<string, number> = {};
     const byLetra: Record<string, number> = {};
-    const byHour: Record<string, number> = {};
-    let totalCusto = 0;
     let medicalCount = 0;
 
-    for (let h = 0; h < 24; h++) {
-      byHour[h.toString().padStart(2, '0')] = 0;
+    let daysWithoutAccident: number | 'N/A' = 'N/A';
+    if (events.length > 0) {
+      const lastEventDate = new Date(events[0].event_date);
+      const today = new Date();
+      daysWithoutAccident = Math.floor((today.getTime() - lastEventDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysWithoutAccident < 0) daysWithoutAccident = 0;
     }
 
+    const dayMap: Record<string, number> = { 'domingo': 0, 'segunda-feira': 1, 'terça-feira': 2, 'quarta-feira': 3, 'quinta-feira': 4, 'sexta-feira': 5, 'sábado': 6 };
+    const punchGrid: Record<number, Record<number, number>> = {};
+    for(let i=0; i<7; i++) { punchGrid[i] = {}; for(let j=0; j<24; j++) punchGrid[i][j] = 0; }
+
     for (const ev of events) {
-      // By month
       const ym = ev.event_date.slice(0, 7);
       byMonth[ym] = (byMonth[ym] || 0) + 1;
-
-      // By year
       const yr = ev.event_date.slice(0, 4);
       byYear[yr] = (byYear[yr] || 0) + 1;
 
-      // By equipment
       const equip = ev.equipment && ev.equipment !== 'NA' ? ev.equipment : 'N/A';
       byEquipment[equip] = (byEquipment[equip] || 0) + 1;
 
-      // By location
       if (ev.location) {
         const loc = ev.location.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location.toUpperCase().includes('PROBLEMA PARTICULAR')
           ? 'ATENDIMENTO MÉDICO / PESSOAL' : ev.location.length > 30 ? ev.location.slice(0, 30) + '...' : ev.location;
         byLocation[loc] = (byLocation[loc] || 0) + 1;
       }
 
-      // Medical
       if (ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR')) {
         medicalCount++;
       }
 
-      // By person
       if (ev.involved_name) {
         byPerson[ev.involved_name] = (byPerson[ev.involved_name] || 0) + 1;
       }
 
-      // By day of week
       if (ev.day_of_week) {
         const dow = ev.day_of_week.toLowerCase();
         byDayOfWeek[dow] = (byDayOfWeek[dow] || 0) + 1;
       }
 
-      // By Letra
       if (ev.shift) {
         byLetra[ev.shift] = (byLetra[ev.shift] || 0) + 1;
       }
 
-      // SST Metrics
       if (ev.tipo_acidente) byTipoAcidente[ev.tipo_acidente] = (byTipoAcidente[ev.tipo_acidente] || 0) + 1;
       if (ev.agente_lesao) byAgenteLesao[ev.agente_lesao] = (byAgenteLesao[ev.agente_lesao] || 0) + 1;
       if (ev.parte_corpo) byParteCorpo[ev.parte_corpo] = (byParteCorpo[ev.parte_corpo] || 0) + 1;
-      totalCusto += ev.custo || 0;
 
-      // By Hour
-      if (ev.event_time) {
-        const hour = ev.event_time.split(':')[0];
-        if (hour && !isNaN(parseInt(hour))) {
-          byHour[hour] = (byHour[hour] || 0) + 1;
+      if (ev.day_of_week && ev.event_time) {
+        const d = dayMap[ev.day_of_week.toLowerCase()];
+        const timeMatch = ev.event_time.match(/\b(\d{2}):(\d{2})(?::\d{2})?\b/);
+        if (timeMatch) {
+          const h = parseInt(timeMatch[1]);
+          if (d !== undefined && !isNaN(h)) {
+            punchGrid[d][h] += 1;
+          }
         }
       }
     }
@@ -337,16 +334,32 @@ export default function Eventos() {
     const operationalCount = events.length - medicalCount;
     const turnoData = Object.entries(byTurno || {}).sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value }));
 
-    const heatmapData = Object.entries(byHour).sort(([a], [b]) => a.localeCompare(b)).map(([hour, count]) => ({ hour, count }));
-    const maxHourCount = Math.max(...heatmapData.map(d => d.count), 1);
+    const punchCardData: any[] = [];
+    for (let d = 0; d < 7; d++) {
+      for (let h = 0; h < 24; h++) {
+        if (punchGrid[d][h] > 0) {
+          punchCardData.push({ dayIndex: d, hourIndex: h, count: punchGrid[d][h] });
+        }
+      }
+    }
+
+    const radialLetraData = Object.entries(byLetra).map(([name, value], i) => ({
+      name, value, fill: CHART_COLORS[i % CHART_COLORS.length]
+    }));
 
     return { 
       monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
       medicalCount, operationalCount, total: events.length,
-      topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData, totalCusto,
-      byLetra, heatmapData, maxHourCount
+      topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
+      byLetra, radialLetraData, punchCardData, daysWithoutAccident
     };
   }, [events]);
+
+  const formatTime = (timeStr: string) => {
+    if (!timeStr) return '';
+    const match = timeStr.match(/\b(\d{2}):(\d{2})(?::\d{2})?\b/);
+    return match ? `${match[1]}h${match[2]}` : timeStr;
+  };
 
   return (
     <div className="space-y-6">
@@ -894,7 +907,7 @@ export default function Eventos() {
                     <>
                       <TableRow key={ev.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(expandedRow === ev.id ? null : ev.id)}>
                         <TableCell className="text-xs font-medium">{new Date(ev.event_date + 'T12:00').toLocaleDateString('pt-BR')}</TableCell>
-                        <TableCell className="text-xs">{ev.event_time}</TableCell>
+                        <TableCell className="text-xs">{formatTime(ev.event_time)}</TableCell>
                         <TableCell className="text-xs font-medium">{ev.involved_name}</TableCell>
                         <TableCell className="text-xs hidden md:table-cell">
                           {ev.equipment && ev.equipment !== 'NA' ? (
