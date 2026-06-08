@@ -73,6 +73,11 @@ export default function Eventos() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [equipmentFilter, setEquipmentFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
+  const [timeFilter, setTimeFilter] = useState('all');
+  const [involvedFilter, setInvolvedFilter] = useState('all');
+  const [plateFilter, setPlateFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('all');
   const [period, setPeriod] = useState<PeriodRange>(() => ({
     start: '2024-01-01',
     end: new Date().toISOString().slice(0, 10),
@@ -280,6 +285,12 @@ export default function Eventos() {
     return Array.from(types).sort();
   }, [events]);
 
+  const dateTypes = useMemo(() => Array.from(new Set(events.map(e => e.event_date).filter(Boolean))).sort((a,b)=>b.localeCompare(a)), [events]);
+  const timeTypes = useMemo(() => Array.from(new Set(events.map(e => e.event_time).filter(Boolean))).sort(), [events]);
+  const involvedTypes = useMemo(() => Array.from(new Set(events.map(e => e.involved_name).filter(Boolean))).sort(), [events]);
+  const plateTypes = useMemo(() => Array.from(new Set(events.map(e => e.plate_tag).filter(Boolean).filter(e => e !== 'NA'))).sort(), [events]);
+  const locationTypes = useMemo(() => Array.from(new Set(events.map(e => e.location).filter(Boolean))).sort(), [events]);
+
   // Filtered events
   const filtered = useMemo(() => {
     return events.filter(ev => {
@@ -291,9 +302,14 @@ export default function Eventos() {
         ev.plate_tag.toLowerCase().includes(q);
       const matchEquip = equipmentFilter === 'all' || ev.equipment === equipmentFilter;
       const matchEmployee = !selectedEmployee || ev.involved_name.trim().toLowerCase() === selectedEmployee.nome.trim().toLowerCase();
-      return matchSearch && matchEquip && matchEmployee;
+      const matchDate = dateFilter === 'all' || ev.event_date === dateFilter;
+      const matchTime = timeFilter === 'all' || ev.event_time === timeFilter;
+      const matchInvolved = involvedFilter === 'all' || ev.involved_name === involvedFilter;
+      const matchPlate = plateFilter === 'all' || ev.plate_tag === plateFilter;
+      const matchLocation = locationFilter === 'all' || ev.location === locationFilter;
+      return matchSearch && matchEquip && matchEmployee && matchDate && matchTime && matchInvolved && matchPlate && matchLocation;
     });
-  }, [events, search, equipmentFilter, selectedEmployee]);
+  }, [events, search, equipmentFilter, selectedEmployee, dateFilter, timeFilter, involvedFilter, plateFilter, locationFilter]);
 
   // ========== ANALYTICS ==========
   const analytics = useMemo(() => {
@@ -1034,11 +1050,50 @@ export default function Eventos() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[100px]">Data</TableHead>
-                    <TableHead className="w-[60px]">Hora</TableHead>
-                    <TableHead>Envolvido</TableHead>
+                    <TableHead className="w-[110px]">
+                      <div className="flex items-center justify-between">
+                        Data
+                        <Select value={dateFilter} onValueChange={setDateFilter}>
+                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none focus:ring-0 [&>svg:not(:first-child)]:hidden">
+                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas</SelectItem>
+                            {dateTypes.map(t => <SelectItem key={t} value={t}>{t.split('-').reverse().join('/')}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
+                    <TableHead className="w-[80px]">
+                      <div className="flex items-center justify-between">
+                        Hora
+                        <Select value={timeFilter} onValueChange={setTimeFilter}>
+                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none focus:ring-0 [&>svg:not(:first-child)]:hidden">
+                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas</SelectItem>
+                            {timeTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
+                    <TableHead>
+                      <div className="flex items-center justify-between gap-2 max-w-[150px]">
+                        Envolvido
+                        <Select value={involvedFilter} onValueChange={setInvolvedFilter}>
+                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none focus:ring-0 [&>svg:not(:first-child)]:hidden">
+                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {involvedTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
                     <TableHead className="hidden md:table-cell">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between gap-2 max-w-[150px]">
                         Equipamento
                         <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
                           <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none focus:ring-0 [&>svg:not(:first-child)]:hidden">
@@ -1051,9 +1106,35 @@ export default function Eventos() {
                         </Select>
                       </div>
                     </TableHead>
-                    <TableHead className="hidden md:table-cell">Placa</TableHead>
-                    <TableHead className="hidden lg:table-cell">Local</TableHead>
-                    <TableHead className="w-[100px]">Ações</TableHead>
+                    <TableHead className="hidden lg:table-cell">
+                      <div className="flex items-center justify-between gap-2 max-w-[100px]">
+                        Placa
+                        <Select value={plateFilter} onValueChange={setPlateFilter}>
+                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none focus:ring-0 [&>svg:not(:first-child)]:hidden">
+                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas</SelectItem>
+                            {plateTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      <div className="flex items-center justify-between gap-2 max-w-[150px]">
+                        Local
+                        <Select value={locationFilter} onValueChange={setLocationFilter}>
+                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none focus:ring-0 [&>svg:not(:first-child)]:hidden">
+                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todos</SelectItem>
+                            {locationTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
