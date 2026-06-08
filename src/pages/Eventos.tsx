@@ -79,7 +79,7 @@ export default function Eventos() {
   const [plateFilter, setPlateFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
   const [period, setPeriod] = useState<PeriodRange>(() => ({
-    start: '2024-01-01',
+    start: '2025-08-01',
     end: new Date().toISOString().slice(0, 10),
     label: 'Todo o período',
   }));
