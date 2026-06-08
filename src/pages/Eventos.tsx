@@ -141,7 +141,7 @@ export default function Eventos() {
       error = res.error;
     }
 
-    if (error) { toast.error('Erro ao salvar evento'); return; }
+    if (error) { toast.error(`Erro ao salvar evento: ${error.message}`); return; }
     toast.success('Evento registrado!');
     setDialogOpen(false);
     setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false });
