@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Plus, Search, Pencil, Filter, TrendingUp, TrendingDown, Calendar, Truck, MapPin, User, ChevronDown, ChevronUp, Trash2, Eye, Download, Upload, X } from 'lucide-react';
+import { Upload, Download, Search, Filter, Plus, User, AlertTriangle, TrendingUp, Calendar, Trash2, Eye, FileText, CheckCircle2, ChevronRight, Menu, X, CheckCircle, Clock, Activity, Wrench, Stethoscope, LineChart, Target, Zap, ChevronDown, ChevronUp, MapPin, Truck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -79,6 +79,7 @@ export default function Eventos() {
   const [involvedFilter, setInvolvedFilter] = useState('all');
   const [plateFilter, setPlateFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'operacional' | 'medico'>('all');
   const [period, setPeriod] = useState<PeriodRange>(() => ({
     start: '2025-08-01',
     end: new Date().toISOString().slice(0, 10),
@@ -132,6 +133,12 @@ export default function Eventos() {
     setFuncionarios((fRes.data || []) as any[]);
     setLoading(false);
   }
+
+  const scrollToTable = () => {
+    setTimeout(() => {
+      document.getElementById('events-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   async function handleCreate() {
     if (!newEvent.event_date || !newEvent.description || !newEvent.involved_name) {
@@ -305,14 +312,17 @@ export default function Eventos() {
         ev.plate_tag.toLowerCase().includes(q);
       const matchEquip = equipmentFilter === 'all' || ev.equipment === equipmentFilter;
       const matchEmployee = !selectedEmployee || ev.involved_name.trim().toLowerCase() === selectedEmployee.nome.trim().toLowerCase();
+      const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid;
+      const matchType = typeFilter === 'all' || (typeFilter === 'medico' && isMedical) || (typeFilter === 'operacional' && !isMedical);
+
       const matchDate = dateFilter === 'all' || ev.event_date === dateFilter;
       const matchTime = timeFilter === 'all' || ev.event_time === timeFilter;
       const matchInvolved = involvedFilter === 'all' || ev.involved_name === involvedFilter;
       const matchPlate = plateFilter === 'all' || ev.plate_tag === plateFilter;
       const matchLocation = locationFilter === 'all' || ev.location === locationFilter;
-      return matchSearch && matchEquip && matchEmployee && matchDate && matchTime && matchInvolved && matchPlate && matchLocation;
+      return matchSearch && matchEquip && matchEmployee && matchDate && matchTime && matchInvolved && matchPlate && matchLocation && matchType;
     });
-  }, [events, search, equipmentFilter, selectedEmployee, dateFilter, timeFilter, involvedFilter, plateFilter, locationFilter]);
+  }, [events, search, equipmentFilter, selectedEmployee, dateFilter, timeFilter, involvedFilter, plateFilter, locationFilter, typeFilter]);
 
   // ========== ANALYTICS ==========
   const analytics = useMemo(() => {
@@ -367,7 +377,8 @@ export default function Eventos() {
         byLocation[loc] = (byLocation[loc] || 0) + 1;
       }
 
-      if (ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico) {
+      const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid;
+      if (isMedical) {
         medicalCount++;
       }
 
@@ -661,35 +672,91 @@ export default function Eventos() {
           </button>
         </motion.div>
       )}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-primary">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground font-medium">Total de Eventos</p>
-            <p className="text-3xl font-bold text-foreground mt-1">{analytics.total}</p>
-            <p className="text-xs text-muted-foreground mt-1">no período selecionado</p>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card 
+          className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'all' ? 'bg-primary/10 ring-2 ring-primary ring-offset-2' : 'bg-gradient-to-br from-primary/5 to-transparent'} group`}
+          onClick={() => { setTypeFilter('all'); scrollToTable(); }}
+        >
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Total de Eventos</p>
+                <p className="text-4xl font-black text-foreground mt-2">{analytics.total}</p>
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 font-medium"><Calendar className="w-3.5 h-3.5"/> no período selecionado</p>
+              </div>
+              <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                <Activity className="w-6 h-6" />
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-warning">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground font-medium">Eventos Operacionais</p>
-            <p className="text-3xl font-bold text-foreground mt-1">{analytics.operationalCount}</p>
-            <p className="text-xs text-warning mt-1">{analytics.total ? ((analytics.operationalCount / analytics.total) * 100).toFixed(0) : 0}% do total</p>
+        
+        <Card 
+          className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'operacional' ? 'bg-warning/10 ring-2 ring-warning ring-offset-2' : 'bg-gradient-to-br from-warning/5 to-transparent'} group`}
+          onClick={() => { setTypeFilter('operacional'); scrollToTable(); }}
+        >
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-warning" />
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning/10 rounded-full blur-2xl group-hover:bg-warning/20 transition-colors" />
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Eventos Operacionais</p>
+                <p className="text-4xl font-black text-foreground mt-2">{analytics.operationalCount}</p>
+                <p className="text-xs text-warning mt-2 font-bold bg-warning/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                  <Target className="w-3 h-3" />
+                  {analytics.total ? ((analytics.operationalCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                </p>
+              </div>
+              <div className="p-3 bg-warning/10 rounded-xl text-warning">
+                <Wrench className="w-6 h-6" />
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-destructive">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground font-medium">Atendimento Médico</p>
-            <p className="text-3xl font-bold text-foreground mt-1">{analytics.medicalCount}</p>
-            <p className="text-xs text-destructive mt-1">{analytics.total ? ((analytics.medicalCount / analytics.total) * 100).toFixed(0) : 0}% do total</p>
+
+        <Card 
+          className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'medico' ? 'bg-destructive/10 ring-2 ring-destructive ring-offset-2' : 'bg-gradient-to-br from-destructive/5 to-transparent'} group`}
+          onClick={() => { setTypeFilter('medico'); scrollToTable(); }}
+        >
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-destructive/10 rounded-full blur-2xl group-hover:bg-destructive/20 transition-colors" />
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Atendimento Médico</p>
+                <p className="text-4xl font-black text-foreground mt-2">{analytics.medicalCount}</p>
+                <p className="text-xs text-destructive mt-2 font-bold bg-destructive/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                  <HeartPulse className="w-3 h-3" />
+                  {analytics.total ? ((analytics.medicalCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                </p>
+              </div>
+              <div className="p-3 bg-destructive/10 rounded-xl text-destructive">
+                <Stethoscope className="w-6 h-6" />
+              </div>
+            </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-[hsl(var(--success))]">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground font-medium">Média Mensal</p>
-            <p className="text-3xl font-bold text-foreground mt-1">
-              {analytics.monthTrend.length ? (analytics.total / analytics.monthTrend.length).toFixed(1) : 0}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">eventos/mês</p>
+
+        <Card 
+          className="relative overflow-hidden cursor-default border-none bg-gradient-to-br from-[hsl(var(--success))]/5 to-transparent group"
+        >
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-[hsl(var(--success))]" />
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[hsl(var(--success))]/10 rounded-full blur-2xl group-hover:bg-[hsl(var(--success))]/20 transition-colors" />
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Média Mensal</p>
+                <p className="text-4xl font-black text-foreground mt-2">
+                  {analytics.monthTrend.length ? (analytics.total / analytics.monthTrend.length).toFixed(1) : 0}
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 font-medium"><LineChart className="w-3.5 h-3.5"/> eventos/mês</p>
+              </div>
+              <div className="p-3 bg-[hsl(var(--success))]/10 rounded-xl text-[hsl(var(--success))]">
+                <Zap className="w-6 h-6" />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -1039,10 +1106,17 @@ export default function Eventos() {
       </div>
 
       {/* Events Table */}
-      <Card>
+      <Card id="events-table" className="scroll-mt-24">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">
-            Registro de Eventos ({filtered.length})
+          <CardTitle className="text-sm font-semibold flex items-center justify-between">
+            <span>
+              Registro de Eventos ({filtered.length})
+              {typeFilter !== 'all' && (
+                <span className={`ml-3 text-xs px-2 py-1 rounded-full ${typeFilter === 'operacional' ? 'bg-warning/20 text-warning-foreground' : 'bg-destructive/20 text-destructive-foreground'}`}>
+                  Filtro: {typeFilter === 'operacional' ? 'Eventos Operacionais' : 'Atendimentos Médicos'}
+                </span>
+              )}
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
