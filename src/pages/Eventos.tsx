@@ -897,19 +897,23 @@ export default function Eventos() {
             </CardHeader>
             <CardContent>
               <div className="h-[200px]">
-                <ExpandableChart title="Top CIDs">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={analytics.topCids} layout="vertical" margin={{ left: 0, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" vertical={false} />
-                      <XAxis type="number" tick={{ fontSize: 10 }} />
-                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={50} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" fill="hsl(0, 68%, 50%)" radius={[0, 4, 4, 0]}>
-                        <LabelList dataKey="value" position="right" style={{ fontSize: '10px' }} />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ExpandableChart>
+                {analytics.topCids.length > 0 ? (
+                  <ExpandableChart title="Top CIDs">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.topCids} layout="vertical" margin={{ left: 0, right: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" vertical={false} />
+                        <XAxis type="number" tick={{ fontSize: 10 }} />
+                        <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={50} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="value" fill="hsl(0, 68%, 50%)" radius={[0, 4, 4, 0]}>
+                          <LabelList dataKey="value" position="right" style={{ fontSize: '10px' }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados de CID</div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -920,17 +924,21 @@ export default function Eventos() {
             </CardHeader>
             <CardContent>
               <div className="h-[200px]">
-                <ExpandableChart title="Afastamentos">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={analytics.afastamentoData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
-                        {analytics.afastamentoData.map((d, i) => <Cell key={i} fill={d.fill} />)}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: "10px" }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ExpandableChart>
+                {analytics.afastamentoData.length > 0 ? (
+                  <ExpandableChart title="Afastamentos">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={analytics.afastamentoData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
+                          {analytics.afastamentoData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ fontSize: "10px" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados</div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -941,17 +949,21 @@ export default function Eventos() {
             </CardHeader>
             <CardContent>
               <div className="h-[200px]">
-                <ExpandableChart title="Danos Materiais">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
-                        {analytics.danosData.map((d, i) => <Cell key={i} fill={d.fill} />)}
-                      </Pie>
-                      <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: "10px" }} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </ExpandableChart>
+                {analytics.danosData.length > 0 ? (
+                  <ExpandableChart title="Danos Materiais">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
+                          {analytics.danosData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ fontSize: "10px" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados</div>
+                )}
               </div>
             </CardContent>
           </Card>
