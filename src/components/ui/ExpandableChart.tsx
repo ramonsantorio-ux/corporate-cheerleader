@@ -14,7 +14,7 @@ export function ExpandableChart({ title, description, children }: ExpandableChar
   return (
     <>
       <div 
-        className="relative group w-full h-full min-h-[250px] flex flex-col cursor-pointer rounded-xl transition-all duration-300 hover:bg-muted/10"
+        className="relative group w-full h-full min-h-0 flex flex-col cursor-pointer rounded-xl transition-all duration-300 hover:bg-muted/10"
         onClickCapture={() => setOpen(true)}
         title="Clique para expandir o gráfico"
       >
