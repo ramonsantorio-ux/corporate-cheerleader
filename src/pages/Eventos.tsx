@@ -699,10 +699,10 @@ export default function Eventos() {
         <Card className="border-l-4 border-l-[#4472c4] lg:col-span-2">
           <CardContent className="p-4 flex flex-col justify-center h-full">
             <p className="text-sm font-semibold mb-4">Eventos por Letra</p>
-            <div className="h-[140px] w-full">
+            <div className="h-[220px] w-full">
               <ExpandableChart title="Eventos por Letra">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.letraData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={analytics.letraData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                     <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
