@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Download, Search, Filter, Plus, User, AlertTriangle, TrendingUp, TrendingDown, Calendar, Trash2, Eye, FileText, CheckCircle2, ChevronRight, Menu, X, CheckCircle, Clock, Activity, Wrench, Stethoscope, LineChart, Target, Zap, ChevronDown, ChevronUp, MapPin, Truck, HeartPulse } from 'lucide-react';
+import { Upload, Download, Search, Filter, Plus, User, AlertTriangle, TrendingUp, TrendingDown, Calendar, Trash2, Eye, FileText, CheckCircle2, ChevronRight, Menu, X, CheckCircle, Clock, Activity, Wrench, Stethoscope, LineChart, Target, Zap, ChevronDown, ChevronUp, MapPin, Truck, HeartPulse, Pencil } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
