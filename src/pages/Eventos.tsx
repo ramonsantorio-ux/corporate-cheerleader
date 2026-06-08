@@ -700,20 +700,22 @@ export default function Eventos() {
           <CardContent className="p-4 flex flex-col justify-center h-full">
             <p className="text-sm font-semibold mb-4">Eventos por Letra</p>
             <div className="h-[140px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.letraData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    <LabelList dataKey="value" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
-                    {analytics.letraData?.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <ExpandableChart title="Eventos por Letra">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.letraData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                    <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                      <LabelList dataKey="value" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
+                      {analytics.letraData?.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -728,17 +730,19 @@ export default function Eventos() {
           </CardHeader>
           <CardContent>
             <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]}>
-                    <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <ExpandableChart title="Horário dos Eventos">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                    <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]}>
+                      <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
           </CardContent>
         </Card>
