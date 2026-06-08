@@ -115,17 +115,32 @@ export default function Eventos() {
 
   async function handleCreate() {
     if (!newEvent.event_date || !newEvent.description || !newEvent.involved_name) {
-      toast.error('Preencha data, descrição e nome do envolvido');
+      toast.error('Preencha os campos obrigatórios');
       return;
     }
+
+    const eventToSave = { ...newEvent };
+    
+    // Format event_time specifically for the database (HH:mm:ss or HH:mm)
+    if (eventToSave.event_time) {
+      const match = eventToSave.event_time.match(/\b(\d{2}:\d{2}(?::\d{2})?)\b/);
+      if (match) {
+        eventToSave.event_time = match[1];
+      } else {
+        // Fallback: truncate to prevent the huge string from crashing the insert/update
+        eventToSave.event_time = eventToSave.event_time.substring(0, 8);
+      }
+    }
+
     let error;
     if (editingEvent) {
-      const res = await supabase.from('events').update(newEvent).eq('id', editingEvent.id);
+      const res = await supabase.from('events').update(eventToSave).eq('id', editingEvent.id);
       error = res.error;
     } else {
-      const res = await supabase.from('events').insert(newEvent);
+      const res = await supabase.from('events').insert(eventToSave);
       error = res.error;
     }
+
     if (error) { toast.error('Erro ao salvar evento'); return; }
     toast.success('Evento registrado!');
     setDialogOpen(false);
@@ -622,22 +637,22 @@ export default function Eventos() {
           <CardContent>
             <div className="h-[280px]">
               <ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={analytics.monthTrend}>
-                  <defs>
-                    <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="eventos" stroke="hsl(200, 80%, 38%)" fill="url(#eventGrad)" strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
-</ExpandableChart>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={analytics.monthTrend}>
+                    <defs>
+                      <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area type="monotone" dataKey="eventos" stroke="hsl(200, 80%, 38%)" fill="url(#eventGrad)" strokeWidth={2} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -652,16 +667,16 @@ export default function Eventos() {
           <CardContent>
             <div className="h-[280px]">
               <ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.topEquipment} layout="vertical" margin={{ left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={140} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="value" name="Eventos" fill="hsl(200, 80%, 38%)" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-</ExpandableChart>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.topEquipment} layout="vertical" margin={{ left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={140} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" name="Eventos" fill="hsl(200, 80%, 38%)" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -679,20 +694,20 @@ export default function Eventos() {
           <CardContent>
             <div className="h-[240px]">
               <ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.dayData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="eventos" name="Eventos" radius={[4, 4, 0, 0]}>
-                    {analytics.dayData.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-</ExpandableChart>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.dayData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                    <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="eventos" name="Eventos" radius={[4, 4, 0, 0]}>
+                      {analytics.dayData.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -707,16 +722,16 @@ export default function Eventos() {
           <CardContent>
             <div className="h-[240px]">
               <ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.yearData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                  <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="eventos" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-</ExpandableChart>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.yearData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                    <XAxis dataKey="year" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="eventos" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -731,20 +746,20 @@ export default function Eventos() {
           <CardContent>
             <div className="h-[240px]">
               <ExpandableChart title="Visualização Ampliada">
-<ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={analytics.topLocations} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                    {analytics.topLocations.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={analytics.topLocations} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                      {analytics.topLocations.map((_, i) => (
+                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: "10px" }} formatter={(value, entry, index) => `${value} (${analytics.topLocations[index].value})`} />
                   </PieChart>
-              </ResponsiveContainer>
-</ExpandableChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
-            </CardContent>
+          </CardContent>
         </Card>
       </div>
 
@@ -899,12 +914,12 @@ export default function Eventos() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold">Danos Materiais</CardTitle>
+              <CardTitle className="text-sm font-semibold">Eventos</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[200px]">
                 {analytics.danosData.length > 0 ? (
-                  <ExpandableChart title="Danos Materiais">
+                  <ExpandableChart title="Eventos">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
@@ -1014,7 +1029,7 @@ export default function Eventos() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDetailEvent(ev); }}>
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: ev.event_time, day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0 }); setDialogOpen(true); }}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false }); setDialogOpen(true); }}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteEvent(ev); }}>
