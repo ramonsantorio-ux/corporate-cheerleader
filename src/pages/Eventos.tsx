@@ -723,7 +723,7 @@ export default function Eventos() {
                     dataKey="hourIndex" 
                     name="Horário" 
                     domain={[0, 23]} 
-                    tickFormatter={(tick) => \`\${tick}h\`} 
+                    tickFormatter={(tick) => `${tick}h`} 
                     tick={{ fontSize: 10, fill: '#64748b' }} 
                     axisLine={false} 
                     tickLine={false} 
