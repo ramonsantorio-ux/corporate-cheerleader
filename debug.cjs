@@ -1,29 +1,10 @@
-const puppeteer = require('puppeteer');
+const fs = require('fs');
+const content = fs.readFileSync('src/pages/Eventos.tsx', 'utf8');
 
-(async () => {
-  try {
-    console.log('Iniciando navegador...');
-    const browser = await puppeteer.launch({ headless: 'new' });
-    const page = await browser.newPage();
-    
-    page.on('console', msg => {
-      if (msg.type() === 'error') {
-        console.log('BROWSER CONSOLE ERROR:', msg.text());
-      }
-    });
+// Verificando sintaxe básica ou uso de variáveis não definidas
+let lines = content.split('\n');
+lines.forEach((l, i) => {
+  if (l.includes('analytics.topCids') && !l.includes('topCids')) console.log('Line', i+1, l);
+});
 
-    page.on('pageerror', err => {
-      console.log('BROWSER PAGE ERROR:', err.toString());
-    });
-
-    console.log('Acessando http://localhost:8080/evolucao...');
-    await page.goto('http://localhost:8080/evolucao', { waitUntil: 'networkidle0', timeout: 15000 });
-    
-    await new Promise(r => setTimeout(r, 2000));
-    
-    await browser.close();
-    console.log('Análise concluída.');
-  } catch (err) {
-    console.error('Erro na execução do script:', err);
-  }
-})();
+console.log("Check finished");
