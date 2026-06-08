@@ -239,9 +239,14 @@ export default function Eventos() {
     const byAgenteLesao: Record<string, number> = {};
     const byParteCorpo: Record<string, number> = {};
     const byGenero: Record<string, number> = {};
-    const byTurno: Record<string, number> = {};
+    const byLetra: Record<string, number> = {};
+    const byHour: Record<string, number> = {};
     let totalCusto = 0;
     let medicalCount = 0;
+
+    for (let h = 0; h < 24; h++) {
+      byHour[h.toString().padStart(2, '0')] = 0;
+    }
 
     for (const ev of events) {
       // By month
@@ -278,6 +283,19 @@ export default function Eventos() {
         const dow = ev.day_of_week.toLowerCase();
         byDayOfWeek[dow] = (byDayOfWeek[dow] || 0) + 1;
       }
+
+      // By Letra
+      if (ev.shift) {
+        byLetra[ev.shift] = (byLetra[ev.shift] || 0) + 1;
+      }
+
+      // By Hour
+      if (ev.event_time) {
+        const hour = ev.event_time.split(':')[0];
+        if (hour && !isNaN(parseInt(hour))) {
+          byHour[hour] = (byHour[hour] || 0) + 1;
+        }
+      }
     }
 
     const monthTrend = Object.entries(byMonth).sort(([a], [b]) => a.localeCompare(b)).map(([month, count]) => {
@@ -303,19 +321,21 @@ export default function Eventos() {
     const topLocations = Object.entries(byLocation)
       .sort(([, a], [, b]) => b - a).slice(0, 6)
       .map(([name, value]) => ({ name, value }));
-
     const yearData = Object.entries(byYear).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, eventos: count }));
 
-        const topTipos = Object.entries(byTipoAcidente).map(([name, value]) => ({ name, value }));
-    const topAgentes = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
-    const topPartes = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
+    const tipoAcidenteData = Object.entries(byTipoAcidente).map(([name, value]) => ({ name, value }));
+    const agenteLesaoData = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
+    const parteCorpoData = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
+    const generoData = Object.entries(byGenero).map(([name, value]) => ({ name, value }));
+    const turnoData = Object.entries(byTurno || {}).sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value }));
 
-    const operationalCount = events.length - medicalCount;
+    const heatmapData = Object.entries(byHour).sort(([a], [b]) => a.localeCompare(b)).map(([hour, count]) => ({ hour, count }));
+    const maxHourCount = Math.max(...heatmapData.map(d => d.count), 1);
 
-    return { 
-      monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
-      medicalCount, operationalCount, total: events.length,
-      topTipos, topAgentes, topPartes, byGenero, byTurno, totalCusto
+    return {
+      monthTrend, topEquipment, topPeople, dayData, totalEvents: events.length, medicalCount,
+      tipoAcidenteData, agenteLesaoData, parteCorpoData, generoData, turnoData, totalCusto,
+      byLetra, heatmapData, maxHourCount, byGenero
     };
   }, [events]);
 
@@ -655,22 +675,47 @@ export default function Eventos() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 border-l-[#4472c4]">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground font-medium text-center">Gênero Atingido</p>
-            <div className="flex justify-around items-center mt-2">
-              <div className="text-center"><p className="text-lg font-bold text-blue-600">{analytics.byGenero['Masculino'] || 0}</p><p className="text-[10px]">Masc</p></div>
-              <div className="text-center"><p className="text-lg font-bold text-pink-600">{analytics.byGenero['Feminino'] || 0}</p><p className="text-[10px]">Fem</p></div>
+            <p className="text-xs text-muted-foreground font-medium text-center mb-2">Eventos por Letra</p>
+            <div className="flex justify-around items-center">
+              <div className="text-center"><p className="text-lg font-bold text-[#4472c4]">{analytics.byLetra?.['A Dia'] || 0}</p><p className="text-[10px] text-muted-foreground">A Dia</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-[#eb7d5b]">{analytics.byLetra?.['A Noite'] || 0}</p><p className="text-[10px] text-muted-foreground">A Noite</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-slate-700">{analytics.byLetra?.['B Dia'] || 0}</p><p className="text-[10px] text-muted-foreground">B Dia</p></div>
+              <div className="text-center"><p className="text-lg font-bold text-slate-500">{analytics.byLetra?.['B Noite'] || 0}</p><p className="text-[10px] text-muted-foreground">B Noite</p></div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-orange-500 md:col-span-2">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground font-medium text-center mb-2">Turnos com Mais Eventos</p>
-            <div className="flex justify-around items-center">
-              <div className="text-center"><p className="text-lg font-bold text-orange-500">{analytics.byTurno['Manhã'] || 0}</p><p className="text-[10px]">Manhã</p></div>
-              <div className="text-center"><p className="text-lg font-bold text-yellow-500">{analytics.byTurno['Tarde'] || 0}</p><p className="text-[10px]">Tarde</p></div>
-              <div className="text-center"><p className="text-lg font-bold text-slate-500">{analytics.byTurno['Noite'] || 0}</p><p className="text-[10px]">Noite</p></div>
+      </div>
+
+      <div className="mb-6">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[#eb7d5b]" /> Mapa de Calor: Horário dos Eventos
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-1 overflow-x-auto pb-2">
+              {analytics.heatmapData?.map((data: any, i: number) => {
+                const intensity = data.count / (analytics.maxHourCount || 1);
+                const alpha = intensity === 0 ? 0.05 : 0.2 + (intensity * 0.8);
+                return (
+                  <div key={i} className="flex flex-col flex-1 min-w-[20px] items-center gap-1 group relative">
+                    <div 
+                      className="w-full h-8 rounded-sm transition-all duration-300" 
+                      style={{ 
+                        backgroundColor: data.count > 0 ? `rgba(235, 125, 91, ${alpha})` : '#f1f5f9',
+                        border: data.count > 0 ? `1px solid rgba(235, 125, 91, ${alpha + 0.2})` : '1px solid #e2e8f0'
+                      }}
+                    />
+                    <span className="text-[9px] text-slate-400 font-medium">{data.hour}h</span>
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                      {data.hour}h: {data.count} eventos
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
