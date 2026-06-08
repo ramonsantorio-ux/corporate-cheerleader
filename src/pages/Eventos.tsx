@@ -146,11 +146,26 @@ export default function Eventos() {
       }
     }
 
-    const extraData = { cid: eventToSave.cid, atestado: eventToSave.atestado, afastamento: eventToSave.afastamento, danos_materiais: eventToSave.danos_materiais };
+    const extraData = { 
+      cid: eventToSave.cid, 
+      atestado: eventToSave.atestado, 
+      afastamento: eventToSave.afastamento, 
+      danos_materiais: eventToSave.danos_materiais,
+      tipo_acidente: eventToSave.tipo_acidente,
+      agente_lesao: eventToSave.agente_lesao,
+      parte_corpo: eventToSave.parte_corpo,
+      genero_envolvido: eventToSave.genero_envolvido,
+      custo: eventToSave.custo
+    };
     delete eventToSave.cid;
     delete eventToSave.atestado;
     delete eventToSave.afastamento;
     delete eventToSave.danos_materiais;
+    delete eventToSave.tipo_acidente;
+    delete eventToSave.agente_lesao;
+    delete eventToSave.parte_corpo;
+    delete eventToSave.genero_envolvido;
+    delete eventToSave.custo;
 
     const cleanDesc = (eventToSave.description || '').split('||EXTRA||')[0].trim();
     eventToSave.description = cleanDesc + " ||EXTRA||" + JSON.stringify(extraData);
