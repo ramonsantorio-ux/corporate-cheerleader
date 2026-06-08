@@ -243,16 +243,20 @@ export default function Eventos() {
     let medicalCount = 0;
 
     let daysWithoutAccident: number | 'N/A' = 'N/A';
-    if (events.length > 0) {
-      const lastEventDate = new Date(events[0].event_date);
-      const today = new Date();
-      daysWithoutAccident = Math.floor((today.getTime() - lastEventDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (daysWithoutAccident < 0) daysWithoutAccident = 0;
+    const validPastDates = events
+      .map(ev => new Date(ev.event_date))
+      .filter(d => !isNaN(d.getTime()) && d.getTime() <= new Date().getTime())
+      .sort((a, b) => b.getTime() - a.getTime());
+
+    if (validPastDates.length > 0) {
+      daysWithoutAccident = Math.floor((new Date().getTime() - validPastDates[0].getTime()) / (1000 * 60 * 60 * 24));
+    } else if (events.length > 0) {
+      daysWithoutAccident = 0;
     }
 
     const dayMap: Record<string, number> = { 'domingo': 0, 'segunda-feira': 1, 'terça-feira': 2, 'quarta-feira': 3, 'quinta-feira': 4, 'sexta-feira': 5, 'sábado': 6 };
-    const punchGrid: Record<number, Record<number, number>> = {};
-    for(let i=0; i<7; i++) { punchGrid[i] = {}; for(let j=0; j<24; j++) punchGrid[i][j] = 0; }
+    const hourlyGrid: Record<number, number> = {};
+    for (let h = 0; h < 24; h++) hourlyGrid[h] = 0;
 
     for (const ev of events) {
       const ym = ev.event_date.slice(0, 7);
@@ -290,13 +294,12 @@ export default function Eventos() {
       if (ev.agente_lesao) byAgenteLesao[ev.agente_lesao] = (byAgenteLesao[ev.agente_lesao] || 0) + 1;
       if (ev.parte_corpo) byParteCorpo[ev.parte_corpo] = (byParteCorpo[ev.parte_corpo] || 0) + 1;
 
-      if (ev.day_of_week && ev.event_time) {
-        const d = dayMap[ev.day_of_week.toLowerCase()];
+      if (ev.event_time) {
         const timeMatch = ev.event_time.match(/\b(\d{2}):(\d{2})(?::\d{2})?\b/);
         if (timeMatch) {
           const h = parseInt(timeMatch[1]);
-          if (d !== undefined && !isNaN(h)) {
-            punchGrid[d][h] += 1;
+          if (!isNaN(h)) {
+            hourlyGrid[h] += 1;
           }
         }
       }
@@ -334,24 +337,19 @@ export default function Eventos() {
     const operationalCount = events.length - medicalCount;
     const turnoData = Object.entries(byTurno || {}).sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value }));
 
-    const punchCardData: any[] = [];
-    for (let d = 0; d < 7; d++) {
-      for (let h = 0; h < 24; h++) {
-        if (punchGrid[d][h] > 0) {
-          punchCardData.push({ dayIndex: d, hourIndex: h, count: punchGrid[d][h] });
-        }
-      }
-    }
+    const hourlyData = Object.entries(hourlyGrid).map(([hour, count]) => ({ hour: `${hour}h`, count }));
 
-    const radialLetraData = Object.entries(byLetra).map(([name, value], i) => ({
-      name, value, fill: CHART_COLORS[i % CHART_COLORS.length]
-    }));
+    const letraData = Object.entries(byLetra)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([name, value], i) => ({
+        name, value, fill: CHART_COLORS[i % CHART_COLORS.length]
+      }));
 
     return { 
       monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
       medicalCount, operationalCount, total: events.length,
       topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
-      byLetra, radialLetraData, punchCardData, daysWithoutAccident
+      byLetra, letraData, hourlyData, daysWithoutAccident
     };
   }, [events]);
 
@@ -702,17 +700,17 @@ export default function Eventos() {
             <p className="text-sm font-semibold mb-4">Eventos por Letra</p>
             <div className="h-[140px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart 
-                  innerRadius="30%" 
-                  outerRadius="100%" 
-                  data={analytics.radialLetraData} 
-                  startAngle={180} 
-                  endAngle={0}
-                >
-                  <RadialBar background clockWise={true} dataKey="value" />
-                  <Legend iconSize={10} width={120} height={140} layout="vertical" verticalAlign="middle" wrapperStyle={{ top: 0, right: 0, lineHeight: '24px' }} formatter={(val, entry: any) => <span className="text-xs text-muted-foreground">{val} ({entry.payload?.value})</span>} />
-                  <Tooltip content={<CustomTooltip />} />
-                </RadialBarChart>
+                <BarChart data={analytics.letraData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {analytics.letraData?.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -723,53 +721,19 @@ export default function Eventos() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-[#eb7d5b]" /> Mapa de Frequência (Dias vs Horários)
+              <TrendingUp className="w-4 h-4 text-[#eb7d5b]" /> Horário dos Eventos
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 40 }}>
+                <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                  <XAxis 
-                    type="number" 
-                    dataKey="hourIndex" 
-                    name="Horário" 
-                    domain={[0, 23]} 
-                    tickFormatter={(tick) => `${tick}h`} 
-                    tick={{ fontSize: 10, fill: '#64748b' }} 
-                    axisLine={false} 
-                    tickLine={false} 
-                  />
-                  <YAxis 
-                    type="number" 
-                    dataKey="dayIndex" 
-                    name="Dia" 
-                    domain={[0, 6]} 
-                    tickFormatter={(tick) => ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][tick]} 
-                    tick={{ fontSize: 10, fill: '#64748b' }} 
-                    axisLine={false} 
-                    tickLine={false} 
-                  />
-                  <ZAxis type="number" dataKey="count" range={[50, 400]} />
-                  <Tooltip 
-                    cursor={{ strokeDasharray: '3 3' }} 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        const dayName = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'][data.dayIndex];
-                        return (
-                          <div className="bg-slate-800 text-white text-xs px-3 py-2 rounded-lg shadow-lg">
-                            <p className="font-semibold mb-1">{dayName} às {data.hourIndex}h</p>
-                            <p className="text-emerald-400 font-bold">{data.count} evento(s)</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Scatter name="Frequência" data={analytics.punchCardData} fill="#eb7d5b" fillOpacity={0.7} />
-                </ScatterChart>
+                  <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                  <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
