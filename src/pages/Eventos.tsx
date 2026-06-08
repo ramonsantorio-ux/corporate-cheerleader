@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import PeriodFilter, { getMonthPeriod } from '@/components/filters/PeriodFilter';
 import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import { toast } from 'sonner';
-import {  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, Legend , ScatterChart, Scatter, ZAxis, RadialBarChart, RadialBar } from 'recharts';
+import {  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, Legend , ScatterChart, Scatter, ZAxis, RadialBarChart, RadialBar, LabelList } from 'recharts';
 import * as XLSX from 'xlsx';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
@@ -287,7 +287,8 @@ export default function Eventos() {
       }
 
       if (ev.shift) {
-        byLetra[ev.shift] = (byLetra[ev.shift] || 0) + 1;
+        const shift = ev.shift.trim().toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
+        byLetra[shift] = (byLetra[shift] || 0) + 1;
       }
 
       if (ev.tipo_acidente) byTipoAcidente[ev.tipo_acidente] = (byTipoAcidente[ev.tipo_acidente] || 0) + 1;
@@ -706,6 +707,7 @@ export default function Eventos() {
                   <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
                   <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="value" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
                     {analytics.letraData?.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
                     ))}
@@ -732,7 +734,9 @@ export default function Eventos() {
                   <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                  <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]}>
+                    <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
