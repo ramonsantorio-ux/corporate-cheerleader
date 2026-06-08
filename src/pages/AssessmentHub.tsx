@@ -12,96 +12,96 @@ import DiscTest from './DiscTest';
 import MbtiTest from './MbtiTest';
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-//  DISC â€“ 30 perguntas
+//  DISC – 30 perguntas
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const discQuestions = [
-  { id: 1, text: "Como vocÃª age sob pressÃ£o?", options: [{ letter: "D", text: "Tomo a lideranÃ§a e resolvo rapidamente." }, { letter: "I", text: "Tento manter a equipe motivada e unida." }, { letter: "S", text: "Sigo o planejamento e mantenho a calma." }, { letter: "C", text: "Analiso os dados antes de tomar qualquer decisÃ£o." }] },
-  { id: 2, text: "Em projetos em equipe, vocÃª costuma:", options: [{ letter: "D", text: "Delegar tarefas e focar no prazo." }, { letter: "I", text: "Incentivar as ideias e a comunicaÃ§Ã£o." }, { letter: "S", text: "Apoiar os colegas e garantir harmonia." }, { letter: "C", text: "Garantir que as regras e padrÃµes sejam seguidos." }] },
-  { id: 3, text: "Seu maior motivador no trabalho Ã©:", options: [{ letter: "D", text: "Desafios e resultados." }, { letter: "I", text: "Reconhecimento e interaÃ§Ã£o." }, { letter: "S", text: "Estabilidade e rotina clara." }, { letter: "C", text: "PrecisÃ£o e qualidade." }] },
-  { id: 4, text: "Quando enfrenta um problema complexo, vocÃª:", options: [{ letter: "D", text: "Enfrenta de frente com soluÃ§Ãµes ousadas." }, { letter: "I", text: "Discute com outras pessoas para ter ideias." }, { letter: "S", text: "Busca mÃ©todos que jÃ¡ funcionaram antes." }, { letter: "C", text: "Investiga a fundo todas as variÃ¡veis." }] },
-  { id: 5, text: "Na comunicaÃ§Ã£o, vocÃª prefere:", options: [{ letter: "D", text: "Ser direto e objetivo." }, { letter: "I", text: "Ser expressivo e amigÃ¡vel." }, { letter: "S", text: "Ser paciente e bom ouvinte." }, { letter: "C", text: "Ser detalhista e baseado em fatos." }] },
-  { id: 6, text: "Seu estilo de lideranÃ§a Ã© mais:", options: [{ letter: "D", text: "Comandante e exigente." }, { letter: "I", text: "Inspirador e carismÃ¡tico." }, { letter: "S", text: "Acolhedor e participativo." }, { letter: "C", text: "Exigente com normas e organizado." }] },
-  { id: 7, text: "Como vocÃª lida com mudanÃ§as bruscas?", options: [{ letter: "D", text: "Vejo como uma oportunidade de inovar." }, { letter: "I", text: "Me adapto bem se for algo empolgante." }, { letter: "S", text: "Preciso de tempo para entender o impacto." }, { letter: "C", text: "Quero saber os porquÃªs e as novas regras." }] },
-  { id: 8, text: "Ao tomar decisÃµes importantes, vocÃª:", options: [{ letter: "D", text: "Decide rÃ¡pido e assume os riscos." }, { letter: "I", text: "Pensa em como isso afetarÃ¡ as pessoas." }, { letter: "S", text: "Consulta os envolvidos para consenso." }, { letter: "C", text: "Faz uma anÃ¡lise crÃ­tica de prÃ³s e contras." }] },
-  { id: 9, text: "O que mais te irrita no ambiente de trabalho?", options: [{ letter: "D", text: "LentidÃ£o e falta de iniciativa." }, { letter: "I", text: "Pessimismo e isolamento." }, { letter: "S", text: "Conflitos desnecessÃ¡rios e injustiÃ§as." }, { letter: "C", text: "DesorganizaÃ§Ã£o e erros frequentes." }] },
-  { id: 10, text: "O que as pessoas mais elogiam em vocÃª?", options: [{ letter: "D", text: "Minha coragem e foco." }, { letter: "I", text: "Meu carisma e energia." }, { letter: "S", text: "Minha lealdade e empatia." }, { letter: "C", text: "Minha inteligÃªncia e perfeccionismo." }] },
-  { id: 11, text: "Seu ritmo de trabalho ideal Ã©:", options: [{ letter: "D", text: "Acelerado e cheio de metas." }, { letter: "I", text: "DinÃ¢mico e interativo." }, { letter: "S", text: "Constante e previsÃ­vel." }, { letter: "C", text: "Estruturado e sem pressa excessiva." }] },
-  { id: 12, text: "Como vocÃª reage a crÃ­ticas?", options: [{ letter: "D", text: "Me defendo ou tento provar meu ponto." }, { letter: "I", text: "Levo para o lado pessoal inicialmente." }, { letter: "S", text: "Aceito, mas me sinto inseguro." }, { letter: "C", text: "Analiso se hÃ¡ fundamento lÃ³gico." }] },
-  { id: 13, text: "Qual palavra melhor define vocÃª?", options: [{ letter: "D", text: "Decisivo." }, { letter: "I", text: "Otimista." }, { letter: "S", text: "ConfiÃ¡vel." }, { letter: "C", text: "Preciso." }] },
-  { id: 14, text: "No planejamento de algo novo, vocÃª foca em:", options: [{ letter: "D", text: "O que vamos alcanÃ§ar (o objetivo)." }, { letter: "I", text: "Quem vai participar (as pessoas)." }, { letter: "S", text: "Como vamos fazer (o processo)." }, { letter: "C", text: "Quais sÃ£o os riscos (a seguranÃ§a)." }] },
-  { id: 15, text: "Sua principal forÃ§a em um time Ã©:", options: [{ letter: "D", text: "Impulsionar a aÃ§Ã£o." }, { letter: "I", text: "Gerar entusiasmo." }, { letter: "S", text: "Manter a cooperaÃ§Ã£o." }, { letter: "C", text: "Garantir a excelÃªncia." }] },
-  { id: 16, text: "O que vocÃª prefere evitar?", options: [{ letter: "D", text: "Perder o controle da situaÃ§Ã£o." }, { letter: "I", text: "Ser ignorado ou rejeitado." }, { letter: "S", text: "MudanÃ§as repentinas no escopo." }, { letter: "C", text: "Estar errado ou cometer falhas." }] },
-  { id: 17, text: "Como vocÃª delega tarefas?", options: [{ letter: "D", text: "Dou a ordem e espero resultados." }, { letter: "I", text: "FaÃ§o um pedido animado." }, { letter: "S", text: "Explico com calma e dou suporte." }, { letter: "C", text: "Passo instruÃ§Ãµes extremamente detalhadas." }] },
-  { id: 18, text: "O que mais te atrai em um lÃ­der?", options: [{ letter: "D", text: "Autoridade e visÃ£o." }, { letter: "I", text: "Carisma e acessibilidade." }, { letter: "S", text: "CompreensÃ£o e apoio." }, { letter: "C", text: "LÃ³gica e competÃªncia tÃ©cnica." }] },
-  { id: 19, text: "Quando tem muitas tarefas, vocÃª:", options: [{ letter: "D", text: "Priorizo as mais difÃ­ceis logo." }, { letter: "I", text: "PeÃ§o ajuda para fazer junto com alguÃ©m." }, { letter: "S", text: "FaÃ§o uma de cada vez no meu ritmo." }, { letter: "C", text: "Crio uma planilha ou lista organizada." }] },
-  { id: 20, text: "Sua abordagem para o aprendizado Ã©:", options: [{ letter: "D", text: "Aprender fazendo (tentativa e erro)." }, { letter: "I", text: "Debater com outras pessoas sobre o tema." }, { letter: "S", text: "Ter alguÃ©m me guiando passo a passo." }, { letter: "C", text: "Ler e pesquisar profundamente." }] },
-  { id: 21, text: "Um ambiente ideal de trabalho tem:", options: [{ letter: "D", text: "Muita autonomia e competiÃ§Ã£o saudÃ¡vel." }, { letter: "I", text: "Festas, comemoraÃ§Ãµes e networking." }, { letter: "S", text: "Paz, respeito mÃºtuo e previsibilidade." }, { letter: "C", text: "Regras claras, silÃªncio e organizaÃ§Ã£o." }] },
-  { id: 22, text: "VocÃª se considera uma pessoa mais:", options: [{ letter: "D", text: "Firme e ousada." }, { letter: "I", text: "Falante e persuasiva." }, { letter: "S", text: "Serena e amÃ¡vel." }, { letter: "C", text: "Exata e crÃ­tica." }] },
-  { id: 23, text: "Para te convencer de algo, Ã© preciso:", options: [{ letter: "D", text: "Mostrar os resultados rÃ¡pidos." }, { letter: "I", text: "Contar uma histÃ³ria envolvente." }, { letter: "S", text: "Provar que Ã© seguro e testado." }, { letter: "C", text: "Apresentar fatos e dados concretos." }] },
-  { id: 24, text: "Em uma discussÃ£o, sua postura Ã©:", options: [{ letter: "D", text: "Impor minha opiniÃ£o com veemÃªncia." }, { letter: "I", text: "Tentar contornar com humor." }, { letter: "S", text: "Ceder para evitar estresse maior." }, { letter: "C", text: "Argumentar apenas com base em provas." }] },
-  { id: 25, text: "Como vocÃª lida com regras?", options: [{ letter: "D", text: "Se atrapalham, eu as ignoro." }, { letter: "I", text: "Vejo como guias flexÃ­veis." }, { letter: "S", text: "Respeito para manter a ordem." }, { letter: "C", text: "Sigo rigorosamente, foram feitas para isso." }] },
-  { id: 26, text: "VocÃª costuma focar mais no:", options: [{ letter: "D", text: "Futuro." }, { letter: "I", text: "Presente." }, { letter: "S", text: "Passado." }, { letter: "C", text: "Detalhe do momento." }] },
-  { id: 27, text: "No convÃ­vio social, vocÃª:", options: [{ letter: "D", text: "Gosto de organizar e decidir o que faremos." }, { letter: "I", text: "Sou a alma da festa, falo com todos." }, { letter: "S", text: "Prefiro conversar com conhecidos." }, { letter: "C", text: "Sou mais reservado e observador." }] },
-  { id: 28, text: "Quando as coisas dÃ£o errado, vocÃª:", options: [{ letter: "D", text: "Fico impaciente e exijo aÃ§Ãµes." }, { letter: "I", text: "Fico frustrado, mas logo me animo." }, { letter: "S", text: "Fico triste e tento entender o que falhou." }, { letter: "C", text: "Procuro imediatamente a causa tÃ©cnica do erro." }] },
-  { id: 29, text: "Para reconhecer seu trabalho, vocÃª prefere:", options: [{ letter: "D", text: "PromoÃ§Ã£o ou aumento financeiro." }, { letter: "I", text: "Elogios em pÃºblico." }, { letter: "S", text: "Um agradecimento sincero no privado." }, { letter: "C", text: "Reconhecimento tÃ©cnico da minha competÃªncia." }] },
-  { id: 30, text: "Avaliando um novo colega, vocÃª repara primeiro:", options: [{ letter: "D", text: "Se ele Ã© produtivo e Ã¡gil." }, { letter: "I", text: "Se ele Ã© simpÃ¡tico e amigÃ¡vel." }, { letter: "S", text: "Se ele Ã© educado e prestativo." }, { letter: "C", text: "Se ele Ã© qualificado e pontual." }] }
+  { id: 1, text: "Como você age sob pressão?", options: [{ letter: "D", text: "Tomo a liderança e resolvo rapidamente." }, { letter: "I", text: "Tento manter a equipe motivada e unida." }, { letter: "S", text: "Sigo o planejamento e mantenho a calma." }, { letter: "C", text: "Analiso os dados antes de tomar qualquer decisão." }] },
+  { id: 2, text: "Em projetos em equipe, você costuma:", options: [{ letter: "D", text: "Delegar tarefas e focar no prazo." }, { letter: "I", text: "Incentivar as ideias e a comunicação." }, { letter: "S", text: "Apoiar os colegas e garantir harmonia." }, { letter: "C", text: "Garantir que as regras e padrões sejam seguidos." }] },
+  { id: 3, text: "Seu maior motivador no trabalho é:", options: [{ letter: "D", text: "Desafios e resultados." }, { letter: "I", text: "Reconhecimento e interação." }, { letter: "S", text: "Estabilidade e rotina clara." }, { letter: "C", text: "Precisão e qualidade." }] },
+  { id: 4, text: "Quando enfrenta um problema complexo, você:", options: [{ letter: "D", text: "Enfrenta de frente com soluções ousadas." }, { letter: "I", text: "Discute com outras pessoas para ter ideias." }, { letter: "S", text: "Busca métodos que já funcionaram antes." }, { letter: "C", text: "Investiga a fundo todas as variáveis." }] },
+  { id: 5, text: "Na comunicação, você prefere:", options: [{ letter: "D", text: "Ser direto e objetivo." }, { letter: "I", text: "Ser expressivo e amigável." }, { letter: "S", text: "Ser paciente e bom ouvinte." }, { letter: "C", text: "Ser detalhista e baseado em fatos." }] },
+  { id: 6, text: "Seu estilo de liderança é mais:", options: [{ letter: "D", text: "Comandante e exigente." }, { letter: "I", text: "Inspirador e carismático." }, { letter: "S", text: "Acolhedor e participativo." }, { letter: "C", text: "Exigente com normas e organizado." }] },
+  { id: 7, text: "Como você lida com mudanças bruscas?", options: [{ letter: "D", text: "Vejo como uma oportunidade de inovar." }, { letter: "I", text: "Me adapto bem se for algo empolgante." }, { letter: "S", text: "Preciso de tempo para entender o impacto." }, { letter: "C", text: "Quero saber os porquês e as novas regras." }] },
+  { id: 8, text: "Ao tomar decisões importantes, você:", options: [{ letter: "D", text: "Decide rápido e assume os riscos." }, { letter: "I", text: "Pensa em como isso afetará as pessoas." }, { letter: "S", text: "Consulta os envolvidos para consenso." }, { letter: "C", text: "Faz uma análise crítica de prós e contras." }] },
+  { id: 9, text: "O que mais te irrita no ambiente de trabalho?", options: [{ letter: "D", text: "Lentidão e falta de iniciativa." }, { letter: "I", text: "Pessimismo e isolamento." }, { letter: "S", text: "Conflitos desnecessários e injustiças." }, { letter: "C", text: "Desorganização e erros frequentes." }] },
+  { id: 10, text: "O que as pessoas mais elogiam em você?", options: [{ letter: "D", text: "Minha coragem e foco." }, { letter: "I", text: "Meu carisma e energia." }, { letter: "S", text: "Minha lealdade e empatia." }, { letter: "C", text: "Minha inteligência e perfeccionismo." }] },
+  { id: 11, text: "Seu ritmo de trabalho ideal é:", options: [{ letter: "D", text: "Acelerado e cheio de metas." }, { letter: "I", text: "Dinâmico e interativo." }, { letter: "S", text: "Constante e previsível." }, { letter: "C", text: "Estruturado e sem pressa excessiva." }] },
+  { id: 12, text: "Como você reage a críticas?", options: [{ letter: "D", text: "Me defendo ou tento provar meu ponto." }, { letter: "I", text: "Levo para o lado pessoal inicialmente." }, { letter: "S", text: "Aceito, mas me sinto inseguro." }, { letter: "C", text: "Analiso se há fundamento lógico." }] },
+  { id: 13, text: "Qual palavra melhor define você?", options: [{ letter: "D", text: "Decisivo." }, { letter: "I", text: "Otimista." }, { letter: "S", text: "Confiável." }, { letter: "C", text: "Preciso." }] },
+  { id: 14, text: "No planejamento de algo novo, você foca em:", options: [{ letter: "D", text: "O que vamos alcançar (o objetivo)." }, { letter: "I", text: "Quem vai participar (as pessoas)." }, { letter: "S", text: "Como vamos fazer (o processo)." }, { letter: "C", text: "Quais são os riscos (a segurança)." }] },
+  { id: 15, text: "Sua principal força em um time é:", options: [{ letter: "D", text: "Impulsionar a ação." }, { letter: "I", text: "Gerar entusiasmo." }, { letter: "S", text: "Manter a cooperação." }, { letter: "C", text: "Garantir a excelência." }] },
+  { id: 16, text: "O que você prefere evitar?", options: [{ letter: "D", text: "Perder o controle da situação." }, { letter: "I", text: "Ser ignorado ou rejeitado." }, { letter: "S", text: "Mudanças repentinas no escopo." }, { letter: "C", text: "Estar errado ou cometer falhas." }] },
+  { id: 17, text: "Como você delega tarefas?", options: [{ letter: "D", text: "Dou a ordem e espero resultados." }, { letter: "I", text: "Faço um pedido animado." }, { letter: "S", text: "Explico com calma e dou suporte." }, { letter: "C", text: "Passo instruções extremamente detalhadas." }] },
+  { id: 18, text: "O que mais te atrai em um líder?", options: [{ letter: "D", text: "Autoridade e visão." }, { letter: "I", text: "Carisma e acessibilidade." }, { letter: "S", text: "Compreensão e apoio." }, { letter: "C", text: "Lógica e competência técnica." }] },
+  { id: 19, text: "Quando tem muitas tarefas, você:", options: [{ letter: "D", text: "Priorizo as mais difíceis logo." }, { letter: "I", text: "Peço ajuda para fazer junto com alguém." }, { letter: "S", text: "Faço uma de cada vez no meu ritmo." }, { letter: "C", text: "Crio uma planilha ou lista organizada." }] },
+  { id: 20, text: "Sua abordagem para o aprendizado é:", options: [{ letter: "D", text: "Aprender fazendo (tentativa e erro)." }, { letter: "I", text: "Debater com outras pessoas sobre o tema." }, { letter: "S", text: "Ter alguém me guiando passo a passo." }, { letter: "C", text: "Ler e pesquisar profundamente." }] },
+  { id: 21, text: "Um ambiente ideal de trabalho tem:", options: [{ letter: "D", text: "Muita autonomia e competição saudável." }, { letter: "I", text: "Festas, comemorações e networking." }, { letter: "S", text: "Paz, respeito mútuo e previsibilidade." }, { letter: "C", text: "Regras claras, silêncio e organização." }] },
+  { id: 22, text: "Você se considera uma pessoa mais:", options: [{ letter: "D", text: "Firme e ousada." }, { letter: "I", text: "Falante e persuasiva." }, { letter: "S", text: "Serena e amável." }, { letter: "C", text: "Exata e crítica." }] },
+  { id: 23, text: "Para te convencer de algo, é preciso:", options: [{ letter: "D", text: "Mostrar os resultados rápidos." }, { letter: "I", text: "Contar uma história envolvente." }, { letter: "S", text: "Provar que é seguro e testado." }, { letter: "C", text: "Apresentar fatos e dados concretos." }] },
+  { id: 24, text: "Em uma discussão, sua postura é:", options: [{ letter: "D", text: "Impor minha opinião com veemência." }, { letter: "I", text: "Tentar contornar com humor." }, { letter: "S", text: "Ceder para evitar estresse maior." }, { letter: "C", text: "Argumentar apenas com base em provas." }] },
+  { id: 25, text: "Como você lida com regras?", options: [{ letter: "D", text: "Se atrapalham, eu as ignoro." }, { letter: "I", text: "Vejo como guias flexíveis." }, { letter: "S", text: "Respeito para manter a ordem." }, { letter: "C", text: "Sigo rigorosamente, foram feitas para isso." }] },
+  { id: 26, text: "Você costuma focar mais no:", options: [{ letter: "D", text: "Futuro." }, { letter: "I", text: "Presente." }, { letter: "S", text: "Passado." }, { letter: "C", text: "Detalhe do momento." }] },
+  { id: 27, text: "No convívio social, você:", options: [{ letter: "D", text: "Gosto de organizar e decidir o que faremos." }, { letter: "I", text: "Sou a alma da festa, falo com todos." }, { letter: "S", text: "Prefiro conversar com conhecidos." }, { letter: "C", text: "Sou mais reservado e observador." }] },
+  { id: 28, text: "Quando as coisas dão errado, você:", options: [{ letter: "D", text: "Fico impaciente e exijo ações." }, { letter: "I", text: "Fico frustrado, mas logo me animo." }, { letter: "S", text: "Fico triste e tento entender o que falhou." }, { letter: "C", text: "Procuro imediatamente a causa técnica do erro." }] },
+  { id: 29, text: "Para reconhecer seu trabalho, você prefere:", options: [{ letter: "D", text: "Promoção ou aumento financeiro." }, { letter: "I", text: "Elogios em público." }, { letter: "S", text: "Um agradecimento sincero no privado." }, { letter: "C", text: "Reconhecimento técnico da minha competência." }] },
+  { id: 30, text: "Avaliando um novo colega, você repara primeiro:", options: [{ letter: "D", text: "Se ele é produtivo e ágil." }, { letter: "I", text: "Se ele é simpático e amigável." }, { letter: "S", text: "Se ele é educado e prestativo." }, { letter: "C", text: "Se ele é qualificado e pontual." }] }
 ];
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-//  MBTI â€“ 20 perguntas (pares dicotÃ´micos)
+//  MBTI – 20 perguntas (pares dicotômicos)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const mbtiQuestions = [
-  { id: 1, pair: "EI", text: "Em situaÃ§Ãµes sociais vocÃª:", A: { letter: "E", text: "Gosta de estar rodeado de pessoas e fica energizado com isso." }, B: { letter: "I", text: "Prefere momentos de reflexÃ£o e recarrega sozinho." } },
-  { id: 2, pair: "EI", text: "Quando toma decisÃµes difÃ­ceis:", A: { letter: "E", text: "Fala sobre isso com amigos para processar." }, B: { letter: "I", text: "Prefere refletir internamente antes de falar." } },
-  { id: 3, pair: "EI", text: "Em reuniÃµes, vocÃª costuma:", A: { letter: "E", text: "Participar ativamente e pensar em voz alta." }, B: { letter: "I", text: "Ouvir antes de falar e preferir contribuir por escrito." } },
+  { id: 1, pair: "EI", text: "Em situações sociais você:", A: { letter: "E", text: "Gosta de estar rodeado de pessoas e fica energizado com isso." }, B: { letter: "I", text: "Prefere momentos de reflexão e recarrega sozinho." } },
+  { id: 2, pair: "EI", text: "Quando toma decisões difíceis:", A: { letter: "E", text: "Fala sobre isso com amigos para processar." }, B: { letter: "I", text: "Prefere refletir internamente antes de falar." } },
+  { id: 3, pair: "EI", text: "Em reuniões, você costuma:", A: { letter: "E", text: "Participar ativamente e pensar em voz alta." }, B: { letter: "I", text: "Ouvir antes de falar e preferir contribuir por escrito." } },
   { id: 4, pair: "EI", text: "No final de uma semana intensa com pessoas:", A: { letter: "E", text: "Me sinto energizado e com vontade de continuar." }, B: { letter: "I", text: "Me sinto drenado e preciso de tempo sozinho." } },
-  { id: 5, pair: "SN", text: "Ao aprender algo novo, vocÃª prefere:", A: { letter: "S", text: "Exemplos prÃ¡ticos, passo a passo e hands-on." }, B: { letter: "N", text: "Entender o conceito geral e o 'grande quadro' primeiro." } },
-  { id: 6, pair: "SN", text: "VocÃª confia mais em:", A: { letter: "S", text: "Fatos concretos e experiÃªncias passadas." }, B: { letter: "N", text: "IntuiÃ§Ã£o e possibilidades futuras." } },
-  { id: 7, pair: "SN", text: "Ao descrever algo, vocÃª foca em:", A: { letter: "S", text: "Os detalhes e a sequÃªncia exata dos fatos." }, B: { letter: "N", text: "PadrÃµes, metÃ¡foras e o significado geral." } },
-  { id: 8, pair: "SN", text: "Na resoluÃ§Ã£o de problemas, vocÃª prefere:", A: { letter: "S", text: "SoluÃ§Ãµes testadas e comprovadas." }, B: { letter: "N", text: "SoluÃ§Ãµes criativas e inovadoras, mesmo sem garantia." } },
-  { id: 9, pair: "TF", text: "Ao dar um feedback, vocÃª:", A: { letter: "T", text: "Prioriza ser honesto e direto, mesmo que doa." }, B: { letter: "F", text: "Considera muito como a pessoa vai se sentir ao receber." } },
-  { id: 10, pair: "TF", text: "Em uma discussÃ£o, vocÃª geralmente:", A: { letter: "T", text: "Foca na lÃ³gica e nos fatos, independente das emoÃ§Ãµes." }, B: { letter: "F", text: "Considera os sentimentos e o impacto nas relaÃ§Ãµes." } },
-  { id: 11, pair: "TF", text: "Ao ver injustiÃ§a, vocÃª reage:", A: { letter: "T", text: "Analisando o que Ã© certo segundo as regras." }, B: { letter: "F", text: "Se afetando emocionalmente e defendendo a pessoa." } },
-  { id: 12, pair: "TF", text: "VocÃª se orgulha mais de:", A: { letter: "T", text: "Ser competente, eficiente e lÃ³gico." }, B: { letter: "F", text: "Ser empÃ¡tico, prestativo e harmonioso." } },
-  { id: 13, pair: "JP", text: "No seu dia a dia, vocÃª prefere:", A: { letter: "J", text: "Planejar antecipadamente e seguir listas." }, B: { letter: "P", text: "Manter as opÃ§Ãµes abertas e ser espontÃ¢neo." } },
-  { id: 14, pair: "JP", text: "Prazo final:", A: { letter: "J", text: "Me incomoda muito deixar para Ãºltima hora." }, B: { letter: "P", text: "Funciono bem sob pressÃ£o na Ãºltima hora." } },
-  { id: 15, pair: "JP", text: "Seu ambiente de trabalho ideal Ã©:", A: { letter: "J", text: "Estruturado, com rotinas e processos claros." }, B: { letter: "P", text: "FlexÃ­vel, com espaÃ§o para adaptar conforme a situaÃ§Ã£o." } },
-  { id: 16, pair: "JP", text: "Ao terminar um projeto, vocÃª sente:", A: { letter: "J", text: "AlÃ­vio e satisfaÃ§Ã£o em finalizar e segurar ao prÃ³ximo." }, B: { letter: "P", text: "Ã€s vezes vontade de melhorar mais antes de entregar." } },
-  { id: 17, pair: "EI", text: "Conhecer novas pessoas te:", A: { letter: "E", text: "Anima e energiza." }, B: { letter: "I", text: "Cansa e exige esforÃ§o extra." } },
-  { id: 18, pair: "SN", text: "Futuro para vocÃª Ã©:", A: { letter: "S", text: "O resultado de escolhas prÃ¡ticas que faÃ§o hoje." }, B: { letter: "N", text: "Cheio de possibilidades e instigante de imaginar." } },
-  { id: 19, pair: "TF", text: "Na hora de criticar alguÃ©m:", A: { letter: "T", text: "Vou direto ao ponto, a verdade Ã© mais importante." }, B: { letter: "F", text: "Escolho cuidadosamente as palavras para nÃ£o magoar." } },
-  { id: 20, pair: "JP", text: "MudanÃ§a de planos de Ãºltima hora:", A: { letter: "J", text: "Me causa stress e desconforto." }, B: { letter: "P", text: "Encaro com tranquilidade e atÃ© gosto da novidade." } },
+  { id: 5, pair: "SN", text: "Ao aprender algo novo, você prefere:", A: { letter: "S", text: "Exemplos práticos, passo a passo e hands-on." }, B: { letter: "N", text: "Entender o conceito geral e o 'grande quadro' primeiro." } },
+  { id: 6, pair: "SN", text: "Você confia mais em:", A: { letter: "S", text: "Fatos concretos e experiências passadas." }, B: { letter: "N", text: "Intuição e possibilidades futuras." } },
+  { id: 7, pair: "SN", text: "Ao descrever algo, você foca em:", A: { letter: "S", text: "Os detalhes e a sequência exata dos fatos." }, B: { letter: "N", text: "Padrões, metáforas e o significado geral." } },
+  { id: 8, pair: "SN", text: "Na resolução de problemas, você prefere:", A: { letter: "S", text: "Soluções testadas e comprovadas." }, B: { letter: "N", text: "Soluções criativas e inovadoras, mesmo sem garantia." } },
+  { id: 9, pair: "TF", text: "Ao dar um feedback, você:", A: { letter: "T", text: "Prioriza ser honesto e direto, mesmo que doa." }, B: { letter: "F", text: "Considera muito como a pessoa vai se sentir ao receber." } },
+  { id: 10, pair: "TF", text: "Em uma discussão, você geralmente:", A: { letter: "T", text: "Foca na lógica e nos fatos, independente das emoções." }, B: { letter: "F", text: "Considera os sentimentos e o impacto nas relações." } },
+  { id: 11, pair: "TF", text: "Ao ver injustiça, você reage:", A: { letter: "T", text: "Analisando o que é certo segundo as regras." }, B: { letter: "F", text: "Se afetando emocionalmente e defendendo a pessoa." } },
+  { id: 12, pair: "TF", text: "Você se orgulha mais de:", A: { letter: "T", text: "Ser competente, eficiente e lógico." }, B: { letter: "F", text: "Ser empático, prestativo e harmonioso." } },
+  { id: 13, pair: "JP", text: "No seu dia a dia, você prefere:", A: { letter: "J", text: "Planejar antecipadamente e seguir listas." }, B: { letter: "P", text: "Manter as opções abertas e ser espontâneo." } },
+  { id: 14, pair: "JP", text: "Prazo final:", A: { letter: "J", text: "Me incomoda muito deixar para última hora." }, B: { letter: "P", text: "Funciono bem sob pressão na última hora." } },
+  { id: 15, pair: "JP", text: "Seu ambiente de trabalho ideal é:", A: { letter: "J", text: "Estruturado, com rotinas e processos claros." }, B: { letter: "P", text: "Flexível, com espaço para adaptar conforme a situação." } },
+  { id: 16, pair: "JP", text: "Ao terminar um projeto, você sente:", A: { letter: "J", text: "Alívio e satisfação em finalizar e segurar ao próximo." }, B: { letter: "P", text: "Ã€s vezes vontade de melhorar mais antes de entregar." } },
+  { id: 17, pair: "EI", text: "Conhecer novas pessoas te:", A: { letter: "E", text: "Anima e energiza." }, B: { letter: "I", text: "Cansa e exige esforço extra." } },
+  { id: 18, pair: "SN", text: "Futuro para você é:", A: { letter: "S", text: "O resultado de escolhas práticas que faço hoje." }, B: { letter: "N", text: "Cheio de possibilidades e instigante de imaginar." } },
+  { id: 19, pair: "TF", text: "Na hora de criticar alguém:", A: { letter: "T", text: "Vou direto ao ponto, a verdade é mais importante." }, B: { letter: "F", text: "Escolho cuidadosamente as palavras para não magoar." } },
+  { id: 20, pair: "JP", text: "Mudança de planos de última hora:", A: { letter: "J", text: "Me causa stress e desconforto." }, B: { letter: "P", text: "Encaro com tranquilidade e até gosto da novidade." } },
 ];
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-//  Big Five (OCEAN) â€“ 25 perguntas (escala 1â€“5)
+//  Big Five (OCEAN) – 25 perguntas (escala 1–5)
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const bigFiveQuestions = [
   { id: 1, dim: "O", text: "Gosto de explorar novas ideias e conceitos abstratos." },
-  { id: 2, dim: "O", text: "Tenho muita imaginaÃ§Ã£o e gosto de artes, mÃºsica ou literatura." },
-  { id: 3, dim: "O", text: "Prefiro rotinas estabelecidas a experiÃªncias completamente novas." },
-  { id: 4, dim: "O", text: "Acho fascinante aprender sobre assuntos fora da minha Ã¡rea." },
-  { id: 5, dim: "O", text: "Tenho pensamentos incomuns e originais com frequÃªncia." },
+  { id: 2, dim: "O", text: "Tenho muita imaginação e gosto de artes, música ou literatura." },
+  { id: 3, dim: "O", text: "Prefiro rotinas estabelecidas a experiências completamente novas." },
+  { id: 4, dim: "O", text: "Acho fascinante aprender sobre assuntos fora da minha área." },
+  { id: 5, dim: "O", text: "Tenho pensamentos incomuns e originais com frequência." },
   { id: 6, dim: "C", text: "Sou organizado e costumo fazer listas e planejamentos." },
   { id: 7, dim: "C", text: "Entrego tarefas sempre no prazo e raramente preciso de lembretes." },
-  { id: 8, dim: "C", text: "Por vezes sou descuidado com detalhes e distraÃ­do." },
-  { id: 9, dim: "C", text: "Tenho autodisciplina e persisto atÃ© concluir o que comeÃ§o." },
-  { id: 10, dim: "C", text: "Trabalho duro mesmo quando a tarefa nÃ£o Ã© estimulante." },
-  { id: 11, dim: "E", text: "Me sinto confortÃ¡vel em festas e eventos com pessoas desconhecidas." },
-  { id: 12, dim: "E", text: "Costumo tomar a iniciativa e assumir o papel de lÃ­der." },
-  { id: 13, dim: "E", text: "Prefiro quietude e momentos a sÃ³s do que grandes grupos." },
+  { id: 8, dim: "C", text: "Por vezes sou descuidado com detalhes e distraído." },
+  { id: 9, dim: "C", text: "Tenho autodisciplina e persisto até concluir o que começo." },
+  { id: 10, dim: "C", text: "Trabalho duro mesmo quando a tarefa não é estimulante." },
+  { id: 11, dim: "E", text: "Me sinto confortável em festas e eventos com pessoas desconhecidas." },
+  { id: 12, dim: "E", text: "Costumo tomar a iniciativa e assumir o papel de líder." },
+  { id: 13, dim: "E", text: "Prefiro quietude e momentos a sós do que grandes grupos." },
   { id: 14, dim: "E", text: "Me sinto cheio de energia e entusiasmo na maior parte do tempo." },
-  { id: 15, dim: "E", text: "Falo muito e gosto de estar no centro das atenÃ§Ãµes." },
-  { id: 16, dim: "A", text: "Sinto compaixÃ£o genuÃ­na pelas dificuldades dos outros." },
+  { id: 15, dim: "E", text: "Falo muito e gosto de estar no centro das atenções." },
+  { id: 16, dim: "A", text: "Sinto compaixão genuína pelas dificuldades dos outros." },
   { id: 17, dim: "A", text: "Evito conflitos e prefiro ceder do que discutir." },
   { id: 18, dim: "A", text: "Ã€s vezes sou rude e direto ao ponto de magoar as pessoas." },
   { id: 19, dim: "A", text: "Tenho interesse sincero no bem-estar das pessoas ao meu redor." },
-  { id: 20, dim: "A", text: "Costumo confiar nas pessoas e assumo boas intenÃ§Ãµes delas." },
+  { id: 20, dim: "A", text: "Costumo confiar nas pessoas e assumo boas intenções delas." },
   { id: 21, dim: "N", text: "Me preocupo frequentemente com coisas que podem dar errado." },
   { id: 22, dim: "N", text: "Fico facilmente estressado quando tenho muitas tarefas." },
-  { id: 23, dim: "N", text: "Raramente fico triste ou ansioso por situaÃ§Ãµes cotidianas." },
-  { id: 24, dim: "N", text: "Ã€s vezes me sinto inseguro e questiono minhas prÃ³prias capacidades." },
-  { id: 25, dim: "N", text: "Minhas emoÃ§Ãµes oscilam bastante ao longo do dia." },
+  { id: 23, dim: "N", text: "Raramente fico triste ou ansioso por situações cotidianas." },
+  { id: 24, dim: "N", text: "Ã€s vezes me sinto inseguro e questiono minhas próprias capacidades." },
+  { id: 25, dim: "N", text: "Minhas emoções oscilam bastante ao longo do dia." },
 ];
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -110,31 +110,31 @@ const bigFiveQuestions = [
 const discDescriptions: Record<string, { title: string; desc: string; strengths: string[]; weaknesses: string[]; communication: string }> = {
   D: {
     title: "Dominante (Executor)",
-    desc: "Focados em resultados, competitivos e diretos. Adoram desafios, assumir o controle e tomar decisÃµes rÃ¡pidas sob pressÃ£o.",
-    strengths: ["Foco em resultados e metas", "Tomada de decisÃ£o rÃ¡pida", "Coragem para assumir riscos", "AutoconfianÃ§a e assertividade"],
-    weaknesses: ["Pode ser autoritÃ¡rio ou impaciente", "TendÃªncia a ignorar detalhes", "Pode atropelar os sentimentos alheios"],
-    communication: "Seja direto, breve e foque nos resultados. Evite excesso de detalhes e vÃ¡ direto ao ponto."
+    desc: "Focados em resultados, competitivos e diretos. Adoram desafios, assumir o controle e tomar decisões rápidas sob pressão.",
+    strengths: ["Foco em resultados e metas", "Tomada de decisão rápida", "Coragem para assumir riscos", "Autoconfiança e assertividade"],
+    weaknesses: ["Pode ser autoritário ou impaciente", "Tendência a ignorar detalhes", "Pode atropelar os sentimentos alheios"],
+    communication: "Seja direto, breve e foque nos resultados. Evite excesso de detalhes e vá direto ao ponto."
   },
   I: {
     title: "Influente (Comunicador)",
-    desc: "SociÃ¡veis, entusiastas e persuasivos. Focam nas pessoas, adoram interagir e trazem muita energia criativa ao ambiente.",
-    strengths: ["Carisma e alto poder de persuasÃ£o", "Otimismo contagiante", "Habilidade de engajar pessoas", "Criatividade e improvisaÃ§Ã£o"],
-    weaknesses: ["Pode perder o foco facilmente", "DesorganizaÃ§Ã£o com prazos", "Dificuldade com rotinas rÃ­gidas"],
-    communication: "Seja amigÃ¡vel e demonstre entusiasmo. Permita tempo para interaÃ§Ãµes sociais e crie um ambiente descontraÃ­do."
+    desc: "Sociáveis, entusiastas e persuasivos. Focam nas pessoas, adoram interagir e trazem muita energia criativa ao ambiente.",
+    strengths: ["Carisma e alto poder de persuasão", "Otimismo contagiante", "Habilidade de engajar pessoas", "Criatividade e improvisação"],
+    weaknesses: ["Pode perder o foco facilmente", "Desorganização com prazos", "Dificuldade com rotinas rígidas"],
+    communication: "Seja amigável e demonstre entusiasmo. Permita tempo para interações sociais e crie um ambiente descontraído."
   },
   S: {
-    title: "EstÃ¡vel (Planejador)",
-    desc: "Pacientes, confiÃ¡veis e empÃ¡ticos. Valorizam a estabilidade, a harmonia e sÃ£o excelentes no trabalho em equipe a longo prazo.",
-    strengths: ["Lealdade extrema", "Ã“timos ouvintes e conselheiros", "Trabalho em equipe colaborativo", "PaciÃªncia e consistÃªncia"],
-    weaknesses: ["ResistÃªncia a mudanÃ§as bruscas", "Dificuldade em dizer 'nÃ£o'", "Pode ser indeciso sob pressÃ£o extrema"],
-    communication: "Seja calmo, paciente e explique as coisas passo a passo. DÃª tempo para processarem mudanÃ§as e evite pressÃµes repentinas."
+    title: "Estável (Planejador)",
+    desc: "Pacientes, confiáveis e empáticos. Valorizam a estabilidade, a harmonia e são excelentes no trabalho em equipe a longo prazo.",
+    strengths: ["Lealdade extrema", "Ã“timos ouvintes e conselheiros", "Trabalho em equipe colaborativo", "Paciência e consistência"],
+    weaknesses: ["Resistência a mudanças bruscas", "Dificuldade em dizer 'não'", "Pode ser indeciso sob pressão extrema"],
+    communication: "Seja calmo, paciente e explique as coisas passo a passo. Dê tempo para processarem mudanças e evite pressões repentinas."
   },
   C: {
     title: "Conforme (Analista)",
-    desc: "AnalÃ­ticos, detalhistas e precisos. Buscam qualidade e perfeiÃ§Ã£o baseando-se em fatos, dados lÃ³gicos e processos claros.",
-    strengths: ["Alta precisÃ£o e foco na qualidade", "Pensamento lÃ³gico e analÃ­tico", "OrganizaÃ§Ã£o extrema", "Habilidade de resolver problemas complexos"],
-    weaknesses: ["Perfeccionismo que pode gerar atrasos", "Pode ser muito crÃ­tico com os outros", "Dificuldade em lidar com ambiguidades"],
-    communication: "Foque em dados, fatos e processos lÃ³gicos. ForneÃ§a detalhes preferencialmente por escrito. Evite apelos puramente emocionais."
+    desc: "Analíticos, detalhistas e precisos. Buscam qualidade e perfeição baseando-se em fatos, dados lógicos e processos claros.",
+    strengths: ["Alta precisão e foco na qualidade", "Pensamento lógico e analítico", "Organização extrema", "Habilidade de resolver problemas complexos"],
+    weaknesses: ["Perfeccionismo que pode gerar atrasos", "Pode ser muito crítico com os outros", "Dificuldade em lidar com ambiguidades"],
+    communication: "Foque em dados, fatos e processos lógicos. Forneça detalhes preferencialmente por escrito. Evite apelos puramente emocionais."
   }
 };
 
@@ -142,22 +142,22 @@ const discDescriptions: Record<string, { title: string; desc: string; strengths:
 //  Resultados MBTI
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const mbtiDescriptions: Record<string, { title: string; desc: string; traits: string[] }> = {
-  ENTJ: { title: "Comandante", desc: "LÃ­deres natos com visÃ£o estratÃ©gica e alto poder de execuÃ§Ã£o.", traits: ["Decisivo", "EstratÃ©gico", "Ambicioso"] },
-  ENTP: { title: "Debatedor",  desc: "Pensadores criativos que adoram desafiar ideias estabelecidas.", traits: ["Criativo", "AnalÃ­tico", "Debates"] },
-  ENFJ: { title: "Protagonista", desc: "CarismÃ¡ticos e inspiradores, focados em desenvolver as pessoas.", traits: ["EmpÃ¡tico", "Inspirador", "Comunicativo"] },
-  ENFP: { title: "CampeÃ£o", desc: "Entusiastas criativos com uma energia contagiante.", traits: ["Entusiasmado", "Criativo", "SociÃ¡vel"] },
-  ESTJ: { title: "Executivo", desc: "GuardiÃµes da tradiÃ§Ã£o, comprometidos com ordem e resultados.", traits: ["Organizado", "Direto", "ConfiÃ¡vel"] },
-  ESTP: { title: "Empreendedor", desc: "EnÃ©rgicos e prÃ¡ticos, adoram aÃ§Ã£o e desafios imediatos.", traits: ["DinÃ¢mico", "Ousado", "AdaptÃ¡vel"] },
-  ESFJ: { title: "CÃ´nsul", desc: "Cuidadosos e sociÃ¡veis, constroem harmonia e comunidade.", traits: ["Generoso", "SociÃ¡vel", "Leal"] },
-  ESFP: { title: "Animador", desc: "EspontÃ¢neos e entusiasmados, tornam tudo mais divertido.", traits: ["Divertido", "EspontÃ¢neo", "SociÃ¡vel"] },
-  INTJ: { title: "Arquiteto", desc: "Pensadores independentes com planos ambiciosos de longo prazo.", traits: ["AnalÃ­tico", "EstratÃ©gico", "Independente"] },
-  INTP: { title: "Pensador",  desc: "Inventores inovadores com sede insaciÃ¡vel de conhecimento.", traits: ["LÃ³gico", "Inovador", "Curioso"] },
-  INFJ: { title: "Advogado",  desc: "Idealistas raros, comprometidos com seu sistema de valores.", traits: ["VisionÃ¡rio", "EmpÃ¡tico", "Reservado"] },
-  INFP: { title: "Mediador",  desc: "Idealistas poÃ©ticos, guiados por seus valores profundos.", traits: ["Criativo", "SensÃ­vel", "Idealista"] },
-  ISTJ: { title: "LogÃ­stico", desc: "ConfiÃ¡veis e metÃ³dicos, com forte Ã©tica de trabalho.", traits: ["ResponsÃ¡vel", "Detalhista", "Tradicional"] },
-  ISTP: { title: "Virtuoso",  desc: "Experimentadores ousados que adoram resolver problemas prÃ¡ticos.", traits: ["Habilidoso", "Racional", "Reservado"] },
-  ISFJ: { title: "Defensor",  desc: "Dedicados e calorosos, sempre prontos para proteger os outros.", traits: ["Dedicado", "Humilde", "ConfiÃ¡vel"] },
-  ISFP: { title: "Aventureiro", desc: "Artistas flexÃ­veis, sempre prontos para explorar e sentir.", traits: ["ArtÃ­stico", "Gentil", "AdaptÃ¡vel"] },
+  ENTJ: { title: "Comandante", desc: "Líderes natos com visão estratégica e alto poder de execução.", traits: ["Decisivo", "Estratégico", "Ambicioso"] },
+  ENTP: { title: "Debatedor",  desc: "Pensadores criativos que adoram desafiar ideias estabelecidas.", traits: ["Criativo", "Analítico", "Debates"] },
+  ENFJ: { title: "Protagonista", desc: "Carismáticos e inspiradores, focados em desenvolver as pessoas.", traits: ["Empático", "Inspirador", "Comunicativo"] },
+  ENFP: { title: "Campeão", desc: "Entusiastas criativos com uma energia contagiante.", traits: ["Entusiasmado", "Criativo", "Sociável"] },
+  ESTJ: { title: "Executivo", desc: "Guardiões da tradição, comprometidos com ordem e resultados.", traits: ["Organizado", "Direto", "Confiável"] },
+  ESTP: { title: "Empreendedor", desc: "Enérgicos e práticos, adoram ação e desafios imediatos.", traits: ["Dinâmico", "Ousado", "Adaptável"] },
+  ESFJ: { title: "Cônsul", desc: "Cuidadosos e sociáveis, constroem harmonia e comunidade.", traits: ["Generoso", "Sociável", "Leal"] },
+  ESFP: { title: "Animador", desc: "Espontâneos e entusiasmados, tornam tudo mais divertido.", traits: ["Divertido", "Espontâneo", "Sociável"] },
+  INTJ: { title: "Arquiteto", desc: "Pensadores independentes com planos ambiciosos de longo prazo.", traits: ["Analítico", "Estratégico", "Independente"] },
+  INTP: { title: "Pensador",  desc: "Inventores inovadores com sede insaciável de conhecimento.", traits: ["Lógico", "Inovador", "Curioso"] },
+  INFJ: { title: "Advogado",  desc: "Idealistas raros, comprometidos com seu sistema de valores.", traits: ["Visionário", "Empático", "Reservado"] },
+  INFP: { title: "Mediador",  desc: "Idealistas poéticos, guiados por seus valores profundos.", traits: ["Criativo", "Sensível", "Idealista"] },
+  ISTJ: { title: "Logístico", desc: "Confiáveis e metódicos, com forte ética de trabalho.", traits: ["Responsável", "Detalhista", "Tradicional"] },
+  ISTP: { title: "Virtuoso",  desc: "Experimentadores ousados que adoram resolver problemas práticos.", traits: ["Habilidoso", "Racional", "Reservado"] },
+  ISFJ: { title: "Defensor",  desc: "Dedicados e calorosos, sempre prontos para proteger os outros.", traits: ["Dedicado", "Humilde", "Confiável"] },
+  ISFP: { title: "Aventureiro", desc: "Artistas flexíveis, sempre prontos para explorar e sentir.", traits: ["Artístico", "Gentil", "Adaptável"] },
 };
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -198,7 +198,7 @@ export default function AssessmentHub() {
     Object.values(answers).forEach(v => { if(v==='D')d++; if(v==='I')i++; if(v==='S')s++; if(v==='C')c++; });
     const total=30;
     const result = { D: Math.round((d/total)*100), I: Math.round((i/total)*100), S: Math.round((s/total)*100), C: Math.round((c/total)*100),
-      dominant: [{letter:'D',val:d,title:'Dominante'},{letter:'I',val:i,title:'Influente'},{letter:'S',val:s,title:'EstÃ¡vel'},{letter:'C',val:c,title:'Conforme'}].sort((a,b)=>b.val-a.val)[0] };
+      dominant: [{letter:'D',val:d,title:'Dominante'},{letter:'I',val:i,title:'Influente'},{letter:'S',val:s,title:'Estável'},{letter:'C',val:c,title:'Conforme'}].sort((a,b)=>b.val-a.val)[0] };
     return result;
   };
 
@@ -232,10 +232,10 @@ export default function AssessmentHub() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedEmpId) { toast({ title: 'Selecione um funcionÃ¡rio.', variant: 'destructive' }); return; }
+    if (!selectedEmpId) { toast({ title: 'Selecione um funcionário.', variant: 'destructive' }); return; }
     if (testType === 'disc' && Object.keys(answers).length < 30) { toast({ title: 'Responda todas as 30 perguntas.', variant: 'destructive' }); return; }
     if (testType === 'mbti' && Object.keys(answers).length < 20) { toast({ title: 'Responda todas as 20 perguntas.', variant: 'destructive' }); return; }
-    if (testType === 'bigfive' && Object.keys(bigFiveAnswers).length < 25) { toast({ title: 'Avalie todas as 25 afirmaÃ§Ãµes.', variant: 'destructive' }); return; }
+    if (testType === 'bigfive' && Object.keys(bigFiveAnswers).length < 25) { toast({ title: 'Avalie todas as 25 afirmações.', variant: 'destructive' }); return; }
 
     setIsSubmitting(true);
     let result: any = null;
@@ -252,16 +252,16 @@ export default function AssessmentHub() {
       });
       
       if (error) {
-        console.warn("A tabela assessment_results pode ainda nÃ£o existir no Supabase. Usando LocalStorage como fallback.", error);
+        console.warn("A tabela assessment_results pode ainda não existir no Supabase. Usando LocalStorage como fallback.", error);
         localStorage.setItem(`${testType}_${selectedEmpId}`, JSON.stringify(result));
       }
 
       setResultScreen(result);
-      toast({ title: error ? 'âœ… Salvo localmente.' : 'âœ… AnÃ¡lise salva no banco de dados!' });
+      toast({ title: error ? 'âœ… Salvo localmente.' : 'âœ… Análise salva no banco de dados!' });
     } catch (err) {
       localStorage.setItem(`${testType}_${selectedEmpId}`, JSON.stringify(result));
       setResultScreen(result);
-      toast({ title: 'âœ… AnÃ¡lise concluÃ­da (salva localmente).' });
+      toast({ title: 'âœ… Análise concluída (salva localmente).' });
     } finally {
       setIsSubmitting(false);
     }
@@ -281,7 +281,7 @@ export default function AssessmentHub() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
             <CheckCircle2 className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold">AnÃ¡lise ConcluÃ­da!</h1>
+          <h1 className="text-3xl font-bold">Análise Concluída!</h1>
           <p className="text-muted-foreground mt-1">Os resultados foram salvos no perfil do colaborador.</p>
         </div>
 
@@ -293,8 +293,8 @@ export default function AssessmentHub() {
           return (
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-black flex items-center justify-center gap-2 mb-2"><Brain className="w-6 h-6 text-primary" /> RelatÃ³rio Executivo: AnÃ¡lise DISC</h2>
-                <p className="text-muted-foreground">Mapeamento de estilo comportamental, tomada de decisÃ£o e comunicaÃ§Ã£o.</p>
+                <h2 className="text-2xl font-black flex items-center justify-center gap-2 mb-2"><Brain className="w-6 h-6 text-primary" /> Relatório Executivo: Análise DISC</h2>
+                <p className="text-muted-foreground">Mapeamento de estilo comportamental, tomada de decisão e comunicação.</p>
               </div>
 
               <div className="glass-card rounded-xl p-6 border-l-4" style={{ borderLeftColor: `var(--${colorMap[dom.letter].split('-')[1]}-500, #ccc)` }}>
@@ -319,7 +319,7 @@ export default function AssessmentHub() {
                   <div className="md:w-2/3 space-y-4">
                     <div className="bg-muted/30 p-4 rounded-lg text-sm text-foreground/80 leading-relaxed border border-border/50">
                       <strong className="text-primary block mb-1">Como atua:</strong> {info.desc}
-                      <strong className="text-primary block mt-3 mb-1">Estilo de ComunicaÃ§Ã£o:</strong> {info.communication}
+                      <strong className="text-primary block mt-3 mb-1">Estilo de Comunicação:</strong> {info.communication}
                     </div>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
@@ -330,7 +330,7 @@ export default function AssessmentHub() {
                         </ul>
                       </div>
                       <div className="bg-warning/10 p-4 rounded-lg text-sm border border-warning/20">
-                        <strong className="text-warning flex items-center gap-1 mb-2"><AlertTriangle className="w-4 h-4"/> AtenÃ§Ã£o (Oportunidades)</strong>
+                        <strong className="text-warning flex items-center gap-1 mb-2"><AlertTriangle className="w-4 h-4"/> Atenção (Oportunidades)</strong>
                         <ul className="list-disc pl-4 space-y-1 text-warning-foreground/80">
                           {info.weaknesses.map((w: string) => <li key={w}>{w}</li>)}
                         </ul>
@@ -351,8 +351,8 @@ export default function AssessmentHub() {
           return (
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-black flex items-center justify-center gap-2 mb-2"><User className="w-6 h-6 text-primary" /> RelatÃ³rio Executivo: MBTI</h2>
-                <p className="text-muted-foreground">Mapeamento de 16 ArquÃ©tipos de Personalidade e DinÃ¢mica Cognitiva.</p>
+                <h2 className="text-2xl font-black flex items-center justify-center gap-2 mb-2"><User className="w-6 h-6 text-primary" /> Relatório Executivo: MBTI</h2>
+                <p className="text-muted-foreground">Mapeamento de 16 Arquétipos de Personalidade e Dinâmica Cognitiva.</p>
               </div>
 
               <div className="glass-card rounded-xl p-6 border-l-4 border-l-primary">
@@ -372,11 +372,11 @@ export default function AssessmentHub() {
                   {/* Right: Exec Summary */}
                   <div className="md:w-2/3 space-y-4">
                     <div className="bg-muted/30 p-4 rounded-lg text-sm text-foreground/80 leading-relaxed border border-border/50">
-                      <strong className="text-primary block mb-1">AnÃ¡lise do ArquÃ©tipo:</strong> {info?.desc}
+                      <strong className="text-primary block mb-1">Análise do Arquétipo:</strong> {info?.desc}
                     </div>
                     <div className="bg-primary/5 p-4 rounded-lg text-sm text-primary-foreground/90 leading-relaxed border border-primary/20 mt-4">
-                      <strong className="text-primary flex items-center gap-1 mb-2"><Zap className="w-4 h-4"/> AplicaÃ§Ã£o PrÃ¡tica</strong>
-                      Os perfis <strong className="uppercase">{info?.title}</strong> geralmente buscam ambientes onde possam aplicar seus pontos fortes naturais ({info?.traits?.join(', ').toLowerCase()}). Trazem diversidade cognitiva Ã  equipe, influenciando o formato de tomada de decisÃ£o e resoluÃ§Ã£o de problemas operacionais.
+                      <strong className="text-primary flex items-center gap-1 mb-2"><Zap className="w-4 h-4"/> Aplicação Prática</strong>
+                      Os perfis <strong className="uppercase">{info?.title}</strong> geralmente buscam ambientes onde possam aplicar seus pontos fortes naturais ({info?.traits?.join(', ').toLowerCase()}). Trazem diversidade cognitiva Ã  equipe, influenciando o formato de tomada de decisão e resolução de problemas operacionais.
                     </div>
                   </div>
 
@@ -389,42 +389,42 @@ export default function AssessmentHub() {
         {testType === 'bigfive' && (() => {
           const bigFiveDetails: Record<string, any> = {
             O: {
-              label: 'Abertura Ã  ExperiÃªncia', color: 'bg-violet-500', icon: 'ðŸ’¡',
-              high: { title: 'VisionÃ¡rio e Inovador', desc: 'IndivÃ­duo criativo, com facilidade para propor soluÃ§Ãµes disruptivas e pensar fora da caixa.', impact: 'Pode atuar como um catalisador de transformaÃ§Ãµes, mas pode se dispersar em rotinas ou processos muito rÃ­gidos.' },
-              mid: { title: 'PragmÃ¡tico AdaptÃ¡vel', desc: 'Equilibra bem a inovaÃ§Ã£o com o uso de mÃ©todos jÃ¡ validados. Inova quando necessÃ¡rio, mas valoriza a previsibilidade.', impact: 'Traz estabilidade para projetos, nÃ£o sendo resistente Ã  mudanÃ§a, mas tambÃ©m nÃ£o abraÃ§ando o caos.' },
-              low: { title: 'Orientado Ã  TradiÃ§Ã£o', desc: 'Prefere processos estruturados, rotinas claras e mÃ©todos testados. Tem grande foco na execuÃ§Ã£o prÃ¡tica e no presente.', impact: 'Excelente para garantir a estabilidade operacional, mas pode apresentar forte resistÃªncia a mudanÃ§as organizacionais.' }
+              label: 'Abertura Ã  Experiência', color: 'bg-violet-500', icon: 'ðŸ’¡',
+              high: { title: 'Visionário e Inovador', desc: 'Indivíduo criativo, com facilidade para propor soluções disruptivas e pensar fora da caixa.', impact: 'Pode atuar como um catalisador de transformações, mas pode se dispersar em rotinas ou processos muito rígidos.' },
+              mid: { title: 'Pragmático Adaptável', desc: 'Equilibra bem a inovação com o uso de métodos já validados. Inova quando necessário, mas valoriza a previsibilidade.', impact: 'Traz estabilidade para projetos, não sendo resistente Ã  mudança, mas também não abraçando o caos.' },
+              low: { title: 'Orientado Ã  Tradição', desc: 'Prefere processos estruturados, rotinas claras e métodos testados. Tem grande foco na execução prática e no presente.', impact: 'Excelente para garantir a estabilidade operacional, mas pode apresentar forte resistência a mudanças organizacionais.' }
             },
             C: {
               label: 'Conscienciosidade', color: 'bg-blue-500', icon: 'ðŸŽ¯',
-              high: { title: 'MetÃ³dico e Focado', desc: 'Altamente disciplinado, organizado e movido a metas. Possui forte senso de dever e foco extremo em qualidade.', impact: 'Ideal para gestÃ£o de processos crÃ­ticos e lideranÃ§a de entregas. Contudo, pode tender ao perfeccionismo limitante.' },
-              mid: { title: 'Organizado e FlexÃ­vel', desc: 'MantÃ©m um bom nÃ­vel de organizaÃ§Ã£o para atingir resultados, sem se prender a regras se isso atrasar o projeto.', impact: 'Apresenta um excelente equilÃ­brio entre o foco na meta e a capacidade Ã¡gil de recalcular a rota.' },
-              low: { title: 'EspontÃ¢neo e Ãgil', desc: 'Trabalha melhor em cenÃ¡rios abertos e sem burocracia. Ã‰ flexÃ­vel, improvisador e altamente focado no curto prazo.', impact: 'Ã“timo para atuar em crises ou startups dinÃ¢micas, mas pode falhar no acompanhamento e no seguimento de regras longas.' }
+              high: { title: 'Metódico e Focado', desc: 'Altamente disciplinado, organizado e movido a metas. Possui forte senso de dever e foco extremo em qualidade.', impact: 'Ideal para gestão de processos críticos e liderança de entregas. Contudo, pode tender ao perfeccionismo limitante.' },
+              mid: { title: 'Organizado e Flexível', desc: 'Mantém um bom nível de organização para atingir resultados, sem se prender a regras se isso atrasar o projeto.', impact: 'Apresenta um excelente equilíbrio entre o foco na meta e a capacidade ágil de recalcular a rota.' },
+              low: { title: 'Espontâneo e Ágil', desc: 'Trabalha melhor em cenários abertos e sem burocracia. Ã‰ flexível, improvisador e altamente focado no curto prazo.', impact: 'Ã“timo para atuar em crises ou startups dinâmicas, mas pode falhar no acompanhamento e no seguimento de regras longas.' }
             },
             E: {
-              label: 'ExtroversÃ£o', color: 'bg-yellow-500', icon: 'ðŸ¤',
-              high: { title: 'Articulador Social', desc: 'Ganha energia nas interaÃ§Ãµes, Ã© comunicativo, assertivo e busca naturalmente posiÃ§Ãµes de influÃªncia.', impact: 'Excelente para papÃ©is comerciais, networking e motivaÃ§Ã£o de equipes. Pode, porÃ©m, ofuscar membros mais quietos.' },
-              mid: { title: 'Ambivertido EstratÃ©gico', desc: 'Adapta-se ao contexto: assume o protagonismo verbal quando necessÃ¡rio, mas atua de forma analÃ­tica quando o momento exige.', impact: 'Serve como a ponte de comunicaÃ§Ã£o perfeita entre Ã¡reas altamente extrovertidas e times profundamente tÃ©cnicos.' },
-              low: { title: 'AnalÃ­tico e Independente', desc: 'Prefere trabalhos de concentraÃ§Ã£o individual. Ouve ativamente e processa internamente antes de se posicionar.', impact: 'Ideal para funÃ§Ãµes de alta profundidade tÃ©cnica, estratÃ©gica ou analÃ­tica. Pode precisar de incentivo para debates abertos.' }
+              label: 'Extroversão', color: 'bg-yellow-500', icon: 'ðŸ¤',
+              high: { title: 'Articulador Social', desc: 'Ganha energia nas interações, é comunicativo, assertivo e busca naturalmente posições de influência.', impact: 'Excelente para papéis comerciais, networking e motivação de equipes. Pode, porém, ofuscar membros mais quietos.' },
+              mid: { title: 'Ambivertido Estratégico', desc: 'Adapta-se ao contexto: assume o protagonismo verbal quando necessário, mas atua de forma analítica quando o momento exige.', impact: 'Serve como a ponte de comunicação perfeita entre áreas altamente extrovertidas e times profundamente técnicos.' },
+              low: { title: 'Analítico e Independente', desc: 'Prefere trabalhos de concentração individual. Ouve ativamente e processa internamente antes de se posicionar.', impact: 'Ideal para funções de alta profundidade técnica, estratégica ou analítica. Pode precisar de incentivo para debates abertos.' }
             },
             A: {
               label: 'Amabilidade', color: 'bg-green-500', icon: 'â¤ï¸',
-              high: { title: 'Acolhedor e Conciliador', desc: 'Altamente empÃ¡tico e voltado Ã  colaboraÃ§Ã£o. Prioriza a harmonia da equipe e a construÃ§Ã£o de consenso.', impact: 'PeÃ§a fundamental para a retenÃ§Ã£o de talentos e o clima organizacional. Pode ter dificuldade em tomar decisÃµes impopulares.' },
-              mid: { title: 'Colaborador Orientado a Resultados', desc: 'Trabalha bem em equipe, mas nÃ£o hesita em criar atritos construtivos se achar que a entrega serÃ¡ prejudicada.', impact: 'O balanÃ§o ideal: mantÃ©m o bom clima, mas possui a firmeza necessÃ¡ria para blindar o interesse da empresa.' },
-              low: { title: 'Questionador e Competitivo', desc: 'Coloca a lÃ³gica e os resultados acima da harmonia social. Tem uma postura direta, pragmÃ¡tica e firme.', impact: 'Crucial para cenÃ¡rios de reestruturaÃ§Ã£o, negociaÃ§Ãµes agressivas e auditoria, porÃ©m pode gerar desgaste no clima da equipe.' }
+              high: { title: 'Acolhedor e Conciliador', desc: 'Altamente empático e voltado Ã  colaboração. Prioriza a harmonia da equipe e a construção de consenso.', impact: 'Peça fundamental para a retenção de talentos e o clima organizacional. Pode ter dificuldade em tomar decisões impopulares.' },
+              mid: { title: 'Colaborador Orientado a Resultados', desc: 'Trabalha bem em equipe, mas não hesita em criar atritos construtivos se achar que a entrega será prejudicada.', impact: 'O balanço ideal: mantém o bom clima, mas possui a firmeza necessária para blindar o interesse da empresa.' },
+              low: { title: 'Questionador e Competitivo', desc: 'Coloca a lógica e os resultados acima da harmonia social. Tem uma postura direta, pragmática e firme.', impact: 'Crucial para cenários de reestruturação, negociações agressivas e auditoria, porém pode gerar desgaste no clima da equipe.' }
             },
             N: {
               label: 'Neuroticismo', color: 'bg-red-500', icon: 'ðŸ›¡ï¸',
-              high: { title: 'Alerta e Antecipador', desc: 'Possui um alto radar para riscos e problemas potenciais. Extremamente reativo a mudanÃ§as e ameaÃ§as no ambiente.', impact: 'Ã“timo para setores de Compliance, SeguranÃ§a ou GestÃ£o de Risco, desde que a lideranÃ§a atue para mitigar seu estresse ou burnout.' },
-              mid: { title: 'Estabilidade Calibrada', desc: 'MantÃ©m a tranquilidade na maioria das situaÃ§Ãµes diÃ¡rias, reagindo de forma proporcional a crises.', impact: 'Consegue absorver a pressÃ£o normal do dia a dia corporativo sem perder o foco na entrega.' },
-              low: { title: 'Resiliente e Frio', desc: 'Extremamente calmo sob pressÃ£o intensa. Lida com urgÃªncias, cobranÃ§as e incertezas de forma puramente objetiva.', impact: 'O perfil ideal para lidar com situaÃ§Ãµes de crise, alta pressÃ£o e incerteza, embora possa parecer pouco empÃ¡tico frente ao caos.' }
+              high: { title: 'Alerta e Antecipador', desc: 'Possui um alto radar para riscos e problemas potenciais. Extremamente reativo a mudanças e ameaças no ambiente.', impact: 'Ã“timo para setores de Compliance, Segurança ou Gestão de Risco, desde que a liderança atue para mitigar seu estresse ou burnout.' },
+              mid: { title: 'Estabilidade Calibrada', desc: 'Mantém a tranquilidade na maioria das situações diárias, reagindo de forma proporcional a crises.', impact: 'Consegue absorver a pressão normal do dia a dia corporativo sem perder o foco na entrega.' },
+              low: { title: 'Resiliente e Frio', desc: 'Extremamente calmo sob pressão intensa. Lida com urgências, cobranças e incertezas de forma puramente objetiva.', impact: 'O perfil ideal para lidar com situações de crise, alta pressão e incerteza, embora possa parecer pouco empático frente ao caos.' }
             }
           };
 
           return (
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-black flex items-center justify-center gap-2 mb-2"><BarChart2 className="w-6 h-6 text-primary" /> RelatÃ³rio Executivo: Big Five</h2>
-                <p className="text-muted-foreground">AnÃ¡lise profunda de tendÃªncias psicolÃ³gicas, engajamento e impacto organizacional.</p>
+                <h2 className="text-2xl font-black flex items-center justify-center gap-2 mb-2"><BarChart2 className="w-6 h-6 text-primary" /> Relatório Executivo: Big Five</h2>
+                <p className="text-muted-foreground">Análise profunda de tendências psicológicas, engajamento e impacto organizacional.</p>
               </div>
 
               {['O', 'C', 'E', 'A', 'N'].map(key => {
@@ -448,7 +448,7 @@ export default function AssessmentHub() {
                         </div>
                         <div className="flex justify-between text-[10px] uppercase text-muted-foreground font-bold px-1">
                           <span>Baixo</span>
-                          <span>MÃ©dio</span>
+                          <span>Médio</span>
                           <span>Alto</span>
                         </div>
                       </div>
@@ -456,16 +456,16 @@ export default function AssessmentHub() {
                       {/* Right: Exec Summary */}
                       <div className="md:w-2/3 space-y-4">
                         <div>
-                          <h3 className="text-sm font-bold uppercase text-primary tracking-wider mb-1">ClassificaÃ§Ã£o do Perfil</h3>
+                          <h3 className="text-sm font-bold uppercase text-primary tracking-wider mb-1">Classificação do Perfil</h3>
                           <p className="text-xl font-black text-foreground">{result.title}</p>
                         </div>
                         
                         <div className="space-y-3">
                           <div className="bg-muted/30 p-3 rounded-lg text-sm text-foreground/80 leading-relaxed border border-border/50">
-                            <strong>CaracterÃ­sticas:</strong> {result.desc}
+                            <strong>Características:</strong> {result.desc}
                           </div>
                           <div className="bg-primary/5 p-3 rounded-lg text-sm text-primary-foreground/90 leading-relaxed border border-primary/20">
-                            <strong className="text-primary">ðŸ’¡ Impacto na OrganizaÃ§Ã£o & LideranÃ§a:</strong><br/>
+                            <strong className="text-primary">ðŸ’¡ Impacto na Organização & Liderança:</strong><br/>
                             {result.impact}
                           </div>
                         </div>
@@ -496,22 +496,22 @@ export default function AssessmentHub() {
           <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full"><ArrowLeft className="w-5 h-5" /></button>
           <div>
             <h1 className="text-xl font-bold flex items-center gap-2"><BarChart2 className="w-5 h-5 text-primary" />Big Five (OCEAN)</h1>
-            <p className="text-sm text-muted-foreground">Modelo mais validado cientificamente â€” 25 afirmaÃ§Ãµes</p>
+            <p className="text-sm text-muted-foreground">Modelo mais validado cientificamente — 25 afirmações</p>
           </div>
         </div>
 
         <div className="glass-card rounded-xl p-4">
-          <label className="text-sm font-semibold mb-2 block">FuncionÃ¡rio Avaliado:</label>
+          <label className="text-sm font-semibold mb-2 block">Funcionário Avaliado:</label>
           <select className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
             value={selectedEmpId} onChange={e => setSelectedEmpId(e.target.value)} disabled={!!id}>
             <option value="" disabled>Selecione...</option>
-            {employees.map(e => <option key={e.id} value={e.id}>{e.nome} â€” {e.cargo}</option>)}
+            {employees.map(e => <option key={e.id} value={e.id}>{e.nome} — {e.cargo}</option>)}
           </select>
         </div>
 
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>QuestÃ£o {currentQ+1} de {totalQ}</span>
+            <span>Questão {currentQ+1} de {totalQ}</span>
             <span>{Math.round(progress)}%</span>
           </div>
           <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -550,7 +550,7 @@ export default function AssessmentHub() {
           </Button>
           {currentQ < totalQ - 1 ? (
             <Button onClick={() => setCurrentQ(c => c+1)} disabled={!bigFiveAnswers[q.id]}>
-              PrÃ³xima <ChevronRight className="w-4 h-4 ml-1" />
+              Próxima <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(bigFiveAnswers).length < 25 || !selectedEmpId}>
@@ -562,7 +562,7 @@ export default function AssessmentHub() {
     );
   }
 
-  // â”€â”€ DISC / MBTI Screen (paginado por questÃ£o) â”€â”€
+  // â”€â”€ DISC / MBTI Screen (paginado por questão) â”€â”€
   const q = questions[currentQ] as any;
   const isDisc = testType === 'disc';
 
@@ -573,34 +573,34 @@ export default function AssessmentHub() {
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
             {isDisc ? <Brain className="w-5 h-5 text-primary" /> : <User className="w-5 h-5 text-primary" />}
-            {isDisc ? 'AnÃ¡lise DISC' : 'MBTI â€” 16 Personalidades'}
+            {isDisc ? 'Análise DISC' : 'MBTI — 16 Personalidades'}
           </h1>
-          <p className="text-sm text-muted-foreground">{isDisc ? '30 questÃµes comportamentais' : '20 pares de preferÃªncias'}</p>
+          <p className="text-sm text-muted-foreground">{isDisc ? '30 questões comportamentais' : '20 pares de preferências'}</p>
         </div>
       </div>
 
       {isDisc && currentQ === 0 && Object.keys(answers).length === 0 && (
         <div className="bg-primary/5 border border-primary/20 p-5 rounded-xl text-sm">
-          <p className="font-bold text-primary mb-2 text-base">O que Ã© a AnÃ¡lise DISC?</p>
+          <p className="font-bold text-primary mb-2 text-base">O que é a Análise DISC?</p>
           <p className="text-muted-foreground leading-relaxed">
-            O DISC Ã© uma metodologia globalmente reconhecida de avaliaÃ§Ã£o de perfil comportamental que mapeia quatro dimensÃµes: <strong>D</strong>ominÃ¢ncia, <strong>I</strong>nfluÃªncia, <strong>E</strong>stabilidade (S) e <strong>C</strong>onformidade. 
-            NÃ£o existem perfis certos ou errados; a anÃ¡lise ajuda as organizaÃ§Ãµes a entenderem os talentos naturais, o estilo ideal de comunicaÃ§Ã£o e as oportunidades de desenvolvimento de cada colaborador, fomentando a formaÃ§Ã£o de equipes mais equilibradas.
+            O DISC é uma metodologia globalmente reconhecida de avaliação de perfil comportamental que mapeia quatro dimensões: <strong>D</strong>ominância, <strong>I</strong>nfluência, <strong>E</strong>stabilidade (S) e <strong>C</strong>onformidade. 
+            Não existem perfis certos ou errados; a análise ajuda as organizações a entenderem os talentos naturais, o estilo ideal de comunicação e as oportunidades de desenvolvimento de cada colaborador, fomentando a formação de equipes mais equilibradas.
           </p>
         </div>
       )}
 
       <div className="glass-card rounded-xl p-4">
-        <label className="text-sm font-semibold mb-2 block">FuncionÃ¡rio Avaliado:</label>
+        <label className="text-sm font-semibold mb-2 block">Funcionário Avaliado:</label>
         <select className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           value={selectedEmpId} onChange={e => setSelectedEmpId(e.target.value)} disabled={!!id}>
           <option value="" disabled>Selecione...</option>
-          {employees.map(e => <option key={e.id} value={e.id}>{e.nome} â€” {e.cargo}</option>)}
+          {employees.map(e => <option key={e.id} value={e.id}>{e.nome} — {e.cargo}</option>)}
         </select>
       </div>
 
       <div className="space-y-1">
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>QuestÃ£o {currentQ+1} de {totalQ}</span>
+          <span>Questão {currentQ+1} de {totalQ}</span>
           <span>{Object.keys(answers).length} respondidas</span>
         </div>
         <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -636,7 +636,7 @@ export default function AssessmentHub() {
         </Button>
         {currentQ < totalQ - 1 ? (
           <Button variant="outline" onClick={() => setCurrentQ(c => c+1)}>
-            PrÃ³xima <ChevronRight className="w-4 h-4 ml-1" />
+            Próxima <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
         ) : (
           <Button onClick={handleSubmit} disabled={isSubmitting || !selectedEmpId}>

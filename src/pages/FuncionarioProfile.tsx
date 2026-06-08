@@ -39,12 +39,12 @@ interface EventRecord { id: string; event_date: string; event_time: string; day_
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
-const CARGOS_SEM_META = ['Motorista', 'Operador de Equipamentos', 'Ajudante de CaminhÃ£o Pipa', 'Operador de Mini Carregadeira'];
+const CARGOS_SEM_META = ['Motorista', 'Operador de Equipamentos', 'Ajudante de Caminhão Pipa', 'Operador de Mini Carregadeira'];
 const turnoLabels: Record<string, string> = { dia_a: 'Dia A', dia_b: 'Dia B', noite_a: 'Noite A', noite_b: 'Noite B', adm: 'ADM' };
 const attendanceStatusLabels: Record<string, string> = {
   presente: 'Presente', falta: 'Falta Injustificada', falta_injustificada: 'Falta Injustificada',
   falta_justificada: 'Falta Justificada',
-  atestado: 'Atestado', extra: 'Extra', ferias: 'FÃ©rias', afastamento: 'Afastamento',
+  atestado: 'Atestado', extra: 'Extra', ferias: 'Férias', afastamento: 'Afastamento',
   abono: 'Abono', banco_horas: 'Banco de Horas',
 };
 const attendanceStatusColors: Record<string, string> = {
@@ -167,7 +167,7 @@ export default function FuncionarioProfile() {
   }
 
   async function saveGoal() {
-    if (!goalForm.descricao || !goalForm.peso) { toast({ title: 'Preencha descriÃ§Ã£o e peso', variant: 'destructive' }); return; }
+    if (!goalForm.descricao || !goalForm.peso) { toast({ title: 'Preencha descrição e peso', variant: 'destructive' }); return; }
     if (editGoal) {
       const { error } = await supabase.from('goals').update({ descricao: goalForm.descricao, peso: goalForm.peso, resultado: goalForm.resultado !== '' ? Number(goalForm.resultado) : null, muito_abaixo: goalForm.muito_abaixo, abaixo: goalForm.abaixo, dentro: goalForm.dentro, acima: goalForm.acima, muito_acima: goalForm.muito_acima }).eq('id', editGoal.id);
       if (error) { toast({ title: 'Erro ao salvar', variant: 'destructive' }); return; }
@@ -183,7 +183,7 @@ export default function FuncionarioProfile() {
   async function confirmDeleteGoal() {
     if (!deleteGoalId) return;
     await supabase.from('goals').delete().eq('id', deleteGoalId);
-    setDeleteGoalId(null); toast({ title: 'Meta excluÃ­da' }); fetchGoals();
+    setDeleteGoalId(null); toast({ title: 'Meta excluída' }); fetchGoals();
   }
 
   const employeeFeedbacks = useMemo(() => {
@@ -309,10 +309,10 @@ export default function FuncionarioProfile() {
   const pendencias = useMemo(() => {
     const items: string[] = [];
     if (func && func.feedbacks_recebidos > func.feedbacks_resolvidos) items.push(`${func.feedbacks_recebidos - func.feedbacks_resolvidos} feedback(s) pendente(s)`);
-    if (meetings.length === 0) items.push('Nenhuma reuniÃ£o 1:1 registrada');
+    if (meetings.length === 0) items.push('Nenhuma reunião 1:1 registrada');
     const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
     if (faltasInj > 0) items.push(`${faltasInj} falta(s) injustificada(s)`);
-    if (employeeWarnings.length > 0) items.push(`${employeeWarnings.length} advertÃªncia(s) registrada(s)`);
+    if (employeeWarnings.length > 0) items.push(`${employeeWarnings.length} advertência(s) registrada(s)`);
     if (employeeEvents.length > 0) items.push(`${employeeEvents.length} evento(s) registrado(s)`);
     return items;
   }, [func, meetings, attendanceRecords, employeeWarnings, employeeEvents]);
@@ -401,7 +401,7 @@ export default function FuncionarioProfile() {
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
     doc.setFont('helvetica', 'normal');
-    doc.text(`MatrÃ­cula: ${func.id.slice(0, 8).toUpperCase()}`, margin + 6, y + 15);
+    doc.text(`Matrícula: ${func.id.slice(0, 8).toUpperCase()}`, margin + 6, y + 15);
     doc.setTextColor(0, 0, 0);
 
     y = y + 24;
@@ -413,11 +413,11 @@ export default function FuncionarioProfile() {
       ['Nome Completo', func.nome.toUpperCase()],
       ['Cargo', func.cargo],
       ['Departamento', func.departamento],
-      ['E-mail', func.email || 'â€”'],
+      ['E-mail', func.email || '—'],
       ['Turno', func.turno],
       
-      ['Escolaridade', func.escolaridade || 'â€”'],
-      ['Data de AdmissÃ£o', new Date(func.data_admissao).toLocaleDateString('pt-BR')],
+      ['Escolaridade', func.escolaridade || '—'],
+      ['Data de Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR')],
     ];
 
     autoTable(doc, {
@@ -449,10 +449,10 @@ export default function FuncionarioProfile() {
         ['Horas Negativas (Total)', String(hrsNeg)],
         ['Faltas Injustificadas', String(faltasInj)],
         ['Faltas Justificadas', String(faltasJust)],
-        ['Atestados MÃ©dicos', String(atestados)],
+        ['Atestados Médicos', String(atestados)],
         ['Horas Extras', String(extrasCount)],
-        ['AdvertÃªncias Aplicadas', String(advApplied)],
-        ['AdvertÃªncias Pendentes', String(advPending)],
+        ['Advertências Aplicadas', String(advApplied)],
+        ['Advertências Pendentes', String(advPending)],
         ['Eventos Registrados', String(employeeEvents.length)],
       ],
       styles: { fontSize: 9, cellPadding: 3 },
@@ -471,12 +471,12 @@ export default function FuncionarioProfile() {
     if (employeeWarnings.length > 0) {
       autoTable(doc, {
         startY: y,
-        head: [['Data', 'Motivo', 'Aplicada', 'ObservaÃ§Ã£o']],
+        head: [['Data', 'Motivo', 'Aplicada', 'Observação']],
         body: employeeWarnings.map(w => [
           new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'),
           w.reason,
           w.applied ? 'SIM' : 'NÃƒO',
-          w.observation || 'â€”',
+          w.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -487,7 +487,7 @@ export default function FuncionarioProfile() {
     } else {
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
-      doc.text('Nenhuma advertÃªncia registrada.', margin + 6, y + 4);
+      doc.text('Nenhuma advertência registrada.', margin + 6, y + 4);
       y += 10;
     }
 
@@ -498,12 +498,12 @@ export default function FuncionarioProfile() {
     if (employeeEvents.length > 0) {
       autoTable(doc, {
         startY: y,
-        head: [['Data', 'DescriÃ§Ã£o', 'Local', 'Equipamento']],
+        head: [['Data', 'Descrição', 'Local', 'Equipamento']],
         body: employeeEvents.map(ev => [
           new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR'),
           ev.description.length > 60 ? ev.description.slice(0, 57) + '...' : ev.description,
-          ev.location || 'â€”',
-          ev.equipment || 'â€”',
+          ev.location || '—',
+          ev.equipment || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -529,11 +529,11 @@ export default function FuncionarioProfile() {
     if (deviationRecords.length > 0) {
       autoTable(doc, {
         startY: y,
-        head: [['Data', 'Status', 'ObservaÃ§Ã£o']],
+        head: [['Data', 'Status', 'Observação']],
         body: deviationRecords.map(a => [
           new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR'),
           attendanceStatusLabels[a.status] || a.status,
-          a.observation || 'â€”',
+          a.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -570,11 +570,11 @@ export default function FuncionarioProfile() {
     }
 
     doc.save(`Desvios_${func.nome.replace(/\s+/g, '_')}.pdf`);
-    toast({ title: 'RelatÃ³rio de desvios exportado!' });
+    toast({ title: 'Relatório de desvios exportado!' });
   }
 
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
-  if (!func) return <div className="text-center py-12 text-muted-foreground">FuncionÃ¡rio nÃ£o encontrado</div>;
+  if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
 
   const turnoDisplay = func.turno ? (turnoLabels[func.turno] || func.turno) : null;
 
@@ -582,9 +582,9 @@ export default function FuncionarioProfile() {
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5" /></Button>
-        <div className="flex-1"><h1 className="text-2xl font-bold">Perfil do FuncionÃ¡rio</h1><p className="text-muted-foreground text-sm">VisÃ£o consolidada de desempenho</p></div>
+        <div className="flex-1"><h1 className="text-2xl font-bold">Perfil do Funcionário</h1><p className="text-muted-foreground text-sm">Visão consolidada de desempenho</p></div>
         <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportEmployeeDeviationsReport}>
-          <FileText className="w-4 h-4 mr-2" />RelatÃ³rio de Desvios (RH)
+          <FileText className="w-4 h-4 mr-2" />Relatório de Desvios (RH)
         </Button>
       </motion.div>
 
@@ -609,15 +609,15 @@ export default function FuncionarioProfile() {
           <div className="flex-1 space-y-3">
             <div>
               <h2 className="text-3xl font-black text-foreground tracking-tight">{func.nome}</h2>
-              <p className="text-lg text-primary font-medium">{func.cargo} <span className="text-muted-foreground font-normal mx-2">â€¢</span> {func.departamento}</p>
+              <p className="text-lg text-primary font-medium">{func.cargo} <span className="text-muted-foreground font-normal mx-2">•</span> {func.departamento}</p>
             </div>
             
             <div className="flex flex-wrap gap-2 pt-1">
               {func.email && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><MessageSquare className="w-3.5 h-3.5" />{func.email}</span>}
-              <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><Calendar className="w-3.5 h-3.5" />AdmissÃ£o: {new Date(func.data_admissao).toLocaleDateString('pt-BR')}</span>
+              <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><Calendar className="w-3.5 h-3.5" />Admissão: {new Date(func.data_admissao).toLocaleDateString('pt-BR')}</span>
               {func.escolaridade && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><GraduationCap className="w-3.5 h-3.5" />{func.escolaridade}</span>}
               {turnoDisplay && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-chart-3/10 text-chart-3"><Briefcase className="w-3.5 h-3.5" />{turnoDisplay}</span>}
-              {encarregadoNome && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-chart-4/10 text-chart-4"><Users className="w-3.5 h-3.5" />LÃ­der: {encarregadoNome}</span>}
+              {encarregadoNome && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-chart-4/10 text-chart-4"><Users className="w-3.5 h-3.5" />Líder: {encarregadoNome}</span>}
             </div>
           </div>
           
@@ -625,7 +625,7 @@ export default function FuncionarioProfile() {
             <Button className="w-full justify-start shadow-sm" onClick={() => navigate('/desempenho?tab=feedbacks')}><MessageSquare className="w-4 h-4 mr-2" /> Dar Feedback</Button>
             <Button variant="secondary" className="w-full justify-start shadow-sm" onClick={() => navigate('/reunioes')}><Calendar className="w-4 h-4 mr-2" /> Agendar 1:1</Button>
             <Button variant="outline" className="w-full justify-start border-orange-500/30 text-orange-600 hover:bg-orange-500/10 shadow-sm" onClick={exportEmployeeDeviationsReport}>
-              <FileText className="w-4 h-4 mr-2" /> DossiÃª (RH)
+              <FileText className="w-4 h-4 mr-2" /> Dossiê (RH)
             </Button>
           </div>
         </div>
@@ -633,10 +633,10 @@ export default function FuncionarioProfile() {
 
       <Tabs defaultValue="visao-geral" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
-          <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">VisÃ£o Geral</TabsTrigger>
+          <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
           <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Desempenho & Metas</TabsTrigger>
-          <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil PsicomÃ©trico</TabsTrigger>
-          <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">DossiÃª (RH)</TabsTrigger>
+          <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil Psicométrico</TabsTrigger>
+          <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">Dossiê (RH)</TabsTrigger>
         </TabsList>
 
         <TabsContent value="visao-geral" className="space-y-6 mt-4">
@@ -662,9 +662,9 @@ export default function FuncionarioProfile() {
               </div>
             </div>
 
-            {/* Alertas e PendÃªncias */}
+            {/* Alertas e Pendências */}
             <div className="kpi-card p-6 rounded-2xl md:col-span-2 flex flex-col">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Alertas e PendÃªncias</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Alertas e Pendências</h3>
               {pendencias.length > 0 ? (
                 <ul className="space-y-3 mt-auto mb-auto">
                   {pendencias.map((p, i) => (
@@ -678,7 +678,7 @@ export default function FuncionarioProfile() {
                 <div className="flex-1 flex flex-col items-center justify-center text-center bg-success/5 rounded-xl border border-success/10 mt-auto mb-auto py-6">
                   <CheckCircle2 className="w-8 h-8 text-success mb-2" />
                   <p className="text-sm font-medium text-success">Tudo em dia!</p>
-                  <p className="text-xs text-success/70">Nenhuma pendÃªncia ou alerta.</p>
+                  <p className="text-xs text-success/70">Nenhuma pendência ou alerta.</p>
                 </div>
               )}
             </div>
@@ -702,7 +702,7 @@ export default function FuncionarioProfile() {
               <div className="kpi-card p-4 rounded-xl flex items-center gap-4 col-span-2 lg:col-span-1">
                 <div className="w-10 h-10 rounded-full bg-chart-4/10 flex items-center justify-center shrink-0"><Calendar className="w-5 h-5 text-chart-4" /></div>
                 <div>
-                  <p className="text-xs text-muted-foreground">ReuniÃµes 1:1</p>
+                  <p className="text-xs text-muted-foreground">Reuniões 1:1</p>
                   <p className="text-xl font-bold">{meetings.length}</p>
                 </div>
               </div>
@@ -712,23 +712,23 @@ export default function FuncionarioProfile() {
         </TabsContent>
 
         <TabsContent value="desempenho" className="space-y-6 mt-4">
-          {/* Comparativo e ReuniÃµes */}
+          {/* Comparativo e Reuniões */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="glass-card rounded-xl p-6">
               <h3 className="font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Comparativo com Equipe ({func.departamento})</h3>
               <div className="space-y-3">
                 <div><div className="flex justify-between text-sm mb-1"><span>{func.nome}</span><span className="font-bold">{pctResolvido}%</span></div><Progress value={pctResolvido} className="h-3" /></div>
-                <div><div className="flex justify-between text-sm mb-1"><span>MÃ©dia da equipe</span><span className="font-bold">{deptAvg}%</span></div><Progress value={deptAvg} className="h-3" /></div>
+                <div><div className="flex justify-between text-sm mb-1"><span>Média da equipe</span><span className="font-bold">{deptAvg}%</span></div><Progress value={deptAvg} className="h-3" /></div>
               </div>
             </div>
             <div className="glass-card rounded-xl p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Ãšltimas ReuniÃµes 1:1</h3>
-              {meetings.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma reuniÃ£o registrada.</p> : (
+              <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Ãšltimas Reuniões 1:1</h3>
+              {meetings.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma reunião registrada.</p> : (
                 <div className="space-y-3">{meetings.slice(0, 5).map(m => (
                   <div key={m.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                     <Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0"><p className="text-sm font-medium">{new Date(m.meeting_date).toLocaleDateString('pt-BR')} â€” {m.manager_name}</p><p className="text-xs text-muted-foreground truncate">{m.notes || 'Sem anotaÃ§Ãµes'}</p></div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{m.status === 'completed' ? 'ConcluÃ­da' : 'Agendada'}</span>
+                    <div className="flex-1 min-w-0"><p className="text-sm font-medium">{new Date(m.meeting_date).toLocaleDateString('pt-BR')} — {m.manager_name}</p><p className="text-xs text-muted-foreground truncate">{m.notes || 'Sem anotações'}</p></div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{m.status === 'completed' ? 'Concluída' : 'Agendada'}</span>
                   </div>
                 ))}</div>
               )}
@@ -738,7 +738,7 @@ export default function FuncionarioProfile() {
           {!cargoSemMeta && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas â€” {func.cargo}</h3>
+                <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
                 <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
               </div>
               {goals.length === 0 ? (
@@ -746,18 +746,18 @@ export default function FuncionarioProfile() {
               ) : (
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">DistribuiÃ§Ã£o de Pesos</h4><ExpandableChart title="DistribuiÃ§Ã£o de Pesos" description="ProporÃ§Ã£o de peso de cada meta para este cargo."><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="40%" paddingAngle={3} label={({ value }) => `${value}%`}>{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `${v}%`} /><Legend /></PieChart></ResponsiveContainer></ExpandableChart></div>
+                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4><ExpandableChart title="Distribuição de Pesos" description="Proporção de peso de cada meta para este cargo."><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="40%" paddingAngle={3} label={({ value }) => `${value}%`}>{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `${v}%`} /><Legend /></PieChart></ResponsiveContainer></ExpandableChart></div>
                     <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Peso por Meta</h4><ExpandableChart title="Peso por Meta" description="Comparativo de metas e seus pesos."><ResponsiveContainer width="100%" height={280}><BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tickFormatter={v => `${v}%`} /><YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} /><Tooltip formatter={(v: number) => `${v}%`} /><Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer></ExpandableChart></div>
                   </div>
                   <div className="glass-card rounded-xl overflow-hidden">
                     <div className="p-4 border-b border-border bg-primary/5"><h4 className="text-base font-bold">{func.cargo}</h4></div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead><tr className="bg-muted/60"><th className="text-left p-3 font-semibold">DescriÃ§Ã£o</th><th className="text-center p-3 font-semibold">Peso</th><th className="text-center p-3 font-semibold">Resultado</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Dentro</th><th className="text-center p-3 font-semibold whitespace-nowrap">Acima</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Acima</th><th className="text-center p-3 font-semibold">AÃ§Ãµes</th></tr></thead>
+                        <thead><tr className="bg-muted/60"><th className="text-left p-3 font-semibold">Descrição</th><th className="text-center p-3 font-semibold">Peso</th><th className="text-center p-3 font-semibold">Resultado</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Dentro</th><th className="text-center p-3 font-semibold whitespace-nowrap">Acima</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Acima</th><th className="text-center p-3 font-semibold">Ações</th></tr></thead>
                         <tbody>
                           {goals.map((goal, i) => (
                             <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
-                              <td className="p-3 font-medium">{goal.descricao}</td><td className="p-3 text-center font-semibold">{goal.peso}%</td><td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : 'â€”'}</td>
+                              <td className="p-3 font-medium">{goal.descricao}</td><td className="p-3 text-center font-semibold">{goal.peso}%</td><td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
                               <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td><td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td><td className="p-3 text-center text-xs">{goal.dentro}</td><td className="p-3 text-center text-xs text-primary">{goal.acima}</td><td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
                               <td className="p-3 text-center"><div className="flex items-center justify-center gap-1"><button onClick={() => openEditGoal(goal)} className="p-1 text-muted-foreground hover:text-primary" title="Editar"><Pencil className="w-4 h-4" /></button><button onClick={() => setDeleteGoalId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive" title="Excluir"><Trash2 className="w-4 h-4" /></button></div></td>
                             </tr>
@@ -781,7 +781,7 @@ export default function FuncionarioProfile() {
                 const status = fb.status as FeedbackStatus; const priority = fb.prioridade as FeedbackPriority;
                 return (
                   <div key={fb.id} className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/feedbacks/${fb.id}`)}>
-                    <div className="flex-1 min-w-0"><p className="font-semibold text-sm truncate">{fb.titulo}</p><p className="text-xs text-muted-foreground mt-1">{new Date(fb.criado_em).toLocaleDateString('pt-BR')} Â· Gestor: {fb.gestor || 'â€”'}</p></div>
+                    <div className="flex-1 min-w-0"><p className="font-semibold text-sm truncate">{fb.titulo}</p><p className="text-xs text-muted-foreground mt-1">{new Date(fb.criado_em).toLocaleDateString('pt-BR')} Â· Gestor: {fb.gestor || '—'}</p></div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || 'bg-muted text-muted-foreground'}`}>{statusLabels[status] || fb.status}</span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[priority] || 'bg-muted text-muted-foreground'}`}>{priorityLabels[priority] || fb.prioridade}</span>
@@ -795,11 +795,11 @@ export default function FuncionarioProfile() {
 
         <TabsContent value="talentos" className="space-y-6 mt-4">
           <div className="flex flex-col gap-6">
-            {/* â•â•â• ANÃLISES COMPORTAMENTAIS â•â•â• */}
+            {/* â•â•â• ANÁLISES COMPORTAMENTAIS â•â•â• */}
             <div className="glass-card rounded-xl p-6 border-t-4 border-t-purple-500 shadow-sm flex flex-col min-h-[400px]">
               <Tabs defaultValue="disc" className="w-full flex flex-col h-full">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                  <h3 className="font-semibold flex items-center gap-2"><Brain className="w-5 h-5 text-purple-500" />Perfil PsicomÃ©trico e Comportamental</h3>
+                  <h3 className="font-semibold flex items-center gap-2"><Brain className="w-5 h-5 text-purple-500" />Perfil Psicométrico e Comportamental</h3>
                   <TabsList className="h-9 w-full sm:w-auto grid grid-cols-3">
                     <TabsTrigger value="disc" className="text-xs">DISC</TabsTrigger>
                     <TabsTrigger value="mbti" className="text-xs">MBTI</TabsTrigger>
@@ -816,7 +816,7 @@ export default function FuncionarioProfile() {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
                       <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                      <p className="text-sm text-muted-foreground mb-4">Teste DISC nÃ£o realizado.</p>
+                      <p className="text-sm text-muted-foreground mb-4">Teste DISC não realizado.</p>
                     </div>
                   )}
                 </TabsContent>
@@ -830,7 +830,7 @@ export default function FuncionarioProfile() {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
                       <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                      <p className="text-sm text-muted-foreground mb-4">Teste MBTI (16 Personalidades) nÃ£o realizado.</p>
+                      <p className="text-sm text-muted-foreground mb-4">Teste MBTI (16 Personalidades) não realizado.</p>
                     </div>
                   )}
                 </TabsContent>
@@ -844,7 +844,7 @@ export default function FuncionarioProfile() {
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
                       <Brain className="w-10 h-10 text-muted-foreground/30 mb-3" />
-                      <p className="text-sm text-muted-foreground mb-4">Teste Big Five (OCEAN) nÃ£o realizado.</p>
+                      <p className="text-sm text-muted-foreground mb-4">Teste Big Five (OCEAN) não realizado.</p>
                     </div>
                   )}
                 </TabsContent>
@@ -861,18 +861,18 @@ export default function FuncionarioProfile() {
           <div className="glass-card rounded-xl p-6 border-t-4 border-t-yellow-500 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold flex items-center gap-2"><Award className="w-5 h-5 text-yellow-500" />Conquistas e Badges</h3>
-              <span className="text-xs font-semibold bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full">{totalBadges} distribuÃ­dos</span>
+              <span className="text-xs font-semibold bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full">{totalBadges} distribuídos</span>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">ReconheÃ§a os talentos clicando em um badge. BotÃ£o direito para remover.</p>
+            <p className="text-xs text-muted-foreground mb-4">Reconheça os talentos clicando em um badge. Botão direito para remover.</p>
             <div className="flex flex-wrap gap-4">
                {[
                  { id: 'batedor_metas', name: 'Batedor de Metas', icon: Award, color: 'yellow' },
                  { id: 'ajudante_equipe', name: 'Ajudante da Equipe', icon: Star, color: 'blue' },
-                 { id: 'presenca_100', name: '100% de PresenÃ§a', icon: Target, color: 'green' },
-                 { id: 'lider_nato', name: 'LÃ­der Nato', icon: Crown, color: 'purple' },
+                 { id: 'presenca_100', name: '100% de Presença', icon: Target, color: 'green' },
+                 { id: 'lider_nato', name: 'Líder Nato', icon: Crown, color: 'purple' },
                  { id: 'zero_acidentes', name: 'Zero Acidentes', icon: ShieldCheck, color: 'red' },
                  { id: 'ideia_brilhante', name: 'Ideia Brilhante', icon: Lightbulb, color: 'orange' },
-                 { id: 'mao_na_massa', name: 'MÃ£o na Massa', icon: Wrench, color: 'slate' }
+                 { id: 'mao_na_massa', name: 'Mão na Massa', icon: Wrench, color: 'slate' }
                ].map(badge => {
                  const count = badgesCounts[badge.id] || 0;
                  return (
@@ -899,12 +899,12 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
-        {/* â•â•â•â• DOSSIÃŠ (RH) TAB (HistÃ³rico Disciplinar e Assiduidade) â•â•â•â• */}
+        {/* â•â•â•â• DOSSIÃŠ (RH) TAB (Histórico Disciplinar e Assiduidade) â•â•â•â• */}
         <TabsContent value="dossie" className="space-y-6 mt-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 glass-card rounded-xl p-6 border-l-4 border-l-orange-500">
             <div>
-              <h2 className="text-xl font-bold flex items-center gap-2"><FileText className="w-6 h-6 text-orange-500" /> DossiÃª Funcional (RH)</h2>
-              <p className="text-sm text-muted-foreground">HistÃ³rico completo de assiduidade, ocorrÃªncias, advertÃªncias e documentaÃ§Ãµes para uso estratÃ©gico.</p>
+              <h2 className="text-xl font-bold flex items-center gap-2"><FileText className="w-6 h-6 text-orange-500" /> Dossiê Funcional (RH)</h2>
+              <p className="text-sm text-muted-foreground">Histórico completo de assiduidade, ocorrências, advertências e documentações para uso estratégico.</p>
             </div>
             <Button variant="default" className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm flex-shrink-0" onClick={exportEmployeeDeviationsReport}>
               <FileText className="w-4 h-4 mr-2" /> Baixar PDF Oficial
@@ -915,8 +915,8 @@ export default function FuncionarioProfile() {
             <div className="flex items-center gap-3 rounded-lg p-4 border bg-teal-500/5 border-teal-500/20">
               <Sun className="w-5 h-5 text-teal-500" />
               <div>
-                <p className="font-semibold text-sm">Colaborador em FÃ©rias</p>
-                <p className="text-xs text-muted-foreground">PerÃ­odo: {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')} a {new Date(vacationInfo.end_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                <p className="font-semibold text-sm">Colaborador em Férias</p>
+                <p className="text-xs text-muted-foreground">Período: {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')} a {new Date(vacationInfo.end_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
               </div>
             </div>
           )}
@@ -924,8 +924,8 @@ export default function FuncionarioProfile() {
             <div className="flex items-center gap-3 rounded-lg p-4 border bg-warning/5 border-warning/20">
               <CalendarDays className="w-5 h-5 text-warning" />
               <div>
-                <p className="font-semibold text-sm">FÃ©rias Programadas</p>
-                <p className="text-xs text-muted-foreground">InÃ­cio em {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                <p className="font-semibold text-sm">Férias Programadas</p>
+                <p className="text-xs text-muted-foreground">Início em {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
               </div>
             </div>
           )}
@@ -933,7 +933,7 @@ export default function FuncionarioProfile() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {[
               { label: 'Total Registros', value: attendanceRecords.length, icon: CalendarDays, color: 'text-primary' },
-              { label: 'PresenÃ§as', value: attendanceStats.presente || 0, icon: Users, color: 'text-success' },
+              { label: 'Presenças', value: attendanceStats.presente || 0, icon: Users, color: 'text-success' },
               { label: 'Faltas Injust.', value: (attendanceStats.falta_injustificada || 0), icon: AlertTriangle, color: 'text-destructive' },
               { label: 'Atestados', value: attendanceStats.atestado || 0, icon: Clock, color: 'text-blue-600' },
               { label: 'Extras', value: extrasCount, icon: TrendingUp, color: extrasCount >= 3 ? 'text-destructive' : 'text-primary' },
@@ -951,7 +951,7 @@ export default function FuncionarioProfile() {
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <div className="flex justify-between text-sm mb-1">
-                  <span>Extras no perÃ­odo atual</span>
+                  <span>Extras no período atual</span>
                   <span className={`font-bold ${extrasCount >= 3 ? 'text-destructive' : ''}`}>{extrasCount}/3 {extrasCount >= 3 ? 'â›” BLOQUEADO' : ''}</span>
                 </div>
                 <Progress value={Math.min((extrasCount / 3) * 100, 100)} className={`h-3 ${extrasCount >= 3 ? '[&>div]:bg-destructive' : extrasCount >= 2 ? '[&>div]:bg-warning' : '[&>div]:bg-success'}`} />
@@ -960,7 +960,7 @@ export default function FuncionarioProfile() {
           </div>
 
           <div className="glass-card rounded-xl p-5">
-            <h3 className="font-semibold flex items-center gap-2 mb-4"><Clock className="w-5 h-5 text-primary" />Resumo de OcorrÃªncias</h3>
+            <h3 className="font-semibold flex items-center gap-2 mb-4"><Clock className="w-5 h-5 text-primary" />Resumo de Ocorrências</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
               {Object.entries(attendanceStatusLabels).filter(([key]) => (attendanceStats[key] || 0) > 0).map(([key, label]) => (
                 <div key={key} className={`rounded-lg p-3 text-center ${attendanceStatusColors[key] || 'bg-muted text-muted-foreground'}`}>
@@ -969,34 +969,34 @@ export default function FuncionarioProfile() {
                 </div>
               ))}
               {Object.keys(attendanceStats).length === 0 && (
-                <p className="col-span-full text-sm text-muted-foreground text-center py-4">Nenhuma ocorrÃªncia registrada</p>
+                <p className="col-span-full text-sm text-muted-foreground text-center py-4">Nenhuma ocorrência registrada</p>
               )}
             </div>
           </div>
 
           <div className="glass-card rounded-xl p-5">
-            <h3 className="font-semibold flex items-center gap-2 mb-4"><Sun className="w-5 h-5 text-primary" />InformaÃ§Ãµes de FÃ©rias</h3>
+            <h3 className="font-semibold flex items-center gap-2 mb-4"><Sun className="w-5 h-5 text-primary" />Informações de Férias</h3>
             {vacationInfo ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div><p className="text-muted-foreground text-xs">Dias Programados</p><p className="font-semibold">{vacationInfo.days_count} dias</p></div>
-                <div><p className="text-muted-foreground text-xs">MÃªs Programado</p><p className="font-semibold">{vacationInfo.scheduled_month || 'â€”'}</p></div>
-                <div><p className="text-muted-foreground text-xs">InÃ­cio</p><p className="font-semibold">{vacationInfo.start_date ? new Date(vacationInfo.start_date + 'T00:00:00').toLocaleDateString('pt-BR') : 'â€”'}</p></div>
-                <div><p className="text-muted-foreground text-xs">Fim</p><p className="font-semibold">{vacationInfo.end_date ? new Date(vacationInfo.end_date + 'T00:00:00').toLocaleDateString('pt-BR') : 'â€”'}</p></div>
+                <div><p className="text-muted-foreground text-xs">Mês Programado</p><p className="font-semibold">{vacationInfo.scheduled_month || '—'}</p></div>
+                <div><p className="text-muted-foreground text-xs">Início</p><p className="font-semibold">{vacationInfo.start_date ? new Date(vacationInfo.start_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p></div>
+                <div><p className="text-muted-foreground text-xs">Fim</p><p className="font-semibold">{vacationInfo.end_date ? new Date(vacationInfo.end_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p></div>
                 {vacationInfo.remaining_days != null && (
                   <div><p className="text-muted-foreground text-xs">Dias Restantes</p><p className="font-semibold">{vacationInfo.remaining_days}</p></div>
                 )}
                 {vacationInfo.observation && (
-                  <div className="col-span-2"><p className="text-muted-foreground text-xs">ObservaÃ§Ã£o</p><p className="font-semibold">{vacationInfo.observation}</p></div>
+                  <div className="col-span-2"><p className="text-muted-foreground text-xs">Observação</p><p className="font-semibold">{vacationInfo.observation}</p></div>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Nenhum registro de fÃ©rias cadastrado.</p>
+              <p className="text-sm text-muted-foreground">Nenhum registro de férias cadastrado.</p>
             )}
           </div>
 
           <div className="glass-card rounded-xl overflow-hidden">
             <div className="p-4 border-b border-border bg-primary/5">
-              <h4 className="text-sm font-bold flex items-center gap-2"><Calendar className="w-4 h-4" />HistÃ³rico de Registros (Ãºltimos 100)</h4>
+              <h4 className="text-sm font-bold flex items-center gap-2"><Calendar className="w-4 h-4" />Histórico de Registros (últimos 100)</h4>
             </div>
             {attendanceRecords.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">Nenhum registro de ponto encontrado.</p>
@@ -1006,7 +1006,7 @@ export default function FuncionarioProfile() {
                   <thead><tr className="bg-muted/30 border-b border-border">
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">ObservaÃ§Ã£o</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
                   </tr></thead>
                   <tbody>
                     {attendanceRecords.slice(0, 30).map((a, i) => (
@@ -1017,7 +1017,7 @@ export default function FuncionarioProfile() {
                             {attendanceStatusLabels[a.status] || a.status}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-xs text-muted-foreground">{a.observation || 'â€”'}</td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{a.observation || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1026,9 +1026,9 @@ export default function FuncionarioProfile() {
             )}
           </div>
 
-          {/* â”€â”€ Desvios e AdvertÃªncias â”€â”€ */}
+          {/* â”€â”€ Desvios e Advertências â”€â”€ */}
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-destructive" />Desvios e AdvertÃªncias</h3>
+            <h3 className="text-lg font-bold flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-destructive" />Desvios e Advertências</h3>
             <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600" onClick={exportEmployeeDeviationsReport}>
               <FileText className="w-4 h-4 mr-2" />Exportar PDF (RH)
             </Button>
@@ -1039,7 +1039,7 @@ export default function FuncionarioProfile() {
               { label: 'Faltas Injust.', value: attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length, color: 'bg-destructive/10 text-destructive' },
               { label: 'Faltas Just.', value: attendanceRecords.filter(a => a.status === 'falta_justificada').length, color: 'bg-warning/10 text-warning' },
               { label: 'Atestados', value: attendanceRecords.filter(a => a.status === 'atestado').length, color: 'bg-blue-500/10 text-blue-600' },
-              { label: 'AdvertÃªncias', value: employeeWarnings.length, color: 'bg-red-600/10 text-red-600' },
+              { label: 'Advertências', value: employeeWarnings.length, color: 'bg-red-600/10 text-red-600' },
             ].map(d => (
               <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
                 <p className="text-3xl font-bold">{d.value}</p>
@@ -1050,10 +1050,10 @@ export default function FuncionarioProfile() {
 
           <div className="glass-card rounded-xl overflow-hidden">
             <div className="p-4 border-b border-border bg-destructive/5">
-              <h4 className="text-sm font-bold flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-destructive" />HistÃ³rico de AdvertÃªncias ({employeeWarnings.length})</h4>
+              <h4 className="text-sm font-bold flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-destructive" />Histórico de Advertências ({employeeWarnings.length})</h4>
             </div>
             {employeeWarnings.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma advertÃªncia registrada</p>
+              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma advertência registrada</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -1061,7 +1061,7 @@ export default function FuncionarioProfile() {
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
                     <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Motivo</th>
                     <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Aplicada</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">ObservaÃ§Ã£o</th>
+                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
                   </tr></thead>
                   <tbody>
                     {employeeWarnings.map((w, i) => (
@@ -1075,7 +1075,7 @@ export default function FuncionarioProfile() {
                             <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
                           )}
                         </td>
-                        <td className="px-4 py-2 text-xs text-muted-foreground">{w.observation || 'â€”'}</td>
+                        <td className="px-4 py-2 text-xs text-muted-foreground">{w.observation || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1086,7 +1086,7 @@ export default function FuncionarioProfile() {
 
           <div className="rounded-lg p-4 border border-orange-500/20 bg-orange-500/5">
             <p className="text-xs text-orange-700 font-medium">
-              âš ï¸ <strong>Nota:</strong> Faltas Injustificadas NÃƒO contemplam banco de horas. Este relatÃ³rio Ã© anexado Ã  ficha do colaborador para envio ao RH no momento do desligamento.
+              âš ï¸ <strong>Nota:</strong> Faltas Injustificadas NÃƒO contemplam banco de horas. Este relatório é anexado Ã  ficha do colaborador para envio ao RH no momento do desligamento.
             </p>
           </div>
           
@@ -1105,7 +1105,7 @@ export default function FuncionarioProfile() {
                     return [
                       { label: 'Total Eventos', value: employeeEvents.length, color: 'bg-warning/10 text-warning' },
                       { label: 'Operacionais', value: operational, color: 'bg-destructive/10 text-destructive' },
-                      { label: 'MÃ©dicos/Pessoais', value: medical, color: 'bg-blue-500/10 text-blue-600' },
+                      { label: 'Médicos/Pessoais', value: medical, color: 'bg-blue-500/10 text-blue-600' },
                       { label: 'Anos c/ Registro', value: years.size, color: 'bg-primary/10 text-primary' },
                     ];
                   })().map(d => (
@@ -1118,13 +1118,13 @@ export default function FuncionarioProfile() {
 
                 <div className="glass-card rounded-xl overflow-hidden">
                   <div className="p-4 border-b border-border bg-warning/5">
-                    <h4 className="text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-warning" />HistÃ³rico de Eventos</h4>
+                    <h4 className="text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-warning" />Histórico de Eventos</h4>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead><tr className="bg-muted/30 border-b border-border">
                         <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
-                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">DescriÃ§Ã£o</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Descrição</th>
                         <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Local</th>
                         <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Equipamento</th>
                         <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
@@ -1134,9 +1134,9 @@ export default function FuncionarioProfile() {
                           <tr key={ev.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
                             <td className="px-4 py-2 text-xs whitespace-nowrap">{new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                             <td className="px-4 py-2 text-xs max-w-[300px]">{ev.description}</td>
-                            <td className="px-4 py-2 text-xs">{ev.location || 'â€”'}</td>
-                            <td className="px-4 py-2 text-xs">{ev.equipment || 'â€”'}</td>
-                            <td className="px-4 py-2 text-xs">{ev.shift || 'â€”'}</td>
+                            <td className="px-4 py-2 text-xs">{ev.location || '—'}</td>
+                            <td className="px-4 py-2 text-xs">{ev.equipment || '—'}</td>
+                            <td className="px-4 py-2 text-xs">{ev.shift || '—'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -1147,9 +1147,9 @@ export default function FuncionarioProfile() {
             )}
           </div>
           <div className="border-t border-border/50 pt-6 mt-6">
-            <h3 className="text-lg font-bold flex items-center gap-2 mb-4"><FileText className="w-5 h-5 text-primary" />DocumentaÃ§Ã£o Anexada</h3>
+            <h3 className="text-lg font-bold flex items-center gap-2 mb-4"><FileText className="w-5 h-5 text-primary" />Documentação Anexada</h3>
             {documents.length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum documento anexado ao prontuÃ¡rio.</div>
+              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum documento anexado ao prontuário.</div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{documents.map(doc => (
                 <div key={doc.id} className="glass-card rounded-xl p-4 flex items-center gap-3">
@@ -1167,7 +1167,7 @@ export default function FuncionarioProfile() {
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>{editGoal ? 'Editar Meta' : 'Nova Meta'}</DialogTitle></DialogHeader>
           <div className="space-y-3 pt-2">
-            <div><Label>DescriÃ§Ã£o</Label><FastInput value={goalForm.descricao} onValueChange={v => setGoalForm(f => ({ ...f, descricao: v }))} /></div>
+            <div><Label>Descrição</Label><FastInput value={goalForm.descricao} onValueChange={v => setGoalForm(f => ({ ...f, descricao: v }))} /></div>
             <div className="grid grid-cols-2 gap-3"><div><Label>Peso (%)</Label><Input type="number" value={goalForm.peso} onChange={e => setGoalForm({ ...goalForm, peso: Number(e.target.value) })} /></div><div><Label>Resultado</Label><Input type="number" value={goalForm.resultado} onChange={e => setGoalForm({ ...goalForm, resultado: e.target.value })} placeholder="Ex: 85" /></div></div>
             <div className="grid grid-cols-2 gap-3"><div><Label>Muito Abaixo</Label><FastInput value={goalForm.muito_abaixo} onValueChange={v => setGoalForm(f => ({ ...f, muito_abaixo: v }))} /></div><div><Label>Abaixo</Label><FastInput value={goalForm.abaixo} onValueChange={v => setGoalForm(f => ({ ...f, abaixo: v }))} /></div><div><Label>Dentro</Label><FastInput value={goalForm.dentro} onValueChange={v => setGoalForm(f => ({ ...f, dentro: v }))} /></div><div><Label>Acima</Label><FastInput value={goalForm.acima} onValueChange={v => setGoalForm(f => ({ ...f, acima: v }))} /></div><div className="col-span-2"><Label>Muito Acima</Label><FastInput value={goalForm.muito_acima} onValueChange={v => setGoalForm(f => ({ ...f, muito_acima: v }))} /></div></div>
             <Button onClick={saveGoal} className="w-full">{editGoal ? 'Salvar' : 'Criar'}</Button>
@@ -1176,7 +1176,7 @@ export default function FuncionarioProfile() {
       </Dialog>
 
       <AlertDialog open={!!deleteGoalId} onOpenChange={open => !open && setDeleteGoalId(null)}>
-        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir meta?</AlertDialogTitle><AlertDialogDescription>Essa aÃ§Ã£o nÃ£o pode ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={confirmDeleteGoal}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+        <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir meta?</AlertDialogTitle><AlertDialogDescription>Essa ação não pode ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={confirmDeleteGoal}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
       </AlertDialog>
     </div>
   );

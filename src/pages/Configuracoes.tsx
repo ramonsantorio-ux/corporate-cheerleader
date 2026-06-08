@@ -31,7 +31,7 @@ export default function Configuracoes() {
     const { data } = await supabase.from('feedbacks').select('*').order('criado_em', { ascending: false });
     if (!data || data.length === 0) { toast.error('Nenhum dado para exportar'); return; }
 
-    const headers = ['TÃ­tulo', 'FuncionÃ¡rio', 'Gestor', 'Setor', 'Status', 'Prioridade', 'Data'];
+    const headers = ['Título', 'Funcionário', 'Gestor', 'Setor', 'Status', 'Prioridade', 'Data'];
     const rows = data.map((f: any) => [
       f.titulo, f.autor, f.gestor || '-', setorLabels[f.setor as FeedbackSetor] || f.setor, f.status, f.prioridade, new Date(f.criado_em).toLocaleDateString('pt-BR'),
     ]);
@@ -54,7 +54,7 @@ export default function Configuracoes() {
     drawBusatoHeader(doc, logoBase64);
     autoTable(doc, {
       startY: 34,
-      head: [['TÃ­tulo', 'FuncionÃ¡rio', 'Gestor', 'Setor', 'Status', 'Data']],
+      head: [['Título', 'Funcionário', 'Gestor', 'Setor', 'Status', 'Data']],
       body: data.map((f: any) => [f.titulo, f.autor, f.gestor || '-', setorLabels[f.setor as FeedbackSetor] || f.setor, f.status, new Date(f.criado_em).toLocaleDateString('pt-BR')]),
       styles: { fontSize: 7 },
     });
@@ -64,33 +64,33 @@ export default function Configuracoes() {
 
   async function exportFuncionariosCSV() {
     const { data } = await supabase.from('funcionarios').select('*').order('nome');
-    if (!data || data.length === 0) { toast.error('Nenhum funcionÃ¡rio'); return; }
-    const headers = ['Nome', 'Cargo', 'Departamento', 'Email', 'AdmissÃ£o', 'Feedbacks Recebidos', 'Feedbacks Resolvidos'];
+    if (!data || data.length === 0) { toast.error('Nenhum funcionário'); return; }
+    const headers = ['Nome', 'Cargo', 'Departamento', 'Email', 'Admissão', 'Feedbacks Recebidos', 'Feedbacks Resolvidos'];
     const rows = data.map((f: any) => [f.nome, f.cargo, f.departamento, f.email || '-', f.data_admissao, f.feedbacks_recebidos, f.feedbacks_resolvidos]);
     const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = 'funcionarios.csv'; a.click();
-    toast.success('FuncionÃ¡rios exportados!');
+    toast.success('Funcionários exportados!');
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold">ConfiguraÃ§Ãµes</h1>
-        <p className="text-muted-foreground text-sm mt-1">Gerencie as preferÃªncias do sistema</p>
+        <h1 className="text-2xl font-bold">Configurações</h1>
+        <p className="text-muted-foreground text-sm mt-1">Gerencie as preferências do sistema</p>
       </motion.div>
 
       <Tabs defaultValue="aparencia" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="aparencia" className="text-xs sm:text-sm"><Palette className="w-4 h-4 mr-1 hidden sm:inline" />AparÃªncia</TabsTrigger>
-          <TabsTrigger value="notificacoes" className="text-xs sm:text-sm"><Bell className="w-4 h-4 mr-1 hidden sm:inline" />NotificaÃ§Ãµes</TabsTrigger>
+          <TabsTrigger value="aparencia" className="text-xs sm:text-sm"><Palette className="w-4 h-4 mr-1 hidden sm:inline" />Aparência</TabsTrigger>
+          <TabsTrigger value="notificacoes" className="text-xs sm:text-sm"><Bell className="w-4 h-4 mr-1 hidden sm:inline" />Notificações</TabsTrigger>
           <TabsTrigger value="privacidade" className="text-xs sm:text-sm"><Shield className="w-4 h-4 mr-1 hidden sm:inline" />Privacidade</TabsTrigger>
           <TabsTrigger value="exportar" className="text-xs sm:text-sm"><Download className="w-4 h-4 mr-1 hidden sm:inline" />Exportar</TabsTrigger>
         </TabsList>
 
-        {/* AparÃªncia */}
+        {/* Aparência */}
         <TabsContent value="aparencia">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-xl p-6 space-y-6">
             <div>
@@ -106,32 +106,32 @@ export default function Configuracoes() {
           </motion.div>
         </TabsContent>
 
-        {/* NotificaÃ§Ãµes */}
+        {/* Notificações */}
         <TabsContent value="notificacoes">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-xl p-6 space-y-5">
             <div>
-              <h3 className="font-semibold mb-4">PreferÃªncias de NotificaÃ§Ã£o</h3>
+              <h3 className="font-semibold mb-4">Preferências de Notificação</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium">Novo feedback criado</Label>
                     <p className="text-xs text-muted-foreground">Receber alerta quando um feedback for registrado</p>
                   </div>
-                  <Switch checked={notifNewFeedback} onCheckedChange={v => { setNotifNewFeedback(v); toast.success('PreferÃªncia salva'); }} />
+                  <Switch checked={notifNewFeedback} onCheckedChange={v => { setNotifNewFeedback(v); toast.success('Preferência salva'); }} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="font-medium">Prazos de metas</Label>
-                    <p className="text-xs text-muted-foreground">Alertar sobre metas prÃ³ximas do vencimento</p>
+                    <p className="text-xs text-muted-foreground">Alertar sobre metas próximas do vencimento</p>
                   </div>
-                  <Switch checked={notifDeadline} onCheckedChange={v => { setNotifDeadline(v); toast.success('PreferÃªncia salva'); }} />
+                  <Switch checked={notifDeadline} onCheckedChange={v => { setNotifDeadline(v); toast.success('Preferência salva'); }} />
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label className="font-medium">ReuniÃµes 1:1</Label>
-                    <p className="text-xs text-muted-foreground">Lembrete de reuniÃµes agendadas</p>
+                    <Label className="font-medium">Reuniões 1:1</Label>
+                    <p className="text-xs text-muted-foreground">Lembrete de reuniões agendadas</p>
                   </div>
-                  <Switch checked={notifMeeting} onCheckedChange={v => { setNotifMeeting(v); toast.success('PreferÃªncia salva'); }} />
+                  <Switch checked={notifMeeting} onCheckedChange={v => { setNotifMeeting(v); toast.success('Preferência salva'); }} />
                 </div>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function Configuracoes() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    <div className="flex items-center gap-2"><Eye className="w-4 h-4" />VisÃ­vel para todos</div>
+                    <div className="flex items-center gap-2"><Eye className="w-4 h-4" />Visível para todos</div>
                   </SelectItem>
                   <SelectItem value="managers">
                     <div className="flex items-center gap-2"><Users className="w-4 h-4" />Apenas gestores</div>
@@ -169,7 +169,7 @@ export default function Configuracoes() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card rounded-xl p-6 space-y-5">
             <div>
               <h3 className="font-semibold mb-1">Exportar Dados</h3>
-              <p className="text-sm text-muted-foreground mb-4">Exporte feedbacks e funcionÃ¡rios em diferentes formatos</p>
+              <p className="text-sm text-muted-foreground mb-4">Exporte feedbacks e funcionários em diferentes formatos</p>
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div>
@@ -181,14 +181,14 @@ export default function Configuracoes() {
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div>
                     <p className="text-sm font-medium">Feedbacks (PDF)</p>
-                    <p className="text-xs text-muted-foreground">RelatÃ³rio completo em PDF</p>
+                    <p className="text-xs text-muted-foreground">Relatório completo em PDF</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={exportPDF}><FileText className="w-4 h-4 mr-2" />PDF</Button>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div>
-                    <p className="text-sm font-medium">FuncionÃ¡rios (CSV)</p>
-                    <p className="text-xs text-muted-foreground">Lista completa de funcionÃ¡rios</p>
+                    <p className="text-sm font-medium">Funcionários (CSV)</p>
+                    <p className="text-xs text-muted-foreground">Lista completa de funcionários</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={exportFuncionariosCSV}><FileSpreadsheet className="w-4 h-4 mr-2" />CSV</Button>
                 </div>
@@ -201,11 +201,11 @@ export default function Configuracoes() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-xl p-5">
         <h2 className="font-semibold mb-1">Instalar no Celular</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Acesse o GestÃ£o Porto diretamente do seu smartphone. Abra o menu do navegador e selecione "Adicionar Ã  tela inicial".
+          Acesse o Gestão Porto diretamente do seu smartphone. Abra o menu do navegador e selecione "Adicionar Ã  tela inicial".
         </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted rounded-lg p-3">
           <Download className="w-4 h-4 flex-shrink-0" />
-          <span>iOS: Safari â†’ Compartilhar â†’ Tela de InÃ­cio | Android: Chrome â†’ Menu â†’ Instalar app</span>
+          <span>iOS: Safari â†’ Compartilhar â†’ Tela de Início | Android: Chrome â†’ Menu â†’ Instalar app</span>
         </div>
       </motion.div>
     </div>

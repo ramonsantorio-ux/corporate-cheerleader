@@ -34,7 +34,7 @@ interface FeedbackRow {
 // Status workflow: which transitions are allowed
 const STATUS_TRANSITIONS: Record<string, { next: FeedbackStatus; label: string; icon: any; color: string }[]> = {
   novo: [
-    { next: 'em_analise', label: 'Iniciar AnÃ¡lise', icon: Clock, color: 'bg-warning text-warning-foreground' },
+    { next: 'em_analise', label: 'Iniciar Análise', icon: Clock, color: 'bg-warning text-warning-foreground' },
     { next: 'arquivado', label: 'Arquivar', icon: X, color: 'bg-muted text-muted-foreground' },
   ],
   em_analise: [
@@ -43,7 +43,7 @@ const STATUS_TRANSITIONS: Record<string, { next: FeedbackStatus; label: string; 
   ],
   em_andamento: [
     { next: 'resolvido', label: 'Dar Baixa / Resolver', icon: CheckCircle2, color: 'bg-success text-success-foreground' },
-    { next: 'em_analise', label: 'Retornar para AnÃ¡lise', icon: Clock, color: 'bg-warning text-warning-foreground' },
+    { next: 'em_analise', label: 'Retornar para Análise', icon: Clock, color: 'bg-warning text-warning-foreground' },
   ],
   resolvido: [
     { next: 'em_andamento', label: 'Reabrir Feedback', icon: ArrowRight, color: 'bg-warning text-warning-foreground' },
@@ -131,14 +131,14 @@ export default function FeedbackDetail() {
   async function handleResolve(e: React.FormEvent) {
     e.preventDefault();
     if (!resolveForm.acaoTomada.trim()) {
-      toast.error('Descreva a aÃ§Ã£o tomada para dar baixa.');
+      toast.error('Descreva a ação tomada para dar baixa.');
       return;
     }
     const obs = [
       feedback?.observacoes || '',
-      `\n--- ResoluÃ§Ã£o (${new Date().toLocaleDateString('pt-BR')}) por ${gestorName} ---`,
-      `AÃ§Ã£o tomada: ${resolveForm.acaoTomada}`,
-      resolveForm.planoAcao ? `Plano de aÃ§Ã£o: ${resolveForm.planoAcao}` : '',
+      `\n--- Resolução (${new Date().toLocaleDateString('pt-BR')}) por ${gestorName} ---`,
+      `Ação tomada: ${resolveForm.acaoTomada}`,
+      resolveForm.planoAcao ? `Plano de ação: ${resolveForm.planoAcao}` : '',
       resolveForm.observacoes ? `Obs: ${resolveForm.observacoes}` : '',
     ].filter(Boolean).join('\n');
 
@@ -160,7 +160,7 @@ export default function FeedbackDetail() {
   if (!feedback) {
     return (
       <div className="text-center py-20">
-        <p className="text-muted-foreground">Feedback nÃ£o encontrado.</p>
+        <p className="text-muted-foreground">Feedback não encontrado.</p>
         <button onClick={() => navigate('/feedbacks')} className="text-primary text-sm mt-2 hover:underline">Voltar aos feedbacks</button>
       </div>
     );
@@ -214,7 +214,7 @@ export default function FeedbackDetail() {
         </div>
         {isArchived && (
           <div className="mt-3 px-3 py-2 bg-muted rounded-lg text-xs text-muted-foreground font-medium">
-            â“˜ Este feedback estÃ¡ arquivado.
+            â“˜ Este feedback está arquivado.
           </div>
         )}
       </motion.div>
@@ -222,7 +222,7 @@ export default function FeedbackDetail() {
       {/* â”€â”€ Action Buttons â”€â”€ */}
       {transitions.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-xl p-5">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">AÃ§Ãµes DisponÃ­veis</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Ações Disponíveis</h3>
           <div className="flex flex-wrap gap-3">
             {transitions.map(t => {
               const Icon = t.icon;
@@ -247,7 +247,7 @@ export default function FeedbackDetail() {
       {/* â”€â”€ Summary KPIs â”€â”€ */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="corporate-kpi">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Dias {isResolved ? 'atÃ© resoluÃ§Ã£o' : 'aberto'}</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Dias {isResolved ? 'até resolução' : 'aberto'}</p>
           <p className={`text-2xl font-bold mt-1 ${daysOpen > 15 ? 'text-destructive' : daysOpen > 7 ? 'text-warning' : 'text-foreground'}`}>{daysOpen}d</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="corporate-kpi">
@@ -292,7 +292,7 @@ export default function FeedbackDetail() {
         {feedback.observacoes && (
           <div className="bg-muted/50 border border-border rounded-lg p-4">
             <h3 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-2">
-              <FileText className="w-4 h-4" /> ObservaÃ§Ãµes / Registro de ResoluÃ§Ã£o
+              <FileText className="w-4 h-4" /> Observações / Registro de Resolução
             </h3>
             <pre className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap font-sans">{feedback.observacoes}</pre>
           </div>
@@ -302,7 +302,7 @@ export default function FeedbackDetail() {
           <div className="flex items-center gap-2 text-sm">
             <User className="w-4 h-4 text-muted-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground">FuncionÃ¡rio</p>
+              <p className="text-xs text-muted-foreground">Funcionário</p>
               <p className="font-medium">{feedback.autor}</p>
             </div>
           </div>
@@ -342,9 +342,9 @@ export default function FeedbackDetail() {
           </DialogHeader>
           <form onSubmit={handleResolve} className="space-y-4 pt-2">
             <div>
-              <label className="text-sm font-medium mb-1.5 block">AÃ§Ã£o Tomada *</label>
+              <label className="text-sm font-medium mb-1.5 block">Ação Tomada *</label>
               <FastTextarea
-                placeholder="Descreva a aÃ§Ã£o realizada para resolver este feedback..."
+                placeholder="Descreva a ação realizada para resolver este feedback..."
                 value={resolveForm.acaoTomada}
                 onValueChange={v => setResolveForm(f => ({ ...f, acaoTomada: v }))}
                 className={`${inputClass} min-h-[90px] resize-none`}
@@ -352,9 +352,9 @@ export default function FeedbackDetail() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1.5 block">Plano de AÃ§Ã£o (opcional)</label>
+              <label className="text-sm font-medium mb-1.5 block">Plano de Ação (opcional)</label>
               <FastTextarea
-                placeholder="Se necessÃ¡rio, descreva o plano de aÃ§Ã£o para evitar recorrÃªncia..."
+                placeholder="Se necessário, descreva o plano de ação para evitar recorrência..."
                 value={resolveForm.planoAcao}
                 onValueChange={v => setResolveForm(f => ({ ...f, planoAcao: v }))}
                 className={`${inputClass} min-h-[70px] resize-none`}
@@ -362,9 +362,9 @@ export default function FeedbackDetail() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium mb-1.5 block">ObservaÃ§Ãµes (opcional)</label>
+              <label className="text-sm font-medium mb-1.5 block">Observações (opcional)</label>
               <FastTextarea
-                placeholder="ObservaÃ§Ãµes adicionais..."
+                placeholder="Observações adicionais..."
                 value={resolveForm.observacoes}
                 onValueChange={v => setResolveForm(f => ({ ...f, observacoes: v }))}
                 className={`${inputClass} min-h-[50px] resize-none`}
@@ -372,13 +372,13 @@ export default function FeedbackDetail() {
               />
             </div>
             <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground">
-              <p><strong>ResponsÃ¡vel:</strong> {gestorName}</p>
+              <p><strong>Responsável:</strong> {gestorName}</p>
               <p><strong>Data:</strong> {new Date().toLocaleDateString('pt-BR')}</p>
-              <p className="mt-1">Ao confirmar, o status serÃ¡ alterado para <strong className="text-success">Resolvido</strong> e o registro serÃ¡ salvo.</p>
+              <p className="mt-1">Ao confirmar, o status será alterado para <strong className="text-success">Resolvido</strong> e o registro será salvo.</p>
             </div>
             <Button type="submit" disabled={updating} className="w-full bg-success text-success-foreground hover:bg-success/90 gap-2">
               {updating ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Confirmar ResoluÃ§Ã£o
+              Confirmar Resolução
             </Button>
           </form>
         </DialogContent>

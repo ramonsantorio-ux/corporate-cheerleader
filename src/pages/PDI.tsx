@@ -43,7 +43,7 @@ const statusIcons: Record<string, typeof CheckCircle2> = {
 const statusLabels: Record<string, string> = {
   pending: 'Pendente',
   in_progress: 'Em andamento',
-  completed: 'ConcluÃ­da',
+  completed: 'Concluída',
 };
 
 const statusColors: Record<string, string> = {
@@ -54,7 +54,7 @@ const statusColors: Record<string, string> = {
 
 const pdiStatusLabels: Record<string, string> = {
   in_progress: 'Em andamento',
-  completed: 'ConcluÃ­do',
+  completed: 'Concluído',
   cancelled: 'Cancelado',
 };
 
@@ -124,7 +124,7 @@ export default function PDIPage() {
 
   async function createAction() {
     if (!actionDialogPdiId || !actionForm.title) {
-      toast({ title: 'Informe o tÃ­tulo da aÃ§Ã£o', variant: 'destructive' });
+      toast({ title: 'Informe o título da ação', variant: 'destructive' });
       return;
     }
     const { error } = await supabase.from('pdi_actions').insert([{
@@ -137,7 +137,7 @@ export default function PDIPage() {
     if (error) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'AÃ§Ã£o adicionada!' });
+      toast({ title: 'Ação adicionada!' });
       setActionDialogPdiId(null);
       setActionForm({ title: '', description: '', deadline: '', competency_id: '' });
       fetchPDIs();
@@ -165,10 +165,10 @@ export default function PDIPage() {
   };
 
   const careerLevels = [
-    { cargo: 'Encarregado Operacional', requisito: 'Ensino mÃ©dio completo', order: 1 },
+    { cargo: 'Encarregado Operacional', requisito: 'Ensino médio completo', order: 1 },
     { cargo: 'Supervisor de Campo', requisito: 'Curso superior completo ou cursando', order: 2 },
     { cargo: 'Coordenador Operacional', requisito: 'Curso Superior completo', order: 3 },
-    { cargo: 'Gerente Operacional', requisito: 'Curso Superior completo + 1 especializaÃ§Ã£o na Ã¡rea', order: 4 },
+    { cargo: 'Gerente Operacional', requisito: 'Curso Superior completo + 1 especialização na área', order: 4 },
   ];
 
   return (
@@ -176,7 +176,7 @@ export default function PDIPage() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">PDI - Plano de Desenvolvimento</h1>
-          <p className="text-muted-foreground text-sm mt-1">AÃ§Ãµes de desenvolvimento vinculadas a competÃªncias</p>
+          <p className="text-muted-foreground text-sm mt-1">Ações de desenvolvimento vinculadas a competências</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -202,19 +202,19 @@ export default function PDIPage() {
       {/* Action creation dialog */}
       <Dialog open={!!actionDialogPdiId} onOpenChange={open => !open && setActionDialogPdiId(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Nova AÃ§Ã£o de Desenvolvimento</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Nova Ação de Desenvolvimento</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
-            <div><Label>TÃ­tulo</Label><FastInput value={actionForm.title} onValueChange={v => setActionForm(f => ({ ...f, title: v }))} placeholder="Ex: Curso de lideranÃ§a" /></div>
-            <div><Label>DescriÃ§Ã£o</Label><FastTextarea value={actionForm.description} onValueChange={v => setActionForm(f => ({ ...f, description: v }))} /></div>
+            <div><Label>Título</Label><FastInput value={actionForm.title} onValueChange={v => setActionForm(f => ({ ...f, title: v }))} placeholder="Ex: Curso de liderança" /></div>
+            <div><Label>Descrição</Label><FastTextarea value={actionForm.description} onValueChange={v => setActionForm(f => ({ ...f, description: v }))} /></div>
             <div><Label>Prazo</Label><Input type="date" value={actionForm.deadline} onChange={e => setActionForm({ ...actionForm, deadline: e.target.value })} /></div>
             <div>
-              <Label>CompetÃªncia vinculada (opcional)</Label>
+              <Label>Competência vinculada (opcional)</Label>
               <Select value={actionForm.competency_id} onValueChange={v => setActionForm({ ...actionForm, competency_id: v })}>
                 <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
                 <SelectContent>{competencies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <Button onClick={createAction} className="w-full">Adicionar AÃ§Ã£o</Button>
+            <Button onClick={createAction} className="w-full">Adicionar Ação</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -222,7 +222,7 @@ export default function PDIPage() {
       {/* Career progression card */}
       <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="glass-card rounded-xl p-5">
-        <h2 className="text-base font-semibold text-foreground mb-4">Plano de Carreira â€” Requisitos para PromoÃ§Ã£o</h2>
+        <h2 className="text-base font-semibold text-foreground mb-4">Plano de Carreira — Requisitos para Promoção</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {careerLevels.map((level, i) => (
             <div key={level.cargo} className="relative flex flex-col items-center text-center p-4 rounded-lg border border-border bg-muted/20">
@@ -254,7 +254,7 @@ export default function PDIPage() {
                 <div className="p-4 flex items-center gap-4 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : pdi.id)}>
                   <div className="flex-1">
                     <h3 className="font-medium text-foreground">{pdi.employee_name}</h3>
-                    <p className="text-sm text-muted-foreground">Ciclo: {cycleName(pdi.cycle_id)} Â· {pdiActions.length} aÃ§Ãµes Â· {pdiStatusLabels[pdi.status]}</p>
+                    <p className="text-sm text-muted-foreground">Ciclo: {cycleName(pdi.cycle_id)} Â· {pdiActions.length} ações Â· {pdiStatusLabels[pdi.status]}</p>
                   </div>
                   <div className="flex items-center gap-3 min-w-[140px]">
                     <Progress value={progress} className="h-2 flex-1" />
@@ -265,7 +265,7 @@ export default function PDIPage() {
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-border pt-3 space-y-2">
                     {pdiActions.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Nenhuma aÃ§Ã£o adicionada.</p>
+                      <p className="text-sm text-muted-foreground">Nenhuma ação adicionada.</p>
                     ) : pdiActions.map(action => {
                       const Icon = statusIcons[action.status] || Clock;
                       return (
@@ -292,7 +292,7 @@ export default function PDIPage() {
                       );
                     })}
                     <Button variant="outline" size="sm" onClick={() => setActionDialogPdiId(pdi.id)}>
-                      <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar AÃ§Ã£o
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Adicionar Ação
                     </Button>
                   </div>
                 )}

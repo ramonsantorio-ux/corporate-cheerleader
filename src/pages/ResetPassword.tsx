@@ -61,11 +61,11 @@ export default function ResetPassword() {
       return;
     }
     if (password.length < 6) {
-      toast.error('Senha deve ter no mÃ­nimo 6 caracteres');
+      toast.error('Senha deve ter no mínimo 6 caracteres');
       return;
     }
     if (password !== confirmPassword) {
-      toast.error('As senhas nÃ£o coincidem');
+      toast.error('As senhas não coincidem');
       return;
     }
     setLoading(true);
@@ -82,7 +82,7 @@ export default function ResetPassword() {
   if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="text-muted-foreground text-sm">Verificando link de recuperaÃ§Ã£o...</div>
+        <div className="text-muted-foreground text-sm">Verificando link de recuperação...</div>
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function ResetPassword() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground text-sm">
-            Link de recuperaÃ§Ã£o invÃ¡lido ou expirado.
+            Link de recuperação inválido ou expirado.
           </p>
           <Button variant="outline" onClick={() => navigate('/login')}>
             Voltar para Login
@@ -124,7 +124,7 @@ export default function ResetPassword() {
               <div className="relative">
                 <FastInput
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••"
                   value={password}
                   onValueChange={setPassword}
                   autoComplete="new-password"
@@ -142,7 +142,7 @@ export default function ResetPassword() {
               <Label>Confirmar nova senha</Label>
               <FastInput
                 type={showPassword ? 'text' : 'password'}
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••"
                 value={confirmPassword}
                 onValueChange={setConfirmPassword}
                 autoComplete="new-password"

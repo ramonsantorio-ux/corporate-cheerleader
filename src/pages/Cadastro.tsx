@@ -34,16 +34,16 @@ interface Funcionario {
 }
 
 const departamentos = [
-  'Contrato Porto', 'Contrato Usina', 'Frotas', 'MediÃ§Ã£o',
-  'SeguranÃ§a', 'CCO', 'CCM', 'ManutenÃ§Ã£o', 'RH', 'Financeiro',
+  'Contrato Porto', 'Contrato Usina', 'Frotas', 'Medição',
+  'Segurança', 'CCO', 'CCM', 'Manutenção', 'RH', 'Financeiro',
 ];
 
 const escolaridades = [
   'Ensino Fundamental',
-  'Ensino MÃ©dio',
+  'Ensino Médio',
   'Ensino Superior Cursando',
   'Ensino Superior Completo',
-  'PÃ³s-GraduaÃ§Ã£o',
+  'Pós-Graduação',
   'Mestrado',
   'Doutorado',
 ];
@@ -137,16 +137,16 @@ export default function Cadastro() {
         email: String(row['Email'] || '').trim(),
         cargo: String(row['Cargo'] || '').trim(),
         departamento: String(row['Departamento'] || '').trim(),
-        data_admissao: String(row['Data AdmissÃ£o'] || row['Data Admissao'] || '').trim() || undefined,
+        data_admissao: String(row['Data Admissão'] || row['Data Admissao'] || '').trim() || undefined,
         escolaridade: String(row['Escolaridade'] || '').trim(),
-        graduacao: String(row['GraduaÃ§Ã£o'] || row['Graduacao'] || '').trim(),
-        pos_graduacao: String(row['PÃ³s-GraduaÃ§Ã£o'] || row['Pos-Graduacao'] || '').toLowerCase() === 'sim',
-        pos_graduacao_tipo: String(row['Tipo PÃ³s-GraduaÃ§Ã£o'] || row['Tipo Pos-Graduacao'] || '').trim(),
+        graduacao: String(row['Graduação'] || row['Graduacao'] || '').trim(),
+        pos_graduacao: String(row['Pós-Graduação'] || row['Pos-Graduacao'] || '').toLowerCase() === 'sim',
+        pos_graduacao_tipo: String(row['Tipo Pós-Graduação'] || row['Tipo Pos-Graduacao'] || '').trim(),
         turno: parseTurno(String(row['Turno'] || '')),
       })).filter(r => r.nome && r.cargo && r.departamento);
 
       if (records.length === 0) {
-        toast.error('Nenhum registro vÃ¡lido encontrado. Verifique se as colunas Nome, Cargo e Departamento estÃ£o preenchidas.');
+        toast.error('Nenhum registro válido encontrado. Verifique se as colunas Nome, Cargo e Departamento estão preenchidas.');
         setImporting(false);
         return;
       }
@@ -171,7 +171,7 @@ export default function Cadastro() {
       if (error) {
         toast.error('Erro ao importar: ' + error.message);
       } else {
-        toast.success(`${records.length} funcionÃ¡rio(s) importado(s) com sucesso!`);
+        toast.success(`${records.length} funcionário(s) importado(s) com sucesso!`);
         fetchFuncionarios();
       }
     } catch (err) {
@@ -194,7 +194,7 @@ export default function Cadastro() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast.error('Erro ao carregar funcionÃ¡rios');
+      toast.error('Erro ao carregar funcionários');
     } else {
       setFuncionarios((data || []) as Funcionario[]);
     }
@@ -230,7 +230,7 @@ export default function Cadastro() {
 
   async function handleCreate() {
     if (!newData.nome || !newData.cargo || !newData.departamento) {
-      toast.error('Preencha todos os campos obrigatÃ³rios');
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     setUploading(true);
@@ -268,7 +268,7 @@ export default function Cadastro() {
     const { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
 
     if (error) {
-      toast.error('Erro ao cadastrar funcionÃ¡rio');
+      toast.error('Erro ao cadastrar funcionário');
       setUploading(false);
       return;
     }
@@ -296,7 +296,7 @@ export default function Cadastro() {
     setNewPhotoPreview('');
     setDocFiles([]);
     setCreateOpen(false);
-    toast.success('FuncionÃ¡rio cadastrado!');
+    toast.success('Funcionário cadastrado!');
     fetchFuncionarios();
   }
 
@@ -325,7 +325,7 @@ export default function Cadastro() {
 
   async function handleEdit() {
     if (!editData.nome || !editData.cargo || !editData.departamento) {
-      toast.error('Preencha todos os campos obrigatÃ³rios');
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     setUploading(true);
@@ -379,14 +379,14 @@ export default function Cadastro() {
 
     setUploading(false);
     if (error) {
-      toast.error('Erro ao atualizar funcionÃ¡rio');
+      toast.error('Erro ao atualizar funcionário');
       return;
     }
 
     setEditOpen(false);
     setEditPhotoFile(null);
     setEditDocFiles([]);
-    toast.success('FuncionÃ¡rio atualizado!');
+    toast.success('Funcionário atualizado!');
     fetchFuncionarios();
   }
 
@@ -394,11 +394,11 @@ export default function Cadastro() {
     if (!deleteId) return;
     const { error } = await supabase.from('funcionarios').delete().eq('id', deleteId);
     if (error) {
-      toast.error('Erro ao excluir funcionÃ¡rio');
+      toast.error('Erro ao excluir funcionário');
       return;
     }
     setDeleteId(null);
-    toast.success('FuncionÃ¡rio excluÃ­do!');
+    toast.success('Funcionário excluído!');
     fetchFuncionarios();
   }
 
@@ -432,10 +432,10 @@ export default function Cadastro() {
     <>
       <div className="space-y-2">
         <Label>Nome completo</Label>
-        <FastInput value={data.nome} onValueChange={v => setData({ ...data, nome: v })} placeholder="Nome do funcionÃ¡rio" />
+        <FastInput value={data.nome} onValueChange={v => setData({ ...data, nome: v })} placeholder="Nome do funcionário" />
       </div>
       <div className="space-y-2">
-        <Label>Data de AdmissÃ£o</Label>
+        <Label>Data de Admissão</Label>
         <Input type="date" value={data.data_admissao} onChange={e => setData({ ...data, data_admissao: e.target.value })} />
       </div>
       <div className="space-y-2">
@@ -450,16 +450,16 @@ export default function Cadastro() {
         </Select>
       </div>
       <div className="space-y-2">
-        <Label>GraduaÃ§Ã£o</Label>
-        <FastInput value={data.graduacao} onValueChange={v => setData({ ...data, graduacao: v })} placeholder="Ex: Engenharia Civil, AdministraÃ§Ã£o..." />
+        <Label>Graduação</Label>
+        <FastInput value={data.graduacao} onValueChange={v => setData({ ...data, graduacao: v })} placeholder="Ex: Engenharia Civil, Administração..." />
       </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label>Possui PÃ³s-GraduaÃ§Ã£o?</Label>
+          <Label>Possui Pós-Graduação?</Label>
           <Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} />
         </div>
         {data.pos_graduacao && (
-          <FastInput value={data.pos_graduacao_tipo} onValueChange={v => setData({ ...data, pos_graduacao_tipo: v })} placeholder="Qual pÃ³s-graduaÃ§Ã£o?" className="mt-2" />
+          <FastInput value={data.pos_graduacao_tipo} onValueChange={v => setData({ ...data, pos_graduacao_tipo: v })} placeholder="Qual pós-graduação?" className="mt-2" />
         )}
       </div>
       <div className="space-y-2">
@@ -558,8 +558,8 @@ export default function Cadastro() {
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <h1 className="text-2xl font-bold">Cadastro de FuncionÃ¡rios</h1>
-        <p className="text-muted-foreground text-sm mt-1">Acompanhe a evoluÃ§Ã£o e desempenho da equipe</p>
+        <h1 className="text-2xl font-bold">Cadastro de Funcionários</h1>
+        <p className="text-muted-foreground text-sm mt-1">Acompanhe a evolução e desempenho da equipe</p>
       </motion.div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -587,11 +587,11 @@ export default function Cadastro() {
         </div>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" />Novo FuncionÃ¡rio</Button>
+            <Button><Plus className="w-4 h-4 mr-2" />Novo Funcionário</Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Cadastrar FuncionÃ¡rio</DialogTitle>
+              <DialogTitle>Cadastrar Funcionário</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="flex flex-col items-center gap-2">
@@ -627,7 +627,7 @@ export default function Cadastro() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>Nenhum funcionÃ¡rio encontrado</p>
+          <p>Nenhum funcionário encontrado</p>
         </div>
       ) : (
         <div className="grid gap-3">
@@ -667,7 +667,7 @@ export default function Cadastro() {
                   </div>
                   <div className="text-center">
                     <p className={`font-bold ${pct >= 70 ? 'text-success' : pct >= 40 ? 'text-warning' : 'text-destructive'}`}>{pct}%</p>
-                    <p className="text-xs text-muted-foreground">EvoluÃ§Ã£o</p>
+                    <p className="text-xs text-muted-foreground">Evolução</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -691,7 +691,7 @@ export default function Cadastro() {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar FuncionÃ¡rio</DialogTitle>
+            <DialogTitle>Editar Funcionário</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="flex flex-col items-center gap-2">
@@ -713,7 +713,7 @@ export default function Cadastro() {
             {renderFormFields(editData, setEditData as any, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
             <Button className="w-full" onClick={handleEdit} disabled={uploading}>
               {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Salvar AlteraÃ§Ãµes
+              Salvar Alterações
             </Button>
           </div>
         </DialogContent>
@@ -723,9 +723,9 @@ export default function Cadastro() {
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir funcionÃ¡rio?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir funcionário?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta aÃ§Ã£o nÃ£o pode ser desfeita. O funcionÃ¡rio serÃ¡ removido permanentemente.
+              Esta ação não pode ser desfeita. O funcionário será removido permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
