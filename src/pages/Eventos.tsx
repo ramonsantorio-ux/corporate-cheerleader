@@ -253,6 +253,12 @@ export default function Eventos() {
     const byGenero: Record<string, number> = {};
     const byTurno: Record<string, number> = {};
     const byLetra: Record<string, number> = {};
+    const byCid: Record<string, number> = {};
+    const byAtestado: Record<string, number> = {};
+    let afastamentoCom = 0;
+    let afastamentoSem = 0;
+    let danosCom = 0;
+    let danosSem = 0;
     let medicalCount = 0;
 
     let daysWithoutAccident: number | 'N/A' = 'N/A';
@@ -303,6 +309,11 @@ export default function Eventos() {
         const shift = ev.shift.trim().toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
         byLetra[shift] = (byLetra[shift] || 0) + 1;
       }
+
+      if (ev.cid) byCid[ev.cid] = (byCid[ev.cid] || 0) + 1;
+      if (ev.atestado && ev.involved_name) byAtestado[ev.involved_name] = (byAtestado[ev.involved_name] || 0) + 1;
+      if (ev.afastamento) afastamentoCom++; else afastamentoSem++;
+      if (ev.danos_materiais) danosCom++; else danosSem++;
 
       if (ev.tipo_acidente) byTipoAcidente[ev.tipo_acidente] = (byTipoAcidente[ev.tipo_acidente] || 0) + 1;
       if (ev.agente_lesao) byAgenteLesao[ev.agente_lesao] = (byAgenteLesao[ev.agente_lesao] || 0) + 1;
