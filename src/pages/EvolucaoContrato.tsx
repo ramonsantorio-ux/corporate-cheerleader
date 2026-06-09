@@ -662,25 +662,38 @@ export default function EvolucaoContrato() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background/95 border border-border p-3 rounded-lg shadow-xl backdrop-blur-sm">
-          <p className="font-bold mb-2">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <div key={index} className="flex items-center gap-2 text-sm mb-1">
-              <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: entry.color }} />
-              <span className="text-muted-foreground">{entry.name}:</span>
-              <span className="font-semibold">
-                {entry.name.includes('Margem') || entry.name.includes('Aderência') 
-                  ? `${entry.value}%` 
-                  : entry.name.includes('Notificações') 
-                    ? entry.value 
-                    : formatCurrency(entry.value)}
-              </span>
-            </div>
-          ))}
+        <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
+          <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>
+          <div className="space-y-2">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-center justify-between gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
+                  <span className="text-muted-foreground font-medium">{entry.name}</span>
+                </div>
+                <span className="font-bold text-foreground">
+                  {entry.name.includes('Margem') || entry.name.includes('Aderência') 
+                    ? `${entry.value}%` 
+                    : entry.name.includes('Notificações') 
+                      ? entry.value 
+                      : formatCurrency(entry.value)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
     return null;
+  };
+
+  const handleChartClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload.length > 0) {
+      const monthData = data.activePayload[0].payload;
+      if (monthData && monthData.id) {
+        setDetalhesMedicao(monthData);
+      }
+    }
   };
 
 
@@ -791,7 +804,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                  <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
                       <linearGradient id="colorSlaArea" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
@@ -821,7 +834,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[300px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                  <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
                       <linearGradient id="colorSla" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
@@ -834,7 +847,7 @@ export default function EvolucaoContrato() {
                     <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar yAxisId="left" dataKey="aderencia" name="Aderência SLA" fill="url(#colorSla)" radius={[4, 4, 0, 0]} />
+                    <Bar yAxisId="left" dataKey="aderencia" name="Aderência SLA" fill="url(#colorSla)" radius={[6, 6, 0, 0]} />
                     <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--blue-500))" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -850,7 +863,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[300px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                  <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
                       <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.6}/>
@@ -863,7 +876,7 @@ export default function EvolucaoContrato() {
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                     <Bar stackId="a" dataKey="perdas" name="Glosas/Multas" fill="hsl(var(--destructive))" barSize={30} />
-                    <Bar stackId="a" dataKey="horasExtras" name="Horas Extras" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                    <Bar stackId="a" dataKey="horasExtras" name="Horas Extras" fill="hsl(var(--warning))" radius={[6, 6, 0, 0]} />
                     <Area type="monotone" dataKey="saldo" name="Lucro Líquido Real" fill="url(#colorSaldo)" stroke="hsl(var(--success))" strokeWidth={3} />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -938,14 +951,20 @@ export default function EvolucaoContrato() {
                 <TabsContent key={tab} value={tab}>
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                      <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                         <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend />
-                        <Bar dataKey={tab === 'impostos' ? 'impostosTotal' : tab === 'folha' ? 'folhaTotal' : tab === 'manutencao' ? 'manutencaoTotal' : tab === 'combustivel' ? 'combustivelTotal' : tab === 'seguranca' ? 'uniformeTotal' : 'escritorioTotal'} name="Custo Realizado" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={50} />
-                        <Line type="monotone" dataKey={tab === 'impostos' ? 'metaImpostos' : tab === 'folha' ? 'metaFolha' : tab === 'manutencao' ? 'metaManutencao' : tab === 'combustivel' ? 'metaCombustivel' : tab === 'seguranca' ? 'metaSeguranca' : 'metaMateriais'} name="Meta" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                        <Bar dataKey={tab === 'impostos' ? 'impostosTotal' : tab === 'folha' ? 'folhaTotal' : tab === 'manutencao' ? 'manutencaoTotal' : tab === 'combustivel' ? 'combustivelTotal' : tab === 'seguranca' ? 'uniformeTotal' : 'escritorioTotal'} name="Custo Realizado" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} maxBarSize={50}>
+                          {chartData.map((entry: any, index: number) => {
+                            const real = tab === 'impostos' ? entry.impostosTotal : tab === 'folha' ? entry.folhaTotal : tab === 'manutencao' ? entry.manutencaoTotal : tab === 'combustivel' ? entry.combustivelTotal : tab === 'seguranca' ? entry.uniformeTotal : entry.escritorioTotal;
+                            const meta = tab === 'impostos' ? entry.metaImpostos : tab === 'folha' ? entry.metaFolha : tab === 'manutencao' ? entry.metaManutencao : tab === 'combustivel' ? entry.metaCombustivel : tab === 'seguranca' ? entry.metaSeguranca : entry.metaMateriais;
+                            return <Cell key={`cell-${index}`} fill={real > meta ? 'hsl(var(--destructive))' : 'hsl(var(--primary))'} />;
+                          })}
+                        </Bar>
+                        <Line type="monotone" dataKey={tab === 'impostos' ? 'metaImpostos' : tab === 'folha' ? 'metaFolha' : tab === 'manutencao' ? 'metaManutencao' : tab === 'combustivel' ? 'metaCombustivel' : tab === 'seguranca' ? 'metaSeguranca' : 'metaMateriais'} name="Meta" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} strokeDasharray="5 5" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>
