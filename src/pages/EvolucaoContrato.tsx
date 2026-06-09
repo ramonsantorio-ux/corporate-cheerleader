@@ -828,6 +828,7 @@ export default function EvolucaoContrato() {
               <TabsTrigger value="visao_executiva" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Visão Executiva</TabsTrigger>
               <TabsTrigger value="custos_metas" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingDown className="w-4 h-4 mr-2" />Custos e Metas</TabsTrigger>
               <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
+              <TabsTrigger value="seguranca_rac" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><ShieldAlert className="w-4 h-4 mr-2" />Segurança</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
@@ -1150,6 +1151,33 @@ export default function EvolucaoContrato() {
       )}
 
                 </TabsContent>
+
+          <TabsContent value="seguranca_rac" className="space-y-6 mt-4">
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="shadow-sm border-border">
+                <CardHeader>
+                  <CardTitle className="text-xl">Conformidade de Segurança (SSMA / RACs)</CardTitle>
+                  <CardDescription>
+                    Nível de aderência aos Requisitos de Atividades Críticas (RACs) do mês atual.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px] w-full mt-4">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarRACData}>
+                        <PolarGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.2} />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 500 }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                        <Radar name="Aderência (%)" dataKey="A" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.5} />
+                        <Tooltip />
+                        <Legend />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
         </Tabs>
       ) : (
         <div className="text-center p-12 border-2 border-dashed border-border rounded-xl">
