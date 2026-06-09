@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { FileWarning, Plus, Trash2, Pencil, Calendar, MapPin, Target, AlertTriangle } from "lucide-react";
+import { FileWarning, Plus, Trash2, Pencil, Calendar, MapPin, Target, AlertTriangle, ShieldAlert, CheckCircle2, Search, SlidersHorizontal, ArrowUpRight, ArrowDownRight, PieChart as PieChartIcon, Check } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export interface NotificacaoGlobal {
   id: string;
@@ -66,6 +69,11 @@ const GestaoNotificacoes = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // Filtros Avançados
+  const [filterType, setFilterType] = useState<string>('all'); // all, notificacao, multa
+  const [filterAction, setFilterAction] = useState<string>('all'); // all, pendente, ok
+  const [searchQuery, setSearchQuery] = useState('');
+
   const [formData, setFormData] = useState<Partial<NotificacaoGlobal>>({
     dataStr: '', local: '', motivo: '', solicitante: '', tipo: 'Notificação', planoDeAcao: 'Pendente', valorOriginal: 0
   });
@@ -116,6 +124,54 @@ const GestaoNotificacoes = () => {
     setIsModalOpen(true);
   };
 
+  // --- Lógicas do Dashboard (KPIs e Gráficos) ---
+  const filteredData = React.useMemo(() => {
+    return notificacoes.filter(n => {
+      const matchType = filterType === 'all' ? true : filterType === 'multa' ? n.tipo === 'Multa' : n.tipo === 'Notificação';
+      const matchAction = filterAction === 'all' ? true : filterAction === 'pendente' ? n.planoDeAcao === 'Pendente' : n.planoDeAcao === 'OK';
+      const matchSearch = n.motivo.toLowerCase().includes(searchQuery.toLowerCase()) || n.local.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchType && matchAction && matchSearch;
+    });
+  }, [notificacoes, filterType, filterAction, searchQuery]);
+
+  const kpis = React.useMemo(() => {
+    const totalExposicao = filteredData.filter(n => n.tipo === 'Multa').reduce((acc, curr) => acc + (curr.valorOriginal || 0), 0);
+    const pendentes = filteredData.filter(n => n.planoDeAcao === 'Pendente').length;
+    const ok = filteredData.filter(n => n.planoDeAcao === 'OK').length;
+    const taxaResolucao = (ok + pendentes) === 0 ? 0 : Math.round((ok / (ok + pendentes)) * 100);
+    return { totalExposicao, pendentes, taxaResolucao, total: filteredData.length };
+  }, [filteredData]);
+
+  const chartDataLocais = React.useMemo(() => {
+    const locs: Record<string, number> = {};
+    filteredData.forEach(n => {
+      locs[n.local] = (locs[n.local] || 0) + 1;
+    });
+    return Object.entries(locs).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value).slice(0, 5);
+  }, [filteredData]);
+
+  const chartDataEvolucao = React.useMemo(() => {
+    const evol: Record<string, { name: string; Multas: number; Notificacoes: number }> = {};
+    filteredData.forEach(n => {
+      const m = getMonthForNotification(n.dataStr) || 'Inválido';
+      if (!evol[m]) evol[m] = { name: m, Multas: 0, Notificacoes: 0 };
+      if (n.tipo === 'Multa') evol[m].Multas += 1;
+      else evol[m].Notificacoes += 1;
+    });
+    // Sorting by parsing month could be complex, assuming order of appearance for simplicity or simple string sort
+    return Object.values(evol);
+  }, [filteredData]);
+
+  const chartDataStatus = React.useMemo(() => {
+    const s = { OK: 0, Pendente: 0, 'N/A': 0 };
+    filteredData.forEach(n => s[n.planoDeAcao] += 1);
+    return [
+      { name: 'Resolvidos (OK)', value: s.OK, fill: 'hsl(var(--success))' },
+      { name: 'Pendentes', value: s.Pendente, fill: 'hsl(var(--warning))' },
+      { name: 'Não se Aplica', value: s['N/A'], fill: 'hsl(var(--muted-foreground))' }
+    ].filter(i => i.value > 0);
+  }, [filteredData]);
+
   return (
     <div className="container mx-auto p-6 space-y-6 animate-in fade-in zoom-in-95 duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -129,6 +185,138 @@ const GestaoNotificacoes = () => {
         </Button>
       </div>
 
+      {/* Control Bar Inovadora */}
+      <div className="flex flex-col sm:flex-row gap-3 bg-card border border-border p-3 rounded-xl shadow-sm">
+        <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-lg border border-border/50">
+          <Search className="w-4 h-4 text-muted-foreground" />
+          <input type="text" placeholder="Buscar por motivo ou local..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none outline-none text-sm w-full" />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant={filterType === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilterType('all')} className="h-9">Todas</Button>
+          <Button variant={filterType === 'notificacao' ? 'default' : 'outline'} size="sm" onClick={() => setFilterType('notificacao')} className="h-9">Notificações</Button>
+          <Button variant={filterType === 'multa' ? 'default' : 'outline'} size="sm" onClick={() => setFilterType('multa')} className="h-9 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">Multas</Button>
+          <div className="w-px h-6 bg-border mx-1"></div>
+          <Button variant={filterAction === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilterAction('all')} className="h-9">Todos Status</Button>
+          <Button variant={filterAction === 'pendente' ? 'default' : 'outline'} size="sm" onClick={() => setFilterAction('pendente')} className="h-9 border-warning text-warning hover:bg-warning hover:text-warning-foreground">Pendentes</Button>
+        </div>
+      </div>
+
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
+          <TabsTrigger value="dashboard" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"><PieChartIcon className="w-4 h-4 mr-2"/> Dashboard Analítico</TabsTrigger>
+          <TabsTrigger value="registros" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all"><FileWarning className="w-4 h-4 mr-2"/> Histórico de Registros</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dashboard" className="space-y-6 outline-none">
+          {/* KPI Cards Nível Executivo */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="shadow-sm border-l-4 border-l-destructive">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Exposição Financeira (Multas)</p>
+                    <h3 className="text-3xl font-black mt-2 text-destructive">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(kpis.totalExposicao)}
+                    </h3>
+                  </div>
+                  <div className="p-3 bg-destructive/10 rounded-full"><AlertTriangle className="w-5 h-5 text-destructive" /></div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-l-4 border-l-warning">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Planos Pendentes (SLAs)</p>
+                    <h3 className="text-3xl font-black mt-2">{kpis.pendentes}</h3>
+                  </div>
+                  <div className="p-3 bg-warning/10 rounded-full"><Target className="w-5 h-5 text-warning" /></div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="shadow-sm border-l-4 border-l-success">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Taxa de Resolução</p>
+                    <h3 className="text-3xl font-black mt-2 text-success">{kpis.taxaResolucao}%</h3>
+                  </div>
+                  <div className="p-3 bg-success/10 rounded-full"><CheckCircle2 className="w-5 h-5 text-success" /></div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Core Analytics Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="shadow-sm col-span-1 lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg">Volume de Ocorrências no Tempo</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <AreaChart data={chartDataEvolucao} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorNotif" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorMulta" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--destructive))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--destructive))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="name" tick={{fontSize: 12}} />
+                    <YAxis tick={{fontSize: 12}} />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <Tooltip />
+                    <Legend />
+                    <Area type="monotone" dataKey="Notificacoes" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorNotif)" />
+                    <Area type="monotone" dataKey="Multas" stroke="hsl(var(--destructive))" fillOpacity={1} fill="url(#colorMulta)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Top Locais Ofensores</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={chartDataLocais} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis type="number" tick={{fontSize: 12}} />
+                    <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 12}} />
+                    <Tooltip />
+                    <Bar dataKey="value" name="Ocorrências" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg">Status dos Planos de Ação</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <PieChart>
+                    <Pie data={chartDataStatus} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                      {chartDataStatus.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend verticalAlign="bottom" height={36}/>
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="registros" className="space-y-6 outline-none">
       <Card className="border-border/50 shadow-sm">
         <CardHeader className="bg-muted/30 border-b border-border/50">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -155,7 +343,7 @@ const GestaoNotificacoes = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {notificacoes.map((n) => {
+                {filteredData.map((n) => {
                   const mesVinculo = getMonthForNotification(n.dataStr);
                   return (
                     <TableRow key={n.id} className="hover:bg-muted/10">
@@ -185,9 +373,9 @@ const GestaoNotificacoes = () => {
                     </TableRow>
                   );
                 })}
-                {notificacoes.length === 0 && (
+                {filteredData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma ocorrência registrada.</TableCell>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Nenhuma ocorrência registrada para os filtros selecionados.</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -195,6 +383,8 @@ const GestaoNotificacoes = () => {
           </div>
         </CardContent>
       </Card>
+      </TabsContent>
+      </Tabs>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl">
