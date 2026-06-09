@@ -13,7 +13,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell } from 'recharts';
+import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import * as XLSX from 'xlsx';
 
 interface OfensorFinanceiro {
@@ -495,6 +495,9 @@ export default function EvolucaoContrato() {
   
   // Privacy mode state
   const [hiddenCards, setHiddenCards] = useState<Record<string, boolean>>({});
+  const [timeRange, setTimeRange] = useState('6');
+  const [activeTab, setActiveTab] = useState('visao_executiva');
+  const [selectedMonthDRE, setSelectedMonthDRE] = useState<string | null>(null);
   const toggleCardVisibility = (key: string) => {
     setHiddenCards(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -632,6 +635,12 @@ export default function EvolucaoContrato() {
       };
     });
   }, [medicoes, notificacoesGlobais]);
+
+  const filteredChartData = useMemo(() => {
+    if (timeRange === 'all') return chartData;
+    const limit = parseInt(timeRange);
+    return chartData.slice(-limit);
+  }, [chartData, timeRange]);
 
   const lastMonth = chartData[chartData.length - 1];
   const prevMonth = chartData[chartData.length - 2];
@@ -793,12 +802,28 @@ export default function EvolucaoContrato() {
 
       {/* CHARTS SECTION */}
       {medicoes.length > 0 ? (
-        <Tabs defaultValue="visao_executiva" className="w-full mt-6 space-y-6">
-          <TabsList className="bg-muted/50 p-1 rounded-xl inline-flex w-full overflow-x-auto justify-start sm:justify-center border border-border/50">
-            <TabsTrigger value="visao_executiva" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Visão Executiva</TabsTrigger>
-            <TabsTrigger value="custos_metas" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingDown className="w-4 h-4 mr-2" />Custos e Metas</TabsTrigger>
-            <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+            <TabsList className="bg-muted/50 p-1 rounded-xl inline-flex w-full sm:w-auto overflow-x-auto justify-start sm:justify-center border border-border/50">
+              <TabsTrigger value="visao_executiva" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Visão Executiva</TabsTrigger>
+              <TabsTrigger value="custos_metas" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingDown className="w-4 h-4 mr-2" />Custos e Metas</TabsTrigger>
+              <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
+            </TabsList>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-full sm:w-[180px] bg-background border-border/50 shadow-sm rounded-xl h-10">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border/50">
+                  <SelectItem value="3">Últimos 3 meses</SelectItem>
+                  <SelectItem value="6">Últimos 6 meses</SelectItem>
+                  <SelectItem value="12">Últimos 12 meses</SelectItem>
+                  <SelectItem value="all">Todo o período</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
           <TabsContent value="visao_executiva" className="space-y-6 mt-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -812,7 +837,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
                       <linearGradient id="colorSlaArea" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
@@ -842,7 +867,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[300px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
                       <linearGradient id="colorSla" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
@@ -871,7 +896,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[300px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
                       <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.6}/>
@@ -952,11 +977,31 @@ export default function EvolucaoContrato() {
                 <TabsTrigger value="materiais" className="py-2">Materiais</TabsTrigger>
               </TabsList>
 
+              <TabsContent value="visao_geral" className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+                    { category: 'Impostos', meta: lastMonth?.metaImpostos || 0, real: lastMonth?.impostosTotal || 0 },
+                    { category: 'Folha', meta: lastMonth?.metaFolha || 0, real: lastMonth?.folhaTotal || 0 },
+                    { category: 'Manutenção', meta: lastMonth?.metaManutencao || 0, real: lastMonth?.manutencaoTotal || 0 },
+                    { category: 'Combustível', meta: lastMonth?.metaCombustivel || 0, real: lastMonth?.combustivelTotal || 0 },
+                    { category: 'Segurança', meta: lastMonth?.metaSeguranca || 0, real: lastMonth?.uniformeTotal || 0 },
+                    { category: 'Materiais', meta: lastMonth?.metaMateriais || 0, real: lastMonth?.escritorioTotal || 0 },
+                  ]}>
+                    <PolarGrid stroke="hsl(var(--border))" />
+                    <PolarAngleAxis dataKey="category" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 500 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
+                    <Radar name="Meta" dataKey="meta" stroke="hsl(var(--primary))" strokeWidth={2} fill="hsl(var(--primary))" fillOpacity={0.2} />
+                    <Radar name="Custo Real" dataKey="real" stroke="hsl(var(--destructive))" strokeWidth={2} fill="hsl(var(--destructive))" fillOpacity={0.4} />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Tooltip content={<CustomTooltip />} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </TabsContent>
               {['impostos', 'folha', 'manutencao', 'combustivel', 'seguranca', 'materiais'].map(tab => (
                 <TabsContent key={tab} value={tab}>
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                      <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                         <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
@@ -988,7 +1033,14 @@ export default function EvolucaoContrato() {
       {medicoes.length > 0 && (
         <Card className="shadow-sm border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/20">
           <div className="p-4 border-b border-border bg-muted/20">
-            <h3 className="font-bold text-lg flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> Histórico Financeiro Detalhado</h3>
+            <div className="flex items-center gap-4">
+              <h3 className="font-bold text-lg flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> Histórico Financeiro Detalhado</h3>
+              {selectedMonthDRE && (
+                <button onClick={() => setSelectedMonthDRE(null)} className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium hover:bg-primary/20 transition-colors">
+                  Filtrado: {selectedMonthDRE} (Limpar ✕)
+                </button>
+              )}
+            </div>
           </div>
           <div className="overflow-x-auto max-h-[350px] overflow-y-auto relative">
             <table className="w-full text-sm">
@@ -1469,7 +1521,7 @@ export default function EvolucaoContrato() {
             
             {expandedChart === 'sla' && (
               <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                     <defs>
                       <linearGradient id="colorSlaAreaBig" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
@@ -1491,7 +1543,7 @@ export default function EvolucaoContrato() {
 
             {expandedChart === 'resumo' && (
               <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={(e: any) => { if (e && e.activeLabel) { setSelectedMonthDRE(e.activeLabel); setActiveTab('dre'); } }} className="cursor-pointer">
                     <defs>
                       <linearGradient id="colorSlaBig" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
@@ -1512,7 +1564,7 @@ export default function EvolucaoContrato() {
 
             {expandedChart === 'rentabilidade' && (
               <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={chartData.slice(-6)} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                     <defs>
                       <linearGradient id="colorSaldoBig" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.6}/>
@@ -1564,7 +1616,7 @@ export default function EvolucaoContrato() {
                 {['impostos', 'folha', 'manutencao', 'combustivel', 'seguranca', 'materiais'].map(tab => (
                   <TabsContent key={tab} value={tab} className="flex-1 mt-0">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={chartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                      <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                         <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
