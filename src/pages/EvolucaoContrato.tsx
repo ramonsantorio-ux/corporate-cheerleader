@@ -1449,7 +1449,7 @@ export default function EvolucaoContrato() {
         </SheetContent>
       </Sheet>
     </>
-  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth]);
+  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth, activeTab, timeRange, selectedMonthDRE, ofensoresData, filteredChartData]);
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-8 animate-fade-in pb-20">
