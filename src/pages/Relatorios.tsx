@@ -6,6 +6,7 @@ import { BarChart3, TrendingUp, PieChart, Download, FileText, FileSpreadsheet, U
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { setorLabels, FeedbackSetor } from '@/lib/feedbackData';
 import * as XLSX from 'xlsx';
@@ -720,6 +721,13 @@ export default function Relatorios() {
 
       <PeriodFilter value={period} onChange={setPeriod} />
 
+      <Tabs defaultValue="analytics" className="w-full mt-6">
+        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
+          <TabsTrigger value="analytics" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Analytics Corporativo</TabsTrigger>
+          <TabsTrigger value="fichas" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Fichas de Colaboradores</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="fichas" className="space-y-6 outline-none">
       {/* Employee PDF export */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-section">
         <div className="px-6 py-4 flex flex-col sm:flex-row items-center gap-3">
@@ -732,8 +740,10 @@ export default function Relatorios() {
           <Button size="sm" onClick={exportEmployeePDF} disabled={!selectedEmployee}><Download className="w-4 h-4 mr-2" />Baixar PDF</Button>
         </div>
       </motion.div>
+      </TabsContent>
 
-      <div className="pt-6">
+      <TabsContent value="analytics" className="space-y-6 outline-none">
+      <div className="pt-2">
         <CLevelAnalytics 
           funcionarios={funcionarios}
           feedbacks={feedbacks}
@@ -854,6 +864,8 @@ export default function Relatorios() {
           </div>
         </div>
       </motion.div>
+      </TabsContent>
+      </Tabs>
     </div>
   );
 }

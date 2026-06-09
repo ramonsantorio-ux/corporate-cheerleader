@@ -6,6 +6,7 @@ import { Brain, User, BarChart2, Zap, ClipboardList, Award, Star, Plus, CheckCir
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/components/ExecutiveReports';
 
 const assessments = [
@@ -176,7 +177,13 @@ export default function Treinamentos() {
         <h1 className="flex items-center gap-2"><ClipboardList className="w-6 h-6 text-primary" />Central de Assessments</h1>
         <p>Mapeamento comportamental e de competências da sua equipe.</p>
       </div>
+      <Tabs defaultValue="assessments" className="w-full mt-6">
+        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
+          <TabsTrigger value="assessments" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Assessments Disponíveis</TabsTrigger>
+          <TabsTrigger value="equipe" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">Mapeamento da Equipe</TabsTrigger>
+        </TabsList>
 
+        <TabsContent value="assessments" className="space-y-6 outline-none">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {assessments.map((a, i) => {
           const Icon = a.icon;
@@ -213,8 +220,11 @@ export default function Treinamentos() {
             </motion.div>
           );
         })}
+        })}
       </div>
+      </TabsContent>
 
+      <TabsContent value="equipe" className="space-y-6 outline-none">
       {/* ── Employee Table ── */}
       <div className="glass-card rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center justify-between flex-wrap gap-3">
@@ -290,6 +300,8 @@ export default function Treinamentos() {
           </table>
         </div>
       </div>
+      </TabsContent>
+      </Tabs>
 
       {/* ── Gallup Modal ── */}
       {gallupModal.open && (
