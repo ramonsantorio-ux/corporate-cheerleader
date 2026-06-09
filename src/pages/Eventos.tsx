@@ -71,6 +71,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function Eventos() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("visao-geral");
   const [events, setEvents] = useState<EventRow[]>([]);
   const [funcionarios, setFuncionarios] = useState<{ id: string; nome: string; cargo: string; departamento: string; foto_url: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -793,7 +794,7 @@ export default function Eventos() {
       </motion.div>
 
       {/* --- DASHBOARD TABS --- */}
-      <Tabs defaultValue="visao-geral" className="w-full mb-8">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
         <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
           <TabsTrigger value="visao-geral" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2">
             <Activity className="w-4 h-4" /> Visão Geral
@@ -1170,9 +1171,10 @@ export default function Eventos() {
       </Tabs>
 
       {/* Events Table */}
-      <Card id="events-table" className="scroll-mt-24">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center justify-between">
+      {activeTab !== 'treinamentos_ssma' && (
+        <Card id="events-table" className="scroll-mt-24">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center justify-between">
             <span>
               Registro de Eventos ({filtered.length})
               {typeFilter !== 'all' && (
@@ -1339,6 +1341,7 @@ export default function Eventos() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Detail dialog */}
       <Dialog open={!!detailEvent} onOpenChange={(open) => !open && setDetailEvent(null)}>
