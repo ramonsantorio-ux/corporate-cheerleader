@@ -200,29 +200,29 @@ export default function Avaliacoes() {
           {/* Charts row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-              className="glass-card rounded-xl p-5">
+              className="glass-card rounded-xl p-5 flex flex-col">
               <h2 className="text-base font-semibold text-foreground mb-4">Distribuição de Pesos</h2>
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={320}>
                 <PieChart>
-                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="40%" paddingAngle={3} label={({ name, value }) => `${value}%`}>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="40%" outerRadius={80} innerRadius={50} paddingAngle={3}>
                     {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(v: number) => `${v}%`} />
-                  <Legend />
+                  <Legend layout="horizontal" verticalAlign="bottom" align="center" wrapperStyle={{ fontSize: '11px', paddingTop: '20px' }} />
                 </PieChart>
               </ResponsiveContainer>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-              className="glass-card rounded-xl p-5">
+              className="glass-card rounded-xl p-5 flex flex-col">
               <h2 className="text-base font-semibold text-foreground mb-4">Peso por Meta</h2>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tickFormatter={v => `${v}%`} />
-                  <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} />
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={barData} layout="vertical" margin={{ left: 0, right: 20, bottom: 5, top: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={true} vertical={false} />
+                  <XAxis type="number" tickFormatter={v => `${v}%`} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(val) => val.length > 25 ? val.slice(0, 25) + '...' : val} axisLine={false} tickLine={false} />
                   <Tooltip formatter={(v: number) => `${v}%`} />
-                  <Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={24} />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>
