@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+﻿import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,10 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw, Download, Upload, Calendar, Share2, Truck } from "lucide-react";
+import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw, Download, Upload, ShieldAlert } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import * as XLSX from 'xlsx';
 
 interface OfensorFinanceiro {
@@ -371,18 +371,18 @@ const mockData: Medicao[] = [
 ];
 
 export const LISTA_EQUIPAMENTOS = [
-  { grupo: "CAMINHÃO BASCULANTE 16TON", itens: ["BASCULANTE 16TON - MFE - 01", "BASCULANTE 16TON - MFE - 02", "BASCULANTE 16TON - MFE - 03", "BASCULANTE 16TON - MFE - 04", "BASCULANTE 16TON - TPM - 01", "BASCULANTE 16TON - TPM - 02"] },
-  { grupo: "CAMINHÃO BASCULANTE 6M³", itens: ["BASCULANTE 6M³ - MFE - 01"] },
-  { grupo: "CAMINHÃO BROOK", itens: ["BROOK - MFE - 01", "BROOK - TPM - 01"] },
-  { grupo: "CAMINHÃO PIPA ASPERSÃO", itens: ["PIPA ASPERSÃO - MFE - 01", "PIPA ASPERSÃO - MFE - 02", "PIPA ASPERSÃO - MFE - 03", "PIPA ASPERSÃO - MFE - 04", "PIPA ASPERSÃO - MFE - 05", "PIPA ASPERSÃO - TPM - 01", "PIPA ASPERSÃO - TPM - 02", "PIPA ASPERSÃO - TPM - 03"] },
-  { grupo: "CAMINHÃO PIPA ASPERSÃO VIAS", itens: ["PIPA ASPERSÃO VIAS - MFE - 01", "PIPA ASPERSÃO VIAS - MFE - 02"] },
-  { grupo: "CAMINHÃO PIPA LIMPEZA", itens: ["PIPA LIMPEZA - MFE - 01", "PIPA LIMPEZA - MFE - 02", "PIPA LIMPEZA - TPM - 01"] },
+  { grupo: "CAMINH├âO BASCULANTE 16TON", itens: ["BASCULANTE 16TON - MFE - 01", "BASCULANTE 16TON - MFE - 02", "BASCULANTE 16TON - MFE - 03", "BASCULANTE 16TON - MFE - 04", "BASCULANTE 16TON - TPM - 01", "BASCULANTE 16TON - TPM - 02"] },
+  { grupo: "CAMINH├âO BASCULANTE 6M┬│", itens: ["BASCULANTE 6M┬│ - MFE - 01"] },
+  { grupo: "CAMINH├âO BROOK", itens: ["BROOK - MFE - 01", "BROOK - TPM - 01"] },
+  { grupo: "CAMINH├âO PIPA ASPERS├âO", itens: ["PIPA ASPERS├âO - MFE - 01", "PIPA ASPERS├âO - MFE - 02", "PIPA ASPERS├âO - MFE - 03", "PIPA ASPERS├âO - MFE - 04", "PIPA ASPERS├âO - MFE - 05", "PIPA ASPERS├âO - TPM - 01", "PIPA ASPERS├âO - TPM - 02", "PIPA ASPERS├âO - TPM - 03"] },
+  { grupo: "CAMINH├âO PIPA ASPERS├âO VIAS", itens: ["PIPA ASPERS├âO VIAS - MFE - 01", "PIPA ASPERS├âO VIAS - MFE - 02"] },
+  { grupo: "CAMINH├âO PIPA LIMPEZA", itens: ["PIPA LIMPEZA - MFE - 01", "PIPA LIMPEZA - MFE - 02", "PIPA LIMPEZA - TPM - 01"] },
   { grupo: "ESCAVADEIRA 312", itens: ["312 - MFE - 03"] },
   { grupo: "MINI CARR. 226B REMOTA", itens: ["CARR. 226B REMOTA - TPM - 01"] },
   { grupo: "MINI CARR. S70 REMOTA", itens: ["CARR. S70 REMOTA - MFE - 01", "CARR. S70 REMOTA - TPM - 01"] },
   { grupo: "MINI CARREGADEIRA 226B", itens: ["CARREGADEIRA 226B - MFE - 01", "CARREGADEIRA 226B - MFE - 02", "CARREGADEIRA 226B - MFE - 03", "CARREGADEIRA 226B - MFE - 04", "CARREGADEIRA 226B - MFE - 05", "CARREGADEIRA 226B - TPM - 01", "CARREGADEIRA 226B - TPM - 02"] },
   { grupo: "MINI ESCAVADEIRA 303.5", itens: ["ESCAVADEIRA 303.5 - MFE - 01", "ESCAVADEIRA 303.5 - MFE - 02"] },
-  { grupo: "PÁ CARREGADEIRA 962GII", itens: ["CARREGADEIRA 962GII - MFE - 01"] },
+  { grupo: "P├ü CARREGADEIRA 962GII", itens: ["CARREGADEIRA 962GII - MFE - 01"] },
   { grupo: "RETROESCAVADEIRA 416D", itens: ["416D - MFE - 01", "416D - MFE - 02", "416D - MFE - 03", "416D - TPM - 01"] }
 ];
 
@@ -415,7 +415,7 @@ const isDateInMedicaoMonth = (dateStr: string, medicaoMes: string) => {
   const monthMap: Record<string, number> = { 
     'Jan': 0, 'Janeiro': 0, 
     'Fev': 1, 'Fevereiro': 1, 
-    'Mar': 2, 'Março': 2, 
+    'Mar': 2, 'Mar├ºo': 2, 
     'Abr': 3, 'Abril': 3, 
     'Mai': 4, 'Maio': 4, 
     'Jun': 5, 'Junho': 5, 
@@ -543,7 +543,7 @@ export default function EvolucaoContrato() {
         await supabase.from('medicoes').delete().eq('id', existing._supabaseId);
       }
       setMedicoes(medicoes.filter(m => m.id !== id));
-      toast({ title: 'Sucesso', description: 'Fechamento excluído com sucesso!' });
+      toast({ title: 'Sucesso', description: 'Fechamento exclu├¡do com sucesso!' });
     }
   };
 
@@ -573,101 +573,151 @@ export default function EvolucaoContrato() {
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+
+  // Derivations for charts and KPIs
+  const chartData = useMemo(() => {
+    return medicoes.map(m => {
+      const globais = notificacoesGlobais.filter(ng => isDateInMedicaoMonth(ng.dataStr, m.mes));
+      const globaisNotifs = globais.filter(ng => ng.tipo === 'Notifica├º├úo' || !ng.tipo).map(ng => ({ 
+        motivo: `${ng.motivo} (Ref: ${ng.local})`,
+        dataStr: ng.dataStr,
+        local: ng.local,
+        solicitante: ng.solicitante,
+        planoDeAcao: ng.planoDeAcao,
+        isGlobal: true
+      }));
+      const globaisMultas = globais.filter(ng => ng.tipo === 'Multa').map(ng => ({ 
+        motivo: `${ng.motivo} (Ref: ${ng.local})`, 
+        valor: ng.valorOriginal || 0,
+        dataStr: ng.dataStr,
+        local: ng.local,
+        solicitante: ng.solicitante,
+        planoDeAcao: ng.planoDeAcao,
+        isGlobal: true
+      }));
+      
+      const todasNotificacoes = [...m.notificacoes, ...globaisNotifs];
+      const todasMultas = [...m.multas, ...globaisMultas];
+
+      const sumDescontos = m.descontos.reduce((acc, curr) => acc + curr.valor, 0);
+      const sumMultas = todasMultas.reduce((acc, curr) => acc + curr.valor, 0);
+      
+      const receitaTotal = m.fatLocacao + m.fatMaoDeObra + m.eventuais;
+      const impostosTotal = (m.impostoIrrf || 0) + (m.impostoPis || 0) + (m.impostoCofins || 0) + (m.impostoCsll || 0) + (m.impostoIss || 0) + (m.impostoInss || 0) + (m.impostoInssAdSat || 0);
+      const folhaTotal = m.custoFolha + m.horasExtras + (m.folhaInss || 0) + (m.folhaFgts || 0) + (m.folhaIrrf || 0) + (m.custoTurnover || 0) + (m.beneficioCafeDaManha || 0) + (m.beneficioSeguroDeVida || 0) + (m.beneficioPlanoDeSaude || 0) + (m.beneficioPlanoOdontologico || 0) + (m.beneficioTicketAlimentacao || 0) + (m.beneficioValeTransporte || 0) + (m.beneficioMaisParaTodos || 0) + (m.beneficioRefeicao || 0);
+      const manutencaoTotal = (m.manutencaoPecas || 0) + (m.manutencaoServicos || 0) + (m.manutencaoPneus || 0) + (m.manutencaoLubrificacao || 0) + (m.manutencaoLavador || 0) + (m.manutencaoPreventiva || 0);
+      const combustivelTotal = (m.combustivelDiesel || 0) + (m.combustivelDieselS10 || 0) + (m.combustivelDieselS500 || 0) + (m.combustivelGasolina || 0);
+      const uniformeTotal = (m.uniforme || 0) + (m.epi || 0);
+      const escritorioTotal = (m.escritorioMaterial || 0) + (m.escritorioLimpeza || 0);
+      
+      // SSMA (RACs) - Conformidade de Treinamento e Inspeção
+      const rac1 = 80 + Math.random() * 20; // Altura
+      const rac2 = 90 + Math.random() * 10; // Veículos Leves
+      const rac3 = 85 + Math.random() * 15; // Equipamentos Móveis
+      const rac4 = 95 + Math.random() * 5;  // Bloqueio Energia
+
+      const perdas = sumDescontos + sumMultas;
+
+      const custosTotais = folhaTotal + manutencaoTotal + combustivelTotal + uniformeTotal + escritorioTotal;
+      const saldo = receitaTotal - impostosTotal - custosTotais - perdas;
+      const margem = receitaTotal > 0 ? (saldo / receitaTotal) * 100 : 0;
+      
+      return {
+        ...m,
+        notificacoes: todasNotificacoes,
+        multas: todasMultas,
+        saldo,
+        margem: parseFloat(margem.toFixed(1)),
+        rac1: Number(rac1.toFixed(1)),
+        rac2: Number(rac2.toFixed(1)),
+        rac3: Number(rac3.toFixed(1)),
+        rac4: Number(rac4.toFixed(1)),
+        perdas,
+        sumDescontos,
+        sumMultas,
+        receitaTotal,
+        impostosTotal,
+        folhaTotal,
+        manutencaoTotal,
+        combustivelTotal,
+        uniformeTotal,
+        escritorioTotal,
+        custosTotais
+      };
+    });
+  }, [medicoes, notificacoesGlobais]);
+
+  const filteredChartData = useMemo(() => {
+    if (timeRange === 'all') return chartData;
+    const limit = parseInt(timeRange);
+    return chartData.slice(-limit);
+  }, [chartData, timeRange]);
+
+  const lastMonth = chartData[chartData.length - 1];
+  const prevMonth = chartData[chartData.length - 2];
+
+  const ofensoresData = useMemo(() => {
+    let glosas = 0;
+    let multas = 0;
+    let horasExtras = 0;
+    medicoes.forEach(m => {
+      glosas += m.descontos.reduce((acc, curr) => acc + curr.valor, 0);
+      multas += m.multas.reduce((acc, curr) => acc + curr.valor, 0);
+      horasExtras += m.horasExtras;
+    });
+    return [
+      { name: 'Glosas Operacionais', value: glosas, color: 'hsl(var(--destructive))' },
+      { name: 'Multas Aplicadas', value: multas, color: '#991b1b' },
+      { name: 'Horas Extras', value: horasExtras, color: 'hsl(var(--warning))' },
+    ].filter(item => item.value > 0);
+  }, [medicoes]);
+
+  const getTrend = (current: number, prev: number, inverseGood = false) => {
+    if (!prev) return { icon: Minus, color: 'text-muted-foreground' };
+    if (current > prev) return { icon: ArrowUpRight, color: inverseGood ? 'text-destructive' : 'text-success' };
+    if (current < prev) return { icon: ArrowDownRight, color: inverseGood ? 'text-success' : 'text-destructive' };
+    return { icon: Minus, color: 'text-muted-foreground' };
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background border border-border p-3 shadow-md rounded-md z-50">
-          <p className="font-semibold text-sm mb-1">{label}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-muted-foreground">{entry.name}:</span>
-              <span className="font-medium">
-                {typeof entry.value === 'number' && entry.name.includes('Glosa') || entry.name.includes('Ofensores') ? `R$ ${(entry.value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
-              </span>
-            </p>
-          ))}
+        <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
+          <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>
+          <div className="space-y-2">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-center justify-between gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
+                  <span className="text-muted-foreground font-medium">{entry.name}</span>
+                </div>
+                <span className="font-bold text-foreground">
+                  {entry.name.includes('Margem') || entry.name.includes('Ader├¬ncia') 
+                    ? `${entry.value}%` 
+                    : entry.name.includes('Notifica├º├Áes') 
+                      ? entry.value 
+                      : formatCurrency(entry.value)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
     return null;
   };
 
-  // Derivations for charts and KPIs
-  const chartData = useMemo(() => {
-    // Gerar últimos 12 meses para os dados do contrato industrial
-    const data = [];
-    const today = new Date();
-    
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const mes = d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-      
-      // Aderência à programação (Meta VALE é 95%)
-      const baseAderencia = 90 + Math.random() * 9; // Varia de 90 a 99
-      const aderencia = Number(baseAderencia.toFixed(1));
-      
-      // Disponibilidade Física Equipamentos (MEV)
-      const horasTotais = 7200; // Ex: 10 equipamentos operando 720h/mês
-      const horasParadas = Math.floor(Math.random() * 800);
-      const horasTrabalhadas = horasTotais - horasParadas;
-      const disponibilidade = Number(((horasTrabalhadas / horasTotais) * 100).toFixed(1));
-
-      // SSMA (RACs) - Conformidade de Treinamento e Inspeção
-      const rac1 = 80 + Math.random() * 20; // Altura
-      const rac2 = 90 + Math.random() * 10; // Veículos Leves
-      const rac3 = 85 + Math.random() * 15; // Equipamentos Móveis
-      const rac4 = 95 + Math.random() * 5;  // Bloqueio Energia
-      const racMedia = Number(((rac1 + rac2 + rac3 + rac4) / 4).toFixed(1));
-
-      // Glosas e Penalidades Financeiras
-      const glosaAderencia = aderencia < 95 ? (95 - aderencia) * 1500 : 0;
-      const glosaSSMA = Math.random() > 0.7 ? Math.random() * 5000 : 0; // Multas de segurança esporádicas
-      const totalGlosas = Number((glosaAderencia + glosaSSMA).toFixed(2));
-
-      data.push({
-        mes,
-        aderencia,
-        metaAderencia: 95,
-        disponibilidade,
-        horasTrabalhadas,
-        horasParadas,
-        racMedia,
-        rac1: Number(rac1.toFixed(1)),
-        rac2: Number(rac2.toFixed(1)),
-        rac3: Number(rac3.toFixed(1)),
-        rac4: Number(rac4.toFixed(1)),
-        totalGlosas,
-        glosaAderencia,
-        glosaSSMA
-      });
+  const handleChartClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload.length > 0) {
+      const monthData = data.activePayload[0].payload;
+      if (monthData && monthData.id) {
+        setDetalhesMedicao(monthData);
+      }
     }
-    return data;
-  }, [timeRange]);
+  };
 
-  const filteredChartData = useMemo(() => {
-    if (timeRange === 'all') return chartData;
-    const months = parseInt(timeRange);
-    return chartData.slice(-months);
-  }, [chartData, timeRange]);
 
-  const lastMonth = filteredChartData[filteredChartData.length - 1];
-  const prevMonth = filteredChartData[filteredChartData.length - 2] || lastMonth;
-
-  const ofensoresData = useMemo(() => {
-    const totalGlosaAderencia = filteredChartData.reduce((acc, curr) => acc + curr.glosaAderencia, 0);
-    const totalGlosaSSMA = filteredChartData.reduce((acc, curr) => acc + curr.glosaSSMA, 0);
-    const totalFaltaEfetivo = Math.random() * 15000 + 5000;
-    const totalAvarias = Math.random() * 20000 + 10000;
-
-    return [
-      { name: 'Baixa Aderência (SLA < 95%)', value: totalGlosaAderencia, color: 'hsl(var(--destructive))' },
-      { name: 'Infrações SSMA/RAC', value: totalGlosaSSMA, color: 'hsl(var(--warning))' },
-      { name: 'Absenteísmo/Falta Efetivo', value: totalFaltaEfetivo, color: 'hsl(var(--orange-500))' },
-      { name: 'Quebra de Equipamentos', value: totalAvarias, color: 'hsl(var(--muted-foreground))' },
-    ].filter(item => item.value > 0);
-  }, [filteredChartData]);
-
+  
   const radarRACData = [
     { subject: 'RAC 01 (Altura)', A: lastMonth?.rac1 || 0, fullMark: 100 },
     { subject: 'RAC 02 (Veículos Leves)', A: lastMonth?.rac2 || 0, fullMark: 100 },
@@ -676,263 +726,768 @@ export default function EvolucaoContrato() {
     { subject: 'RAC 05 (Içamento)', A: 90 + Math.random()*10, fullMark: 100 },
   ];
 
-  const getTrend = (current: number, prev: number, inverseGood = false) => {
-    if (!current || !prev) return { icon: <Minus className="w-4 h-4 text-muted-foreground" />, color: 'text-muted-foreground', value: '0%' };
-    const diff = ((current - prev) / prev) * 100;
-    const isPositive = diff >= 0;
-    const isGood = inverseGood ? !isPositive : isPositive;
-    
-    if (Math.abs(diff) < 0.1) return { icon: <Minus className="w-4 h-4 text-muted-foreground" />, color: 'text-muted-foreground', value: '0%' };
-    
-    return {
-      icon: isPositive ? <ArrowUpRight className={`w-4 h-4 ${isGood ? 'text-success' : 'text-destructive'}`} /> : <ArrowDownRight className={`w-4 h-4 ${isGood ? 'text-success' : 'text-destructive'}`} />,
-      color: isGood ? 'text-success' : 'text-destructive',
-      value: `${Math.abs(diff).toFixed(1)}%`
-    };
-  };
-
   const dashboardContent = useMemo(() => (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Gestão Operacional do Contrato</h2>
-          <p className="text-muted-foreground">Monitoramento de SLAs, SSMA, Conformidade RAC e Equipamentos (MEV).</p>
+    <>
+      {/* KPI TOP CARDS */}
+      {lastMonth && (
+        <div className="flex flex-wrap gap-4 [&>*]:flex-1 [&>*]:min-w-[200px]">
+          <div className={`glass-card rounded-xl p-4 border-l-4 ${lastMonth.aderencia < 95 ? 'border-l-destructive bg-destructive/5' : 'border-l-primary'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <p className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${lastMonth.aderencia < 95 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                <Target className="w-3.5 h-3.5" /> Ader├¬ncia SLA
+              </p>
+              <button onClick={() => toggleCardVisibility('aderencia')} className="text-muted-foreground hover:text-foreground transition-colors">
+                {hiddenCards['aderencia'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-2xl font-black tracking-tight transition-all duration-300 ${hiddenCards['aderencia'] ? 'blur-md select-none opacity-50 text-foreground' : (lastMonth.aderencia < 95 ? 'text-destructive' : '')}`}>{lastMonth.aderencia}%</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.aderencia, prevMonth.aderencia).icon;
+                const color = getTrend(lastMonth.aderencia, prevMonth.aderencia).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
+            </div>
+          </div>
+          
+          <div className="glass-card rounded-xl p-4 border-l-4 border-l-blue-500">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5" /> Faturamento Bruto</p>
+              <button onClick={() => toggleCardVisibility('faturamento')} className="text-muted-foreground hover:text-foreground transition-colors">
+                {hiddenCards['faturamento'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-xl font-black text-foreground tracking-tight transition-all duration-300 ${hiddenCards['faturamento'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.receitaTotal)}</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.receitaTotal, prevMonth.receitaTotal).icon;
+                const color = getTrend(lastMonth.receitaTotal, prevMonth.receitaTotal).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
+            </div>
+          </div>
+
+          <div className="glass-card rounded-xl p-4 border-l-4 border-l-success bg-success/5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-success uppercase tracking-wider flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Lucro L├¡quido Real</p>
+              <button onClick={() => toggleCardVisibility('lucro')} className="text-success/70 hover:text-success transition-colors">
+                {hiddenCards['lucro'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-xl font-black text-success tracking-tight transition-all duration-300 ${hiddenCards['lucro'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.saldo)}</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.saldo, prevMonth.saldo).icon;
+                const color = getTrend(lastMonth.saldo, prevMonth.saldo).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
+            </div>
+          </div>
+
+          <div className="glass-card rounded-xl p-4 border-l-4 border-l-primary">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Calculator className="w-3.5 h-3.5" /> Margem L├¡quida</p>
+              <button onClick={() => toggleCardVisibility('margem')} className="text-muted-foreground hover:text-foreground transition-colors">
+                {hiddenCards['margem'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-2xl font-black tracking-tight transition-all duration-300 ${hiddenCards['margem'] ? 'blur-md select-none opacity-50 text-foreground' : 'text-primary'}`}>{lastMonth.margem}%</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.margem, prevMonth.margem).icon;
+                const color = getTrend(lastMonth.margem, prevMonth.margem).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
+            </div>
+          </div>
+
+          <div className="glass-card rounded-xl p-4 border-l-4 border-l-destructive bg-destructive/5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Sangria (Glosas+Multas)</p>
+              <button onClick={() => toggleCardVisibility('perdas')} className="text-destructive/70 hover:text-destructive transition-colors">
+                {hiddenCards['perdas'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-xl font-black text-destructive tracking-tight transition-all duration-300 ${hiddenCards['perdas'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.perdas)}</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.perdas, prevMonth.perdas, true).icon;
+                const color = getTrend(lastMonth.perdas, prevMonth.perdas, true).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[180px] bg-background border-border shadow-sm">
-              <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="3">Últimos 3 meses</SelectItem>
-              <SelectItem value="6">Últimos 6 meses</SelectItem>
-              <SelectItem value="12">Últimos 12 meses</SelectItem>
-              <SelectItem value="all">Todo o período</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="icon"><Download className="w-4 h-4" /></Button>
-          <Button variant="outline" size="icon"><Share2 className="w-4 h-4" /></Button>
-        </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Aderência à Programação</CardTitle>
-            <Target className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {lastMonth?.aderencia}%
+      {/* CHARTS SECTION */}
+      {medicoes.length > 0 ? (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+            <TabsList className="bg-muted/50 p-1 rounded-xl inline-flex w-full sm:w-auto overflow-x-auto justify-start sm:justify-center border border-border/50">
+              <TabsTrigger value="visao_executiva" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Vis├úo Executiva</TabsTrigger>
+              <TabsTrigger value="custos_metas" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingDown className="w-4 h-4 mr-2" />Custos e Metas</TabsTrigger>
+              <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
+            </TabsList>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Per├¡odo:</span>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-full sm:w-[180px] bg-background border-border/50 shadow-sm rounded-xl h-10">
+                  <SelectValue placeholder="Per├¡odo" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border/50">
+                  <SelectItem value="3">├Ültimos 3 meses</SelectItem>
+                  <SelectItem value="6">├Ültimos 6 meses</SelectItem>
+                  <SelectItem value="12">├Ültimos 12 meses</SelectItem>
+                  <SelectItem value="all">Todo o per├¡odo</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div className="flex items-center gap-2 mt-1">
-              {getTrend(lastMonth?.aderencia, prevMonth?.aderencia).icon}
-              <span className={`text-xs ${getTrend(lastMonth?.aderencia, prevMonth?.aderencia).color} font-medium`}>
-                {getTrend(lastMonth?.aderencia, prevMonth?.aderencia).value}
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">vs mês anterior</span>
-            </div>
-            {lastMonth?.aderencia < 95 && (
-              <div className="mt-2 text-[11px] bg-destructive/10 text-destructive px-2 py-1 rounded-md inline-block font-semibold">
-                ⚠️ Abaixo da meta (95%)
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Disponibilidade MEV</CardTitle>
-            <Truck className="h-4 w-4 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {lastMonth?.disponibilidade}%
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              {getTrend(lastMonth?.disponibilidade, prevMonth?.disponibilidade).icon}
-              <span className={`text-xs ${getTrend(lastMonth?.disponibilidade, prevMonth?.disponibilidade).color} font-medium`}>
-                {getTrend(lastMonth?.disponibilidade, prevMonth?.disponibilidade).value}
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">vs mês anterior</span>
-            </div>
-            <div className="mt-2 text-[11px] text-muted-foreground">
-              {lastMonth?.horasTrabalhadas}h operadas / {lastMonth?.horasParadas}h em manutenção
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conformidade RAC (SSMA)</CardTitle>
-            <ShieldAlert className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {lastMonth?.racMedia}%
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              {getTrend(lastMonth?.racMedia, prevMonth?.racMedia).icon}
-              <span className={`text-xs ${getTrend(lastMonth?.racMedia, prevMonth?.racMedia).color} font-medium`}>
-                {getTrend(lastMonth?.racMedia, prevMonth?.racMedia).value}
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">vs mês anterior</span>
-            </div>
-            <div className="mt-2 flex gap-2">
-              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded border border-border">0 Acidentes</span>
-              <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded border border-border">0 Interdições</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Penalidades / Glosas</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-destructive">
-              R$ {(lastMonth?.totalGlosas / 1000).toFixed(1)}k
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              {getTrend(lastMonth?.totalGlosas, prevMonth?.totalGlosas, true).icon}
-              <span className={`text-xs ${getTrend(lastMonth?.totalGlosas, prevMonth?.totalGlosas, true).color} font-medium`}>
-                {getTrend(lastMonth?.totalGlosas, prevMonth?.totalGlosas, true).value}
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">vs mês anterior</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="shadow-sm border-border transition-all duration-300">
-          <CardHeader>
-            <CardTitle className="text-lg">Aderência à Programação (SLA)</CardTitle>
-            <CardDescription>Acompanhamento mensal da meta de aderência contratual (Mínimo de 95%).</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
-                  <defs>
-                    <linearGradient id="colorAderencia" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
-                  <YAxis domain={[80, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <ReferenceLine y={95} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ position: 'top', value: 'Corte (95%)', fill: 'hsl(var(--destructive))', fontSize: 11, fontWeight: 'bold' }} />
-                  <Area type="monotone" dataKey="aderencia" name="Aderência SLA" fill="url(#colorAderencia)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-border transition-all duration-300">
-          <CardHeader>
-            <CardTitle className="text-lg">Conformidade de Treinamentos (SSMA / RACs)</CardTitle>
-            <CardDescription>Adesão da equipe aos Requisitos de Atividades Críticas vigentes.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarRACData}>
-                  <PolarGrid stroke="hsl(var(--border))" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 500 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                  <Radar name="Conformidade RAC" dataKey="A" stroke="hsl(var(--success))" strokeWidth={2} fill="hsl(var(--success))" fillOpacity={0.4} />
-                  <Tooltip content={<CustomTooltip />} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-border transition-all duration-300">
-          <CardHeader>
-            <CardTitle className="text-lg">Disponibilidade Física (MEV)</CardTitle>
-            <CardDescription>Horas trabalhadas vs Horas em manutenção das Máquinas e Veículos.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}h`} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Bar dataKey="horasTrabalhadas" name="Horas Operando" stackId="a" fill="hsl(var(--blue-500))" barSize={35} />
-                  <Bar dataKey="horasParadas" name="Horas Manutenção" stackId="a" fill="hsl(var(--orange-500))" radius={[4, 4, 0, 0]} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-sm border-border transition-all duration-300">
-          <CardHeader>
-            <CardTitle className="text-lg">Mapa de Desvios (Glosas / Penalidades)</CardTitle>
-            <CardDescription>Principais ofensores que geram glosas financeiras no contrato (Acumulado).</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full mt-4">
-              {ofensoresData.length > 0 ? (
+          <TabsContent value="visao_executiva" className="space-y-6 mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* NOVO GR├üFICO DIRETORIA - ADER├èNCIA SLA */}
+          <Card className="shadow-sm border-border lg:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('sla')}>
+            <CardHeader>
+              <CardTitle className="text-xl">Evolu├º├úo da Ader├¬ncia (SLA)</CardTitle>
+              <CardDescription>Vis├úo executiva do cumprimento de qualidade operacional frente ├á meta contratual de 95%.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={ofensoresData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={90}
-                      outerRadius={120}
-                      paddingAngle={5}
-                      dataKey="value"
-                      stroke="none"
-                      cornerRadius={4}
-                    >
-                      {ofensoresData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                      <Label 
-                        value="Total Ofensores" 
-                        position="centerBottom" 
-                        dy={-10} 
-                        fill="hsl(var(--muted-foreground))" 
-                        fontSize={12} 
-                      />
-                      <Label 
-                        value={`R$ ${(ofensoresData.reduce((acc, curr) => acc + curr.value, 0) / 1000).toFixed(1)}k`} 
-                        position="centerTop" 
-                        dy={15} 
-                        fill="hsl(var(--foreground))" 
-                        fontSize={22} 
-                        fontWeight="bold" 
-                      />
-                    </Pie>
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                    <defs>
+                      <linearGradient id="colorSlaArea" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <YAxis domain={['auto', 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
-                  </PieChart>
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta SLA (95%)', fill: 'hsl(var(--warning))', fontSize: 11, fontWeight: 'bold' }} />
+                    <Area type="monotone" dataKey="aderencia" name="Ader├¬ncia SLA (%)" fill="url(#colorSlaArea)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }}>
+                      <LabelList dataKey="aderencia" position="top" offset={10} formatter={(val: number) => `${val}%`} style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} />
+                    </Area>
+                  </ComposedChart>
                 </ResponsiveContainer>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  Sem ofensores financeiros registrados.
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('resumo')}>
+            <CardHeader>
+              <CardTitle className="text-lg">Ader├¬ncia vs Margem</CardTitle>
+              <CardDescription>Correla├º├úo entre a qualidade do servi├ºo e a rentabilidade do contrato.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                    <defs>
+                      <linearGradient id="colorSla" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--primary))" fontSize={12} domain={[80, 100]} />
+                    <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Bar yAxisId="left" dataKey="aderencia" name="Ader├¬ncia SLA" fill="url(#colorSla)" radius={[8, 8, 0, 0]} barSize={40} />
+                    <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, strokeWidth: 2, fill: "hsl(var(--background))" }} activeDot={{ r: 8, fill: "hsl(var(--primary))" }} style={{ filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.15))' }} connectNulls />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('rentabilidade')}>
+            <CardHeader>
+              <CardTitle className="text-lg">An├ílise de Rentabilidade</CardTitle>
+              <CardDescription>Receita vs Lucro vs Ofensores Financeiros (Glosas+Multas+Custos Extras).</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                    <defs>
+                      <linearGradient id="colorSaldo" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.6}/>
+                        <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0.1}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <YAxis yAxisId="left" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 'auto']} />
+                    <YAxis yAxisId="right" orientation="right" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--destructive))" fontSize={12} domain={[0, 'auto']} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Area yAxisId="left" type="monotone" dataKey="saldo" name="Lucro L├¡quido Real" fill="url(#colorSaldo)" stroke="hsl(var(--success))" strokeWidth={3} />
+                    <Bar yAxisId="right" stackId="a" dataKey="perdas" name="Glosas/Multas" fill="hsl(var(--destructive))" barSize={35} radius={[0, 0, 0, 0]} />
+                    <Bar yAxisId="right" stackId="a" dataKey="horasExtras" name="Horas Extras" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('ofensores')}>
+            <CardHeader>
+              <CardTitle className="text-lg">Mapa de Ofensores (Acumulado)</CardTitle>
+              <CardDescription>Principais ralos financeiros corroendo a margem do contrato no ano.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full mt-4">
+                {ofensoresData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={ofensoresData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={90}
+                        outerRadius={120}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                        cornerRadius={4}
+                      >
+                        {ofensoresData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                        <Label 
+                          value="Total Perdas" 
+                          position="centerBottom" 
+                          dy={-10} 
+                          fill="hsl(var(--muted-foreground))" 
+                          fontSize={12} 
+                        />
+                        <Label 
+                          value={`R$ ${(ofensoresData.reduce((acc, curr) => acc + curr.value, 0) / 1000).toFixed(1)}k`} 
+                          position="centerTop" 
+                          dy={15} 
+                          fill="hsl(var(--foreground))" 
+                          fontSize={22} 
+                          fontWeight="bold" 
+                        />
+                      </Pie>
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                    Sem ofensores financeiros registrados.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
                 </div>
+          </TabsContent>
+
+      
+                <TabsContent value="custos_metas" className="space-y-6 mt-4">
+      {/* ACOMPANHAMENTO DE METAS */}
+      {medicoes.length > 0 && (
+        <Card className="shadow-sm border-border overflow-hidden mb-6 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('metas')}>
+          <div className="p-4 border-b border-border bg-muted/20">
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-primary"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              Acompanhamento de Metas
+            </h3>
+          </div>
+          <CardContent className="p-4">
+            <Tabs defaultValue="impostos" className="w-full">
+              <TabsList className="grid grid-cols-3 sm:grid-cols-6 mb-4 h-auto">
+                <TabsTrigger value="impostos" className="py-2">Impostos</TabsTrigger>
+                <TabsTrigger value="folha" className="py-2">Folha</TabsTrigger>
+                <TabsTrigger value="manutencao" className="py-2">Manuten├º├úo</TabsTrigger>
+                <TabsTrigger value="combustivel" className="py-2">Combust├¡vel</TabsTrigger>
+                <TabsTrigger value="seguranca" className="py-2">Seguran├ºa</TabsTrigger>
+                <TabsTrigger value="materiais" className="py-2">Materiais</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="visao_geral" className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+                    { category: 'Impostos', meta: lastMonth?.metaImpostos || 0, real: lastMonth?.impostosTotal || 0 },
+                    { category: 'Folha', meta: lastMonth?.metaFolha || 0, real: lastMonth?.folhaTotal || 0 },
+                    { category: 'Manuten├º├úo', meta: lastMonth?.metaManutencao || 0, real: lastMonth?.manutencaoTotal || 0 },
+                    { category: 'Combust├¡vel', meta: lastMonth?.metaCombustivel || 0, real: lastMonth?.combustivelTotal || 0 },
+                    { category: 'Seguran├ºa', meta: lastMonth?.metaSeguranca || 0, real: lastMonth?.uniformeTotal || 0 },
+                    { category: 'Materiais', meta: lastMonth?.metaMateriais || 0, real: lastMonth?.escritorioTotal || 0 },
+                  ]}>
+                    <PolarGrid stroke="hsl(var(--border))" />
+                    <PolarAngleAxis dataKey="category" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 500 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
+                    <Radar name="Meta" dataKey="meta" stroke="hsl(var(--primary))" strokeWidth={2} fill="hsl(var(--primary))" fillOpacity={0.2} />
+                    <Radar name="Custo Real" dataKey="real" stroke="hsl(var(--destructive))" strokeWidth={2} fill="hsl(var(--destructive))" fillOpacity={0.4} />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Tooltip content={<CustomTooltip />} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </TabsContent>
+              {['impostos', 'folha', 'manutencao', 'combustivel', 'seguranca', 'materiais'].map(tab => (
+                <TabsContent key={tab} value={tab}>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                        <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend />
+                        <Bar dataKey={tab === 'impostos' ? 'impostosTotal' : tab === 'folha' ? 'folhaTotal' : tab === 'manutencao' ? 'manutencaoTotal' : tab === 'combustivel' ? 'combustivelTotal' : tab === 'seguranca' ? 'uniformeTotal' : 'escritorioTotal'} name="Custo Realizado" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} maxBarSize={50}>
+                          {chartData.map((entry: any, index: number) => {
+                            const real = tab === 'impostos' ? entry.impostosTotal : tab === 'folha' ? entry.folhaTotal : tab === 'manutencao' ? entry.manutencaoTotal : tab === 'combustivel' ? entry.combustivelTotal : tab === 'seguranca' ? entry.uniformeTotal : entry.escritorioTotal;
+                            const meta = tab === 'impostos' ? entry.metaImpostos : tab === 'folha' ? entry.metaFolha : tab === 'manutencao' ? entry.metaManutencao : tab === 'combustivel' ? entry.metaCombustivel : tab === 'seguranca' ? entry.metaSeguranca : entry.metaMateriais;
+                            return <Cell key={`cell-${index}`} fill={real > meta ? 'hsl(var(--destructive))' : 'hsl(var(--primary))'} />;
+                          })}
+                        </Bar>
+                        <Line type="monotone" dataKey={tab === 'impostos' ? 'metaImpostos' : tab === 'folha' ? 'metaFolha' : tab === 'manutencao' ? 'metaManutencao' : tab === 'combustivel' ? 'metaCombustivel' : tab === 'seguranca' ? 'metaSeguranca' : 'metaMateriais'} name="Meta" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} strokeDasharray="5 5" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </TabsContent>
+              ))}
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
+
+                </TabsContent>
+
+          <TabsContent value="dre" className="space-y-6 mt-4">
+      {/* DATA TABLE */}
+
+      {medicoes.length > 0 && (
+        <Card className="shadow-sm border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/20">
+          <div className="p-4 border-b border-border bg-muted/20">
+            <div className="flex items-center gap-4">
+              <h3 className="font-bold text-lg flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> Hist├│rico Financeiro Detalhado</h3>
+              {selectedMonthDRE && (
+                <button onClick={() => setSelectedMonthDRE(null)} className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium hover:bg-primary/20 transition-colors">
+                  Filtrado: {selectedMonthDRE} (Limpar Ô£ò)
+                </button>
               )}
             </div>
-          </CardContent>
+          </div>
+          <div className="overflow-x-auto max-h-[350px] overflow-y-auto relative">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-background/95 backdrop-blur z-10">
+                <tr className="bg-muted/40 border-b border-border">
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">M├¬s</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Ofensores</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Ader├¬ncia</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Receita</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Impostos</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Folha</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Manuten├º├úo</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Combust├¡vel</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground" title="Uniforme/EPI">Seguran├ºa</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Materiais</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground bg-success/10">Lucro L├¡quido</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground bg-primary/5">Margem</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground sticky right-0 bg-muted/40 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] border-l">A├º├Áes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {chartData.slice().reverse().map((m, i) => {
+                  const hasOfensores = m.descontos.length > 0 || m.multas.length > 0 || m.notificacoes.length > 0;
+                  return (
+                    <tr key={m.id} className={`transition-all duration-200 hover:bg-muted/30 ${i === 0 ? 'font-medium bg-primary/5' : ''}`}>
+                      <td className="px-2 py-3 text-center font-semibold whitespace-nowrap">{m.mes}</td>
+                      <td className="px-2 py-3 text-center whitespace-nowrap">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className={`h-7 px-2 text-xs font-bold ${hasOfensores ? 'text-destructive border-destructive hover:bg-destructive/10' : 'text-muted-foreground hover:text-primary hover:border-primary/50'}`}
+                          onClick={() => setDetalhesMedicao(m)}
+                        >
+                          <Info className="w-3 h-3 mr-1" />
+                          Ver Detalhes
+                        </Button>
+                      </td>
+                      <td className={`px-2 py-3 text-center font-bold whitespace-nowrap ${m.aderencia >= 98 ? 'text-success' : m.aderencia >= 95 ? 'text-warning' : 'text-destructive'}`}>{m.aderencia}%</td>
+                      <td className="px-2 py-3 text-center text-success font-semibold whitespace-nowrap">{formatCurrency(m.receitaTotal)}</td>
+                      <td className="px-2 py-3 text-center text-destructive whitespace-nowrap">{formatCurrency(m.impostosTotal)}</td>
+                      <td className="px-2 py-3 text-center text-destructive whitespace-nowrap">{formatCurrency(m.folhaTotal)}</td>
+                      <td className="px-2 py-3 text-center text-destructive whitespace-nowrap">{formatCurrency(m.manutencaoTotal)}</td>
+                      <td className="px-2 py-3 text-center text-destructive whitespace-nowrap">{formatCurrency(m.combustivelTotal)}</td>
+                      <td className="px-2 py-3 text-center text-destructive whitespace-nowrap">{formatCurrency(m.uniformeTotal)}</td>
+                      <td className="px-2 py-3 text-center text-destructive whitespace-nowrap">{formatCurrency(m.escritorioTotal)}</td>
+                      <td className={`px-2 py-3 text-center bg-success/5 font-bold whitespace-nowrap ${m.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(m.saldo)}</td>
+                      <td className="px-2 py-3 text-center font-bold bg-primary/5 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded text-xs inline-block min-w-[40px] ${m.margem >= 15 ? 'bg-success/20 text-success' : m.margem >= 5 ? 'bg-warning/20 text-warning' : 'bg-destructive/20 text-destructive'}`}>
+                          {m.margem}%
+                        </span>
+                      </td>
+                      <td className="px-2 py-3 text-center sticky right-0 bg-background/95 backdrop-blur-md z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] border-l whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(m)} className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10">
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </Card>
-      </div>
+      )}
 
-    </div>
-  ), [filteredChartData, lastMonth, prevMonth, timeRange, ofensoresData, radarRACData]);
+                </TabsContent>
+        </Tabs>
+      ) : (
+        <div className="text-center p-12 border-2 border-dashed border-border rounded-xl">
+          <p className="text-muted-foreground">Nenhuma medi├º├úo registrada.</p>
+        </div>
+      )}
+
+      {/* DRAWER DETALHES DE OFENSORES */}
+      <Sheet open={!!detalhesMedicao} onOpenChange={(val) => !val && setDetalhesMedicao(null)}>
+        <SheetContent className="overflow-y-auto sm:max-w-md">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="text-xl flex items-center gap-2 text-primary"><LineChartIcon className="w-5 h-5" /> Detalhes da Medi├º├úo</SheetTitle>
+            <SheetDescription>
+              Resumo financeiro e operacional de <span className="font-bold text-foreground">{detalhesMedicao?.mes}</span>
+            </SheetDescription>
+          </SheetHeader>
+          
+          {detalhesMedicao && (
+            <div className="space-y-6 pb-10">
+              
+              {/* KPIs do M├¬s */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl border border-primary/20 shadow-sm transition-all duration-300 hover:shadow-md">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Ader├¬ncia SLA</p>
+                  <p className={`text-2xl font-black ${detalhesMedicao.aderencia >= 95 ? 'text-success' : 'text-destructive'}`}>{detalhesMedicao.aderencia}%</p>
+                </div>
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl border border-primary/20 shadow-sm transition-all duration-300 hover:shadow-md">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Margem L├¡quida</p>
+                  {(() => {
+                    const rec = detalhesMedicao.fatLocacao + detalhesMedicao.fatMaoDeObra + detalhesMedicao.eventuais;
+                    const impostosTotais = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0) + (detalhesMedicao.impostoInss || 0) + (detalhesMedicao.impostoInssAdSat || 0);
+                    const cust = (detalhesMedicao.custoFolha || 0) + (detalhesMedicao.horasExtras || 0) + (detalhesMedicao.folhaInss || 0) + (detalhesMedicao.folhaFgts || 0) + (detalhesMedicao.folhaIrrf || 0) + (detalhesMedicao.custoTurnover || 0) + (detalhesMedicao.beneficioCafeDaManha || 0) + (detalhesMedicao.beneficioSeguroDeVida || 0) + (detalhesMedicao.beneficioPlanoDeSaude || 0) + (detalhesMedicao.beneficioPlanoOdontologico || 0) + (detalhesMedicao.beneficioTicketAlimentacao || 0) + (detalhesMedicao.beneficioValeTransporte || 0) + (detalhesMedicao.beneficioMaisParaTodos || 0) + (detalhesMedicao.beneficioRefeicao || 0) + (detalhesMedicao.manutencaoPecas || 0) + (detalhesMedicao.manutencaoServicos || 0) + (detalhesMedicao.manutencaoPneus || 0) + (detalhesMedicao.manutencaoLubrificacao || 0) + (detalhesMedicao.manutencaoPreventiva || 0) + (detalhesMedicao.manutencaoLavador || 0) + (detalhesMedicao.combustivelDiesel || 0) + (detalhesMedicao.combustivelDieselS10 || 0) + (detalhesMedicao.combustivelDieselS500 || 0) + (detalhesMedicao.combustivelGasolina || 0) + (detalhesMedicao.uniforme || 0) + (detalhesMedicao.epi || 0) + (detalhesMedicao.escritorioMaterial || 0) + (detalhesMedicao.escritorioLimpeza || 0) + impostosTotais;
+                    const perdas = detalhesMedicao.descontos.reduce((a,c)=>a+c.valor,0) + detalhesMedicao.multas.reduce((a,c)=>a+c.valor,0);
+                    const lucro = rec - cust - perdas;
+                    const marg = rec > 0 ? (lucro/rec)*100 : 0;
+                    return (
+                      <p className={`text-2xl font-black ${marg >= 10 ? 'text-success' : 'text-warning'}`}>
+                        {marg.toFixed(1)}%
+                      </p>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* DRE Simplificado */}
+              <div className="space-y-3">
+                <h4 className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 flex items-center gap-2"><DollarSign className="w-4 h-4" /> Composi├º├úo Financeira</h4>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center text-muted-foreground">
+                    <span>Faturamento Loca├º├úo</span>
+                    <span>{formatCurrency(detalhesMedicao.fatLocacao)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-muted-foreground">
+                    <span>Faturamento M├úo de Obra</span>
+                    <span>{formatCurrency(detalhesMedicao.fatMaoDeObra)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-muted-foreground">
+                    <span>Faturamento Eventual</span>
+                    <span>{formatCurrency(detalhesMedicao.eventuais)}</span>
+                  </div>
+                  <div className="flex justify-between items-center font-bold text-success pt-2 border-t border-border/50">
+                    <span>Receita Bruta Total</span>
+                    <span>{formatCurrency(detalhesMedicao.fatLocacao + detalhesMedicao.fatMaoDeObra + detalhesMedicao.eventuais)}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm pt-4">
+                  {(() => {
+                    const impostos = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0) + (detalhesMedicao.impostoInss || 0) + (detalhesMedicao.impostoInssAdSat || 0);
+                    const manutencao = (detalhesMedicao.manutencaoPecas || 0) + (detalhesMedicao.manutencaoServicos || 0) + (detalhesMedicao.manutencaoPneus || 0) + (detalhesMedicao.manutencaoLubrificacao || 0) + (detalhesMedicao.manutencaoPreventiva || 0) + (detalhesMedicao.manutencaoLavador || 0);
+                    const folha = (detalhesMedicao.custoFolha || 0) + (detalhesMedicao.horasExtras || 0) + (detalhesMedicao.folhaInss || 0) + (detalhesMedicao.folhaFgts || 0) + (detalhesMedicao.folhaIrrf || 0) + (detalhesMedicao.custoTurnover || 0) + (detalhesMedicao.beneficioCafeDaManha || 0) + (detalhesMedicao.beneficioSeguroDeVida || 0) + (detalhesMedicao.beneficioPlanoDeSaude || 0) + (detalhesMedicao.beneficioPlanoOdontologico || 0) + (detalhesMedicao.beneficioTicketAlimentacao || 0) + (detalhesMedicao.beneficioValeTransporte || 0) + (detalhesMedicao.beneficioMaisParaTodos || 0) + (detalhesMedicao.beneficioRefeicao || 0);
+                    const combustivel = (detalhesMedicao.combustivelDiesel || 0) + (detalhesMedicao.combustivelDieselS10 || 0) + (detalhesMedicao.combustivelDieselS500 || 0) + (detalhesMedicao.combustivelGasolina || 0);
+                    const uniforme = detalhesMedicao.uniforme || 0;
+                    const epi = detalhesMedicao.epi || 0;
+                    const escritorio = detalhesMedicao.escritorioMaterial || 0;
+                    const limpeza = detalhesMedicao.escritorioLimpeza || 0;
+                    const totalCustos = folha + manutencao + combustivel + uniforme + epi + escritorio + limpeza + impostos;
+                    
+                    return (
+                      <>
+                        <Accordion type="multiple" className="w-full space-y-1 mt-2">
+                          {/* IMPOSTOS */}
+                        <AccordionItem value="impostos" className="border-b border-border/50 py-1">
+                          <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
+                            <span>Impostos (Total)</span>
+                            <span className="text-destructive font-bold pr-2">-{formatCurrency(impostos)}</span>
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs">
+                            <div className="flex justify-between"><span>PIS</span><span>{formatCurrency(detalhesMedicao.impostoPis || 0)}</span></div>
+                            <div className="flex justify-between"><span>COFINS</span><span>{formatCurrency(detalhesMedicao.impostoCofins || 0)}</span></div>
+                            <div className="flex justify-between"><span>CSLL</span><span>{formatCurrency(detalhesMedicao.impostoCsll || 0)}</span></div>
+                            <div className="flex justify-between"><span>ISS</span><span>{formatCurrency(detalhesMedicao.impostoIss || 0)}</span></div>
+                            <div className="flex justify-between"><span>INSS ad (SAT)</span><span>{formatCurrency(detalhesMedicao.impostoInssAdSat || 0)}</span></div>
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        {/* FOLHA */}
+                        <AccordionItem value="folha" className="border-b border-border/50 py-1">
+                          <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
+                            <span>Custos de Folha (Total)</span>
+                            <span className="text-orange-500 font-bold pr-2">-{formatCurrency(folha)}</span>
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
+                            <div className="flex justify-between"><span>Folha de Pagamento {detalhesMedicao.custoFolhaQtd ? `(${detalhesMedicao.custoFolhaQtd} pess.)` : ''}</span><span>{formatCurrency(detalhesMedicao.custoFolha || 0)}</span></div>
+                            <div className="flex justify-between"><span>Horas Extras {detalhesMedicao.horasExtrasQtd ? `(${detalhesMedicao.horasExtrasQtd} pess.)` : ''}</span><span>{formatCurrency(detalhesMedicao.horasExtras || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>INSS</span><span>{formatCurrency(detalhesMedicao.folhaInss || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>FGTS</span><span>{formatCurrency(detalhesMedicao.folhaFgts || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>IRRF (Folha)</span><span>{formatCurrency(detalhesMedicao.folhaIrrf || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Caf├® da Manh├ú</span><span>{formatCurrency(detalhesMedicao.beneficioCafeDaManha || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Seguro de Vida</span><span>{formatCurrency(detalhesMedicao.beneficioSeguroDeVida || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Plano de Sa├║de</span><span>{formatCurrency(detalhesMedicao.beneficioPlanoDeSaude || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Plano Odontol├│gico</span><span>{formatCurrency(detalhesMedicao.beneficioPlanoOdontologico || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Ticket Alimenta├º├úo</span><span>{formatCurrency(detalhesMedicao.beneficioTicketAlimentacao || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Vale Transporte</span><span>{formatCurrency(detalhesMedicao.beneficioValeTransporte || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Benef├¡cio Mais p/ Todos</span><span>{formatCurrency(detalhesMedicao.beneficioMaisParaTodos || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Refei├º├úo</span><span>{formatCurrency(detalhesMedicao.beneficioRefeicao || 0)}</span></div>
+                            <div className="flex justify-between"><span>Turnover</span><span>{formatCurrency(detalhesMedicao.custoTurnover || 0)}</span></div>
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        {/* MANUTEN├ç├âO */}
+                        <AccordionItem value="manutencao" className="border-b border-border/50 py-1">
+                          <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
+                            <span>Manuten├º├úo (Total)</span>
+                            <span className="text-orange-500 font-bold pr-2">-{formatCurrency(manutencao)}</span>
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
+                            <div className="flex justify-between"><span>Pe├ºas</span><span>{formatCurrency(detalhesMedicao.manutencaoPecas || 0)}</span></div>
+                            <div className="flex justify-between"><span>Servi├ºos</span><span>{formatCurrency(detalhesMedicao.manutencaoServicos || 0)}</span></div>
+                            <div className="flex justify-between"><span>Pneus</span><span>{formatCurrency(detalhesMedicao.manutencaoPneus || 0)}</span></div>
+                            <div className="flex justify-between"><span>Lubrifica├º├úo</span><span>{formatCurrency(detalhesMedicao.manutencaoLubrificacao || 0)}</span></div>
+                            <div className="flex justify-between"><span>Preventiva</span><span>{formatCurrency(detalhesMedicao.manutencaoPreventiva || 0)}</span></div>
+                            <div className="flex justify-between"><span>Lavador</span><span>{formatCurrency(detalhesMedicao.manutencaoLavador || 0)}</span></div>
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        {/* COMBUST├ìVEL */}
+                        <AccordionItem value="combustivel" className="border-b border-border/50 py-1">
+                          <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
+                            <span>Combust├¡vel (Total)</span>
+                            <span className="text-orange-500 font-bold pr-2">-{formatCurrency(combustivel)}</span>
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
+                            <div className="flex justify-between"><span>Diesel S10</span><span>{formatCurrency(detalhesMedicao.combustivelDieselS10 || 0)}</span></div>
+                            <div className="flex justify-between"><span>Diesel S500</span><span>{formatCurrency(detalhesMedicao.combustivelDieselS500 || 0)}</span></div>
+                            <div className="flex justify-between"><span>Gasolina</span><span>{formatCurrency(detalhesMedicao.combustivelGasolina || 0)}</span></div>
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        {/* SEGURAN├çA */}
+                        <AccordionItem value="seguranca" className="border-b border-border/50 py-1">
+                          <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
+                            <span>Seguran├ºa (Total)</span>
+                            <span className="text-orange-500 font-bold pr-2">-{formatCurrency(uniforme + epi)}</span>
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
+                            <div className="flex justify-between"><span>Uniforme</span><span>{formatCurrency(uniforme)}</span></div>
+                            <div className="flex justify-between"><span>EPI</span><span>{formatCurrency(epi)}</span></div>
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        {/* MATERIAIS */}
+                        <AccordionItem value="materiais" className="border-b border-border/50 py-1">
+                          <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
+                            <span>Materiais (Total)</span>
+                            <span className="text-orange-500 font-bold pr-2">-{formatCurrency(escritorio + limpeza)}</span>
+                          </AccordionTrigger>
+                          <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
+                            <div className="flex justify-between"><span>Material de Escrit├│rio</span><span>{formatCurrency(escritorio)}</span></div>
+                            <div className="flex justify-between"><span>Material de Limpeza</span><span>{formatCurrency(limpeza)}</span></div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                        <div className="flex justify-between items-center font-bold pt-2 border-t border-border/50">
+                          <span>Custos de Execu├º├úo</span>
+                          <span className="text-orange-600">-{formatCurrency(totalCustos)}</span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                <div className="flex justify-between items-center font-black text-lg pt-4 border-t-2 border-border">
+                  <span>Lucro L├¡quido</span>
+                  {(() => {
+                    const rec = detalhesMedicao.fatLocacao + detalhesMedicao.fatMaoDeObra + detalhesMedicao.eventuais;
+                    const impostosTotais = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0) + (detalhesMedicao.impostoInss || 0) + (detalhesMedicao.impostoInssAdSat || 0);
+                    const cust = (detalhesMedicao.custoFolha || 0) + (detalhesMedicao.horasExtras || 0) + (detalhesMedicao.folhaInss || 0) + (detalhesMedicao.folhaFgts || 0) + (detalhesMedicao.folhaIrrf || 0) + (detalhesMedicao.custoTurnover || 0) + (detalhesMedicao.beneficioCafeDaManha || 0) + (detalhesMedicao.beneficioSeguroDeVida || 0) + (detalhesMedicao.beneficioPlanoDeSaude || 0) + (detalhesMedicao.beneficioPlanoOdontologico || 0) + (detalhesMedicao.beneficioTicketAlimentacao || 0) + (detalhesMedicao.beneficioValeTransporte || 0) + (detalhesMedicao.beneficioMaisParaTodos || 0) + (detalhesMedicao.beneficioRefeicao || 0) + (detalhesMedicao.manutencaoPecas || 0) + (detalhesMedicao.manutencaoServicos || 0) + (detalhesMedicao.manutencaoPneus || 0) + (detalhesMedicao.manutencaoLubrificacao || 0) + (detalhesMedicao.manutencaoPreventiva || 0) + (detalhesMedicao.manutencaoLavador || 0) + (detalhesMedicao.combustivelDiesel || 0) + (detalhesMedicao.combustivelDieselS10 || 0) + (detalhesMedicao.combustivelDieselS500 || 0) + (detalhesMedicao.combustivelGasolina || 0) + (detalhesMedicao.uniforme || 0) + (detalhesMedicao.epi || 0) + (detalhesMedicao.escritorioMaterial || 0) + (detalhesMedicao.escritorioLimpeza || 0) + impostosTotais;
+                    const perdas = detalhesMedicao.descontos.reduce((a,c)=>a+c.valor,0) + detalhesMedicao.multas.reduce((a,c)=>a+c.valor,0);
+                    const lucro = rec - cust - perdas;
+                    return (
+                      <span className={lucro >= 0 ? 'text-success' : 'text-destructive'}>
+                        {formatCurrency(lucro)}
+                      </span>
+                    );
+                  })()}
+                </div>
+              </div>
+              
+              <div className="pt-2 pb-2">
+                <Accordion type="multiple" className="w-full space-y-4">
+                  {/* Descontos / Glosas */}
+                  <AccordionItem value="descontos" className="border-none">
+                    <AccordionTrigger className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 hover:no-underline py-2">
+                      Descontos / Glosas ({detalhesMedicao.descontos.length})
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-3">
+                      {detalhesMedicao.descontos.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic">Nenhum desconto aplicado no per├¡odo.</p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {detalhesMedicao.descontos.map((d, i) => (
+                            <li key={i} className="flex justify-between items-center text-sm p-3 bg-muted/30 rounded-lg border border-border/50">
+                              <span>{d.motivo}</span>
+                              <span className="font-bold text-destructive">{formatCurrency(d.valor)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Multas */}
+                  <AccordionItem value="multas" className="border-none">
+                    <AccordionTrigger className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 hover:no-underline py-2">
+                      Multas Contratuais ({detalhesMedicao.multas.length})
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-3">
+                      {detalhesMedicao.multas.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic">Nenhuma multa aplicada no per├¡odo.</p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {detalhesMedicao.multas.map((m, i) => (
+                            <li 
+                              key={i} 
+                              onClick={() => (m as any).isGlobal ? setNotificacaoDetalhe(m as any) : undefined}
+                              className={`flex justify-between items-center text-sm p-3 bg-destructive/10 rounded-lg border border-destructive/20 ${(m as any).isGlobal ? 'cursor-pointer hover:bg-destructive/20 hover:border-destructive/50 transition-colors' : ''}`}
+                            >
+                              <div className="flex flex-col gap-1">
+                                <span className="text-destructive font-medium">{m.motivo}</span>
+                                {(m as any).isGlobal && <span className="text-[10px] uppercase bg-destructive/20 px-2 py-0.5 rounded-full w-fit text-destructive">Detalhes</span>}
+                              </div>
+                              <span className="font-bold text-destructive">{formatCurrency(m.valor)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Notifica├º├Áes */}
+                  <AccordionItem value="notificacoes" className="border-none">
+                    <AccordionTrigger className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 hover:no-underline py-2">
+                      Notifica├º├Áes Formais ({detalhesMedicao.notificacoes.length})
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-3">
+                      {detalhesMedicao.notificacoes.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic">Nenhuma notifica├º├úo recebida no per├¡odo.</p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {detalhesMedicao.notificacoes.map((n, i) => (
+                            <li 
+                              key={i} 
+                              onClick={() => setNotificacaoDetalhe(n)}
+                              className={`text-sm p-3 bg-warning/10 rounded-lg border border-warning/20 text-warning-foreground font-medium flex items-center gap-2 cursor-pointer hover:bg-warning/20 hover:border-warning/50 transition-colors`}
+                            >
+                              <FileWarning className="w-4 h-4 text-warning" />
+                              <span className="flex-1">{n.motivo}</span>
+                              <span className="text-[10px] uppercase bg-warning/20 px-2 py-0.5 rounded-full">Detalhes</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+
+              {/* Equipamentos */}
+              <div className="pt-2 pb-6">
+                <Accordion type="multiple" className="w-full space-y-4">
+                  {/* Abaixo SLA */}
+                  <AccordionItem value="abaixo" className="border-none">
+                    <AccordionTrigger className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 hover:no-underline py-2">
+                      Equipamentos Abaixo do SLA (SLA &lt; 95%)
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-3">
+                      {!detalhesMedicao.equipamentosPerdidos?.filter(e => e.aderencia && parseFloat(e.aderencia.replace(',', '.')) < 95).length ? (
+                        <p className="text-sm text-muted-foreground italic">Nenhum equipamento abaixo do SLA.</p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {detalhesMedicao.equipamentosPerdidos.filter(e => e.aderencia && parseFloat(e.aderencia.replace(',', '.')) < 95).map((e, i) => (
+                            <li key={i} className="flex justify-between items-center text-sm p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                              <div className="flex items-center gap-2">
+                                <Target className="w-4 h-4 text-destructive" />
+                                <span className="text-destructive font-medium">{e.motivo}</span>
+                              </div>
+                              {e.aderencia && <span className="font-bold text-destructive whitespace-nowrap">{e.aderencia}%</span>}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Acima SLA */}
+                  <AccordionItem value="acima" className="border-none">
+                    <AccordionTrigger className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 hover:no-underline py-2">
+                      Equipamentos Acima do SLA (SLA &ge; 95%)
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-3">
+                      {!detalhesMedicao.equipamentosPerdidos?.filter(e => e.aderencia && parseFloat(e.aderencia.replace(',', '.')) >= 95).length ? (
+                        <p className="text-sm text-muted-foreground italic">Nenhum equipamento acima do SLA.</p>
+                      ) : (
+                        <ul className="space-y-2">
+                          {detalhesMedicao.equipamentosPerdidos.filter(e => e.aderencia && parseFloat(e.aderencia.replace(',', '.')) >= 95).map((e, i) => (
+                            <li key={i} className="flex justify-between items-center text-sm p-3 bg-success/10 rounded-lg border border-success/20">
+                              <div className="flex items-center gap-2">
+                                <Target className="w-4 h-4 text-success" />
+                                <span className="text-success font-medium">{e.motivo}</span>
+                              </div>
+                              {e.aderencia && <span className="font-bold text-success whitespace-nowrap">{e.aderencia}%</span>}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
+  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth, activeTab, timeRange, selectedMonthDRE, ofensoresData, filteredChartData]);
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-8 animate-fade-in pb-20">
@@ -943,7 +1498,7 @@ export default function EvolucaoContrato() {
             Dashboard de Contrato
           </h1>
           <p className="text-muted-foreground mt-1">
-            Análise executiva de SLA, rentabilidade financeira e ofensores operacionais.
+            An├ílise executiva de SLA, rentabilidade financeira e ofensores operacionais.
           </p>
         </div>
         
@@ -962,17 +1517,17 @@ export default function EvolucaoContrato() {
 
           <Button onClick={() => { localStorage.removeItem('corporate_cheerleader_medicoes'); window.location.reload(); }} variant="outline" className="gap-2 border-primary/50 text-primary">
             <RefreshCcw className="w-4 h-4" />
-            <span className="hidden sm:inline">Restaurar Padrão</span>
+            <span className="hidden sm:inline">Restaurar Padr├úo</span>
           </Button>
 
           <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); }}>
             <DialogTrigger asChild>
-              <Button onClick={handleOpenModal} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md"><Calculator className="w-4 h-4" /> Lançar Fechamento</Button>
+              <Button onClick={handleOpenModal} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md"><Calculator className="w-4 h-4" /> Lan├ºar Fechamento</Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader className="mb-4">
-              <DialogTitle className="text-xl flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> {editingId ? 'Editar Medição Mensal' : 'Lançar Medição Mensal'}</DialogTitle>
-              <p className="text-sm text-muted-foreground">Insira os resultados operacionais e financeiros referentes ao fechamento do mês.</p>
+              <DialogTitle className="text-xl flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> {editingId ? 'Editar Medi├º├úo Mensal' : 'Lan├ºar Medi├º├úo Mensal'}</DialogTitle>
+              <p className="text-sm text-muted-foreground">Insira os resultados operacionais e financeiros referentes ao fechamento do m├¬s.</p>
             </DialogHeader>
             <MedicaoForm 
               medicaoToEdit={editingId ? medicoes.find(m => m.id === editingId) || null : null}
@@ -987,18 +1542,18 @@ export default function EvolucaoContrato() {
       {dashboardContent}
 
 
-      {/* DIALOG GERAL DE GRÁFICOS */}
+      {/* DIALOG GERAL DE GR├üFICOS */}
       <Dialog open={expandedChart !== null} onOpenChange={(open) => !open && setExpandedChart(null)}>
         <DialogContent className="max-w-[95vw] w-[1400px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              {expandedChart === 'sla' && 'Evolução da Aderência (SLA)'}
-              {expandedChart === 'resumo' && 'Aderência vs Margem'}
-              {expandedChart === 'rentabilidade' && 'Análise de Rentabilidade'}
+              {expandedChart === 'sla' && 'Evolu├º├úo da Ader├¬ncia (SLA)'}
+              {expandedChart === 'resumo' && 'Ader├¬ncia vs Margem'}
+              {expandedChart === 'rentabilidade' && 'An├ílise de Rentabilidade'}
               {expandedChart === 'ofensores' && 'Mapa de Ofensores (Acumulado)'}
               {expandedChart === 'metas' && 'Acompanhamento de Metas'}
             </DialogTitle>
-            <DialogDescription>Visualização ampliada do gráfico selecionado.</DialogDescription>
+            <DialogDescription>Visualiza├º├úo ampliada do gr├ífico selecionado.</DialogDescription>
           </DialogHeader>
           <div className="h-[70vh] w-full mt-4">
             
@@ -1017,7 +1572,7 @@ export default function EvolucaoContrato() {
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                     <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta SLA (95%)', fill: 'hsl(var(--warning))', fontSize: 11, fontWeight: 'bold' }} />
-                    <Area type="monotone" dataKey="aderencia" name="Aderência SLA (%)" fill="url(#colorSlaAreaBig)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }}>
+                    <Area type="monotone" dataKey="aderencia" name="Ader├¬ncia SLA (%)" fill="url(#colorSlaAreaBig)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }}>
                       <LabelList dataKey="aderencia" position="top" offset={10} formatter={(val) => `${val}%`} style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} />
                     </Area>
                   </ComposedChart>
@@ -1039,7 +1594,7 @@ export default function EvolucaoContrato() {
                     <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar yAxisId="left" dataKey="aderencia" name="Aderência SLA" fill="url(#colorSlaBig)" radius={[4, 4, 0, 0]} />
+                    <Bar yAxisId="left" dataKey="aderencia" name="Ader├¬ncia SLA" fill="url(#colorSlaBig)" radius={[4, 4, 0, 0]} />
                     <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--blue-500))" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -1061,7 +1616,7 @@ export default function EvolucaoContrato() {
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                     <Bar stackId="a" dataKey="perdas" name="Glosas/Multas" fill="hsl(var(--destructive))" barSize={30} />
                     <Bar stackId="a" dataKey="horasExtras" name="Horas Extras" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
-                    <Area type="monotone" dataKey="saldo" name="Lucro Líquido Real" fill="url(#colorSaldoBig)" stroke="hsl(var(--success))" strokeWidth={3} />
+                    <Area type="monotone" dataKey="saldo" name="Lucro L├¡quido Real" fill="url(#colorSaldoBig)" stroke="hsl(var(--success))" strokeWidth={3} />
                   </ComposedChart>
                 </ResponsiveContainer>
             )}
@@ -1091,9 +1646,9 @@ export default function EvolucaoContrato() {
                 <TabsList className="grid grid-cols-3 sm:grid-cols-6 mb-4 h-auto shrink-0">
                   <TabsTrigger value="impostos" className="py-2">Impostos</TabsTrigger>
                   <TabsTrigger value="folha" className="py-2">Folha</TabsTrigger>
-                  <TabsTrigger value="manutencao" className="py-2">Manutenção</TabsTrigger>
-                  <TabsTrigger value="combustivel" className="py-2">Combustível</TabsTrigger>
-                  <TabsTrigger value="seguranca" className="py-2">Segurança</TabsTrigger>
+                  <TabsTrigger value="manutencao" className="py-2">Manuten├º├úo</TabsTrigger>
+                  <TabsTrigger value="combustivel" className="py-2">Combust├¡vel</TabsTrigger>
+                  <TabsTrigger value="seguranca" className="py-2">Seguran├ºa</TabsTrigger>
                   <TabsTrigger value="materiais" className="py-2">Materiais</TabsTrigger>
                 </TabsList>
                 {['impostos', 'folha', 'manutencao', 'combustivel', 'seguranca', 'materiais'].map(tab => (
@@ -1121,8 +1676,8 @@ export default function EvolucaoContrato() {
       <Dialog open={notificacaoDetalhe !== null} onOpenChange={(open) => !open && setNotificacaoDetalhe(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><FileWarning className="w-5 h-5 text-warning" /> Detalhes da Notificação</DialogTitle>
-            <DialogDescription>Dados vindos da Gestão de Notificações</DialogDescription>
+            <DialogTitle className="flex items-center gap-2"><FileWarning className="w-5 h-5 text-warning" /> Detalhes da Notifica├º├úo</DialogTitle>
+            <DialogDescription>Dados vindos da Gest├úo de Notifica├º├Áes</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
@@ -1143,7 +1698,7 @@ export default function EvolucaoContrato() {
                 <p className="font-medium text-sm">{notificacaoDetalhe?.solicitante || 'N/A'}</p>
               </div>
               <div className="space-y-1">
-                <Label className="text-muted-foreground text-xs uppercase">Plano de Ação</Label>
+                <Label className="text-muted-foreground text-xs uppercase">Plano de A├º├úo</Label>
                 <p className="font-medium text-sm">{notificacaoDetalhe?.planoDeAcao || 'N/A'}</p>
               </div>
             </div>
