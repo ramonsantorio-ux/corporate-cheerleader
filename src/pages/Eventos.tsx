@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import {  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, Legend , ScatterChart, Scatter, ZAxis, RadialBarChart, RadialBar, LabelList } from 'recharts';
 import * as XLSX from 'xlsx';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
+import { TreinamentosSSMA } from '@/components/TreinamentosSSMA';
 
 interface EventRow {
   id: string;
@@ -1164,33 +1165,7 @@ export default function Eventos() {
 
         {/* 5. TREINAMENTOS SSMA */}
         <TabsContent value="treinamentos_ssma" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Target className="w-4 h-4 text-primary" /> Conformidade de Segurança (SSMA / RACs)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
-                    { subject: 'RAC 01 (Altura)', A: 95 },
-                    { subject: 'RAC 02 (Veículos Leves)', A: 96.5 },
-                    { subject: 'RAC 03 (Equipamentos Móveis)', A: 98 },
-                    { subject: 'RAC 04 (Bloqueio de Energia)', A: 90 },
-                    { subject: 'RAC 05 (Içamento)', A: 92 },
-                  ]}>
-                    <PolarGrid stroke="hsl(var(--muted-foreground))" strokeOpacity={0.2} />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--foreground))', fontSize: 12, fontWeight: 500 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                    <Radar name="Aderência (%)" dataKey="A" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.5} />
-                    <Tooltip />
-                    <Legend />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <TreinamentosSSMA />
         </TabsContent>
       </Tabs>
 
