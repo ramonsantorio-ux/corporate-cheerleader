@@ -3,10 +3,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, BarChart3, Target, Activity } from 'lucide-react';
 import { FastInput } from '@/components/ui/fast-input';
-import { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, SlidersHorizontal, Bell, AlertCircle, ChevronDown, ChevronUp, Users, Plus, Send, X, TrendingUp, TrendingDown, Clock, CheckCircle2, AlertTriangle, BarChart3, Target, Activity } from 'lucide-react';
-import { FastInput } from '@/components/ui/fast-input';
 import { FastTextarea } from '@/components/ui/fast-textarea';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +12,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, AreaChart, Area, CartesianGrid, RadialBarChart, RadialBar, Legend } from 'recharts';
@@ -308,13 +303,14 @@ export default function Feedbacks() {
 
       <PeriodFilter value={period} onChange={setPeriod} />
 
-      <Tabs defaultValue="visao" className="w-full">
+      <Tabs defaultValue="visao_geral" className="w-full mt-6">
         <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
-          <TabsTrigger value="visao" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Visão Geral & Gráficos</TabsTrigger>
-          <TabsTrigger value="lista" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">Lista de Feedbacks</TabsTrigger>
+          <TabsTrigger value="visao_geral" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Visão Geral</TabsTrigger>
+          <TabsTrigger value="historico" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Histórico de Feedbacks</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="visao" className="space-y-6 outline-none">
+        <TabsContent value="visao_geral" className="space-y-6 outline-none">
+
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }} className="corporate-kpi">
@@ -548,6 +544,154 @@ export default function Feedbacks() {
               <Bar dataKey="Pendentes" stackId="a" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} barSize={28} />
             </BarChart>
           </ResponsiveContainer>
+</ExpandableChart>
+          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center">
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(var(--success))' }} /> Resolvidos</div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded" style={{ background: 'hsl(var(--warning))' }} /> Pendentes</div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Alert banner */}
+      {alertFeedbacks.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-xl border-l-4 border-l-warning">
+          <button onClick={() => setShowAlerts(!showAlerts)} className="w-full flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Bell className="w-5 h-5 text-warning" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] rounded-full flex items-center justify-center font-bold">{alertFeedbacks.length}</span>
+              </div>
+              <span className="text-sm font-semibold">{alertFeedbacks.length} alerta(s) de SLA pendente(s)</span>
+            </div>
+            {showAlerts ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
+          <AnimatePresence>
+            {showAlerts && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                <div className="px-4 pb-4 space-y-2">
+                  {alertFeedbacks.map(fb => {
+                    const alertType = getAlertType(fb)!;
+                    const days = getDaysSince(fb.criadoEm);
+                    return (
+                      <div key={fb.id} onClick={() => navigate(`/feedbacks/${fb.id}`)} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 cursor-pointer hover:bg-muted transition-colors">
+                        <AlertCircle className={`w-4 h-4 flex-shrink-0 ${alertType === 'mensal' ? 'text-destructive' : 'text-warning'}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{fb.titulo}</p>
+                          <p className="text-xs text-muted-foreground">{fb.autor} · {setorLabels[fb.setor]}</p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${alertType === 'mensal' ? 'bg-destructive/10 text-destructive' : 'bg-warning/10 text-warning'}`}>
+                          {days}d · {alertType === 'mensal' ? 'Mensal' : 'Quinzenal'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
+      </TabsContent>
+      <TabsContent value="historico" className="space-y-6 outline-none">
+      {/* Search & filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2">
+          <Search className="w-4 h-4 text-muted-foreground" />
+          <input type="text" placeholder="Buscar feedbacks..." value={search} onChange={(e) => setSearch(e.target.value)} className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground" />
+        </div>
+        <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-lg text-sm hover:bg-muted transition-colors">
+          <SlidersHorizontal className="w-4 h-4" />Filtros
+        </button>
+      </div>
+
+      {showFilters && (
+        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="glass-card rounded-xl p-4 flex flex-wrap gap-4">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Status</label>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as FeedbackStatus | 'todos')} className="bg-muted border-none rounded-lg px-3 py-2 text-sm outline-none">
+              <option value="todos">Todos</option>
+              {(Object.entries(statusLabels) as [FeedbackStatus, string][]).map(([k, v]) => (<option key={k} value={k}>{v}</option>))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Prioridade</label>
+            <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as FeedbackPriority | 'todos')} className="bg-muted border-none rounded-lg px-3 py-2 text-sm outline-none">
+              <option value="todos">Todas</option>
+              {(Object.entries(priorityLabels) as [FeedbackPriority, string][]).map(([k, v]) => (<option key={k} value={k}>{v}</option>))}
+            </select>
+          </div>
+        </motion.div>
+      )}
+
+      <p className="text-sm text-muted-foreground">{filtered.length} feedback(s) encontrado(s)</p>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {filtered.map((fb, i) => (
+          <FeedbackCard key={fb.id} feedback={fb} index={i} onClick={() => navigate(`/feedbacks/${fb.id}`)} onDelete={() => setDeleteId(fb.id)} />
+        ))}
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="text-center py-12 text-muted-foreground">
+          <Filter className="w-10 h-10 mx-auto mb-3 opacity-50" />
+          <p className="text-sm">Nenhum feedback encontrado com os filtros aplicados.</p>
+        </div>
+      )}
+
+      {/* Department tracking detail */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-xl p-6">
+        <h2 className="font-semibold text-lg mb-4">Detalhamento por Departamento</h2>
+        <div className="space-y-3">
+          {deptStats.map(dept => {
+            const maxTotal = Math.max(...deptStats.map(d => d.total), 1);
+            const isSelected = selectedDept === dept.key;
+            return (
+              <div key={dept.key}>
+                <button onClick={() => setSelectedDept(isSelected ? null : dept.key)} className="w-full text-left">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="text-sm w-32 shrink-0 font-medium">{dept.label}</span>
+                    <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden flex">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${(dept.resolved / maxTotal) * 100}%` }} transition={{ duration: 0.5 }} className="h-full bg-success" />
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${(dept.pending / maxTotal) * 100}%` }} transition={{ duration: 0.5 }} className="h-full bg-warning" />
+                    </div>
+                    <span className="text-xs w-16 text-right text-muted-foreground">{dept.resolved}✓ {dept.pending}⏳</span>
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isSelected ? 'rotate-180' : ''}`} />
+                  </div>
+                </button>
+                <AnimatePresence>
+                  {isSelected && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <div className="ml-32 pl-3 mt-2 space-y-2 border-l-2 border-primary/20">
+                        {selectedDeptPeople.length === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2">Sem pessoas neste departamento</p>
+                        ) : (
+                          selectedDeptPeople.map(person => (
+                            <div key={person.nome} className="flex items-center gap-3 py-1.5">
+                              <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                              <span className="text-sm flex-1">{person.nome}</span>
+                              <span className="text-xs text-muted-foreground">{person.resolvidos}/{person.total} resolvidos</span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
+      </TabsContent>
+      </Tabs>
+
+      {/* Create Feedback Dialog */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
+          <DialogHeader><DialogTitle>Novo Feedback</DialogTitle></DialogHeader>
+          <form onSubmit={handleCreateFeedback} className="space-y-4 pt-2">
+            <div>
               <label className={labelClass}>Gestor Responsável</label>
               <input type="text" value={gestorName} readOnly className={`${inputClass} opacity-70 cursor-not-allowed`} />
             </div>

@@ -220,7 +220,6 @@ export default function Treinamentos() {
             </motion.div>
           );
         })}
-        })}
       </div>
       </TabsContent>
 
