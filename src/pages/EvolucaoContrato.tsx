@@ -880,8 +880,8 @@ export default function EvolucaoContrato() {
                     <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar yAxisId="left" dataKey="aderencia" name="Aderência SLA" fill="url(#colorSla)" radius={[6, 6, 0, 0]} />
-                    <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--blue-500))" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                    <Bar yAxisId="left" dataKey="aderencia" name="Aderência SLA" fill="url(#colorSla)" radius={[8, 8, 0, 0]} barSize={40} />
+                    <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, strokeWidth: 2, fill: "hsl(var(--background))" }} activeDot={{ r: 8, fill: "hsl(var(--primary))" }} style={{ filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.15))' }} connectNulls />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -905,12 +905,13 @@ export default function EvolucaoContrato() {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
-                    <YAxis tickFormatter={(val) => `R$${val/1000}k`} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <YAxis yAxisId="left" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 'auto']} />
+                    <YAxis yAxisId="right" orientation="right" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--destructive))" fontSize={12} domain={[0, 'auto']} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar stackId="a" dataKey="perdas" name="Glosas/Multas" fill="hsl(var(--destructive))" barSize={30} />
-                    <Bar stackId="a" dataKey="horasExtras" name="Horas Extras" fill="hsl(var(--warning))" radius={[6, 6, 0, 0]} />
-                    <Area type="monotone" dataKey="saldo" name="Lucro Líquido Real" fill="url(#colorSaldo)" stroke="hsl(var(--success))" strokeWidth={3} />
+                    <Area yAxisId="left" type="monotone" dataKey="saldo" name="Lucro Líquido Real" fill="url(#colorSaldo)" stroke="hsl(var(--success))" strokeWidth={3} />
+                    <Bar yAxisId="right" stackId="a" dataKey="perdas" name="Glosas/Multas" fill="hsl(var(--destructive))" barSize={35} radius={[0, 0, 0, 0]} />
+                    <Bar yAxisId="right" stackId="a" dataKey="horasExtras" name="Horas Extras" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -931,14 +932,31 @@ export default function EvolucaoContrato() {
                         data={ofensoresData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={80}
-                        outerRadius="80%"
-                        paddingAngle={2}
+                        innerRadius={90}
+                        outerRadius={120}
+                        paddingAngle={5}
                         dataKey="value"
+                        stroke="none"
+                        cornerRadius={4}
                       >
                         {ofensoresData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
+                        <Label 
+                          value="Total Perdas" 
+                          position="centerBottom" 
+                          dy={-10} 
+                          fill="hsl(var(--muted-foreground))" 
+                          fontSize={12} 
+                        />
+                        <Label 
+                          value={`R$ ${(ofensoresData.reduce((acc, curr) => acc + curr.value, 0) / 1000).toFixed(1)}k`} 
+                          position="centerTop" 
+                          dy={15} 
+                          fill="hsl(var(--foreground))" 
+                          fontSize={22} 
+                          fontWeight="bold" 
+                        />
                       </Pie>
                       <Tooltip content={<CustomTooltip />} />
                       <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
