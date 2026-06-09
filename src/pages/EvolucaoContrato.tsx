@@ -793,7 +793,15 @@ export default function EvolucaoContrato() {
 
       {/* CHARTS SECTION */}
       {medicoes.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Tabs defaultValue="visao_executiva" className="w-full mt-6 space-y-6">
+          <TabsList className="bg-muted/50 p-1 rounded-xl inline-flex w-full overflow-x-auto justify-start sm:justify-center border border-border/50">
+            <TabsTrigger value="visao_executiva" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Visão Executiva</TabsTrigger>
+            <TabsTrigger value="custos_metas" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingDown className="w-4 h-4 mr-2" />Custos e Metas</TabsTrigger>
+            <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="visao_executiva" className="space-y-6 mt-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* NOVO GRÁFICO DIRETORIA - ADERÊNCIA SLA */}
           <Card className="shadow-sm border-border lg:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('sla')}>
@@ -919,14 +927,11 @@ export default function EvolucaoContrato() {
               </div>
             </CardContent>
           </Card>
-        </div>
-      ) : (
-        <div className="text-center p-12 border-2 border-dashed border-border rounded-xl">
-          <p className="text-muted-foreground">Nenhuma medição registrada.</p>
-        </div>
-      )}
+                </div>
+          </TabsContent>
 
       
+                <TabsContent value="custos_metas" className="space-y-6 mt-4">
       {/* ACOMPANHAMENTO DE METAS */}
       {medicoes.length > 0 && (
         <Card className="shadow-sm border-border overflow-hidden mb-6 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('metas')}>
@@ -975,6 +980,9 @@ export default function EvolucaoContrato() {
         </Card>
       )}
 
+                </TabsContent>
+
+          <TabsContent value="dre" className="space-y-6 mt-4">
       {/* DATA TABLE */}
 
       {medicoes.length > 0 && (
@@ -1049,6 +1057,14 @@ export default function EvolucaoContrato() {
             </table>
           </div>
         </Card>
+      )}
+
+                </TabsContent>
+        </Tabs>
+      ) : (
+        <div className="text-center p-12 border-2 border-dashed border-border rounded-xl">
+          <p className="text-muted-foreground">Nenhuma medição registrada.</p>
+        </div>
       )}
 
       {/* DRAWER DETALHES DE OFENSORES */}
