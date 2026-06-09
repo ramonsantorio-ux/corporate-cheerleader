@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1017,6 +1018,15 @@ export default function PontoFerias() {
         ))}
       </div>
 
+      {/* ═══ TABS CONTAINER ═══ */}
+      <Tabs defaultValue="geral" className="w-full mb-8 mt-6">
+        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
+          <TabsTrigger value="geral" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Visão Geral & Frequência</TabsTrigger>
+          <TabsTrigger value="eventos" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-warning data-[state=active]:shadow-sm transition-all">Advertências & Férias</TabsTrigger>
+          <TabsTrigger value="registros" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">Quadro & Registros de Ponto</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="geral" className="space-y-6 outline-none">
       {/* ═══ META DIÁRIA ═══ */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
         className="corporate-section">
@@ -1307,7 +1317,9 @@ export default function PontoFerias() {
           </div>
         )}
       </motion.div>
+      </TabsContent>
 
+      <TabsContent value="eventos" className="space-y-6 outline-none">
       {/* ═══ ADVERTÊNCIAS ═══ */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.27 }}
         className="corporate-section">
@@ -1407,7 +1419,9 @@ export default function PontoFerias() {
           )}
         </motion.div>
       )}
+      </TabsContent>
 
+      <TabsContent value="registros" className="space-y-6 outline-none">
       {/* ═══ EMPLOYEE ROSTER ═══ */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
         className="corporate-section">
@@ -1607,6 +1621,8 @@ export default function PontoFerias() {
           </div>
         )}
       </div>
+      </TabsContent>
+      </Tabs>
 
       {/* ═══ EDIT VACATION DIALOG ═══ */}
       <Dialog open={editVacDialogOpen} onOpenChange={setEditVacDialogOpen}>

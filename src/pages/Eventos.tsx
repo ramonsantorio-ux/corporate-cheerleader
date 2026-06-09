@@ -598,20 +598,49 @@ export default function Eventos() {
         </div>
       </motion.div>
 
-      {/* Period + Search + Filter */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <PeriodFilter value={period} onChange={setPeriod} className="md:w-auto" />
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Buscar por descrição, nome, local, equipamento..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
+      {/* Period + Search + Advanced Filters */}
+      <div className="space-y-3 mb-6">
+        <div className="flex flex-col md:flex-row gap-3">
+          <PeriodFilter value={period} onChange={setPeriod} className="md:w-auto shrink-0" />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Buscar geral por descrição, nome, local, equipamento..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 w-full" />
+          </div>
         </div>
-        <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
-          <SelectTrigger className="w-[200px]"><Filter className="w-4 h-4 mr-2" /><SelectValue placeholder="Equipamento" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos Equipamentos</SelectItem>
-            {equipmentTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
+            <SelectTrigger><Filter className="w-4 h-4 mr-2" /><SelectValue placeholder="Equipamento" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Equipamentos</SelectItem>
+              {equipmentTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          <Select value={locationFilter} onValueChange={setLocationFilter}>
+            <SelectTrigger><MapPin className="w-4 h-4 mr-2" /><SelectValue placeholder="Local" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Locais</SelectItem>
+              {locationTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          <Select value={plateFilter} onValueChange={setPlateFilter}>
+            <SelectTrigger><Truck className="w-4 h-4 mr-2" /><SelectValue placeholder="Placa/TAG" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as Placas</SelectItem>
+              {plateTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+
+          <Select value={timeFilter} onValueChange={setTimeFilter}>
+            <SelectTrigger><Clock className="w-4 h-4 mr-2" /><SelectValue placeholder="Horário" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos Horários</SelectItem>
+              {timeTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Employee Filter */}

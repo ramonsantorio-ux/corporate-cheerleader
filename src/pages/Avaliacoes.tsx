@@ -11,6 +11,7 @@ import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Goal {
   id: string;
@@ -189,7 +190,13 @@ export default function Avaliacoes() {
       ) : filtered.length === 0 ? (
         <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma meta encontrada para este cargo.</div>
       ) : (
-        <>
+        <Tabs defaultValue="visao" className="w-full">
+          <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
+            <TabsTrigger value="visao" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Análise e Gráficos</TabsTrigger>
+            <TabsTrigger value="metas" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">Detalhamento de Metas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="visao" className="space-y-6 outline-none">
           {/* Charts row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -240,7 +247,9 @@ export default function Avaliacoes() {
               )}
             </motion.div>
           </div>
+          </TabsContent>
 
+          <TabsContent value="metas" className="space-y-6 outline-none">
           {/* Goals table */}
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
             className="glass-card rounded-xl overflow-hidden">
@@ -294,7 +303,8 @@ export default function Avaliacoes() {
               </table>
             </div>
           </motion.div>
-        </>
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* Edit/Create Dialog */}

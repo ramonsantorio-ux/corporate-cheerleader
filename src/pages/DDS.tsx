@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface DDSRecord {
   id: string;
@@ -161,6 +162,13 @@ export default function DDS() {
         </Dialog>
       </div>
 
+      <Tabs defaultValue="visao" className="w-full mb-8 mt-2">
+        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
+          <TabsTrigger value="visao" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Visão Geral & Métricas</TabsTrigger>
+          <TabsTrigger value="historico" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">Histórico de Registros</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="visao" className="space-y-6 outline-none">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-l-4 border-l-primary">
           <CardContent className="p-4 flex items-center justify-between">
@@ -245,7 +253,9 @@ export default function DDS() {
           </CardContent>
         </Card>
       </div>
+      </TabsContent>
 
+      <TabsContent value="historico" className="space-y-6 outline-none">
       <Card>
         <CardHeader className="pb-2">
            <CardTitle className="text-sm font-semibold">Histórico de DDS</CardTitle>
@@ -294,6 +304,8 @@ export default function DDS() {
           )}
         </CardContent>
       </Card>
+      </TabsContent>
+      </Tabs>
     </div>
   );
 }

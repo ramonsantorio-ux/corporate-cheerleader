@@ -457,7 +457,10 @@ export default function Index() {
       {/* ═══ MAIN KPIs (ENTERPRISE) ═══ */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatCard title="Colaboradores" value={sel ? 1 : totalColaboradores} change={sel ? selectedEmployee?.cargo || '' : `${emFerias} em férias`} changeType="neutral" icon={Users} delay={0} />
-        <StatCard title="Turnover" value="2.4%" change="      {/* ═══ DASHBOARD TABS ═══ */}
+        <StatCard title="Turnover" value="2.4%" change="-0.5% ref. mês anterior" changeType="positive" icon={TrendingUp} delay={0.1} />
+      </div>
+
+      {/* ═══ DASHBOARD TABS ═══ */}
       <Tabs defaultValue="corporativo" className="w-full mb-8">
         <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
           <TabsTrigger value="corporativo" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2">
