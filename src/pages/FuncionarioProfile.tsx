@@ -317,8 +317,9 @@ export default function FuncionarioProfile() {
     return items;
   }, [func, meetings, attendanceRecords, employeeWarnings, employeeEvents]);
 
-  const pieData = goals.map(g => ({ name: g.descricao, value: g.peso }));
-  const barData = goals.map(g => ({ name: g.descricao.length > 20 ? g.descricao.slice(0, 18) + 'â€¦' : g.descricao, Peso: g.peso }));
+  const fixEncoding = (str: string) => str.replace(/Ã£/g, 'ã').replace(/Ã§/g, 'ç').replace(/Ãµ/g, 'õ').replace(/Ã¡/g, 'á').replace(/Ã©/g, 'é').replace(/Ã³/g, 'ó').replace(/Ãº/g, 'ú').replace(/Ã­/g, 'í').replace(/Ãª/g, 'ê').replace(/Ã´/g, 'ô').replace(/Ã‡/g, 'Ç').replace(/Ãƒ/g, 'Ã').replace(/Ã‰/g, 'É').replace(/Ã“/g, 'Ó').replace(/Ãš/g, 'Ú').replace(/Ã‚/g, 'Â').replace(/ÃŠ/g, 'Ê').replace(/ Eventuãis/g, ' Eventuais').replace(/Ã /g, 'à');
+  const pieData = goals.map(g => ({ name: fixEncoding(g.descricao), value: g.peso }));
+  const barData = goals.map(g => ({ name: fixEncoding(g.descricao).length > 20 ? fixEncoding(g.descricao).slice(0, 18) + '...' : fixEncoding(g.descricao), Peso: g.peso }));
 
   const attendanceStats = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -744,7 +745,7 @@ export default function FuncionarioProfile() {
               </div>
             </div>
             <div className="glass-card rounded-xl p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Ãšltimas Reuniões 1:1</h3>
+              <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Últimas Reuniões 1:1</h3>
               {meetings.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma reunião registrada.</p> : (
                 <div className="space-y-3">{meetings.slice(0, 5).map(m => (
                   <div key={m.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
@@ -768,7 +769,7 @@ export default function FuncionarioProfile() {
               ) : (
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4><ExpandableChart title="Distribuição de Pesos" description="Proporção de peso de cada meta para este cargo."><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="40%" paddingAngle={3} label={({ value }) => `${value}%`}>{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip content={<CustomTooltip />} /><Legend /></PieChart></ResponsiveContainer></ExpandableChart></div>
+                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4><ExpandableChart title="Distribuição de Pesos" description="Proporção de peso de cada meta para este cargo."><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="50%" paddingAngle={3} stroke="none">{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip content={<CustomTooltip />} /><Legend /></PieChart></ResponsiveContainer></ExpandableChart></div>
                     <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Peso por Meta</h4><ExpandableChart title="Peso por Meta" description="Comparativo de metas e seus pesos."><ResponsiveContainer width="100%" height={280}><BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tickFormatter={v => `${v}%`} /><YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} /><Tooltip content={<CustomTooltip />} /><Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer></ExpandableChart></div>
                   </div>
                   <div className="glass-card rounded-xl overflow-hidden">
