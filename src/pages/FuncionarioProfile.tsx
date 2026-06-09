@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays, ShieldAlert, Award, Crown, ShieldCheck, Lightbulb, Wrench, Brain, Zap, BarChart2, CheckCircle2, User } from 'lucide-react';
@@ -341,6 +341,28 @@ export default function FuncionarioProfile() {
     const start = new Date(vacationInfo.start_date);
     return start > today && (start.getTime() - today.getTime()) <= 7 * 86400000;
   }, [vacationInfo]);
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[150px]">
+          {label && <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>}
+          <div className="space-y-2">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-center justify-between gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color || entry.fill }} />
+                  <span className="text-muted-foreground font-medium">{entry.name}</span>
+                </div>
+                <span className="font-bold text-foreground">{entry.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
 
   // â”€â”€â”€ Deviations Report PDF for this employee â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function exportEmployeeDeviationsReport() {
@@ -746,8 +768,8 @@ export default function FuncionarioProfile() {
               ) : (
                 <>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4><ExpandableChart title="Distribuição de Pesos" description="Proporção de peso de cada meta para este cargo."><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="40%" paddingAngle={3} label={({ value }) => `${value}%`}>{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip formatter={(v: number) => `${v}%`} /><Legend /></PieChart></ResponsiveContainer></ExpandableChart></div>
-                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Peso por Meta</h4><ExpandableChart title="Peso por Meta" description="Comparativo de metas e seus pesos."><ResponsiveContainer width="100%" height={280}><BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tickFormatter={v => `${v}%`} /><YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} /><Tooltip formatter={(v: number) => `${v}%`} /><Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer></ExpandableChart></div>
+                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4><ExpandableChart title="Distribuição de Pesos" description="Proporção de peso de cada meta para este cargo."><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="40%" paddingAngle={3} label={({ value }) => `${value}%`}>{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip content={<CustomTooltip />} /><Legend /></PieChart></ResponsiveContainer></ExpandableChart></div>
+                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Peso por Meta</h4><ExpandableChart title="Peso por Meta" description="Comparativo de metas e seus pesos."><ResponsiveContainer width="100%" height={280}><BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tickFormatter={v => `${v}%`} /><YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} /><Tooltip content={<CustomTooltip />} /><Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer></ExpandableChart></div>
                   </div>
                   <div className="glass-card rounded-xl overflow-hidden">
                     <div className="p-4 border-b border-border bg-primary/5"><h4 className="text-base font-bold">{func.cargo}</h4></div>

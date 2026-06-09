@@ -376,34 +376,47 @@ export default function Colaboradores() {
               </>
             )}
           </div>
-        <div className="grid gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {filtered.map((f, i) => {
             const turnoLabel = TURNOS.find(t => t.value === f.turno)?.label;
             return (
               <motion.div key={f.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                className={`glass-card rounded-xl p-4 flex items-center gap-4 hover:ring-1 hover:ring-primary/30 transition-all ${selectedIds.has(f.id) ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
+                className={`glass-card rounded-2xl p-5 flex flex-col items-center text-center gap-4 hover:ring-1 hover:ring-primary/30 transition-all relative overflow-hidden group ${selectedIds.has(f.id) ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
               >
-                <Checkbox
-                  checked={selectedIds.has(f.id)}
-                  onCheckedChange={() => toggleSelect(f.id)}
-                />
-                {f.foto_url ? (
-                  <img src={f.foto_url} alt={f.nome} className="w-10 h-10 rounded-full object-cover border-2 border-primary/20" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"><span className="text-primary font-bold text-sm">{f.nome.charAt(0)}</span></div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{f.nome}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {f.cargo} Â· {f.departamento}
-                    {turnoLabel && <span className="ml-1">Â· {turnoLabel}</span>}
-                    
-                  </p>
+                <div className="absolute top-4 left-4">
+                  <Checkbox
+                    checked={selectedIds.has(f.id)}
+                    onCheckedChange={() => toggleSelect(f.id)}
+                  />
                 </div>
-                <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => navigate(`/funcionario/${f.id}`)} title="Ver perfil"><Eye className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(f)} title="Editar"><Edit className="w-4 h-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => setDeleteId(f.id)} title="Excluir" className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                
+                <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => openEdit(f)} title="Editar"><Edit className="w-3.5 h-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-destructive hover:text-destructive" onClick={() => setDeleteId(f.id)} title="Excluir"><Trash2 className="w-3.5 h-3.5" /></Button>
+                </div>
+
+                <div className="mt-2">
+                  {f.foto_url ? (
+                    <img src={f.foto_url} alt={f.nome} className="w-20 h-20 rounded-full object-cover border-4 border-background shadow-md mx-auto" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 border-4 border-background shadow-sm mx-auto"><span className="text-primary font-black text-2xl">{f.nome.charAt(0)}</span></div>
+                  )}
+                </div>
+                
+                <div className="flex-1 w-full space-y-2">
+                  <div>
+                    <p className="font-bold text-base line-clamp-1">{f.nome}</p>
+                    <p className="text-xs text-primary font-medium">{f.cargo}</p>
+                  </div>
+                  
+                  <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+                    <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{f.departamento}</span>
+                    {turnoLabel && <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-chart-3/10 text-chart-3">{turnoLabel}</span>}
+                  </div>
+                </div>
+                
+                <div className="w-full mt-2 pt-4 border-t border-border/50">
+                  <Button variant="outline" className="w-full text-xs" onClick={() => navigate(`/funcionario/${f.id}`)}><Eye className="w-3.5 h-3.5 mr-2" /> Ver Perfil</Button>
                 </div>
               </motion.div>
             );
