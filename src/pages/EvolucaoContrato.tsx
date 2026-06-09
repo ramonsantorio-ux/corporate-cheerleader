@@ -495,7 +495,7 @@ export default function EvolucaoContrato() {
   
   // Privacy mode state
   const [hiddenCards, setHiddenCards] = useState<Record<string, boolean>>({});
-  const [timeRange, setTimeRange] = useState('6');
+  const [timeRange, setTimeRange] = useState('12');
   const [activeTab, setActiveTab] = useState('visao_executiva');
   const [selectedMonthDRE, setSelectedMonthDRE] = useState<string | null>(null);
   const toggleCardVisibility = (key: string) => {
