@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -371,18 +371,18 @@ const mockData: Medicao[] = [
 ];
 
 export const LISTA_EQUIPAMENTOS = [
-  { grupo: "CAMINH├âO BASCULANTE 16TON", itens: ["BASCULANTE 16TON - MFE - 01", "BASCULANTE 16TON - MFE - 02", "BASCULANTE 16TON - MFE - 03", "BASCULANTE 16TON - MFE - 04", "BASCULANTE 16TON - TPM - 01", "BASCULANTE 16TON - TPM - 02"] },
-  { grupo: "CAMINH├âO BASCULANTE 6M┬│", itens: ["BASCULANTE 6M┬│ - MFE - 01"] },
-  { grupo: "CAMINH├âO BROOK", itens: ["BROOK - MFE - 01", "BROOK - TPM - 01"] },
-  { grupo: "CAMINH├âO PIPA ASPERS├âO", itens: ["PIPA ASPERS├âO - MFE - 01", "PIPA ASPERS├âO - MFE - 02", "PIPA ASPERS├âO - MFE - 03", "PIPA ASPERS├âO - MFE - 04", "PIPA ASPERS├âO - MFE - 05", "PIPA ASPERS├âO - TPM - 01", "PIPA ASPERS├âO - TPM - 02", "PIPA ASPERS├âO - TPM - 03"] },
-  { grupo: "CAMINH├âO PIPA ASPERS├âO VIAS", itens: ["PIPA ASPERS├âO VIAS - MFE - 01", "PIPA ASPERS├âO VIAS - MFE - 02"] },
-  { grupo: "CAMINH├âO PIPA LIMPEZA", itens: ["PIPA LIMPEZA - MFE - 01", "PIPA LIMPEZA - MFE - 02", "PIPA LIMPEZA - TPM - 01"] },
+  { grupo: "CAMINHÃO BASCULANTE 16TON", itens: ["BASCULANTE 16TON - MFE - 01", "BASCULANTE 16TON - MFE - 02", "BASCULANTE 16TON - MFE - 03", "BASCULANTE 16TON - MFE - 04", "BASCULANTE 16TON - TPM - 01", "BASCULANTE 16TON - TPM - 02"] },
+  { grupo: "CAMINHÃO BASCULANTE 6M³", itens: ["BASCULANTE 6M³ - MFE - 01"] },
+  { grupo: "CAMINHÃO BROOK", itens: ["BROOK - MFE - 01", "BROOK - TPM - 01"] },
+  { grupo: "CAMINHÃO PIPA ASPERSÃO", itens: ["PIPA ASPERSÃO - MFE - 01", "PIPA ASPERSÃO - MFE - 02", "PIPA ASPERSÃO - MFE - 03", "PIPA ASPERSÃO - MFE - 04", "PIPA ASPERSÃO - MFE - 05", "PIPA ASPERSÃO - TPM - 01", "PIPA ASPERSÃO - TPM - 02", "PIPA ASPERSÃO - TPM - 03"] },
+  { grupo: "CAMINHÃO PIPA ASPERSÃO VIAS", itens: ["PIPA ASPERSÃO VIAS - MFE - 01", "PIPA ASPERSÃO VIAS - MFE - 02"] },
+  { grupo: "CAMINHÃO PIPA LIMPEZA", itens: ["PIPA LIMPEZA - MFE - 01", "PIPA LIMPEZA - MFE - 02", "PIPA LIMPEZA - TPM - 01"] },
   { grupo: "ESCAVADEIRA 312", itens: ["312 - MFE - 03"] },
   { grupo: "MINI CARR. 226B REMOTA", itens: ["CARR. 226B REMOTA - TPM - 01"] },
   { grupo: "MINI CARR. S70 REMOTA", itens: ["CARR. S70 REMOTA - MFE - 01", "CARR. S70 REMOTA - TPM - 01"] },
   { grupo: "MINI CARREGADEIRA 226B", itens: ["CARREGADEIRA 226B - MFE - 01", "CARREGADEIRA 226B - MFE - 02", "CARREGADEIRA 226B - MFE - 03", "CARREGADEIRA 226B - MFE - 04", "CARREGADEIRA 226B - MFE - 05", "CARREGADEIRA 226B - TPM - 01", "CARREGADEIRA 226B - TPM - 02"] },
   { grupo: "MINI ESCAVADEIRA 303.5", itens: ["ESCAVADEIRA 303.5 - MFE - 01", "ESCAVADEIRA 303.5 - MFE - 02"] },
-  { grupo: "P├ü CARREGADEIRA 962GII", itens: ["CARREGADEIRA 962GII - MFE - 01"] },
+  { grupo: "PÁ CARREGADEIRA 962GII", itens: ["CARREGADEIRA 962GII - MFE - 01"] },
   { grupo: "RETROESCAVADEIRA 416D", itens: ["416D - MFE - 01", "416D - MFE - 02", "416D - MFE - 03", "416D - TPM - 01"] }
 ];
 
@@ -415,7 +415,7 @@ const isDateInMedicaoMonth = (dateStr: string, medicaoMes: string) => {
   const monthMap: Record<string, number> = { 
     'Jan': 0, 'Janeiro': 0, 
     'Fev': 1, 'Fevereiro': 1, 
-    'Mar': 2, 'Mar├ºo': 2, 
+    'Mar': 2, 'Março': 2, 
     'Abr': 3, 'Abril': 3, 
     'Mai': 4, 'Maio': 4, 
     'Jun': 5, 'Junho': 5, 
@@ -543,7 +543,7 @@ export default function EvolucaoContrato() {
         await supabase.from('medicoes').delete().eq('id', existing._supabaseId);
       }
       setMedicoes(medicoes.filter(m => m.id !== id));
-      toast({ title: 'Sucesso', description: 'Fechamento exclu├¡do com sucesso!' });
+      toast({ title: 'Sucesso', description: 'Fechamento excluído com sucesso!' });
     }
   };
 
@@ -578,7 +578,7 @@ export default function EvolucaoContrato() {
   const chartData = useMemo(() => {
     return medicoes.map(m => {
       const globais = notificacoesGlobais.filter(ng => isDateInMedicaoMonth(ng.dataStr, m.mes));
-      const globaisNotifs = globais.filter(ng => ng.tipo === 'Notifica├º├úo' || !ng.tipo).map(ng => ({ 
+      const globaisNotifs = globais.filter(ng => ng.tipo === 'Notificação' || !ng.tipo).map(ng => ({ 
         motivo: `${ng.motivo} (Ref: ${ng.local})`,
         dataStr: ng.dataStr,
         local: ng.local,
@@ -692,9 +692,9 @@ export default function EvolucaoContrato() {
                   <span className="text-muted-foreground font-medium">{entry.name}</span>
                 </div>
                 <span className="font-bold text-foreground">
-                  {entry.name.includes('Margem') || entry.name.includes('Ader├¬ncia') 
+                  {entry.name.includes('Margem') || entry.name.includes('Aderência') 
                     ? `${entry.value}%` 
-                    : entry.name.includes('Notifica├º├Áes') 
+                    : entry.name.includes('Notificações') 
                       ? entry.value 
                       : formatCurrency(entry.value)}
                 </span>
@@ -721,8 +721,8 @@ export default function EvolucaoContrato() {
   const radarRACData = [
     { subject: 'RAC 01 (Altura)', A: lastMonth?.rac1 || 0, fullMark: 100 },
     { subject: 'RAC 02 (Veículos Leves)', A: lastMonth?.rac2 || 0, fullMark: 100 },
-    { subject: 'RAC 03 (Equip. Móveis)', A: lastMonth?.rac3 || 0, fullMark: 100 },
-    { subject: 'RAC 04 (Bloqueio Energia)', A: lastMonth?.rac4 || 0, fullMark: 100 },
+    { subject: 'RAC 03 (Equipamentos Móveis)', A: lastMonth?.rac3 || 0, fullMark: 100 },
+    { subject: 'RAC 04 (Bloqueio de Energia)', A: lastMonth?.rac4 || 0, fullMark: 100 },
     { subject: 'RAC 05 (Içamento)', A: 90 + Math.random()*10, fullMark: 100 },
   ];
 
@@ -734,7 +734,7 @@ export default function EvolucaoContrato() {
           <div className={`glass-card rounded-xl p-4 border-l-4 ${lastMonth.aderencia < 95 ? 'border-l-destructive bg-destructive/5' : 'border-l-primary'}`}>
             <div className="flex items-center justify-between mb-2">
               <p className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${lastMonth.aderencia < 95 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                <Target className="w-3.5 h-3.5" /> Ader├¬ncia SLA
+                <Target className="w-3.5 h-3.5" /> Aderência SLA
               </p>
               <button onClick={() => toggleCardVisibility('aderencia')} className="text-muted-foreground hover:text-foreground transition-colors">
                 {hiddenCards['aderencia'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -769,7 +769,7 @@ export default function EvolucaoContrato() {
 
           <div className="glass-card rounded-xl p-4 border-l-4 border-l-success bg-success/5">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-bold text-success uppercase tracking-wider flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Lucro L├¡quido Real</p>
+              <p className="text-[10px] font-bold text-success uppercase tracking-wider flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Lucro Líquido Real</p>
               <button onClick={() => toggleCardVisibility('lucro')} className="text-success/70 hover:text-success transition-colors">
                 {hiddenCards['lucro'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
@@ -786,7 +786,7 @@ export default function EvolucaoContrato() {
 
           <div className="glass-card rounded-xl p-4 border-l-4 border-l-primary">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Calculator className="w-3.5 h-3.5" /> Margem L├¡quida</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Calculator className="w-3.5 h-3.5" /> Margem Líquida</p>
               <button onClick={() => toggleCardVisibility('margem')} className="text-muted-foreground hover:text-foreground transition-colors">
                 {hiddenCards['margem'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
@@ -825,21 +825,21 @@ export default function EvolucaoContrato() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6 space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
             <TabsList className="bg-muted/50 p-1 rounded-xl inline-flex w-full sm:w-auto overflow-x-auto justify-start sm:justify-center border border-border/50">
-              <TabsTrigger value="visao_executiva" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Vis├úo Executiva</TabsTrigger>
+              <TabsTrigger value="visao_executiva" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Visão Executiva</TabsTrigger>
               <TabsTrigger value="custos_metas" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingDown className="w-4 h-4 mr-2" />Custos e Metas</TabsTrigger>
               <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Per├¡odo:</span>
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
               <Select value={timeRange} onValueChange={setTimeRange}>
                 <SelectTrigger className="w-full sm:w-[180px] bg-background border-border/50 shadow-sm rounded-xl h-10">
-                  <SelectValue placeholder="Per├¡odo" />
+                  <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border/50">
-                  <SelectItem value="3">├Ültimos 3 meses</SelectItem>
-                  <SelectItem value="6">├Ültimos 6 meses</SelectItem>
-                  <SelectItem value="12">├Ültimos 12 meses</SelectItem>
-                  <SelectItem value="all">Todo o per├¡odo</SelectItem>
+                  <SelectItem value="3">Últimos 3 meses</SelectItem>
+                  <SelectItem value="6">Últimos 6 meses</SelectItem>
+                  <SelectItem value="12">Últimos 12 meses</SelectItem>
+                  <SelectItem value="all">Todo o período</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -848,11 +848,11 @@ export default function EvolucaoContrato() {
           <TabsContent value="visao_executiva" className="space-y-6 mt-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          {/* NOVO GR├üFICO DIRETORIA - ADER├èNCIA SLA */}
+          {/* NOVO GRÁFICO DIRETORIA - ADERÊNCIA SLA */}
           <Card className="shadow-sm border-border lg:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('sla')}>
             <CardHeader>
-              <CardTitle className="text-xl">Evolu├º├úo da Ader├¬ncia (SLA)</CardTitle>
-              <CardDescription>Vis├úo executiva do cumprimento de qualidade operacional frente ├á meta contratual de 95%.</CardDescription>
+              <CardTitle className="text-xl">Evolução da Aderência (SLA)</CardTitle>
+              <CardDescription>Visão executiva do cumprimento de qualidade operacional frente à meta contratual de 95%.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[350px] w-full mt-4">
@@ -870,7 +870,7 @@ export default function EvolucaoContrato() {
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                     <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta SLA (95%)', fill: 'hsl(var(--warning))', fontSize: 11, fontWeight: 'bold' }} />
-                    <Area type="monotone" dataKey="aderencia" name="Ader├¬ncia SLA (%)" fill="url(#colorSlaArea)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }}>
+                    <Area type="monotone" dataKey="aderencia" name="Aderência SLA (%)" fill="url(#colorSlaArea)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }}>
                       <LabelList dataKey="aderencia" position="top" offset={10} formatter={(val: number) => `${val}%`} style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} />
                     </Area>
                   </ComposedChart>
@@ -881,8 +881,8 @@ export default function EvolucaoContrato() {
 
           <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('resumo')}>
             <CardHeader>
-              <CardTitle className="text-lg">Ader├¬ncia vs Margem</CardTitle>
-              <CardDescription>Correla├º├úo entre a qualidade do servi├ºo e a rentabilidade do contrato.</CardDescription>
+              <CardTitle className="text-lg">Aderência vs Margem</CardTitle>
+              <CardDescription>Correlação entre a qualidade do serviço e a rentabilidade do contrato.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px] w-full mt-4">
@@ -900,7 +900,7 @@ export default function EvolucaoContrato() {
                     <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar yAxisId="left" dataKey="aderencia" name="Ader├¬ncia SLA" fill="url(#colorSla)" radius={[8, 8, 0, 0]} barSize={40} />
+                    <Bar yAxisId="left" dataKey="aderencia" name="Aderência SLA" fill="url(#colorSla)" radius={[8, 8, 0, 0]} barSize={40} />
                     <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, strokeWidth: 2, fill: "hsl(var(--background))" }} activeDot={{ r: 8, fill: "hsl(var(--primary))" }} style={{ filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.15))' }} connectNulls />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -910,7 +910,7 @@ export default function EvolucaoContrato() {
 
           <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('rentabilidade')}>
             <CardHeader>
-              <CardTitle className="text-lg">An├ílise de Rentabilidade</CardTitle>
+              <CardTitle className="text-lg">Análise de Rentabilidade</CardTitle>
               <CardDescription>Receita vs Lucro vs Ofensores Financeiros (Glosas+Multas+Custos Extras).</CardDescription>
             </CardHeader>
             <CardContent>
@@ -929,7 +929,7 @@ export default function EvolucaoContrato() {
                     <YAxis yAxisId="right" orientation="right" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--destructive))" fontSize={12} domain={[0, 'auto']} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Area yAxisId="left" type="monotone" dataKey="saldo" name="Lucro L├¡quido Real" fill="url(#colorSaldo)" stroke="hsl(var(--success))" strokeWidth={3} />
+                    <Area yAxisId="left" type="monotone" dataKey="saldo" name="Lucro Líquido Real" fill="url(#colorSaldo)" stroke="hsl(var(--success))" strokeWidth={3} />
                     <Bar yAxisId="right" stackId="a" dataKey="perdas" name="Glosas/Multas" fill="hsl(var(--destructive))" barSize={35} radius={[0, 0, 0, 0]} />
                     <Bar yAxisId="right" stackId="a" dataKey="horasExtras" name="Horas Extras" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
                   </ComposedChart>
@@ -1009,9 +1009,9 @@ export default function EvolucaoContrato() {
               <TabsList className="grid grid-cols-3 sm:grid-cols-6 mb-4 h-auto">
                 <TabsTrigger value="impostos" className="py-2">Impostos</TabsTrigger>
                 <TabsTrigger value="folha" className="py-2">Folha</TabsTrigger>
-                <TabsTrigger value="manutencao" className="py-2">Manuten├º├úo</TabsTrigger>
-                <TabsTrigger value="combustivel" className="py-2">Combust├¡vel</TabsTrigger>
-                <TabsTrigger value="seguranca" className="py-2">Seguran├ºa</TabsTrigger>
+                <TabsTrigger value="manutencao" className="py-2">Manutenção</TabsTrigger>
+                <TabsTrigger value="combustivel" className="py-2">Combustível</TabsTrigger>
+                <TabsTrigger value="seguranca" className="py-2">Segurança</TabsTrigger>
                 <TabsTrigger value="materiais" className="py-2">Materiais</TabsTrigger>
               </TabsList>
 
@@ -1020,9 +1020,9 @@ export default function EvolucaoContrato() {
                   <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
                     { category: 'Impostos', meta: lastMonth?.metaImpostos || 0, real: lastMonth?.impostosTotal || 0 },
                     { category: 'Folha', meta: lastMonth?.metaFolha || 0, real: lastMonth?.folhaTotal || 0 },
-                    { category: 'Manuten├º├úo', meta: lastMonth?.metaManutencao || 0, real: lastMonth?.manutencaoTotal || 0 },
-                    { category: 'Combust├¡vel', meta: lastMonth?.metaCombustivel || 0, real: lastMonth?.combustivelTotal || 0 },
-                    { category: 'Seguran├ºa', meta: lastMonth?.metaSeguranca || 0, real: lastMonth?.uniformeTotal || 0 },
+                    { category: 'Manutenção', meta: lastMonth?.metaManutencao || 0, real: lastMonth?.manutencaoTotal || 0 },
+                    { category: 'Combustível', meta: lastMonth?.metaCombustivel || 0, real: lastMonth?.combustivelTotal || 0 },
+                    { category: 'Segurança', meta: lastMonth?.metaSeguranca || 0, real: lastMonth?.uniformeTotal || 0 },
                     { category: 'Materiais', meta: lastMonth?.metaMateriais || 0, real: lastMonth?.escritorioTotal || 0 },
                   ]}>
                     <PolarGrid stroke="hsl(var(--border))" />
@@ -1072,10 +1072,10 @@ export default function EvolucaoContrato() {
         <Card className="shadow-sm border-border overflow-hidden transition-all duration-300 hover:shadow-md hover:border-primary/20">
           <div className="p-4 border-b border-border bg-muted/20">
             <div className="flex items-center gap-4">
-              <h3 className="font-bold text-lg flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> Hist├│rico Financeiro Detalhado</h3>
+              <h3 className="font-bold text-lg flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> Histórico Financeiro Detalhado</h3>
               {selectedMonthDRE && (
                 <button onClick={() => setSelectedMonthDRE(null)} className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-medium hover:bg-primary/20 transition-colors">
-                  Filtrado: {selectedMonthDRE} (Limpar Ô£ò)
+                  Filtrado: {selectedMonthDRE} (Limpar ✕)
                 </button>
               )}
             </div>
@@ -1084,19 +1084,19 @@ export default function EvolucaoContrato() {
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-background/95 backdrop-blur z-10">
                 <tr className="bg-muted/40 border-b border-border">
-                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">M├¬s</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Mês</th>
                   <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Ofensores</th>
-                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Ader├¬ncia</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Aderência</th>
                   <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Receita</th>
                   <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Impostos</th>
                   <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Folha</th>
-                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Manuten├º├úo</th>
-                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Combust├¡vel</th>
-                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground" title="Uniforme/EPI">Seguran├ºa</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Manutenção</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Combustível</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground" title="Uniforme/EPI">Segurança</th>
                   <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground">Materiais</th>
-                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground bg-success/10">Lucro L├¡quido</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground bg-success/10">Lucro Líquido</th>
                   <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground bg-primary/5">Margem</th>
-                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground sticky right-0 bg-muted/40 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] border-l">A├º├Áes</th>
+                  <th className="text-center px-2 py-3 font-semibold text-[11px] uppercase text-muted-foreground sticky right-0 bg-muted/40 z-20 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] border-l">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
@@ -1153,7 +1153,7 @@ export default function EvolucaoContrato() {
         </Tabs>
       ) : (
         <div className="text-center p-12 border-2 border-dashed border-border rounded-xl">
-          <p className="text-muted-foreground">Nenhuma medi├º├úo registrada.</p>
+          <p className="text-muted-foreground">Nenhuma medição registrada.</p>
         </div>
       )}
 
@@ -1161,7 +1161,7 @@ export default function EvolucaoContrato() {
       <Sheet open={!!detalhesMedicao} onOpenChange={(val) => !val && setDetalhesMedicao(null)}>
         <SheetContent className="overflow-y-auto sm:max-w-md">
           <SheetHeader className="mb-6">
-            <SheetTitle className="text-xl flex items-center gap-2 text-primary"><LineChartIcon className="w-5 h-5" /> Detalhes da Medi├º├úo</SheetTitle>
+            <SheetTitle className="text-xl flex items-center gap-2 text-primary"><LineChartIcon className="w-5 h-5" /> Detalhes da Medição</SheetTitle>
             <SheetDescription>
               Resumo financeiro e operacional de <span className="font-bold text-foreground">{detalhesMedicao?.mes}</span>
             </SheetDescription>
@@ -1170,14 +1170,14 @@ export default function EvolucaoContrato() {
           {detalhesMedicao && (
             <div className="space-y-6 pb-10">
               
-              {/* KPIs do M├¬s */}
+              {/* KPIs do Mês */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl border border-primary/20 shadow-sm transition-all duration-300 hover:shadow-md">
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Ader├¬ncia SLA</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Aderência SLA</p>
                   <p className={`text-2xl font-black ${detalhesMedicao.aderencia >= 95 ? 'text-success' : 'text-destructive'}`}>{detalhesMedicao.aderencia}%</p>
                 </div>
                 <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl border border-primary/20 shadow-sm transition-all duration-300 hover:shadow-md">
-                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Margem L├¡quida</p>
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Margem Líquida</p>
                   {(() => {
                     const rec = detalhesMedicao.fatLocacao + detalhesMedicao.fatMaoDeObra + detalhesMedicao.eventuais;
                     const impostosTotais = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0) + (detalhesMedicao.impostoInss || 0) + (detalhesMedicao.impostoInssAdSat || 0);
@@ -1196,15 +1196,15 @@ export default function EvolucaoContrato() {
 
               {/* DRE Simplificado */}
               <div className="space-y-3">
-                <h4 className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 flex items-center gap-2"><DollarSign className="w-4 h-4" /> Composi├º├úo Financeira</h4>
+                <h4 className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 flex items-center gap-2"><DollarSign className="w-4 h-4" /> Composição Financeira</h4>
                 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Faturamento Loca├º├úo</span>
+                    <span>Faturamento Locação</span>
                     <span>{formatCurrency(detalhesMedicao.fatLocacao)}</span>
                   </div>
                   <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Faturamento M├úo de Obra</span>
+                    <span>Faturamento Mão de Obra</span>
                     <span>{formatCurrency(detalhesMedicao.fatMaoDeObra)}</span>
                   </div>
                   <div className="flex justify-between items-center text-muted-foreground">
@@ -1259,38 +1259,38 @@ export default function EvolucaoContrato() {
                             <div className="flex justify-between text-muted-foreground/80"><span>INSS</span><span>{formatCurrency(detalhesMedicao.folhaInss || 0)}</span></div>
                             <div className="flex justify-between text-muted-foreground/80"><span>FGTS</span><span>{formatCurrency(detalhesMedicao.folhaFgts || 0)}</span></div>
                             <div className="flex justify-between text-muted-foreground/80"><span>IRRF (Folha)</span><span>{formatCurrency(detalhesMedicao.folhaIrrf || 0)}</span></div>
-                            <div className="flex justify-between text-muted-foreground/80"><span>Caf├® da Manh├ú</span><span>{formatCurrency(detalhesMedicao.beneficioCafeDaManha || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Café da Manhã</span><span>{formatCurrency(detalhesMedicao.beneficioCafeDaManha || 0)}</span></div>
                             <div className="flex justify-between text-muted-foreground/80"><span>Seguro de Vida</span><span>{formatCurrency(detalhesMedicao.beneficioSeguroDeVida || 0)}</span></div>
-                            <div className="flex justify-between text-muted-foreground/80"><span>Plano de Sa├║de</span><span>{formatCurrency(detalhesMedicao.beneficioPlanoDeSaude || 0)}</span></div>
-                            <div className="flex justify-between text-muted-foreground/80"><span>Plano Odontol├│gico</span><span>{formatCurrency(detalhesMedicao.beneficioPlanoOdontologico || 0)}</span></div>
-                            <div className="flex justify-between text-muted-foreground/80"><span>Ticket Alimenta├º├úo</span><span>{formatCurrency(detalhesMedicao.beneficioTicketAlimentacao || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Plano de Saúde</span><span>{formatCurrency(detalhesMedicao.beneficioPlanoDeSaude || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Plano Odontológico</span><span>{formatCurrency(detalhesMedicao.beneficioPlanoOdontologico || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Ticket Alimentação</span><span>{formatCurrency(detalhesMedicao.beneficioTicketAlimentacao || 0)}</span></div>
                             <div className="flex justify-between text-muted-foreground/80"><span>Vale Transporte</span><span>{formatCurrency(detalhesMedicao.beneficioValeTransporte || 0)}</span></div>
-                            <div className="flex justify-between text-muted-foreground/80"><span>Benef├¡cio Mais p/ Todos</span><span>{formatCurrency(detalhesMedicao.beneficioMaisParaTodos || 0)}</span></div>
-                            <div className="flex justify-between text-muted-foreground/80"><span>Refei├º├úo</span><span>{formatCurrency(detalhesMedicao.beneficioRefeicao || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Benefício Mais p/ Todos</span><span>{formatCurrency(detalhesMedicao.beneficioMaisParaTodos || 0)}</span></div>
+                            <div className="flex justify-between text-muted-foreground/80"><span>Refeição</span><span>{formatCurrency(detalhesMedicao.beneficioRefeicao || 0)}</span></div>
                             <div className="flex justify-between"><span>Turnover</span><span>{formatCurrency(detalhesMedicao.custoTurnover || 0)}</span></div>
                           </AccordionContent>
                         </AccordionItem>
 
-                        {/* MANUTEN├ç├âO */}
+                        {/* MANUTENÇÃO */}
                         <AccordionItem value="manutencao" className="border-b border-border/50 py-1">
                           <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
-                            <span>Manuten├º├úo (Total)</span>
+                            <span>Manutenção (Total)</span>
                             <span className="text-orange-500 font-bold pr-2">-{formatCurrency(manutencao)}</span>
                           </AccordionTrigger>
                           <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
-                            <div className="flex justify-between"><span>Pe├ºas</span><span>{formatCurrency(detalhesMedicao.manutencaoPecas || 0)}</span></div>
-                            <div className="flex justify-between"><span>Servi├ºos</span><span>{formatCurrency(detalhesMedicao.manutencaoServicos || 0)}</span></div>
+                            <div className="flex justify-between"><span>Peças</span><span>{formatCurrency(detalhesMedicao.manutencaoPecas || 0)}</span></div>
+                            <div className="flex justify-between"><span>Serviços</span><span>{formatCurrency(detalhesMedicao.manutencaoServicos || 0)}</span></div>
                             <div className="flex justify-between"><span>Pneus</span><span>{formatCurrency(detalhesMedicao.manutencaoPneus || 0)}</span></div>
-                            <div className="flex justify-between"><span>Lubrifica├º├úo</span><span>{formatCurrency(detalhesMedicao.manutencaoLubrificacao || 0)}</span></div>
+                            <div className="flex justify-between"><span>Lubrificação</span><span>{formatCurrency(detalhesMedicao.manutencaoLubrificacao || 0)}</span></div>
                             <div className="flex justify-between"><span>Preventiva</span><span>{formatCurrency(detalhesMedicao.manutencaoPreventiva || 0)}</span></div>
                             <div className="flex justify-between"><span>Lavador</span><span>{formatCurrency(detalhesMedicao.manutencaoLavador || 0)}</span></div>
                           </AccordionContent>
                         </AccordionItem>
 
-                        {/* COMBUST├ìVEL */}
+                        {/* COMBUSTÍVEL */}
                         <AccordionItem value="combustivel" className="border-b border-border/50 py-1">
                           <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
-                            <span>Combust├¡vel (Total)</span>
+                            <span>Combustível (Total)</span>
                             <span className="text-orange-500 font-bold pr-2">-{formatCurrency(combustivel)}</span>
                           </AccordionTrigger>
                           <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
@@ -1300,10 +1300,10 @@ export default function EvolucaoContrato() {
                           </AccordionContent>
                         </AccordionItem>
 
-                        {/* SEGURAN├çA */}
+                        {/* SEGURANÇA */}
                         <AccordionItem value="seguranca" className="border-b border-border/50 py-1">
                           <AccordionTrigger className="hover:no-underline py-2 px-1 text-muted-foreground flex justify-between w-full font-normal">
-                            <span>Seguran├ºa (Total)</span>
+                            <span>Segurança (Total)</span>
                             <span className="text-orange-500 font-bold pr-2">-{formatCurrency(uniforme + epi)}</span>
                           </AccordionTrigger>
                           <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
@@ -1319,13 +1319,13 @@ export default function EvolucaoContrato() {
                             <span className="text-orange-500 font-bold pr-2">-{formatCurrency(escritorio + limpeza)}</span>
                           </AccordionTrigger>
                           <AccordionContent className="pt-2 pb-2 px-2 bg-muted/10 rounded-lg space-y-2 text-xs text-muted-foreground">
-                            <div className="flex justify-between"><span>Material de Escrit├│rio</span><span>{formatCurrency(escritorio)}</span></div>
+                            <div className="flex justify-between"><span>Material de Escritório</span><span>{formatCurrency(escritorio)}</span></div>
                             <div className="flex justify-between"><span>Material de Limpeza</span><span>{formatCurrency(limpeza)}</span></div>
                           </AccordionContent>
                         </AccordionItem>
                       </Accordion>
                         <div className="flex justify-between items-center font-bold pt-2 border-t border-border/50">
-                          <span>Custos de Execu├º├úo</span>
+                          <span>Custos de Execução</span>
                           <span className="text-orange-600">-{formatCurrency(totalCustos)}</span>
                         </div>
                       </>
@@ -1334,7 +1334,7 @@ export default function EvolucaoContrato() {
                 </div>
 
                 <div className="flex justify-between items-center font-black text-lg pt-4 border-t-2 border-border">
-                  <span>Lucro L├¡quido</span>
+                  <span>Lucro Líquido</span>
                   {(() => {
                     const rec = detalhesMedicao.fatLocacao + detalhesMedicao.fatMaoDeObra + detalhesMedicao.eventuais;
                     const impostosTotais = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0) + (detalhesMedicao.impostoInss || 0) + (detalhesMedicao.impostoInssAdSat || 0);
@@ -1359,7 +1359,7 @@ export default function EvolucaoContrato() {
                     </AccordionTrigger>
                     <AccordionContent className="pt-3">
                       {detalhesMedicao.descontos.length === 0 ? (
-                        <p className="text-sm text-muted-foreground italic">Nenhum desconto aplicado no per├¡odo.</p>
+                        <p className="text-sm text-muted-foreground italic">Nenhum desconto aplicado no período.</p>
                       ) : (
                         <ul className="space-y-2">
                           {detalhesMedicao.descontos.map((d, i) => (
@@ -1380,7 +1380,7 @@ export default function EvolucaoContrato() {
                     </AccordionTrigger>
                     <AccordionContent className="pt-3">
                       {detalhesMedicao.multas.length === 0 ? (
-                        <p className="text-sm text-muted-foreground italic">Nenhuma multa aplicada no per├¡odo.</p>
+                        <p className="text-sm text-muted-foreground italic">Nenhuma multa aplicada no período.</p>
                       ) : (
                         <ul className="space-y-2">
                           {detalhesMedicao.multas.map((m, i) => (
@@ -1401,14 +1401,14 @@ export default function EvolucaoContrato() {
                     </AccordionContent>
                   </AccordionItem>
 
-                  {/* Notifica├º├Áes */}
+                  {/* Notificações */}
                   <AccordionItem value="notificacoes" className="border-none">
                     <AccordionTrigger className="font-bold text-sm uppercase text-muted-foreground border-b pb-1 hover:no-underline py-2">
-                      Notifica├º├Áes Formais ({detalhesMedicao.notificacoes.length})
+                      Notificações Formais ({detalhesMedicao.notificacoes.length})
                     </AccordionTrigger>
                     <AccordionContent className="pt-3">
                       {detalhesMedicao.notificacoes.length === 0 ? (
-                        <p className="text-sm text-muted-foreground italic">Nenhuma notifica├º├úo recebida no per├¡odo.</p>
+                        <p className="text-sm text-muted-foreground italic">Nenhuma notificação recebida no período.</p>
                       ) : (
                         <ul className="space-y-2">
                           {detalhesMedicao.notificacoes.map((n, i) => (
@@ -1498,7 +1498,7 @@ export default function EvolucaoContrato() {
             Dashboard de Contrato
           </h1>
           <p className="text-muted-foreground mt-1">
-            An├ílise executiva de SLA, rentabilidade financeira e ofensores operacionais.
+            Análise executiva de SLA, rentabilidade financeira e ofensores operacionais.
           </p>
         </div>
         
@@ -1517,17 +1517,17 @@ export default function EvolucaoContrato() {
 
           <Button onClick={() => { localStorage.removeItem('corporate_cheerleader_medicoes'); window.location.reload(); }} variant="outline" className="gap-2 border-primary/50 text-primary">
             <RefreshCcw className="w-4 h-4" />
-            <span className="hidden sm:inline">Restaurar Padr├úo</span>
+            <span className="hidden sm:inline">Restaurar Padrão</span>
           </Button>
 
           <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); }}>
             <DialogTrigger asChild>
-              <Button onClick={handleOpenModal} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md"><Calculator className="w-4 h-4" /> Lan├ºar Fechamento</Button>
+              <Button onClick={handleOpenModal} className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md"><Calculator className="w-4 h-4" /> Lançar Fechamento</Button>
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader className="mb-4">
-              <DialogTitle className="text-xl flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> {editingId ? 'Editar Medi├º├úo Mensal' : 'Lan├ºar Medi├º├úo Mensal'}</DialogTitle>
-              <p className="text-sm text-muted-foreground">Insira os resultados operacionais e financeiros referentes ao fechamento do m├¬s.</p>
+              <DialogTitle className="text-xl flex items-center gap-2"><Calculator className="w-5 h-5 text-primary" /> {editingId ? 'Editar Medição Mensal' : 'Lançar Medição Mensal'}</DialogTitle>
+              <p className="text-sm text-muted-foreground">Insira os resultados operacionais e financeiros referentes ao fechamento do mês.</p>
             </DialogHeader>
             <MedicaoForm 
               medicaoToEdit={editingId ? medicoes.find(m => m.id === editingId) || null : null}
@@ -1542,18 +1542,18 @@ export default function EvolucaoContrato() {
       {dashboardContent}
 
 
-      {/* DIALOG GERAL DE GR├üFICOS */}
+      {/* DIALOG GERAL DE GRÁFICOS */}
       <Dialog open={expandedChart !== null} onOpenChange={(open) => !open && setExpandedChart(null)}>
         <DialogContent className="max-w-[95vw] w-[1400px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
-              {expandedChart === 'sla' && 'Evolu├º├úo da Ader├¬ncia (SLA)'}
-              {expandedChart === 'resumo' && 'Ader├¬ncia vs Margem'}
-              {expandedChart === 'rentabilidade' && 'An├ílise de Rentabilidade'}
+              {expandedChart === 'sla' && 'Evolução da Aderência (SLA)'}
+              {expandedChart === 'resumo' && 'Aderência vs Margem'}
+              {expandedChart === 'rentabilidade' && 'Análise de Rentabilidade'}
               {expandedChart === 'ofensores' && 'Mapa de Ofensores (Acumulado)'}
               {expandedChart === 'metas' && 'Acompanhamento de Metas'}
             </DialogTitle>
-            <DialogDescription>Visualiza├º├úo ampliada do gr├ífico selecionado.</DialogDescription>
+            <DialogDescription>Visualização ampliada do gráfico selecionado.</DialogDescription>
           </DialogHeader>
           <div className="h-[70vh] w-full mt-4">
             
@@ -1572,7 +1572,7 @@ export default function EvolucaoContrato() {
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                     <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta SLA (95%)', fill: 'hsl(var(--warning))', fontSize: 11, fontWeight: 'bold' }} />
-                    <Area type="monotone" dataKey="aderencia" name="Ader├¬ncia SLA (%)" fill="url(#colorSlaAreaBig)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }}>
+                    <Area type="monotone" dataKey="aderencia" name="Aderência SLA (%)" fill="url(#colorSlaAreaBig)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }}>
                       <LabelList dataKey="aderencia" position="top" offset={10} formatter={(val) => `${val}%`} style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} />
                     </Area>
                   </ComposedChart>
@@ -1594,7 +1594,7 @@ export default function EvolucaoContrato() {
                     <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Bar yAxisId="left" dataKey="aderencia" name="Ader├¬ncia SLA" fill="url(#colorSlaBig)" radius={[4, 4, 0, 0]} />
+                    <Bar yAxisId="left" dataKey="aderencia" name="Aderência SLA" fill="url(#colorSlaBig)" radius={[4, 4, 0, 0]} />
                     <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem (%)" stroke="hsl(var(--blue-500))" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -1616,7 +1616,7 @@ export default function EvolucaoContrato() {
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                     <Bar stackId="a" dataKey="perdas" name="Glosas/Multas" fill="hsl(var(--destructive))" barSize={30} />
                     <Bar stackId="a" dataKey="horasExtras" name="Horas Extras" fill="hsl(var(--warning))" radius={[4, 4, 0, 0]} />
-                    <Area type="monotone" dataKey="saldo" name="Lucro L├¡quido Real" fill="url(#colorSaldoBig)" stroke="hsl(var(--success))" strokeWidth={3} />
+                    <Area type="monotone" dataKey="saldo" name="Lucro Líquido Real" fill="url(#colorSaldoBig)" stroke="hsl(var(--success))" strokeWidth={3} />
                   </ComposedChart>
                 </ResponsiveContainer>
             )}
@@ -1646,9 +1646,9 @@ export default function EvolucaoContrato() {
                 <TabsList className="grid grid-cols-3 sm:grid-cols-6 mb-4 h-auto shrink-0">
                   <TabsTrigger value="impostos" className="py-2">Impostos</TabsTrigger>
                   <TabsTrigger value="folha" className="py-2">Folha</TabsTrigger>
-                  <TabsTrigger value="manutencao" className="py-2">Manuten├º├úo</TabsTrigger>
-                  <TabsTrigger value="combustivel" className="py-2">Combust├¡vel</TabsTrigger>
-                  <TabsTrigger value="seguranca" className="py-2">Seguran├ºa</TabsTrigger>
+                  <TabsTrigger value="manutencao" className="py-2">Manutenção</TabsTrigger>
+                  <TabsTrigger value="combustivel" className="py-2">Combustível</TabsTrigger>
+                  <TabsTrigger value="seguranca" className="py-2">Segurança</TabsTrigger>
                   <TabsTrigger value="materiais" className="py-2">Materiais</TabsTrigger>
                 </TabsList>
                 {['impostos', 'folha', 'manutencao', 'combustivel', 'seguranca', 'materiais'].map(tab => (
@@ -1676,8 +1676,8 @@ export default function EvolucaoContrato() {
       <Dialog open={notificacaoDetalhe !== null} onOpenChange={(open) => !open && setNotificacaoDetalhe(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><FileWarning className="w-5 h-5 text-warning" /> Detalhes da Notifica├º├úo</DialogTitle>
-            <DialogDescription>Dados vindos da Gest├úo de Notifica├º├Áes</DialogDescription>
+            <DialogTitle className="flex items-center gap-2"><FileWarning className="w-5 h-5 text-warning" /> Detalhes da Notificação</DialogTitle>
+            <DialogDescription>Dados vindos da Gestão de Notificações</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1">
@@ -1698,7 +1698,7 @@ export default function EvolucaoContrato() {
                 <p className="font-medium text-sm">{notificacaoDetalhe?.solicitante || 'N/A'}</p>
               </div>
               <div className="space-y-1">
-                <Label className="text-muted-foreground text-xs uppercase">Plano de A├º├úo</Label>
+                <Label className="text-muted-foreground text-xs uppercase">Plano de Ação</Label>
                 <p className="font-medium text-sm">{notificacaoDetalhe?.planoDeAcao || 'N/A'}</p>
               </div>
             </div>

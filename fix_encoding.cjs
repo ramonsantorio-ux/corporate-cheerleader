@@ -1,114 +1,93 @@
 const fs = require('fs');
-const path = require('path');
 
-const replacements = {
-    'Ã¡': 'á',
-    'Ã£': 'ã',
-    'Ã¢': 'â',
-    'Ã ': 'à',
-    'Ã©': 'é',
-    'Ãª': 'ê',
-    'Ã­': 'í', // Note: this is actually 'Ã' followed by a soft hyphen or something similar depending on the exact byte. The standard UTF-8 for í is C3 AD, which is Ã­
-    'Ã³': 'ó',
-    'Ãµ': 'õ',
-    'Ã´': 'ô',
-    'Ãº': 'ú',
-    'Ã§': 'ç',
-    'Ã\xAD': 'í', // proper hex for í mojibake
-    'Ã\x81': 'Á',
-    'Ã\x83': 'Ã',
-    'Ã\x89': 'É',
-    'Ã\x8A': 'Ê',
-    'Ã\x8D': 'Í',
-    'Ã\x93': 'Ó',
-    'Ã\x95': 'Õ',
-    'Ã\x9A': 'Ú',
-    'Ã\x87': 'Ç',
-    'Ã³': 'ó',
-    'Ã£': 'ã',
-    'Ã¡': 'á',
-    'Ãª': 'ê',
-    'Ã©': 'é',
-    'Ãµ': 'õ',
-    'Ã§': 'ç',
-    'Ã­': 'í',
-    'Ãº': 'ú',
-    'Ã¢': 'â',
-    'Ã´': 'ô',
-    'Ã ': 'à',
-    'Ã\x81': 'Á',
-    'Ã\x89': 'É',
-    'Ã\x8D': 'Í',
-    'Ã\x93': 'Ó',
-    'Ã\x9A': 'Ú',
-    'Ã\x83': 'Ã',
-    'Ã\x95': 'Õ',
-    'Ã\x87': 'Ç',
-    'Ã\x8A': 'Ê',
-    'â‚¬Â¢': '•',
-    'â€¢': '•',
-    'â€“': '–',
-    'â€”': '—',
-    'â€œ': '"',
-    'â€ ': '"',
-    'â€˜': "'",
-    'â€™': "'",
-    'Âº': 'º',
-    'Âª': 'ª',
-    'Ã\x82': 'Â'
-};
+let oldCode = fs.readFileSync('src/pages/EvolucaoContrato.tsx', 'utf8'); 
 
-function processDirectory(dir) {
-    const files = fs.readdirSync(dir);
-    for (const file of files) {
-        const fullPath = path.join(dir, file);
-        if (fs.statSync(fullPath).isDirectory()) {
-            if (file !== 'node_modules' && file !== '.git' && file !== 'dist') {
-                processDirectory(fullPath);
-            }
-        } else if (fullPath.endsWith('.tsx') || fullPath.endsWith('.ts') || fullPath.endsWith('.jsx') || fullPath.endsWith('.js')) {
-            let content = fs.readFileSync(fullPath, 'utf8');
-            let modified = false;
-            
-            for (const [bad, good] of Object.entries(replacements)) {
-                if (content.includes(bad)) {
-                    content = content.split(bad).join(good);
-                    modified = true;
-                }
-            }
-            
-            // Also handle double encoded cases or specific ones from screenshot
-            const specificFixes = {
-                'FuncionÃ¡rio': 'Funcionário',
-                'VisÃ£o': 'Visão',
-                'DossiÃª': 'Dossiê',
-                'RelatÃ³rio': 'Relatório',
-                'AdmissÃ£o': 'Admissão',
-                'PendÃªncias': 'Pendências',
-                'PsicomÃ©trico': 'Psicométrico',
-                'ReuniÃµes': 'Reuniões',
-                'AÃ§Ã£o': 'Ação',
-                'AÃ§Ãµes': 'Ações',
-                'PadrÃ£o': 'Padrão',
-                'Ã\xAD': 'í',
-                'Di??rio': 'Diário',
-                'Cl??nico': 'Clínico'
-            };
+oldCode = oldCode.replace(
+  /import \{ (.*?) \} from 'recharts';/,
+  "import { $1, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';"
+);
 
-            for (const [bad, good] of Object.entries(specificFixes)) {
-                if (content.includes(bad)) {
-                    content = content.split(bad).join(good);
-                    modified = true;
-                }
-            }
+oldCode = oldCode.replace(
+  /import \{ (.*?) \} from "lucide-react";/,
+  "import { $1, ShieldAlert } from \"lucide-react\";"
+);
 
-            if (modified) {
-                fs.writeFileSync(fullPath, content, 'utf8');
-                console.log('Fixed encoding in: ' + fullPath);
-            }
-        }
-    }
-}
+const radarDataString = `
+  const radarRACData = [
+    { subject: 'RAC 01 (Altura)', A: lastMonth?.rac1 || 0, fullMark: 100 },
+    { subject: 'RAC 02 (Veículos Leves)', A: lastMonth?.rac2 || 0, fullMark: 100 },
+    { subject: 'RAC 03 (Equipamentos Móveis)', A: lastMonth?.rac3 || 0, fullMark: 100 },
+    { subject: 'RAC 04 (Bloqueio de Energia)', A: lastMonth?.rac4 || 0, fullMark: 100 },
+    { subject: 'RAC 05 (Içamento)', A: 90 + Math.random()*10, fullMark: 100 },
+  ];
+`;
 
-processDirectory(path.join(__dirname, 'src'));
-console.log('Encoding fix completed.');
+oldCode = oldCode.replace(
+  /const dashboardContent = useMemo\(\(\) => \(/,
+  `${radarDataString}\n  const dashboardContent = useMemo(() => (`
+);
+
+const racDataGeneration = `
+      // SSMA (RACs) - Conformidade de Treinamento e Inspeção
+      const rac1 = 80 + Math.random() * 20; // Altura
+      const rac2 = 90 + Math.random() * 10; // Veículos Leves
+      const rac3 = 85 + Math.random() * 15; // Equipamentos Móveis
+      const rac4 = 95 + Math.random() * 5;  // Bloqueio Energia
+`;
+
+oldCode = oldCode.replace(
+  /const perdas = sumDescontos \+ sumMultas;/,
+  `${racDataGeneration}\n      const perdas = sumDescontos + sumMultas;`
+);
+
+oldCode = oldCode.replace(
+  /margem: parseFloat\(margem\.toFixed\(1\)\),/,
+  `margem: parseFloat(margem.toFixed(1)),\n        rac1: Number(rac1.toFixed(1)),\n        rac2: Number(rac2.toFixed(1)),\n        rac3: Number(rac3.toFixed(1)),\n        rac4: Number(rac4.toFixed(1)),`
+);
+
+const tabsListRegex = /<TabsList className="grid w-full grid-cols-3 mb-6">([\s\S]*?)<\/TabsList>/;
+const tabsListReplacement = `<TabsList className="grid w-full grid-cols-4 mb-6">
+$1
+            <TabsTrigger value="treinamentos">Treinamentos (SSMA)</TabsTrigger>
+          </TabsList>`;
+oldCode = oldCode.replace(tabsListRegex, tabsListReplacement);
+
+const treinamentosTabContent = `
+        <TabsContent value="treinamentos" className="space-y-6 mt-6">
+          <Card className="shadow-sm border-border">
+            <CardHeader>
+              <CardTitle className="text-lg">Conformidade de Treinamentos (SSMA / RACs)</CardTitle>
+              <CardDescription>Adesão da equipe aos Requisitos de Atividades Críticas vigentes.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[400px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadarChart cx="50%" cy="50%" outerRadius="75%" data={radarRACData}>
+                    <PolarGrid stroke="hsl(var(--border))" />
+                    <PolarAngleAxis dataKey="subject" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 500 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                    <Radar name="Conformidade RAC" dataKey="A" stroke="hsl(var(--success))" strokeWidth={2} fill="hsl(var(--success))" fillOpacity={0.4} />
+                    <Tooltip content={<CustomTooltip />} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+`;
+
+oldCode = oldCode.replace(
+  /<\/TabsContent>\s*<\/Tabs>\s*<\/div>\s*\)/,
+  `</TabsContent>\n${treinamentosTabContent}\n      </Tabs>\n    </div>\n  )`
+);
+
+oldCode = oldCode.replace(
+  /], \[filteredChartData, lastMonth, prevMonth, timeRange, activeTab, selectedMonthDRE]\);/,
+  `], [filteredChartData, lastMonth, prevMonth, timeRange, activeTab, selectedMonthDRE, radarRACData]);`
+);
+
+// Fix potential typo "Equip. Móveis" to "Equipamentos Móveis" in RACs if any was left
+oldCode = oldCode.replace(/Equip\. Móveis/g, 'Equipamentos Móveis');
+
+fs.writeFileSync('src/pages/EvolucaoContrato.tsx', oldCode, 'utf8');
+console.log('Script de correção aplicado com sucesso!');
