@@ -573,6 +573,25 @@ export default function EvolucaoContrato() {
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border p-3 shadow-md rounded-md z-50">
+          <p className="font-semibold text-sm mb-1">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="text-sm flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className="text-muted-foreground">{entry.name}:</span>
+              <span className="font-medium">
+                {typeof entry.value === 'number' && entry.name.includes('Glosa') || entry.name.includes('Ofensores') ? `R$ ${(entry.value).toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}
+              </span>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   // Derivations for charts and KPIs
   const chartData = useMemo(() => {
