@@ -871,7 +871,30 @@ export default function Eventos() {
             </Card>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-primary" /> Comparativo Mensal
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[240px]">
+                  <ExpandableChart title="Comparativo Mensal">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.monthTrend}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                        <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar dataKey="eventos" name="Eventos" fill="hsl(200, 80%, 38%)" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">

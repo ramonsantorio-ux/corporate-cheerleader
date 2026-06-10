@@ -29,7 +29,7 @@ interface VacationRow { id: string; employee_id: string; start_date: string | nu
 interface WarningRow { id: string; employee_id: string; date: string; applied: boolean; }
 interface EvalRow { id: string; evaluated_name: string; status: string; completed_at: string | null; }
 interface MeetingRow { id: string; employee_id: string; meeting_date: string; status: string; meeting_type: string; }
-interface EventRow { id: string; event_date: string; involved_name: string; location: string; }
+interface EventRow { id: string; event_date: string; involved_name: string; }
 interface ActionItemRow { id: string; meeting_id: string; status: string; }
 interface AttendeeRow { id: string; meeting_id: string; employee_id: string; present: boolean; }
 
@@ -88,7 +88,7 @@ export default function Index() {
         supabase.from('employee_warnings').select('id, employee_id, date, applied').gte('date', period.start).lte('date', period.end),
         supabase.from('evaluations').select('id, evaluated_name, status, completed_at'),
         supabase.from('meetings').select('id, employee_id, meeting_date, status, meeting_type').gte('meeting_date', period.start).lte('meeting_date', period.end),
-        supabase.from('events').select('id, event_date, involved_name, location').gte('event_date', period.start).lte('event_date', period.end),
+        supabase.from('events').select('id, event_date, involved_name').gte('event_date', period.start).lte('event_date', period.end),
         supabase.from('meeting_action_items').select('id, meeting_id, status'),
         supabase.from('meeting_attendees').select('id, meeting_id, employee_id, present'),
       ]);
@@ -285,40 +285,6 @@ export default function Index() {
 
     return Object.values(map).sort((a, b) => b.total - a.total).slice(0, 7);
   }, [filteredAttendance, filteredWarnings, filteredEvents, funcionarios]);
-
-  const eventAnalytics = useMemo(() => {
-    const byMonth: Record<string, number> = {};
-    const byLocation: Record<string, number> = {};
-    const byYear: Record<string, number> = {};
-    
-    filteredEvents.forEach(ev => {
-      if (ev.event_date) {
-        const ym = ev.event_date.slice(0, 7);
-        byMonth[ym] = (byMonth[ym] || 0) + 1;
-        const yr = ev.event_date.slice(0, 4);
-        byYear[yr] = (byYear[yr] || 0) + 1;
-      }
-      if (ev.location) {
-        const loc = ev.location.toUpperCase().includes('ATENDIMENTO M') || ev.location.toUpperCase().includes('PROBLEMA PARTICULAR')
-          ? 'ATENDIMENTO MÉDICO / PESSOAL' : ev.location.length > 30 ? ev.location.slice(0, 30) + '...' : ev.location;
-        byLocation[loc] = (byLocation[loc] || 0) + 1;
-      }
-    });
-
-    const monthTrend = Object.entries(byMonth).sort(([a], [b]) => a.localeCompare(b)).map(([month, count]) => {
-      const [y, m] = month.split('-');
-      const label = `${m}/${y.slice(2)}`;
-      return { month: label, eventos: count };
-    });
-    
-    const topLocations = Object.entries(byLocation)
-      .sort(([, a], [, b]) => b - a).slice(0, 6)
-      .map(([name, value]) => ({ name, value }));
-      
-    const yearData = Object.entries(byYear).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, eventos: count }));
-    
-    return { monthTrend, topLocations, yearData };
-  }, [filteredEvents]);
 
   const gaugeData = useMemo(() => [
     { name: 'Resolução FB', value: fbTaxaResolucao, fill: 'hsl(155, 60%, 38%)' },
@@ -768,77 +734,6 @@ export default function Index() {
               ) : (
                 <p className="text-sm text-muted-foreground py-12 text-center">Sem dados de ponto no período</p>
               )}
-            </div>
-          </motion.div>
-
-          {/* EVENTS ANALYTICS */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="corporate-section">
-              <div className="corporate-section-header">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Evolução de Eventos (Mensal)</h2>
-                </div>
-              </div>
-              <div className="corporate-section-body h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={eventAnalytics.monthTrend}>
-                    <defs>
-                      <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                    <YAxis tick={{ fontSize: 11 }} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="eventos" stroke="hsl(200, 80%, 38%)" fill="url(#eventGrad)" strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="corporate-section">
-              <div className="corporate-section-header">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-primary" />
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Principais Locais</h2>
-                </div>
-              </div>
-              <div className="corporate-section-body h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={eventAnalytics.topLocations} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                      {eventAnalytics.topLocations.map((_, i) => (
-                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: "10px" }} formatter={(value, entry, index) => `${value} (${eventAnalytics.topLocations[index].value})`} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </motion.div>
-          </div>
-
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="corporate-section mt-6">
-            <div className="corporate-section-header">
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-primary" />
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Comparativo Anual de Eventos</h2>
-              </div>
-            </div>
-            <div className="corporate-section-body h-[240px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={eventAnalytics.yearData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                  <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="eventos" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
             </div>
           </motion.div>
 
