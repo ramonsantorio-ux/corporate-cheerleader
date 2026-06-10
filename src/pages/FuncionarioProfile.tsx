@@ -20,6 +20,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
 import { DiscReport, MbtiReport, BigFiveReport } from '@/components/ExecutiveReports';
+import Organograma from './Organograma';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
@@ -657,7 +658,7 @@ export default function FuncionarioProfile() {
       <Tabs defaultValue="visao-geral" className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
           <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
-          <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Desempenho & Metas</TabsTrigger>
+          <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Desempenho & Organograma</TabsTrigger>
           <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil Psicométrico</TabsTrigger>
           <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">Dossiê (RH)</TabsTrigger>
         </TabsList>
@@ -681,7 +682,6 @@ export default function FuncionarioProfile() {
               </div>
               <div className="flex gap-4 w-full justify-center text-xs text-muted-foreground">
                 <div className="flex flex-col"><span className="font-bold text-foreground">{scoreFit}</span> Fit</div>
-                {!cargoSemMeta && <div className="flex flex-col"><span className="font-bold text-foreground">{scoreMeta}</span> Metas</div>}
               </div>
             </div>
 
@@ -758,42 +758,12 @@ export default function FuncionarioProfile() {
             </div>
           </div>
 
-          {!cargoSemMeta && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-2"><Target className="w-5 h-5 text-primary" />Metas — {func.cargo}</h3>
-                <Button size="sm" onClick={openNewGoal}><Plus className="w-4 h-4 mr-1" /> Nova Meta</Button>
-              </div>
-              {goals.length === 0 ? (
-                <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma meta encontrada para o cargo "{func.cargo}".</div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Distribuição de Pesos</h4><ExpandableChart title="Distribuição de Pesos" description="Proporção de peso de cada meta para este cargo."><ResponsiveContainer width="100%" height={280}><PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" innerRadius="50%" paddingAngle={3} stroke="none">{pieData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}</Pie><Tooltip content={<CustomTooltip />} /><Legend /></PieChart></ResponsiveContainer></ExpandableChart></div>
-                    <div className="glass-card rounded-xl p-5"><h4 className="text-base font-semibold mb-4">Peso por Meta</h4><ExpandableChart title="Peso por Meta" description="Comparativo de metas e seus pesos."><ResponsiveContainer width="100%" height={280}><BarChart data={barData} layout="vertical" margin={{ left: 10, right: 20 }}><CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" /><XAxis type="number" tickFormatter={v => `${v}%`} /><YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 12 }} /><Tooltip content={<CustomTooltip />} /><Bar dataKey="Peso" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer></ExpandableChart></div>
-                  </div>
-                  <div className="glass-card rounded-xl overflow-hidden">
-                    <div className="p-4 border-b border-border bg-primary/5"><h4 className="text-base font-bold">{func.cargo}</h4></div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead><tr className="bg-muted/60"><th className="text-left p-3 font-semibold">Descrição</th><th className="text-center p-3 font-semibold">Peso</th><th className="text-center p-3 font-semibold">Resultado</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Abaixo</th><th className="text-center p-3 font-semibold whitespace-nowrap">Dentro</th><th className="text-center p-3 font-semibold whitespace-nowrap">Acima</th><th className="text-center p-3 font-semibold whitespace-nowrap">Muito Acima</th><th className="text-center p-3 font-semibold">Ações</th></tr></thead>
-                        <tbody>
-                          {goals.map((goal, i) => (
-                            <tr key={goal.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-background' : 'bg-muted/20'}`}>
-                              <td className="p-3 font-medium">{goal.descricao}</td><td className="p-3 text-center font-semibold">{goal.peso}%</td><td className="p-3 text-center text-muted-foreground">{goal.resultado != null ? goal.resultado : '—'}</td>
-                              <td className="p-3 text-center text-xs text-destructive">{goal.muito_abaixo}</td><td className="p-3 text-center text-xs text-destructive/70">{goal.abaixo}</td><td className="p-3 text-center text-xs">{goal.dentro}</td><td className="p-3 text-center text-xs text-primary">{goal.acima}</td><td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
-                              <td className="p-3 text-center"><div className="flex items-center justify-center gap-1"><button onClick={() => openEditGoal(goal)} className="p-1 text-muted-foreground hover:text-primary" title="Editar"><Pencil className="w-4 h-4" /></button><button onClick={() => setDeleteGoalId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive" title="Excluir"><Trash2 className="w-4 h-4" /></button></div></td>
-                            </tr>
-                          ))}
-                          <tr className="bg-muted/50 font-bold"><td className="p-3">TOTAL</td><td className="p-3 text-center">{goals.reduce((s, g) => s + g.peso, 0)}%</td><td colSpan={7}></td></tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </>
-              )}
+          <div className="space-y-6">
+            <h3 className="text-lg font-bold flex items-center gap-2"><Users className="w-5 h-5 text-primary" />Organograma Corporativo</h3>
+            <div className="glass-card rounded-xl overflow-hidden bg-background/50 border border-border/50">
+              <Organograma />
             </div>
-          )}
+          </div>
 
           <div className="space-y-4">
             <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
