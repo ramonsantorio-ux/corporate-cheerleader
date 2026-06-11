@@ -1235,7 +1235,7 @@ export default function Eventos() {
       </Tabs>
 
       {/* Events Table */}
-      {activeTab !== 'treinamentos_ssma' && (
+      {activeTab !== 'treinamentos_ssma' && activeTab !== 'metas' && (
         <Card id="events-table" className="scroll-mt-24">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center justify-between">
