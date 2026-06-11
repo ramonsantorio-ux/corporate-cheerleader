@@ -714,6 +714,24 @@ export default function EvolucaoContrato() {
     return chartData.slice(-limit);
   }, [chartData, timeRange]);
 
+  const filteredPortoMinerio = useMemo(() => {
+    if (timeRange === 'all') return dataPortoMinerio;
+    const limit = parseInt(timeRange);
+    return dataPortoMinerio.slice(-limit);
+  }, [timeRange]);
+
+  const filteredPortoTPM = useMemo(() => {
+    if (timeRange === 'all') return dataPortoTPM;
+    const limit = parseInt(timeRange);
+    return dataPortoTPM.slice(-limit);
+  }, [timeRange]);
+
+  const filteredAderenciaDia = useMemo(() => {
+    // O gráfico diário tem dados de apenas 1 mês, então ele sempre será exibido integralmente 
+    // para filtros de 3, 6 ou 12 meses.
+    return dataAderenciaDia;
+  }, [timeRange]);
+
   const lastMonth = chartData[chartData.length - 1];
   const prevMonth = chartData[chartData.length - 2];
 
@@ -918,7 +936,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[300px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={dataPortoMinerio} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
+                  <ComposedChart data={filteredPortoMinerio} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} />
                     <YAxis domain={[75, 105]} stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `${val}%`} />
@@ -926,7 +944,7 @@ export default function EvolucaoContrato() {
                     <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                     <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                     <Bar dataKey="aderencia" name="Aderência (%)" radius={[4, 4, 0, 0]} barSize={35}>
-                      {dataPortoMinerio.map((entry, index) => (
+                      {filteredPortoMinerio.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} />
                       ))}
                       <LabelList dataKey="aderencia" position="top" formatter={(val: number) => `${val}%`} style={{ fontSize: '10px', fill: 'hsl(var(--foreground))', fontWeight: 600 }} />
@@ -945,7 +963,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[300px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={dataPortoTPM} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
+                  <ComposedChart data={filteredPortoTPM} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} />
                     <YAxis domain={[75, 105]} stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `${val}%`} />
@@ -953,7 +971,7 @@ export default function EvolucaoContrato() {
                     <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                     <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                     <Bar dataKey="aderencia" name="Aderência (%)" radius={[4, 4, 0, 0]} barSize={35}>
-                      {dataPortoTPM.map((entry, index) => (
+                      {filteredPortoTPM.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? '#8b5cf6' : 'hsl(var(--destructive))'} />
                       ))}
                       <LabelList dataKey="aderencia" position="top" formatter={(val: number) => `${val}%`} style={{ fontSize: '10px', fill: 'hsl(var(--foreground))', fontWeight: 600 }} />
@@ -972,7 +990,7 @@ export default function EvolucaoContrato() {
             <CardContent>
               <div className="h-[350px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={dataAderenciaDia} margin={{ top: 30, right: 30, bottom: 5, left: -15 }}>
+                  <ComposedChart data={filteredAderenciaDia} margin={{ top: 30, right: 30, bottom: 5, left: -15 }}>
                     <defs>
                       <linearGradient id="colorAderenciaDia" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.4}/>
@@ -1694,6 +1712,9 @@ export default function EvolucaoContrato() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
               {expandedChart === 'sla' && 'Evolução da Aderência (SLA)'}
+              {expandedChart === 'minerio' && 'Porto - Minério (Aderência vs Meta)'}
+              {expandedChart === 'tpm' && 'Porto - TPM (Aderência vs Meta)'}
+              {expandedChart === 'diario' && 'Evolução Aderência Mês (Diário)'}
               {expandedChart === 'resumo' && 'Aderência vs Margem'}
               {expandedChart === 'rentabilidade' && 'Análise de Rentabilidade'}
               {expandedChart === 'ofensores' && 'Mapa de Ofensores (Acumulado)'}
@@ -1720,6 +1741,66 @@ export default function EvolucaoContrato() {
                     <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta SLA (95%)', fill: 'hsl(var(--warning))', fontSize: 11, fontWeight: 'bold' }} />
                     <Area type="monotone" dataKey="aderencia" name="Aderência SLA (%)" fill="url(#colorSlaAreaBig)" stroke="hsl(var(--primary))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 7, fill: "hsl(var(--primary))" }}>
                       <LabelList dataKey="aderencia" position="top" offset={10} formatter={(val) => `${val}%`} style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} />
+                    </Area>
+                  </ComposedChart>
+                </ResponsiveContainer>
+            )}
+
+            {expandedChart === 'minerio' && (
+              <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={filteredPortoMinerio} margin={{ top: 25, right: 30, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <YAxis domain={[75, 105]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '10px' }} />
+                    <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                    <Bar dataKey="aderencia" name="Aderência (%)" radius={[4, 4, 0, 0]} barSize={45}>
+                      {filteredPortoMinerio.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} />
+                      ))}
+                      <LabelList dataKey="aderencia" position="top" formatter={(val: number) => `${val}%`} style={{ fontSize: '12px', fill: 'hsl(var(--foreground))', fontWeight: 600 }} />
+                    </Bar>
+                  </ComposedChart>
+                </ResponsiveContainer>
+            )}
+
+            {expandedChart === 'tpm' && (
+              <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={filteredPortoTPM} margin={{ top: 25, right: 30, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <YAxis domain={[75, 105]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '10px' }} />
+                    <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                    <Bar dataKey="aderencia" name="Aderência (%)" radius={[4, 4, 0, 0]} barSize={45}>
+                      {filteredPortoTPM.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? '#8b5cf6' : 'hsl(var(--destructive))'} />
+                      ))}
+                      <LabelList dataKey="aderencia" position="top" formatter={(val: number) => `${val}%`} style={{ fontSize: '12px', fill: 'hsl(var(--foreground))', fontWeight: 600 }} />
+                    </Bar>
+                  </ComposedChart>
+                </ResponsiveContainer>
+            )}
+
+            {expandedChart === 'diario' && (
+              <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={filteredAderenciaDia} margin={{ top: 30, right: 30, bottom: 30, left: 0 }}>
+                    <defs>
+                      <linearGradient id="colorAderenciaDiaBig" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="dia" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={15} angle={-45} textAnchor="end" height={60} />
+                    <YAxis domain={[85, 105]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '20px' }} />
+                    <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta (95%)', fill: 'hsl(var(--warning))', fontSize: 13, fontWeight: 'bold' }} />
+                    <Area type="monotone" dataKey="aderencia" name="Aderência (%)" fill="url(#colorAderenciaDiaBig)" stroke="hsl(var(--success))" strokeWidth={4} dot={{ r: 5, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 8, fill: "hsl(var(--success))" }}>
+                      <LabelList dataKey="aderencia" position="top" offset={12} formatter={(val: number) => val === 100 ? '100' : val.toFixed(1)} style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }} />
                     </Area>
                   </ComposedChart>
                 </ResponsiveContainer>
