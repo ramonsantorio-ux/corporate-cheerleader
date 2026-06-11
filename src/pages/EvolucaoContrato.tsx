@@ -771,7 +771,7 @@ export default function EvolucaoContrato() {
                   <span className="text-muted-foreground font-medium">{entry.name}</span>
                 </div>
                 <span className="font-bold text-foreground">
-                  {entry.name.includes('Margem') || entry.name.includes('Aderência') 
+                  {entry.name.includes('Margem') || entry.name.includes('Aderência') || entry.name.includes('Meta') 
                     ? `${entry.value}%` 
                     : entry.name.includes('Notificações') 
                       ? entry.value 
@@ -1863,7 +1863,7 @@ export default function EvolucaoContrato() {
                     <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                     <Bar dataKey="aderencia" name="Aderência (%)" radius={[4, 4, 0, 0]} barSize={45}>
                       {filteredPortoTPM.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? '#8b5cf6' : 'hsl(var(--destructive))'} />
+                        <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} />
                       ))}
                       <LabelList dataKey="aderencia" position="top" formatter={(val: number) => `${val}%`} style={{ fontSize: '12px', fill: 'hsl(var(--foreground))', fontWeight: 600 }} />
                     </Bar>
