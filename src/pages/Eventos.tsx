@@ -147,6 +147,29 @@ export default function Eventos() {
     }, 100);
   };
 
+  const handleChartClick = (data: any, type: string) => {
+    if (!data) return;
+    const name = data.name || data.payload?.name || data.activePayload?.[0]?.payload?.name;
+    if (!name || name === 'N/A' || name === 'NA') return;
+
+    if (type === 'person') {
+       const emp = funcionarios.find(f => f.nome.trim().toLowerCase() === name.trim().toLowerCase());
+       if (emp) {
+         setSelectedEmployee(emp);
+       } else {
+         setSelectedEmployee({ id: 'stub', nome: name, cargo: '', departamento: '', foto_url: '' });
+       }
+       setActiveTab('visao-geral'); // Voltar para a aba com a tabela caso esteja na aba colaboradores
+    } else if (type === 'equipment') {
+       setEquipmentFilter(name);
+    } else if (type === 'location') {
+       setLocationFilter(name);
+    }
+    
+    // Pequeno atraso para dar tempo de mudar a aba se necessário
+    setTimeout(scrollToTable, 50);
+  };
+
   async function handleCreate() {
     if (!newEvent.event_date || !newEvent.description || !newEvent.involved_name) {
       toast.error('Preencha os campos obrigatórios');
@@ -950,8 +973,8 @@ export default function Eventos() {
                           label={({ percent }) => `${(percent * 100).toFixed(0)}%`} 
                           labelLine={false}
                         >
-                          {analytics.topLocations.map((_, i) => (
-                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="transparent" />
+                          {analytics.topLocations.map((entry, i) => (
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="transparent" onClick={() => handleChartClick(entry, 'location')} className="cursor-pointer hover:opacity-80 transition-opacity" />
                           ))}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
@@ -978,7 +1001,7 @@ export default function Eventos() {
                         <XAxis type="number" tick={{ fontSize: 11 }} />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={140} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="value" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="value" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[0, 4, 4, 0]} onClick={(data) => handleChartClick(data, 'equipment')} className="cursor-pointer hover:opacity-80 transition-opacity" />
                       </BarChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
@@ -1217,7 +1240,7 @@ export default function Eventos() {
                       <XAxis type="number" tick={{ fontSize: 11 }} />
                       <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={150} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" name="Eventos" fill="#3b82f6" radius={[0, 4, 4, 0]}>
+                      <Bar dataKey="value" name="Eventos" fill="#3b82f6" radius={[0, 4, 4, 0]} onClick={(data) => handleChartClick(data, 'person')} className="cursor-pointer hover:opacity-80 transition-opacity">
                         <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
                       </Bar>
                     </BarChart>
