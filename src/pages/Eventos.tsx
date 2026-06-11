@@ -600,19 +600,64 @@ export default function Eventos() {
         </div>
       </motion.div>
 
-      {/* Period + Search + Advanced Filters */}
-      <div className="space-y-3 mb-6">
-        <div className="flex flex-col md:flex-row gap-3">
-          <PeriodFilter value={period} onChange={setPeriod} className="md:w-auto shrink-0" />
+      {/* Painel de Filtros Unificado */}
+      <div className="bg-card border border-border rounded-xl p-4 mb-6 shadow-sm space-y-4">
+        {/* Linha Principal: Período, Busca Geral e Funcionário */}
+        <div className="flex flex-col lg:flex-row gap-3">
+          <PeriodFilter value={period} onChange={setPeriod} className="lg:w-auto shrink-0" />
+          
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input placeholder="Buscar geral por descrição, nome, local, equipamento..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 w-full" />
+            <Input placeholder="Buscar por descrição, local, equipamento..." value={search} onChange={e => setSearch(e.target.value)} className="pl-10 w-full bg-background" />
+          </div>
+
+          <div className="relative w-full lg:w-72 shrink-0">
+            <div className="flex items-center gap-2 bg-background border border-input rounded-md px-3 h-10">
+              <User className="w-4 h-4 text-muted-foreground shrink-0" />
+              {selectedEmployee ? (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {selectedEmployee.foto_url ? (
+                    <img src={selectedEmployee.foto_url} className="w-6 h-6 rounded-full object-cover border border-border" alt="" />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{selectedEmployee.nome.charAt(0)}</div>
+                  )}
+                  <span className="text-sm font-medium truncate">{selectedEmployee.nome}</span>
+                  <button onClick={() => { setSelectedEmployee(null); setEmployeeSearch(''); }} className="ml-auto text-muted-foreground hover:text-foreground">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <input type="text" placeholder="Filtrar por funcionário..." value={employeeSearch}
+                  onChange={e => { setEmployeeSearch(e.target.value); setShowEmpDropdown(true); }}
+                  onFocus={() => setShowEmpDropdown(true)}
+                  className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground" />
+              )}
+            </div>
+            {showEmpDropdown && filteredSearchEmps.length > 0 && !selectedEmployee && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+                {filteredSearchEmps.map(f => (
+                  <button key={f.id} onClick={() => { setSelectedEmployee(f); setEmployeeSearch(''); setShowEmpDropdown(false); }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left">
+                    {f.foto_url ? (
+                      <img src={f.foto_url} className="w-7 h-7 rounded-full object-cover border border-border" alt="" />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{f.nome.charAt(0)}</div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{f.nome}</p>
+                      <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.departamento}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Linha Secundária: Filtros Específicos */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
-            <SelectTrigger><Filter className="w-4 h-4 mr-2" /><SelectValue placeholder="Equipamento" /></SelectTrigger>
+            <SelectTrigger className="bg-background"><Filter className="w-4 h-4 mr-2 text-muted-foreground" /><SelectValue placeholder="Equipamento" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos Equipamentos</SelectItem>
               {equipmentTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
@@ -620,7 +665,7 @@ export default function Eventos() {
           </Select>
 
           <Select value={locationFilter} onValueChange={setLocationFilter}>
-            <SelectTrigger><MapPin className="w-4 h-4 mr-2" /><SelectValue placeholder="Local" /></SelectTrigger>
+            <SelectTrigger className="bg-background"><MapPin className="w-4 h-4 mr-2 text-muted-foreground" /><SelectValue placeholder="Local" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos Locais</SelectItem>
               {locationTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
@@ -628,7 +673,7 @@ export default function Eventos() {
           </Select>
 
           <Select value={plateFilter} onValueChange={setPlateFilter}>
-            <SelectTrigger><Truck className="w-4 h-4 mr-2" /><SelectValue placeholder="Placa/TAG" /></SelectTrigger>
+            <SelectTrigger className="bg-background"><Truck className="w-4 h-4 mr-2 text-muted-foreground" /><SelectValue placeholder="Placa/TAG" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as Placas</SelectItem>
               {plateTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
@@ -636,56 +681,13 @@ export default function Eventos() {
           </Select>
 
           <Select value={timeFilter} onValueChange={setTimeFilter}>
-            <SelectTrigger><Clock className="w-4 h-4 mr-2" /><SelectValue placeholder="Horário" /></SelectTrigger>
+            <SelectTrigger className="bg-background"><Clock className="w-4 h-4 mr-2 text-muted-foreground" /><SelectValue placeholder="Horário" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos Horários</SelectItem>
               {timeTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      {/* Employee Filter */}
-      <div className="relative w-full sm:w-72">
-        <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2">
-          <User className="w-4 h-4 text-muted-foreground shrink-0" />
-          {selectedEmployee ? (
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {selectedEmployee.foto_url ? (
-                <img src={selectedEmployee.foto_url} className="w-6 h-6 rounded-full object-cover border border-border" alt="" />
-              ) : (
-                <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{selectedEmployee.nome.charAt(0)}</div>
-              )}
-              <span className="text-sm font-medium truncate">{selectedEmployee.nome}</span>
-              <button onClick={() => { setSelectedEmployee(null); setEmployeeSearch(''); }} className="ml-auto text-muted-foreground hover:text-foreground">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <input type="text" placeholder="Filtrar por funcionário..." value={employeeSearch}
-              onChange={e => { setEmployeeSearch(e.target.value); setShowEmpDropdown(true); }}
-              onFocus={() => setShowEmpDropdown(true)}
-              className="bg-transparent text-sm outline-none w-full placeholder:text-muted-foreground" />
-          )}
-        </div>
-        {showEmpDropdown && filteredSearchEmps.length > 0 && !selectedEmployee && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
-            {filteredSearchEmps.map(f => (
-              <button key={f.id} onClick={() => { setSelectedEmployee(f); setEmployeeSearch(''); setShowEmpDropdown(false); }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted transition-colors text-left">
-                {f.foto_url ? (
-                  <img src={f.foto_url} className="w-7 h-7 rounded-full object-cover border border-border" alt="" />
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{f.nome.charAt(0)}</div>
-                )}
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{f.nome}</p>
-                  <p className="text-[10px] text-muted-foreground">{f.cargo} · {f.departamento}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {selectedEmployee && (
