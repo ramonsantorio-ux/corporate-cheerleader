@@ -1313,7 +1313,7 @@ export default function EvolucaoContrato() {
 
                 </TabsContent>
           <TabsContent value="aderencia" className="space-y-6 mt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
           {/* GRÁFICOS SOLICITADOS - PORTO MINÉRIO E PORTO TPM */}
           <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('minerio')}>
             <CardHeader>
@@ -1321,7 +1321,7 @@ export default function EvolucaoContrato() {
               <CardDescription>Aderência Operacional vs Meta (95%)</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full mt-4">
+              <div className="h-[400px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={filteredPortoMinerio} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -1330,7 +1330,7 @@ export default function EvolucaoContrato() {
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                     <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                    <Bar dataKey="aderencia" name="Aderência (%)" radius={[4, 4, 0, 0]} barSize={35}>
+                    <Bar dataKey="aderencia" name="Aderência (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={45}>
                       {filteredPortoMinerio.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} />
                       ))}
@@ -1344,11 +1344,11 @@ export default function EvolucaoContrato() {
 
           <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('tpm')}>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2"><Target className="w-5 h-5 text-[#8b5cf6]" /> Porto - TPM</CardTitle>
+              <CardTitle className="text-lg flex items-center gap-2"><Target className="w-5 h-5 text-primary" /> Porto - TPM</CardTitle>
               <CardDescription>Aderência Operacional vs Meta (95%)</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full mt-4">
+              <div className="h-[400px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={filteredPortoTPM} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
@@ -1357,9 +1357,9 @@ export default function EvolucaoContrato() {
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                     <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                    <Bar dataKey="aderencia" name="Aderência (%)" radius={[4, 4, 0, 0]} barSize={35}>
+                    <Bar dataKey="aderencia" name="Aderência (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={45}>
                       {filteredPortoTPM.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? '#8b5cf6' : 'hsl(var(--destructive))'} />
+                        <Cell key={`cell-${index}`} fill={entry.aderencia >= 95 ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} />
                       ))}
                       <LabelList dataKey="aderencia" position="top" formatter={(val: number) => `${val}%`} style={{ fontSize: '10px', fill: 'hsl(var(--foreground))', fontWeight: 600 }} />
                     </Bar>
