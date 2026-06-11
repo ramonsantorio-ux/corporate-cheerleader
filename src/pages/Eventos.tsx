@@ -854,7 +854,7 @@ export default function Eventos() {
             <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary" /> Principais Locais
+                  <MapPin className="w-4 h-4 text-primary" /> Principais Locais de Ocorrência
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -862,13 +862,24 @@ export default function Eventos() {
                   <ExpandableChart title="Principais Locais">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={analytics.topLocations} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius="80%" label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                        <Pie 
+                          data={analytics.topLocations} 
+                          dataKey="value" 
+                          nameKey="name" 
+                          cx="50%" 
+                          cy="50%" 
+                          innerRadius="55%" 
+                          outerRadius="80%" 
+                          paddingAngle={4}
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} 
+                          labelLine={false}
+                        >
                           {analytics.topLocations.map((_, i) => (
-                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="transparent" />
                           ))}
                         </Pie>
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ fontSize: "10px" }} formatter={(value, entry, index) => `${value} (${analytics.topLocations[index].value})`} />
+                        <Legend wrapperStyle={{ fontSize: "11px" }} formatter={(value, entry, index) => `${value} (${analytics.topLocations[index].value})`} />
                       </PieChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
@@ -886,15 +897,22 @@ export default function Eventos() {
                 <div className="h-[280px]">
                   <ExpandableChart title="Comparativo Anual">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={analytics.yearData} margin={{ top: 20, right: 20, bottom: 5, left: -20 }}>
+                      <ComposedChart data={analytics.yearData} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
+                        <defs>
+                          <linearGradient id="yearGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                          </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                        <XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }} />
-                        <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                        <Bar dataKey="eventos" name="Eventos por Ano" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={50}>
-                          <LabelList dataKey="eventos" position="top" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))', fontWeight: 600 }} />
+                        <XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.1 }} />
+                        <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                        <Bar dataKey="eventos" name="Volume Total" fill="url(#yearGrad)" radius={[8, 8, 0, 0]} maxBarSize={60}>
+                          <LabelList dataKey="eventos" position="top" offset={10} style={{ fontSize: '12px', fill: 'hsl(var(--foreground))', fontWeight: 'bold' }} />
                         </Bar>
+                        <Line type="monotone" dataKey="eventos" name="Tendência Anual" stroke="hsl(var(--warning))" strokeWidth={3} dot={{ r: 6, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 8, fill: "hsl(var(--warning))" }} />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
