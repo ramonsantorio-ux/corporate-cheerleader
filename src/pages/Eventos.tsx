@@ -815,37 +815,43 @@ export default function Eventos() {
 
         {/* 1. VISÃO GERAL */}
         <TabsContent value="visao-geral" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+          <div className="grid grid-cols-1 gap-6 mb-6">
+            <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-primary" /> Evolução Mensal
+                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" /> Evolução Mensal de Eventos
                 </CardTitle>
+                <CardDescription>Acompanhamento histórico da volumetria de eventos registrados</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[280px]">
-                  <ExpandableChart title="Evolução Mensal">
+                <div className="h-[350px] w-full">
+                  <ExpandableChart title="Evolução Mensal de Eventos">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={analytics.monthTrend}>
+                      <ComposedChart data={analytics.monthTrend} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
                         <defs>
                           <linearGradient id="eventGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(200, 80%, 38%)" stopOpacity={0} />
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                        <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Area type="monotone" dataKey="eventos" stroke="hsl(200, 80%, 38%)" fill="url(#eventGrad)" strokeWidth={2} />
-                      </AreaChart>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                        <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }} />
+                        <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                        <Area type="monotone" dataKey="eventos" name="Eventos Registrados" fill="url(#eventGrad)" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 4, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 6, fill: "hsl(var(--primary))" }}>
+                          <LabelList dataKey="eventos" position="top" offset={10} style={{ fontSize: '10px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }} />
+                        </Area>
+                      </ComposedChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
                 </div>
               </CardContent>
             </Card>
+          </div>
 
-            <Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-primary" /> Principais Locais
@@ -869,49 +875,27 @@ export default function Eventos() {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-primary" /> Comparativo Mensal
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[240px]">
-                  <ExpandableChart title="Comparativo Mensal">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.monthTrend}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                        <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="eventos" name="Eventos" fill="hsl(200, 80%, 38%)" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ExpandableChart>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
+            <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
                   <TrendingDown className="w-4 h-4 text-primary" /> Comparativo Anual
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[240px]">
+                <div className="h-[280px]">
                   <ExpandableChart title="Comparativo Anual">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.yearData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                        <XAxis dataKey="year" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="eventos" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[4, 4, 0, 0]} />
-                      </BarChart>
+                      <ComposedChart data={analytics.yearData} margin={{ top: 20, right: 20, bottom: 5, left: -20 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                        <XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} />
+                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.2 }} />
+                        <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                        <Bar dataKey="eventos" name="Eventos por Ano" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={50}>
+                          <LabelList dataKey="eventos" position="top" style={{ fontSize: '10px', fill: 'hsl(var(--foreground))', fontWeight: 600 }} />
+                        </Bar>
+                      </ComposedChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
                 </div>
