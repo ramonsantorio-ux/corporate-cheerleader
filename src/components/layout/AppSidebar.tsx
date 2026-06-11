@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import busatoGlobo from '@/assets/busato-globo.png';
 
 interface NavItem { to: string; icon: any; label: string; badge?: string }
@@ -100,74 +101,81 @@ export default function AppSidebar() {
       </div>
 
       {/* ── Navigation ── */}
-      <nav className="flex-1 py-2 overflow-y-auto">
-        {allGroups.map((group, gi) => (
-          <div key={group.label} className={cn('mb-1', gi > 0 && 'mt-2')}>
-            <AnimatePresence>
-              {!collapsed && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="px-4 pt-3 pb-1">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/35">
+      <nav className="flex-1 py-2 overflow-y-auto px-2">
+        {collapsed ? (
+          allGroups.map((group, gi) => (
+            <div key={group.label} className={cn('mb-1', gi > 0 && 'mt-2')}>
+              {gi > 0 && <div className="mx-3 my-1.5 border-t border-sidebar-border/30" />}
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
+                  return (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      title={item.label}
+                      className={cn(
+                        'group relative flex items-center justify-center h-10 w-10 mx-auto rounded-lg transition-all duration-150',
+                        isActive ? 'bg-sidebar-primary/12 text-sidebar-primary' : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/70'
+                      )}
+                    >
+                      <item.icon className={cn('w-4 h-4 transition-colors', isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70')} />
+                    </NavLink>
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        ) : (
+          <Accordion type="multiple" defaultValue={allGroups.map(g => g.label)} className="w-full space-y-1">
+            {allGroups.map((group) => (
+              <AccordionItem value={group.label} key={group.label} className="border-none px-2">
+                <AccordionTrigger className="hover:no-underline py-2 px-2 hover:bg-sidebar-accent/50 rounded-lg transition-colors [&[data-state=open]>svg]:rotate-180 group">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-sidebar-foreground/50 group-hover:text-sidebar-foreground/80 transition-colors">
                     {group.label}
                   </span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {collapsed && gi > 0 && <div className="mx-3 my-1.5 border-t border-sidebar-border/30" />}
-
-            <div className="px-2 space-y-0.5">
-              {group.items.map((item) => {
-                const isActive = item.to === '/'
-                  ? location.pathname === '/'
-                  : location.pathname.startsWith(item.to);
-
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    className={cn(
-                      'group relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-150',
-                      isActive
-                        ? 'bg-sidebar-primary/12 text-sidebar-primary'
-                        : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/70'
-                    )}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="sidebar-indicator"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-sidebar-primary"
-                        transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-                      />
-                    )}
-
-                    <item.icon className={cn(
-                      'w-4 h-4 flex-shrink-0 transition-colors',
-                      isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70'
-                    )} />
-
-                    <AnimatePresence>
-                      {!collapsed && (
-                        <motion.span
-                          initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -4 }} transition={{ duration: 0.12 }}
-                          className="whitespace-nowrap flex-1 flex items-center justify-between"
-                        >
+                </AccordionTrigger>
+                <AccordionContent className="pb-1 pt-1 space-y-0.5">
+                  {group.items.map((item) => {
+                    const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
+                    return (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        className={cn(
+                          'group relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-medium transition-all duration-150',
+                          isActive
+                            ? 'bg-sidebar-primary/12 text-sidebar-primary'
+                            : 'text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/70'
+                        )}
+                      >
+                        {isActive && (
+                          <motion.div
+                            layoutId="sidebar-indicator"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-sidebar-primary"
+                            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                          />
+                        )}
+                        <item.icon className={cn(
+                          'w-4 h-4 flex-shrink-0 transition-colors',
+                          isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70'
+                        )} />
+                        <span className="whitespace-nowrap flex-1 flex items-center justify-between">
                           {item.label}
                           {item.badge && (
                             <span className="text-[9px] font-bold bg-sidebar-primary text-white px-1.5 py-0.5 rounded-full leading-none">
                               {item.badge}
                             </span>
                           )}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </NavLink>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+                        </span>
+                      </NavLink>
+                    );
+                  })}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        )}
       </nav>
 
       {/* ── Footer ── */}
