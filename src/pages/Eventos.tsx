@@ -22,6 +22,7 @@ import {  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContain
 import * as XLSX from 'xlsx';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { TreinamentosSSMA } from '@/components/TreinamentosSSMA';
+import MetasBusato from '@/components/MetasBusato';
 
 interface EventRow {
   id: string;
@@ -748,7 +749,15 @@ export default function Eventos() {
           <TabsTrigger value="treinamentos_ssma" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2">
             <Target className="w-4 h-4" /> Treinamentos SSMA
           </TabsTrigger>
+          <TabsTrigger value="metas" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" /> Metas
+          </TabsTrigger>
         </TabsList>
+
+        {/* ABA NOVA: METAS */}
+        <TabsContent value="metas" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          <MetasBusato />
+        </TabsContent>
 
         {/* 1. VISÃO GERAL */}
         <TabsContent value="visao-geral" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
