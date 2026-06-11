@@ -1369,7 +1369,7 @@ export default function EvolucaoContrato() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-border lg:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('diario')}>
+          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('diario')}>
             <CardHeader>
               <CardTitle className="text-xl flex items-center gap-2"><TrendingUp className="w-6 h-6 text-success" /> Evolução Aderência Mês (Diário)</CardTitle>
               <CardDescription>Acompanhamento diário da aderência de 21/abr a 20/mai</CardDescription>
