@@ -1077,7 +1077,7 @@ export default function EvolucaoContrato() {
                 <TabsContent value="custos_metas" className="space-y-6 mt-4">
       {/* ACOMPANHAMENTO DE METAS */}
       {medicoes.length > 0 && (
-        <Card className="shadow-sm border-border overflow-hidden mb-6 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('metas')}>
+        <Card className="shadow-sm border-border overflow-hidden mb-6">
           <div className="p-4 border-b border-border bg-muted/20">
             <h3 className="font-bold text-lg flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-primary"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
