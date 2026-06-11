@@ -1085,60 +1085,144 @@ export default function EvolucaoContrato() {
             </h3>
           </div>
           <CardContent className="p-4">
-            <Tabs defaultValue="impostos" className="w-full">
-              <TabsList className="grid grid-cols-3 sm:grid-cols-6 mb-4 h-auto">
-                <TabsTrigger value="impostos" className="py-2">Impostos</TabsTrigger>
-                <TabsTrigger value="folha" className="py-2">Folha</TabsTrigger>
-                <TabsTrigger value="manutencao" className="py-2">Manutenção</TabsTrigger>
-                <TabsTrigger value="combustivel" className="py-2">Combustível</TabsTrigger>
-                <TabsTrigger value="seguranca" className="py-2">Segurança</TabsTrigger>
-                <TabsTrigger value="materiais" className="py-2">Materiais</TabsTrigger>
-              </TabsList>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* IMPOSTOS */}
+              <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
+                <h4 className="font-bold text-center">Impostos</h4>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      <Bar dataKey="impostoIrrf" name="IRRF" stackId="a" fill="#3b82f6" maxBarSize={45} />
+                      <Bar dataKey="impostoPis" name="PIS" stackId="a" fill="#60a5fa" maxBarSize={45} />
+                      <Bar dataKey="impostoCofins" name="COFINS" stackId="a" fill="#93c5fd" maxBarSize={45} />
+                      <Bar dataKey="impostoCsll" name="CSLL" stackId="a" fill="#2dd4bf" maxBarSize={45} />
+                      <Bar dataKey="impostoIss" name="ISS" stackId="a" fill="#34d399" maxBarSize={45} />
+                      <Bar dataKey="impostoInss" name="INSS" stackId="a" fill="#10b981" maxBarSize={45} />
+                      <Bar dataKey="impostoInssAdSat" name="INSS SAT" stackId="a" fill="#059669" radius={[4, 4, 0, 0]} maxBarSize={45} />
+                      <Line type="monotone" dataKey="metaImpostos" name="Meta Impostos" stroke="#ef4444" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} strokeDasharray="5 5" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
 
-              <TabsContent value="visao_geral" className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
-                    { category: 'Impostos', meta: lastMonth?.metaImpostos || 0, real: lastMonth?.impostosTotal || 0 },
-                    { category: 'Folha', meta: lastMonth?.metaFolha || 0, real: lastMonth?.folhaTotal || 0 },
-                    { category: 'Manutenção', meta: lastMonth?.metaManutencao || 0, real: lastMonth?.manutencaoTotal || 0 },
-                    { category: 'Combustível', meta: lastMonth?.metaCombustivel || 0, real: lastMonth?.combustivelTotal || 0 },
-                    { category: 'Segurança', meta: lastMonth?.metaSeguranca || 0, real: lastMonth?.uniformeTotal || 0 },
-                    { category: 'Materiais', meta: lastMonth?.metaMateriais || 0, real: lastMonth?.escritorioTotal || 0 },
-                  ]}>
-                    <PolarGrid stroke="hsl(var(--border))" />
-                    <PolarAngleAxis dataKey="category" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 500 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
-                    <Radar name="Meta" dataKey="meta" stroke="hsl(var(--primary))" strokeWidth={2} fill="hsl(var(--primary))" fillOpacity={0.2} />
-                    <Radar name="Custo Real" dataKey="real" stroke="hsl(var(--destructive))" strokeWidth={2} fill="hsl(var(--destructive))" fillOpacity={0.4} />
-                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                    <Tooltip content={<CustomTooltip />} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </TabsContent>
-              {['impostos', 'folha', 'manutencao', 'combustivel', 'seguranca', 'materiais'].map(tab => (
-                <TabsContent key={tab} value={tab}>
-                  <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                        <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend />
-                        <Bar dataKey={tab === 'impostos' ? 'impostosTotal' : tab === 'folha' ? 'folhaTotal' : tab === 'manutencao' ? 'manutencaoTotal' : tab === 'combustivel' ? 'combustivelTotal' : tab === 'seguranca' ? 'uniformeTotal' : 'escritorioTotal'} name="Custo Realizado" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} maxBarSize={50}>
-                          {chartData.map((entry: any, index: number) => {
-                            const real = tab === 'impostos' ? entry.impostosTotal : tab === 'folha' ? entry.folhaTotal : tab === 'manutencao' ? entry.manutencaoTotal : tab === 'combustivel' ? entry.combustivelTotal : tab === 'seguranca' ? entry.uniformeTotal : entry.escritorioTotal;
-                            const meta = tab === 'impostos' ? entry.metaImpostos : tab === 'folha' ? entry.metaFolha : tab === 'manutencao' ? entry.metaManutencao : tab === 'combustivel' ? entry.metaCombustivel : tab === 'seguranca' ? entry.metaSeguranca : entry.metaMateriais;
-                            return <Cell key={`cell-${index}`} fill={real > meta ? 'hsl(var(--destructive))' : 'hsl(var(--primary))'} />;
-                          })}
-                        </Bar>
-                        <Line type="monotone" dataKey={tab === 'impostos' ? 'metaImpostos' : tab === 'folha' ? 'metaFolha' : tab === 'manutencao' ? 'metaManutencao' : tab === 'combustivel' ? 'metaCombustivel' : tab === 'seguranca' ? 'metaSeguranca' : 'metaMateriais'} name="Meta" stroke="#ef4444" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} strokeDasharray="5 5" />
-                      </ComposedChart>
-                    </ResponsiveContainer>
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
+              {/* FOLHA */}
+              <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
+                <h4 className="font-bold text-center">Folha de Pagamento</h4>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      <Bar dataKey="custoFolha" name="Salários" stackId="a" fill="#8b5cf6" maxBarSize={45} />
+                      <Bar dataKey="horasExtras" name="Horas Extras" stackId="a" fill="#a78bfa" maxBarSize={45} />
+                      <Bar dataKey="beneficioValeTransporte" name="VT" stackId="a" fill="#f59e0b" maxBarSize={45} />
+                      <Bar dataKey="beneficioTicketAlimentacao" name="VA" stackId="a" fill="#fbbf24" maxBarSize={45} />
+                      <Bar dataKey="beneficioRefeicao" name="VR" stackId="a" fill="#fcd34d" maxBarSize={45} />
+                      <Bar dataKey="beneficioPlanoDeSaude" name="Plano Saúde" stackId="a" fill="#ec4899" maxBarSize={45} />
+                      <Bar dataKey="beneficioPlanoOdontologico" name="Plano Odonto" stackId="a" fill="#f472b6" maxBarSize={45} />
+                      <Bar dataKey="beneficioSeguroDeVida" name="Seg. Vida" stackId="a" fill="#fbcfe8" maxBarSize={45} />
+                      <Bar dataKey="beneficioCafeDaManha" name="Café Manhã" stackId="a" fill="#84cc16" maxBarSize={45} />
+                      <Bar dataKey="folhaInss" name="INSS" stackId="a" fill="#0ea5e9" maxBarSize={45} />
+                      <Bar dataKey="folhaFgts" name="FGTS" stackId="a" fill="#38bdf8" maxBarSize={45} />
+                      <Bar dataKey="folhaIrrf" name="IRRF" stackId="a" fill="#7dd3fc" radius={[4, 4, 0, 0]} maxBarSize={45} />
+                      <Line type="monotone" dataKey="metaFolha" name="Meta Folha" stroke="#ef4444" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} strokeDasharray="5 5" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* MANUTENÇÃO */}
+              <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
+                <h4 className="font-bold text-center">Manutenção</h4>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      <Bar dataKey="manutencaoPreventiva" name="Preventiva" stackId="a" fill="#f97316" maxBarSize={45} />
+                      <Bar dataKey="manutencaoServicos" name="Serviços" stackId="a" fill="#fdba74" maxBarSize={45} />
+                      <Bar dataKey="manutencaoPecas" name="Peças" stackId="a" fill="#64748b" maxBarSize={45} />
+                      <Bar dataKey="manutencaoPneus" name="Pneus" stackId="a" fill="#94a3b8" maxBarSize={45} />
+                      <Bar dataKey="manutencaoLubrificacao" name="Lubrificação" stackId="a" fill="#cbd5e1" maxBarSize={45} />
+                      <Bar dataKey="manutencaoLavador" name="Lavador" stackId="a" fill="#e2e8f0" radius={[4, 4, 0, 0]} maxBarSize={45} />
+                      <Line type="monotone" dataKey="metaManutencao" name="Meta Manutenção" stroke="#ef4444" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} strokeDasharray="5 5" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* COMBUSTÍVEL */}
+              <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
+                <h4 className="font-bold text-center">Combustível</h4>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      <Bar dataKey="combustivelDieselS10" name="Diesel S10" stackId="a" fill="#14b8a6" maxBarSize={45} />
+                      <Bar dataKey="combustivelDieselS500" name="Diesel S500" stackId="a" fill="#2dd4bf" maxBarSize={45} />
+                      <Bar dataKey="combustivelGasolina" name="Gasolina" stackId="a" fill="#5eead4" maxBarSize={45} />
+                      <Bar dataKey="combustivelDiesel" name="Diesel (Antigo)" stackId="a" fill="#99f6e4" radius={[4, 4, 0, 0]} maxBarSize={45} />
+                      <Line type="monotone" dataKey="metaCombustivel" name="Meta Combustível" stroke="#ef4444" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} strokeDasharray="5 5" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* SEGURANÇA */}
+              <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
+                <h4 className="font-bold text-center">Segurança</h4>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      <Bar dataKey="epi" name="EPI" stackId="a" fill="#eab308" maxBarSize={45} />
+                      <Bar dataKey="uniforme" name="Uniforme" stackId="a" fill="#fde047" radius={[4, 4, 0, 0]} maxBarSize={45} />
+                      <Line type="monotone" dataKey="metaSeguranca" name="Meta Segurança" stroke="#ef4444" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} strokeDasharray="5 5" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* MATERIAIS */}
+              <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
+                <h4 className="font-bold text-center">Materiais</h4>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      <Bar dataKey="escritorioMaterial" name="Mat. Escritório" stackId="a" fill="#a855f7" maxBarSize={45} />
+                      <Bar dataKey="escritorioLimpeza" name="Mat. Limpeza" stackId="a" fill="#c084fc" radius={[4, 4, 0, 0]} maxBarSize={45} />
+                      <Line type="monotone" dataKey="metaMateriais" name="Meta Materiais" stroke="#ef4444" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} strokeDasharray="5 5" />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
           </CardContent>
         </Card>
       )}
