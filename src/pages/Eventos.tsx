@@ -350,14 +350,14 @@ export default function Eventos() {
     let medicalCount = 0;
 
     let daysWithoutAccident: number | 'N/A' = 'N/A';
-    const validPastDates = events
+    const validPastDates = filtered
       .map(ev => new Date(ev.event_date))
       .filter(d => !isNaN(d.getTime()) && d.getTime() <= new Date().getTime())
       .sort((a, b) => b.getTime() - a.getTime());
 
     if (validPastDates.length > 0) {
       daysWithoutAccident = Math.floor((new Date().getTime() - validPastDates[0].getTime()) / (1000 * 60 * 60 * 24));
-    } else if (events.length > 0) {
+    } else if (filtered.length > 0) {
       daysWithoutAccident = 0;
     }
 
@@ -365,7 +365,7 @@ export default function Eventos() {
     const hourlyGrid: Record<number, number> = {};
     for (let h = 0; h < 24; h++) hourlyGrid[h] = 0;
 
-    for (const ev of events) {
+    for (const ev of filtered) {
       const ym = ev.event_date.slice(0, 7);
       byMonth[ym] = (byMonth[ym] || 0) + 1;
       const yr = ev.event_date.slice(0, 4);
@@ -448,7 +448,7 @@ export default function Eventos() {
     const topAgentes = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
     const topPartes = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
 
-    const operationalCount = events.length - medicalCount;
+    const operationalCount = filtered.length - medicalCount;
     const turnoData = Object.entries(byTurno || {}).sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value }));
 
     const hourlyData = Object.entries(hourlyGrid).map(([hour, count]) => ({ hour: `${hour}h`, count }));
@@ -479,12 +479,12 @@ export default function Eventos() {
 
     return { 
       monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
-      medicalCount, operationalCount, total: events.length,
+      medicalCount, operationalCount, total: filtered.length,
       topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
       byLetra, letraData, hourlyData, daysWithoutAccident,
       topCids, topAtestados, afastamentoData, danosData
     };
-  }, [events]);
+  }, [filtered]);
 
   const formatTime = (timeStr: string) => {
     if (!timeStr) return '';
