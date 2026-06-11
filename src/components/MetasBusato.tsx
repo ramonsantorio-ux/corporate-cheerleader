@@ -1,12 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, ReferenceLine, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LabelList } from 'recharts';
-import { Target, TrendingUp, AlertTriangle, CheckCircle2, TrendingDown, ArrowUpRight, ArrowDownRight, Trophy, AlertOctagon, CalendarCheck, CalendarX } from 'lucide-react';
+import { Target, TrendingUp, AlertTriangle, CheckCircle2, TrendingDown, ArrowUpRight, ArrowDownRight, Trophy, AlertOctagon, CalendarCheck, CalendarX, Download } from 'lucide-react';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
+import html2canvas from 'html2canvas';
 
 // --- Dados Fixos (Mock Jan-Mai) ---
 const METAS_DATA = {
@@ -124,6 +126,29 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export default function MetasBusato() {
   const [selectedMonth, setSelectedMonth] = useState<string>('Maio');
+  const [isExporting, setIsExporting] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  const handleExport = async () => {
+    if (!dashboardRef.current) return;
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `Metas_Busato_${selectedMonth}.png`;
+      link.click();
+    } catch (err) {
+      console.error("Failed to export image", err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
   
   const data = METAS_DATA[selectedMonth as keyof typeof METAS_DATA];
   const batidas = data.counts.acima + data.counts.aceitavel;
@@ -159,7 +184,7 @@ export default function MetasBusato() {
   }, [data]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-background rounded-xl" ref={dashboardRef}>
       
       {/* 1. Timeline Semafórica do Ano */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -171,25 +196,31 @@ export default function MetasBusato() {
           </div>
         </div>
         
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 w-full sm:w-auto">
-          {meses.map(m => {
-            const atingido = METAS_DATA[m as keyof typeof METAS_DATA].atingido;
-            const isGood = atingido >= 60; // Arbitrary threshold for visual
-            const isSelected = selectedMonth === m;
-            return (
-              <button 
-                key={m}
-                onClick={() => setSelectedMonth(m)}
-                className={`flex flex-col items-center min-w-[60px] p-2 rounded-lg transition-all border ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-transparent hover:bg-muted'}`}
-              >
-                <span className={`text-[10px] font-bold uppercase mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>{m.substring(0, 3)}</span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${isGood ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600' : 'bg-rose-500/10 border-rose-500 text-rose-600'}`}>
-                  {isGood ? <CalendarCheck className="w-4 h-4" /> : <CalendarX className="w-4 h-4" />}
-                </div>
-                <span className="text-[9px] font-bold mt-1 text-foreground">{atingido.toFixed(0)}%</span>
-              </button>
-            );
-          })}
+        <div className="flex flex-1 justify-end items-center gap-4 w-full sm:w-auto">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
+            {meses.map(m => {
+              const atingido = METAS_DATA[m as keyof typeof METAS_DATA].atingido;
+              const isGood = atingido >= 60; // Arbitrary threshold for visual
+              const isSelected = selectedMonth === m;
+              return (
+                <button 
+                  key={m}
+                  onClick={() => setSelectedMonth(m)}
+                  className={`flex flex-col items-center min-w-[60px] p-2 rounded-lg transition-all border ${isSelected ? 'border-primary bg-primary/5 shadow-sm' : 'border-transparent hover:bg-muted'}`}
+                >
+                  <span className={`text-[10px] font-bold uppercase mb-1 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`}>{m.substring(0, 3)}</span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${isGood ? 'bg-emerald-500/10 border-emerald-500 text-emerald-600' : 'bg-rose-500/10 border-rose-500 text-rose-600'}`}>
+                    {isGood ? <CalendarCheck className="w-4 h-4" /> : <CalendarX className="w-4 h-4" />}
+                  </div>
+                  <span className="text-[9px] font-bold mt-1 text-foreground">{atingido.toFixed(0)}%</span>
+                </button>
+              );
+            })}
+          </div>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} data-html2canvas-ignore className="hidden sm:flex shadow-sm">
+            <Download className="w-4 h-4 mr-2" />
+            {isExporting ? 'Exportando...' : 'Exportar PNG'}
+          </Button>
         </div>
       </div>
 
@@ -267,15 +298,10 @@ export default function MetasBusato() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         
         {/* Tabela */}
-        <Card className="xl:col-span-2 shadow-sm border-border overflow-hidden flex flex-col">
-          <CardHeader className="bg-muted/30 border-b border-border py-4">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" />
-              Detalhamento de {selectedMonth}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 flex-1 overflow-auto">
-            <Table>
+        <Card className="xl:col-span-2 shadow-sm border-border flex flex-col">
+          <ExpandableChart title={`Detalhamento de ${selectedMonth}`}>
+            <div className="p-0 flex-1 overflow-auto rounded-md bg-card">
+              <Table>
               <TableHeader className="bg-muted/10">
                 <TableRow>
                   <TableHead className="font-bold">Métrica</TableHead>
@@ -332,20 +358,16 @@ export default function MetasBusato() {
                   })}
                 </AnimatePresence>
               </TableBody>
-            </Table>
-          </CardContent>
+              </Table>
+            </div>
+          </ExpandableChart>
         </Card>
 
         {/* Radar Chart (Ideia A) */}
         <Card className="xl:col-span-1 shadow-sm border-border flex flex-col">
-          <CardHeader className="bg-muted/10 border-b border-border py-4">
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertOctagon className="w-5 h-5 text-primary" />
-              Radar de Equilíbrio
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col items-center justify-center p-4">
-            <div className="w-full h-[300px]">
+          <ExpandableChart title="Radar de Equilíbrio">
+            <div className="flex-1 flex flex-col items-center justify-center p-4 bg-card rounded-md">
+              <div className="w-full h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                   <PolarGrid stroke="hsl(var(--border))" />
@@ -361,7 +383,8 @@ export default function MetasBusato() {
             <p className="text-[11px] text-center text-muted-foreground mt-4 leading-relaxed">
               O polígono verde (Alcançado) deve idealmente cobrir a linha tracejada vermelha (Referência 100%). O que encolhe para dentro é gap.
             </p>
-          </CardContent>
+            </div>
+          </ExpandableChart>
         </Card>
 
       </div>
