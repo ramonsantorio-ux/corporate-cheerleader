@@ -730,96 +730,7 @@ export default function Eventos() {
           </button>
         </motion.div>
       )}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card 
-          className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'all' ? 'bg-primary/10 ring-2 ring-primary ring-offset-2' : 'bg-gradient-to-br from-primary/5 to-transparent'} group`}
-          onClick={() => { setTypeFilter('all'); scrollToTable(); }}
-        >
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Total de Eventos</p>
-                <p className="text-4xl font-black text-foreground mt-2">{analytics.total}</p>
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 font-medium"><Calendar className="w-3.5 h-3.5"/> no período selecionado</p>
-              </div>
-              <div className="p-3 bg-primary/10 rounded-xl text-primary">
-                <Activity className="w-6 h-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card 
-          className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'operacional' ? 'bg-warning/10 ring-2 ring-warning ring-offset-2' : 'bg-gradient-to-br from-warning/5 to-transparent'} group`}
-          onClick={() => { setTypeFilter('operacional'); scrollToTable(); }}
-        >
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-warning" />
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning/10 rounded-full blur-2xl group-hover:bg-warning/20 transition-colors" />
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Eventos Operacionais</p>
-                <p className="text-4xl font-black text-foreground mt-2">{analytics.operationalCount}</p>
-                <p className="text-xs text-warning mt-2 font-bold bg-warning/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-                  <Target className="w-3 h-3" />
-                  {analytics.total ? ((analytics.operationalCount / analytics.total) * 100).toFixed(0) : 0}% do total
-                </p>
-              </div>
-              <div className="p-3 bg-warning/10 rounded-xl text-warning">
-                <Wrench className="w-6 h-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'medico' ? 'bg-destructive/10 ring-2 ring-destructive ring-offset-2' : 'bg-gradient-to-br from-destructive/5 to-transparent'} group`}
-          onClick={() => { setTypeFilter('medico'); scrollToTable(); }}
-        >
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-destructive/10 rounded-full blur-2xl group-hover:bg-destructive/20 transition-colors" />
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Atendimento Médico</p>
-                <p className="text-4xl font-black text-foreground mt-2">{analytics.medicalCount}</p>
-                <p className="text-xs text-destructive mt-2 font-bold bg-destructive/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
-                  <HeartPulse className="w-3 h-3" />
-                  {analytics.total ? ((analytics.medicalCount / analytics.total) * 100).toFixed(0) : 0}% do total
-                </p>
-              </div>
-              <div className="p-3 bg-destructive/10 rounded-xl text-destructive">
-                <Stethoscope className="w-6 h-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card 
-          className="relative overflow-hidden cursor-default border-none bg-gradient-to-br from-[hsl(var(--success))]/5 to-transparent group"
-        >
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-[hsl(var(--success))]" />
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-[hsl(var(--success))]/10 rounded-full blur-2xl group-hover:bg-[hsl(var(--success))]/20 transition-colors" />
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Média Mensal</p>
-                <p className="text-4xl font-black text-foreground mt-2">
-                  {analytics.monthTrend.length ? (analytics.total / analytics.monthTrend.length).toFixed(1) : 0}
-                </p>
-                <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 font-medium"><LineChart className="w-3.5 h-3.5"/> eventos/mês</p>
-              </div>
-              <div className="p-3 bg-[hsl(var(--success))]/10 rounded-xl text-[hsl(var(--success))]">
-                <Zap className="w-6 h-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* --- DASHBOARD TABS --- */}
+            {/* --- DASHBOARD TABS --- */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
         <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
           <TabsTrigger value="visao-geral" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2">
@@ -841,6 +752,96 @@ export default function Eventos() {
 
         {/* 1. VISÃO GERAL */}
         <TabsContent value="visao-geral" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <Card 
+              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'all' ? 'bg-primary/10 ring-2 ring-primary ring-offset-2' : 'bg-gradient-to-br from-primary/5 to-transparent'} group`}
+              onClick={() => { setTypeFilter('all'); scrollToTable(); }}
+            >
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-colors" />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Total de Eventos</p>
+                    <p className="text-4xl font-black text-foreground mt-2">{analytics.total}</p>
+                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 font-medium"><Calendar className="w-3.5 h-3.5"/> no período selecionado</p>
+                  </div>
+                  <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                    <Activity className="w-6 h-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card 
+              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'operacional' ? 'bg-warning/10 ring-2 ring-warning ring-offset-2' : 'bg-gradient-to-br from-warning/5 to-transparent'} group`}
+              onClick={() => { setTypeFilter('operacional'); scrollToTable(); }}
+            >
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-warning" />
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning/10 rounded-full blur-2xl group-hover:bg-warning/20 transition-colors" />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Eventos Operacionais</p>
+                    <p className="text-4xl font-black text-foreground mt-2">{analytics.operationalCount}</p>
+                    <p className="text-xs text-warning mt-2 font-bold bg-warning/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                      <Target className="w-3 h-3" />
+                      {analytics.total ? ((analytics.operationalCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                    </p>
+                  </div>
+                  <div className="p-3 bg-warning/10 rounded-xl text-warning">
+                    <Wrench className="w-6 h-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'medico' ? 'bg-destructive/10 ring-2 ring-destructive ring-offset-2' : 'bg-gradient-to-br from-destructive/5 to-transparent'} group`}
+              onClick={() => { setTypeFilter('medico'); scrollToTable(); }}
+            >
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-destructive/10 rounded-full blur-2xl group-hover:bg-destructive/20 transition-colors" />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Atendimento Médico</p>
+                    <p className="text-4xl font-black text-foreground mt-2">{analytics.medicalCount}</p>
+                    <p className="text-xs text-destructive mt-2 font-bold bg-destructive/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                      <HeartPulse className="w-3 h-3" />
+                      {analytics.total ? ((analytics.medicalCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                    </p>
+                  </div>
+                  <div className="p-3 bg-destructive/10 rounded-xl text-destructive">
+                    <Stethoscope className="w-6 h-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className="relative overflow-hidden cursor-default border-none bg-gradient-to-br from-[hsl(var(--success))]/5 to-transparent group"
+            >
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-[hsl(var(--success))]" />
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-[hsl(var(--success))]/10 rounded-full blur-2xl group-hover:bg-[hsl(var(--success))]/20 transition-colors" />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Média Mensal</p>
+                    <p className="text-4xl font-black text-foreground mt-2">
+                      {analytics.monthTrend.length ? (analytics.total / analytics.monthTrend.length).toFixed(1) : 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 font-medium"><LineChart className="w-3.5 h-3.5"/> eventos/mês</p>
+                  </div>
+                  <div className="p-3 bg-[hsl(var(--success))]/10 rounded-xl text-[hsl(var(--success))]">
+                    <Zap className="w-6 h-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
           <div className="grid grid-cols-1 gap-6 mb-6">
             <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
@@ -869,44 +870,6 @@ export default function Eventos() {
                           <LabelList dataKey="eventos" position="top" offset={10} style={{ fontSize: '10px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }} />
                         </Area>
                       </ComposedChart>
-                    </ResponsiveContainer>
-                  </ExpandableChart>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary" /> Principais Locais de Ocorrência
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[280px]">
-                  <ExpandableChart title="Principais Locais">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie 
-                          data={analytics.topLocations} 
-                          dataKey="value" 
-                          nameKey="name" 
-                          cx="50%" 
-                          cy="50%" 
-                          innerRadius="55%" 
-                          outerRadius="80%" 
-                          paddingAngle={4}
-                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} 
-                          labelLine={false}
-                        >
-                          {analytics.topLocations.map((_, i) => (
-                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="transparent" />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ fontSize: "11px" }} formatter={(value, entry, index) => `${value} (${analytics.topLocations[index].value})`} />
-                      </PieChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
                 </div>
@@ -951,6 +914,42 @@ export default function Eventos() {
         {/* 2. OPERAÇÃO E TURNOS */}
         <TabsContent value="operacao" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary" /> Principais Locais de Ocorrência
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[280px]">
+                  <ExpandableChart title="Principais Locais">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie 
+                          data={analytics.topLocations} 
+                          dataKey="value" 
+                          nameKey="name" 
+                          cx="50%" 
+                          cy="50%" 
+                          innerRadius="55%" 
+                          outerRadius="80%" 
+                          paddingAngle={4}
+                          label={({ percent }) => `${(percent * 100).toFixed(0)}%`} 
+                          labelLine={false}
+                        >
+                          {analytics.topLocations.map((_, i) => (
+                            <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="transparent" />
+                          ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ fontSize: "11px" }} formatter={(value, entry, index) => `${value} (${analytics.topLocations[index].value})`} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -973,7 +972,36 @@ export default function Eventos() {
                 </div>
               </CardContent>
             </Card>
+          </div>
 
+          <div className="grid grid-cols-1 gap-6 mb-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#eb7d5b]" /> Horário dos Eventos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[250px] w-full">
+                  <ExpandableChart title="Horário dos Eventos">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                        <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                        <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]}>
+                          <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -1000,33 +1028,6 @@ export default function Eventos() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#eb7d5b]" /> Horário dos Eventos
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[250px] w-full">
-                  <ExpandableChart title="Horário dos Eventos">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
-                        <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </ExpandableChart>
-                </div>
-              </CardContent>
-            </Card>
 
             <Card>
               <CardHeader className="pb-2">
@@ -1035,7 +1036,7 @@ export default function Eventos() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[250px] w-full">
+                <div className="h-[280px] w-full">
                   <ExpandableChart title="Eventos por Letra">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analytics.letraData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
@@ -1045,7 +1046,7 @@ export default function Eventos() {
                         <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
                         <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                           <LabelList dataKey="value" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
-                          {analytics.letraData?.map((entry: any, index: number) => (
+                          {analytics.letraData?.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.fill} />
                           ))}
                         </Bar>
@@ -1057,8 +1058,7 @@ export default function Eventos() {
             </Card>
           </div>
         </TabsContent>
-
-        {/* 3. SAÚDE & SEGURANÇA (SST) */}
+{/* 3. SAÚDE & SEGURANÇA (SST) */}
         <TabsContent value="sst" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card className="border-none bg-gradient-to-br from-emerald-500/10 to-transparent shadow-sm relative overflow-hidden group">
