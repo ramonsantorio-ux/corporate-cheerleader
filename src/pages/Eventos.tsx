@@ -605,7 +605,9 @@ export default function Eventos() {
       </motion.div>
 
       {/* Painel de Filtros Compacto */}
-      <div className="bg-card border border-border rounded-xl p-3 mb-6 shadow-sm">
+      {activeTab !== 'metas' && (
+        <>
+          <div className="bg-card border border-border rounded-xl p-3 mb-6 shadow-sm">
         {/* Linha Principal: Sempre visível */}
         <div className="flex flex-col md:flex-row gap-3">
           <PeriodFilter value={period} onChange={setPeriod} className="md:w-auto shrink-0" />
@@ -730,6 +732,8 @@ export default function Eventos() {
             <Eye className="w-3.5 h-3.5" /> Ver Perfil
           </button>
         </motion.div>
+      )}
+        </>
       )}
             {/* --- DASHBOARD TABS --- */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
