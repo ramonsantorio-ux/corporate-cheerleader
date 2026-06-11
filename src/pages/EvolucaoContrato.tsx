@@ -664,7 +664,7 @@ export default function EvolucaoContrato() {
       const sumMultas = todasMultas.reduce((acc, curr) => acc + curr.valor, 0);
       
       const receitaTotal = m.fatLocacao + m.fatMaoDeObra + m.eventuais;
-      const impostosTotal = (m.impostoIrrf || 0) + (m.impostoPis || 0) + (m.impostoCofins || 0) + (m.impostoCsll || 0) + (m.impostoIss || 0) + (m.impostoInss || 0) + (m.impostoInssAdSat || 0);
+      const impostosTotal = (m.impostoIrrf || 0) + (m.impostoPis || 0) + (m.impostoCofins || 0) + (m.impostoCsll || 0) + (m.impostoIss || 0);
       const folhaTotal = m.custoFolha + m.horasExtras + (m.folhaInss || 0) + (m.folhaFgts || 0) + (m.folhaIrrf || 0) + (m.custoTurnover || 0) + (m.beneficioCafeDaManha || 0) + (m.beneficioSeguroDeVida || 0) + (m.beneficioPlanoDeSaude || 0) + (m.beneficioPlanoOdontologico || 0) + (m.beneficioTicketAlimentacao || 0) + (m.beneficioValeTransporte || 0) + (m.beneficioMaisParaTodos || 0) + (m.beneficioRefeicao || 0);
       const manutencaoTotal = (m.manutencaoPecas || 0) + (m.manutencaoServicos || 0) + (m.manutencaoPneus || 0) + (m.manutencaoLubrificacao || 0) + (m.manutencaoLavador || 0) + (m.manutencaoPreventiva || 0);
       const combustivelTotal = (m.combustivelDiesel || 0) + (m.combustivelDieselS10 || 0) + (m.combustivelDieselS500 || 0) + (m.combustivelGasolina || 0);
@@ -1086,15 +1086,15 @@ export default function EvolucaoContrato() {
           </div>
           <CardContent className="p-4">
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 gap-8">
               {/* IMPOSTOS */}
               <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
                 <h4 className="font-bold text-center">Impostos</h4>
-                <div className="h-[300px] w-full">
+                <div className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval={0} angle={-35} textAnchor="end" height={60} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
@@ -1102,9 +1102,7 @@ export default function EvolucaoContrato() {
                       <Bar dataKey="impostoPis" name="PIS" stackId="a" fill="#60a5fa" maxBarSize={45} />
                       <Bar dataKey="impostoCofins" name="COFINS" stackId="a" fill="#93c5fd" maxBarSize={45} />
                       <Bar dataKey="impostoCsll" name="CSLL" stackId="a" fill="#2dd4bf" maxBarSize={45} />
-                      <Bar dataKey="impostoIss" name="ISS" stackId="a" fill="#34d399" maxBarSize={45} />
-                      <Bar dataKey="impostoInss" name="INSS" stackId="a" fill="#10b981" maxBarSize={45} />
-                      <Bar dataKey="impostoInssAdSat" name="INSS SAT" stackId="a" fill="#059669" radius={[4, 4, 0, 0]} maxBarSize={45} />
+                      <Bar dataKey="impostoIss" name="ISS" stackId="a" fill="#34d399" radius={[4, 4, 0, 0]} maxBarSize={45} />
                       <Line type="monotone" dataKey="metaImpostos" name="Meta Impostos" stroke="#ef4444" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} strokeDasharray="5 5" />
                     </ComposedChart>
                   </ResponsiveContainer>
@@ -1114,11 +1112,11 @@ export default function EvolucaoContrato() {
               {/* FOLHA */}
               <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
                 <h4 className="font-bold text-center">Folha de Pagamento</h4>
-                <div className="h-[300px] w-full">
+                <div className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval={0} angle={-35} textAnchor="end" height={60} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
@@ -1143,11 +1141,11 @@ export default function EvolucaoContrato() {
               {/* MANUTENÇÃO */}
               <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
                 <h4 className="font-bold text-center">Manutenção</h4>
-                <div className="h-[300px] w-full">
+                <div className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval={0} angle={-35} textAnchor="end" height={60} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
@@ -1166,11 +1164,11 @@ export default function EvolucaoContrato() {
               {/* COMBUSTÍVEL */}
               <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
                 <h4 className="font-bold text-center">Combustível</h4>
-                <div className="h-[300px] w-full">
+                <div className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval={0} angle={-35} textAnchor="end" height={60} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
@@ -1187,11 +1185,11 @@ export default function EvolucaoContrato() {
               {/* SEGURANÇA */}
               <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
                 <h4 className="font-bold text-center">Segurança</h4>
-                <div className="h-[300px] w-full">
+                <div className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval={0} angle={-35} textAnchor="end" height={60} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
@@ -1206,11 +1204,11 @@ export default function EvolucaoContrato() {
               {/* MATERIAIS */}
               <div className="space-y-2 border border-border/50 rounded-xl p-4 bg-background/50">
                 <h4 className="font-bold text-center">Materiais</h4>
-                <div className="h-[300px] w-full">
+                <div className="h-[400px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval="preserveStartEnd" />
+                      <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} interval={0} angle={-35} textAnchor="end" height={60} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `R$ ${(val/1000).toFixed(0)}k`} />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend wrapperStyle={{ fontSize: '11px' }} />
@@ -1433,7 +1431,7 @@ export default function EvolucaoContrato() {
                   <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Margem Líquida</p>
                   {(() => {
                     const rec = detalhesMedicao.fatLocacao + detalhesMedicao.fatMaoDeObra + detalhesMedicao.eventuais;
-                    const impostosTotais = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0) + (detalhesMedicao.impostoInss || 0) + (detalhesMedicao.impostoInssAdSat || 0);
+                    const impostosTotais = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0);
                     const cust = (detalhesMedicao.custoFolha || 0) + (detalhesMedicao.horasExtras || 0) + (detalhesMedicao.folhaInss || 0) + (detalhesMedicao.folhaFgts || 0) + (detalhesMedicao.folhaIrrf || 0) + (detalhesMedicao.custoTurnover || 0) + (detalhesMedicao.beneficioCafeDaManha || 0) + (detalhesMedicao.beneficioSeguroDeVida || 0) + (detalhesMedicao.beneficioPlanoDeSaude || 0) + (detalhesMedicao.beneficioPlanoOdontologico || 0) + (detalhesMedicao.beneficioTicketAlimentacao || 0) + (detalhesMedicao.beneficioValeTransporte || 0) + (detalhesMedicao.beneficioMaisParaTodos || 0) + (detalhesMedicao.beneficioRefeicao || 0) + (detalhesMedicao.manutencaoPecas || 0) + (detalhesMedicao.manutencaoServicos || 0) + (detalhesMedicao.manutencaoPneus || 0) + (detalhesMedicao.manutencaoLubrificacao || 0) + (detalhesMedicao.manutencaoPreventiva || 0) + (detalhesMedicao.manutencaoLavador || 0) + (detalhesMedicao.combustivelDiesel || 0) + (detalhesMedicao.combustivelDieselS10 || 0) + (detalhesMedicao.combustivelDieselS500 || 0) + (detalhesMedicao.combustivelGasolina || 0) + (detalhesMedicao.uniforme || 0) + (detalhesMedicao.epi || 0) + (detalhesMedicao.escritorioMaterial || 0) + (detalhesMedicao.escritorioLimpeza || 0) + impostosTotais;
                     const perdas = detalhesMedicao.descontos.reduce((a,c)=>a+c.valor,0) + detalhesMedicao.multas.reduce((a,c)=>a+c.valor,0);
                     const lucro = rec - cust - perdas;
@@ -1472,7 +1470,7 @@ export default function EvolucaoContrato() {
 
                 <div className="space-y-2 text-sm pt-4">
                   {(() => {
-                    const impostos = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0) + (detalhesMedicao.impostoInss || 0) + (detalhesMedicao.impostoInssAdSat || 0);
+                    const impostos = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0);
                     const manutencao = (detalhesMedicao.manutencaoPecas || 0) + (detalhesMedicao.manutencaoServicos || 0) + (detalhesMedicao.manutencaoPneus || 0) + (detalhesMedicao.manutencaoLubrificacao || 0) + (detalhesMedicao.manutencaoPreventiva || 0) + (detalhesMedicao.manutencaoLavador || 0);
                     const folha = (detalhesMedicao.custoFolha || 0) + (detalhesMedicao.horasExtras || 0) + (detalhesMedicao.folhaInss || 0) + (detalhesMedicao.folhaFgts || 0) + (detalhesMedicao.folhaIrrf || 0) + (detalhesMedicao.custoTurnover || 0) + (detalhesMedicao.beneficioCafeDaManha || 0) + (detalhesMedicao.beneficioSeguroDeVida || 0) + (detalhesMedicao.beneficioPlanoDeSaude || 0) + (detalhesMedicao.beneficioPlanoOdontologico || 0) + (detalhesMedicao.beneficioTicketAlimentacao || 0) + (detalhesMedicao.beneficioValeTransporte || 0) + (detalhesMedicao.beneficioMaisParaTodos || 0) + (detalhesMedicao.beneficioRefeicao || 0);
                     const combustivel = (detalhesMedicao.combustivelDiesel || 0) + (detalhesMedicao.combustivelDieselS10 || 0) + (detalhesMedicao.combustivelDieselS500 || 0) + (detalhesMedicao.combustivelGasolina || 0);
@@ -1496,7 +1494,7 @@ export default function EvolucaoContrato() {
                             <div className="flex justify-between"><span>COFINS</span><span>{formatCurrency(detalhesMedicao.impostoCofins || 0)}</span></div>
                             <div className="flex justify-between"><span>CSLL</span><span>{formatCurrency(detalhesMedicao.impostoCsll || 0)}</span></div>
                             <div className="flex justify-between"><span>ISS</span><span>{formatCurrency(detalhesMedicao.impostoIss || 0)}</span></div>
-                            <div className="flex justify-between"><span>INSS ad (SAT)</span><span>{formatCurrency(detalhesMedicao.impostoInssAdSat || 0)}</span></div>
+                            
                           </AccordionContent>
                         </AccordionItem>
 
@@ -1590,7 +1588,7 @@ export default function EvolucaoContrato() {
                   <span>Lucro Líquido</span>
                   {(() => {
                     const rec = detalhesMedicao.fatLocacao + detalhesMedicao.fatMaoDeObra + detalhesMedicao.eventuais;
-                    const impostosTotais = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0) + (detalhesMedicao.impostoInss || 0) + (detalhesMedicao.impostoInssAdSat || 0);
+                    const impostosTotais = (detalhesMedicao.impostoIrrf || 0) + (detalhesMedicao.impostoPis || 0) + (detalhesMedicao.impostoCofins || 0) + (detalhesMedicao.impostoCsll || 0) + (detalhesMedicao.impostoIss || 0);
                     const cust = (detalhesMedicao.custoFolha || 0) + (detalhesMedicao.horasExtras || 0) + (detalhesMedicao.folhaInss || 0) + (detalhesMedicao.folhaFgts || 0) + (detalhesMedicao.folhaIrrf || 0) + (detalhesMedicao.custoTurnover || 0) + (detalhesMedicao.beneficioCafeDaManha || 0) + (detalhesMedicao.beneficioSeguroDeVida || 0) + (detalhesMedicao.beneficioPlanoDeSaude || 0) + (detalhesMedicao.beneficioPlanoOdontologico || 0) + (detalhesMedicao.beneficioTicketAlimentacao || 0) + (detalhesMedicao.beneficioValeTransporte || 0) + (detalhesMedicao.beneficioMaisParaTodos || 0) + (detalhesMedicao.beneficioRefeicao || 0) + (detalhesMedicao.manutencaoPecas || 0) + (detalhesMedicao.manutencaoServicos || 0) + (detalhesMedicao.manutencaoPneus || 0) + (detalhesMedicao.manutencaoLubrificacao || 0) + (detalhesMedicao.manutencaoPreventiva || 0) + (detalhesMedicao.manutencaoLavador || 0) + (detalhesMedicao.combustivelDiesel || 0) + (detalhesMedicao.combustivelDieselS10 || 0) + (detalhesMedicao.combustivelDieselS500 || 0) + (detalhesMedicao.combustivelGasolina || 0) + (detalhesMedicao.uniforme || 0) + (detalhesMedicao.epi || 0) + (detalhesMedicao.escritorioMaterial || 0) + (detalhesMedicao.escritorioLimpeza || 0) + impostosTotais;
                     const perdas = detalhesMedicao.descontos.reduce((a,c)=>a+c.valor,0) + detalhesMedicao.multas.reduce((a,c)=>a+c.valor,0);
                     const lucro = rec - cust - perdas;
