@@ -4,8 +4,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, ReferenceLine, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, ReferenceLine, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LabelList } from 'recharts';
 import { Target, TrendingUp, AlertTriangle, CheckCircle2, TrendingDown, ArrowUpRight, ArrowDownRight, Trophy, AlertOctagon, CalendarCheck, CalendarX } from 'lucide-react';
+import { ExpandableChart } from '@/components/ui/ExpandableChart';
 
 // --- Dados Fixos (Mock Jan-Mai) ---
 const METAS_DATA = {
@@ -377,22 +378,26 @@ export default function MetasBusato() {
           </CardHeader>
           <CardContent>
             <div className="h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={evolutionData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorAtingido" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--muted))', strokeWidth: 2, strokeDasharray: '5 5' }} />
-                  <Area type="monotone" dataKey="atingido" name="Atingido" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorAtingido)" activeDot={{ r: 6 }} />
-                  <ReferenceLine y={100} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Meta (100%)', fill: 'hsl(var(--destructive))', fontSize: 10 }} />
-                </AreaChart>
-              </ResponsiveContainer>
+              <ExpandableChart title="Evolução do Atingimento Global">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={evolutionData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorAtingido" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--muted))', strokeWidth: 2, strokeDasharray: '5 5' }} />
+                    <Area type="monotone" dataKey="atingido" name="Atingido" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorAtingido)" activeDot={{ r: 6 }}>
+                      <LabelList dataKey="atingido" position="top" style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} formatter={(val: number) => val.toFixed(0) + '%'} offset={10} />
+                    </Area>
+                    <ReferenceLine y={100} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Meta (100%)', fill: 'hsl(var(--destructive))', fontSize: 10 }} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
           </CardContent>
         </Card>
@@ -408,20 +413,23 @@ export default function MetasBusato() {
           </CardHeader>
           <CardContent>
             <div className="h-[250px] mt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={varianceData} margin={{ top: 20, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: 'hsl(var(--muted)/0.5)' }} content={<CustomTooltip />} />
-                  <ReferenceLine y={0} stroke="hsl(var(--foreground))" strokeOpacity={0.2} strokeWidth={2} />
-                  <Bar dataKey="variance" name="Variação Absoluta vs Meta">
-                    {varianceData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.isPositive ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <ExpandableChart title={`Ofensores e Impulsionadores (${selectedMonth})`}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={varianceData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{ fill: 'hsl(var(--muted)/0.5)' }} content={<CustomTooltip />} />
+                    <ReferenceLine y={0} stroke="hsl(var(--foreground))" strokeOpacity={0.2} strokeWidth={2} />
+                    <Bar dataKey="variance" name="Variação Absoluta vs Meta">
+                      <LabelList dataKey="variance" position="top" style={{ fontSize: '11px', fontWeight: 'bold' }} formatter={(val: number) => val > 0 ? '+' + val.toFixed(1) : val.toFixed(1)} />
+                      {varianceData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.isPositive ? 'hsl(var(--primary))' : 'hsl(var(--destructive))'} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </ExpandableChart>
             </div>
             <p className="text-[10px] text-muted-foreground mt-2 text-center">
               Barras para cima ajudaram a bater a meta. Barras para baixo puxaram o resultado global para trás.
