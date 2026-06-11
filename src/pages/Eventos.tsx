@@ -620,7 +620,7 @@ export default function Eventos() {
             onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
           >
             <Filter className="w-4 h-4" />
-            Filtros {activeFiltersCount > 0 && \`(\${activeFiltersCount})\`}
+            Filtros {activeFiltersCount > 0 && `(${activeFiltersCount})`}
             {showAdvancedFilters ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
           </Button>
         </div>
