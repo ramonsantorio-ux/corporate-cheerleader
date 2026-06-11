@@ -386,6 +386,67 @@ export const LISTA_EQUIPAMENTOS = [
   { grupo: "RETROESCAVADEIRA 416D", itens: ["416D - MFE - 01", "416D - MFE - 02", "416D - MFE - 03", "416D - TPM - 01"] }
 ];
 
+export const dataPortoMinerio = [
+  { mes: 'Jul', aderencia: 80.29, meta: 95 },
+  { mes: 'Ago', aderencia: 79.82, meta: 95 },
+  { mes: 'Set', aderencia: 87.75, meta: 95 },
+  { mes: 'Out', aderencia: 88.99, meta: 95 },
+  { mes: 'Nov', aderencia: 95.50, meta: 95 },
+  { mes: 'Dez', aderencia: 95.15, meta: 95 },
+  { mes: 'Jan', aderencia: 96.10, meta: 95 },
+  { mes: 'Fev', aderencia: 95.64, meta: 95 },
+  { mes: 'Mar', aderencia: 94.02, meta: 95 },
+  { mes: 'Abr', aderencia: 96.68, meta: 95 },
+  { mes: 'Mai', aderencia: 96.16, meta: 95 },
+];
+
+export const dataPortoTPM = [
+  { mes: 'Jul', aderencia: 89.14, meta: 95 },
+  { mes: 'Ago', aderencia: 86.83, meta: 95 },
+  { mes: 'Set', aderencia: 92.30, meta: 95 },
+  { mes: 'Out', aderencia: 93.38, meta: 95 },
+  { mes: 'Nov', aderencia: 98.06, meta: 95 },
+  { mes: 'Dez', aderencia: 97.46, meta: 95 },
+  { mes: 'Jan', aderencia: 97.45, meta: 95 },
+  { mes: 'Fev', aderencia: 96.85, meta: 95 },
+  { mes: 'Mar', aderencia: 97.87, meta: 95 },
+  { mes: 'Abr', aderencia: 98.89, meta: 95 },
+  { mes: 'Mai', aderencia: 99.00, meta: 95 },
+];
+
+export const dataAderenciaDia = [
+  { dia: '21/abr', aderencia: 92.41, meta: 95 },
+  { dia: '22/abr', aderencia: 95.48, meta: 95 },
+  { dia: '23/abr', aderencia: 95.21, meta: 95 },
+  { dia: '24/abr', aderencia: 97.91, meta: 95 },
+  { dia: '25/abr', aderencia: 95.97, meta: 95 },
+  { dia: '26/abr', aderencia: 97.83, meta: 95 },
+  { dia: '27/abr', aderencia: 97.89, meta: 95 },
+  { dia: '28/abr', aderencia: 98.92, meta: 95 },
+  { dia: '29/abr', aderencia: 90.08, meta: 95 },
+  { dia: '30/abr', aderencia: 95.97, meta: 95 },
+  { dia: '01/mai', aderencia: 100.00, meta: 95 },
+  { dia: '02/mai', aderencia: 98.61, meta: 95 },
+  { dia: '03/mai', aderencia: 98.68, meta: 95 },
+  { dia: '04/mai', aderencia: 99.23, meta: 95 },
+  { dia: '05/mai', aderencia: 98.69, meta: 95 },
+  { dia: '06/mai', aderencia: 96.31, meta: 95 },
+  { dia: '07/mai', aderencia: 95.70, meta: 95 },
+  { dia: '08/mai', aderencia: 100.00, meta: 95 },
+  { dia: '09/mai', aderencia: 98.94, meta: 95 },
+  { dia: '10/mai', aderencia: 98.95, meta: 95 },
+  { dia: '11/mai', aderencia: 94.88, meta: 95 },
+  { dia: '12/mai', aderencia: 99.76, meta: 95 },
+  { dia: '13/mai', aderencia: 96.48, meta: 95 },
+  { dia: '14/mai', aderencia: 97.43, meta: 95 },
+  { dia: '15/mai', aderencia: 96.43, meta: 95 },
+  { dia: '16/mai', aderencia: 99.51, meta: 95 },
+  { dia: '17/mai', aderencia: 98.92, meta: 95 },
+  { dia: '18/mai', aderencia: 98.04, meta: 95 },
+  { dia: '19/mai', aderencia: 94.36, meta: 95 },
+  { dia: '20/mai', aderencia: 95.32, meta: 95 }
+];
+
 export const formatCurrencyInput = (value: string | number) => {
   if (value === '' || value === undefined || value === null) return '';
   const num = Number(value);
@@ -847,6 +908,81 @@ export default function EvolucaoContrato() {
 
           <TabsContent value="visao_executiva" className="space-y-6 mt-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* GRÁFICOS SOLICITADOS - PORTO MINÉRIO E PORTO TPM */}
+          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('minerio')}>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2"><Target className="w-5 h-5 text-primary" /> Porto - Minério</CardTitle>
+              <CardDescription>Aderência Operacional vs Meta (95%)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={dataPortoMinerio} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <YAxis domain={[70, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                    <Bar dataKey="aderencia" name="Aderência (%)" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={30} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('tpm')}>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2"><Target className="w-5 h-5 text-blue-500" /> Porto - TPM</CardTitle>
+              <CardDescription>Aderência Operacional vs Meta (95%)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={dataPortoTPM} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <YAxis domain={[70, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Line type="monotone" dataKey="meta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                    <Bar dataKey="aderencia" name="Aderência (%)" fill="hsl(var(--blue-500))" radius={[4, 4, 0, 0]} barSize={30} />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-sm border-border lg:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('diario')}>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2"><TrendingUp className="w-6 h-6 text-success" /> Evolução Aderência Mês (Diário)</CardTitle>
+              <CardDescription>Acompanhamento diário da aderência de 21/abr a 20/mai</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[350px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={dataAderenciaDia} margin={{ top: 20, right: 30, bottom: 5, left: 0 }}>
+                    <defs>
+                      <linearGradient id="colorAderenciaDia" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis dataKey="dia" stroke="hsl(var(--muted-foreground))" fontSize={10} tickMargin={10} angle={-45} textAnchor="end" height={60} />
+                    <YAxis domain={[80, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
+                    <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta (95%)', fill: 'hsl(var(--warning))', fontSize: 11, fontWeight: 'bold' }} />
+                    <Area type="monotone" dataKey="aderencia" name="Aderência (%)" fill="url(#colorAderenciaDia)" stroke="hsl(var(--success))" strokeWidth={3} dot={{ r: 3, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 6, fill: "hsl(var(--success))" }}>
+                      <LabelList dataKey="aderencia" position="top" offset={10} formatter={(val: number) => `${val}%`} style={{ fontSize: '9px', fontWeight: 'bold', fill: 'hsl(var(--success))' }} />
+                    </Area>
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
           
           {/* NOVO GRÁFICO DIRETORIA - ADERÊNCIA SLA */}
           <Card className="shadow-sm border-border lg:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('sla')}>
