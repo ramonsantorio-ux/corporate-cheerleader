@@ -1029,7 +1029,7 @@ export default function EvolucaoContrato() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} interval="preserveStartEnd" />
                     <YAxis domain={['auto', 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
@@ -1059,7 +1059,7 @@ export default function EvolucaoContrato() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} interval="preserveStartEnd" />
                     <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--primary))" fontSize={12} domain={[80, 100]} />
                     <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
@@ -1088,7 +1088,7 @@ export default function EvolucaoContrato() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} interval="preserveStartEnd" />
                     <YAxis yAxisId="left" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 'auto']} />
                     <YAxis yAxisId="right" orientation="right" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--destructive))" fontSize={12} domain={[0, 'auto']} />
                     <Tooltip content={<CustomTooltip />} />
@@ -1750,7 +1750,7 @@ export default function EvolucaoContrato() {
               <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={filteredPortoMinerio} margin={{ top: 25, right: 30, bottom: 5, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} interval="preserveStartEnd" />
                     <YAxis domain={[75, 105]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '10px' }} />
@@ -1769,7 +1769,7 @@ export default function EvolucaoContrato() {
               <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={filteredPortoTPM} margin={{ top: 25, right: 30, bottom: 5, left: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} interval="preserveStartEnd" />
                     <YAxis domain={[75, 105]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '13px', paddingTop: '10px' }} />
@@ -1816,7 +1816,7 @@ export default function EvolucaoContrato() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} interval="preserveStartEnd" />
                     <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--primary))" fontSize={12} domain={[80, 100]} />
                     <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
@@ -1837,7 +1837,7 @@ export default function EvolucaoContrato() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} tickMargin={10} interval="preserveStartEnd" />
                     <YAxis tickFormatter={(val) => `R${val/1000}k`} stroke="hsl(var(--muted-foreground))" fontSize={12} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
