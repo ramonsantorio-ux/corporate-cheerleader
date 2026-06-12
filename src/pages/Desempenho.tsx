@@ -16,6 +16,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContaine
 
 // Lazy sub-pages
 import Avaliacoes from './Avaliacoes';
+import EvolucaoContrato from './EvolucaoContrato';
 import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
 import Feedback360 from './Feedback360';
@@ -221,7 +222,7 @@ export default function Desempenho() {
 
         {/* ═══ GESTÃO DE METAS ═══ */}
         <TabsContent value="metas" className="mt-4">
-          <Avaliacoes />
+          <EvolucaoContrato />
         </TabsContent>
 
         {/* ═══ FIT CULTURAL ═══ */}
