@@ -14,9 +14,8 @@ import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, Cell } from 'recharts';
 
-// Lazy sub-pages
 import Avaliacoes from './Avaliacoes';
-import EvolucaoContrato from './EvolucaoContrato';
+import MetasBusato from '@/components/MetasBusato';
 import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
 import Feedback360 from './Feedback360';
@@ -222,7 +221,7 @@ export default function Desempenho() {
 
         {/* ═══ GESTÃO DE METAS ═══ */}
         <TabsContent value="metas" className="mt-4">
-          <EvolucaoContrato />
+          <MetasBusato />
         </TabsContent>
 
         {/* ═══ FIT CULTURAL ═══ */}
