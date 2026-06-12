@@ -130,8 +130,8 @@ export default function AppSidebar() {
           <Accordion type="multiple" defaultValue={allGroups.map(g => g.label)} className="w-full space-y-1">
             {allGroups.map((group) => (
               <AccordionItem value={group.label} key={group.label} className="border-none px-2">
-                <AccordionTrigger className="hover:no-underline py-2 px-2 hover:bg-sidebar-accent/50 rounded-lg transition-colors [&[data-state=open]>svg]:rotate-180 group">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-sidebar-foreground/50 group-hover:text-sidebar-foreground/80 transition-colors">
+                <AccordionTrigger className="hover:no-underline py-2 px-2 hover:bg-sidebar-accent/50 rounded-lg transition-colors [&[data-state=open]>svg]:rotate-180 group text-left">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-sidebar-foreground/50 group-hover:text-sidebar-foreground/80 transition-colors flex-1">
                     {group.label}
                   </span>
                 </AccordionTrigger>
