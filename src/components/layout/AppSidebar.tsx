@@ -116,7 +116,7 @@ export default function AppSidebar() {
               transition={{ duration: 0.2 }}
               className="w-full flex justify-center"
             >
-              <div className="bg-white/95 p-1.5 rounded-xl shadow-lg border border-white/20 flex items-center justify-center">
+              <div className="bg-white/95 w-11 h-11 rounded-xl shadow-lg border border-white/20 flex items-center justify-center">
                 <img src={busatoGlobo} alt="Busato" className="w-7 h-7 object-contain drop-shadow-sm" />
               </div>
             </motion.div>
