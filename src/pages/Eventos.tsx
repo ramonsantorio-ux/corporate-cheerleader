@@ -82,6 +82,7 @@ export default function Eventos() {
   const [involvedFilter, setInvolvedFilter] = useState('all');
   const [plateFilter, setPlateFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
+  const [shiftFilter, setShiftFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState<'all' | 'operacional' | 'medico'>('all');
   const [period, setPeriod] = useState<PeriodRange>(() => ({
     start: '2025-08-01',
@@ -329,6 +330,7 @@ export default function Eventos() {
   const involvedTypes = useMemo(() => Array.from(new Set(events.map(e => e.involved_name).filter(Boolean))).sort(), [events]);
   const plateTypes = useMemo(() => Array.from(new Set(events.map(e => e.plate_tag).filter(Boolean).filter(e => e !== 'NA'))).sort(), [events]);
   const locationTypes = useMemo(() => Array.from(new Set(events.map(e => e.location).filter(Boolean))).sort(), [events]);
+  const shiftTypes = useMemo(() => Array.from(new Set(events.map(e => e.shift?.trim().toUpperCase()).filter(Boolean))).sort(), [events]);
 
   // Filtered events
   const filtered = useMemo(() => {
@@ -349,9 +351,10 @@ export default function Eventos() {
       const matchInvolved = involvedFilter === 'all' || ev.involved_name === involvedFilter;
       const matchPlate = plateFilter === 'all' || ev.plate_tag === plateFilter;
       const matchLocation = locationFilter === 'all' || ev.location === locationFilter;
-      return matchSearch && matchEquip && matchEmployee && matchDate && matchTime && matchInvolved && matchPlate && matchLocation && matchType;
+      const matchShift = shiftFilter === 'all' || (ev.shift && ev.shift.trim().toUpperCase() === shiftFilter.toUpperCase());
+      return matchSearch && matchEquip && matchEmployee && matchDate && matchTime && matchInvolved && matchPlate && matchLocation && matchType && matchShift;
     });
-  }, [events, search, equipmentFilter, selectedEmployee, dateFilter, timeFilter, involvedFilter, plateFilter, locationFilter, typeFilter]);
+  }, [events, search, equipmentFilter, selectedEmployee, dateFilter, timeFilter, involvedFilter, plateFilter, locationFilter, typeFilter, shiftFilter]);
 
   // ========== ANALYTICS ==========
   const analytics = useMemo(() => {
@@ -1303,6 +1306,20 @@ export default function Eventos() {
                         </Select>
                       </div>
                     </TableHead>
+                    <TableHead className="w-[90px]">
+                      <div className="flex items-center justify-between">
+                        Letra
+                        <Select value={shiftFilter} onValueChange={setShiftFilter}>
+                          <SelectTrigger className="h-6 w-6 p-0 border-0 bg-transparent shadow-none focus:ring-0 [&>svg:not(:first-child)]:hidden">
+                            <Filter className="w-4 h-4 text-muted-foreground hover:text-foreground cursor-pointer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">Todas</SelectItem>
+                            {shiftTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TableHead>
                     <TableHead>
                       <div className="flex items-center justify-between gap-2 max-w-[150px]">
                         Envolvido
@@ -1368,6 +1385,7 @@ export default function Eventos() {
                       <TableRow key={ev.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(expandedRow === ev.id ? null : ev.id)}>
                         <TableCell className="text-xs font-medium">{new Date(ev.event_date + 'T12:00').toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell className="text-xs">{formatTime(ev.event_time)}</TableCell>
+                        <TableCell className="text-xs text-center font-bold text-muted-foreground">{ev.shift ? ev.shift.toUpperCase() : '—'}</TableCell>
                         <TableCell className="text-xs font-medium">{ev.involved_name}</TableCell>
                         <TableCell className="text-xs hidden md:table-cell">
                           {ev.equipment && ev.equipment !== 'NA' ? (
@@ -1394,7 +1412,7 @@ export default function Eventos() {
                       <AnimatePresence>
                         {expandedRow === ev.id && (
                           <TableRow key={`${ev.id}-expand`}>
-                            <TableCell colSpan={7} className="bg-muted/30 p-4">
+                            <TableCell colSpan={8} className="bg-muted/30 p-4">
                               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                                 <p className="text-xs text-foreground leading-relaxed">{ev.description}</p>
                                 <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
