@@ -116,7 +116,9 @@ export default function AppSidebar() {
               transition={{ duration: 0.2 }}
               className="w-full flex justify-center"
             >
-              <img src={busatoGlobo} alt="Busato" className="w-8 h-8 rounded-lg shadow-md ring-1 ring-white/10" />
+              <div className="bg-white/95 p-1.5 rounded-xl shadow-lg border border-white/20 flex items-center justify-center">
+                <img src={busatoGlobo} alt="Busato" className="w-7 h-7 object-contain drop-shadow-sm" />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
