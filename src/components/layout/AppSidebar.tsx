@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import busatoGlobo from '@/assets/busato-globo.png';
+import busatoLogoFull from '@/assets/busato-logo-full.png';
 
 interface NavItem { to: string; icon: any; label: string; badge?: string }
 interface NavGroup { label: string; items: NavItem[] }
@@ -88,13 +89,34 @@ export default function AppSidebar() {
       className="hidden md:flex flex-col h-screen sticky top-0 z-30 bg-sidebar border-r border-sidebar-border"
     >
       {/* ── Brand ── */}
-      <div className="flex items-center gap-3 px-4 h-14 border-b border-sidebar-border flex-shrink-0">
-        <img src={busatoGlobo} alt="Busato" className="w-8 h-8 rounded-lg flex-shrink-0 ring-2 ring-sidebar-primary/30" />
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.15 }}>
-              <span className="text-sidebar-foreground font-bold text-sm tracking-tight block leading-none">BUSATO</span>
-              <span className="text-sidebar-foreground/40 text-[10px] font-semibold tracking-[0.15em] uppercase">Gestão de Contratos</span>
+      <div className="flex items-center px-4 h-20 border-b border-sidebar-border/50 flex-shrink-0 relative overflow-hidden">
+        {/* Efeito luminoso de fundo sutil */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-50" />
+        
+        <AnimatePresence mode="wait">
+          {!collapsed ? (
+            <motion.div 
+              key="full-logo"
+              initial={{ opacity: 0, x: -10 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              exit={{ opacity: 0, x: -10 }} 
+              transition={{ duration: 0.2 }}
+              className="w-full flex items-center"
+            >
+              <div className="bg-white/95 px-3 py-2 rounded-xl shadow-lg border border-white/20 w-full flex items-center justify-center">
+                <img src={busatoLogoFull} alt="Busato Group" className="h-6 w-auto object-contain" />
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="icon-logo"
+              initial={{ opacity: 0, scale: 0.8 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              exit={{ opacity: 0, scale: 0.8 }} 
+              transition={{ duration: 0.2 }}
+              className="w-full flex justify-center"
+            >
+              <img src={busatoGlobo} alt="Busato" className="w-8 h-8 rounded-lg shadow-md ring-1 ring-white/10" />
             </motion.div>
           )}
         </AnimatePresence>
