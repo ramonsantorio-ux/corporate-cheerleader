@@ -454,14 +454,13 @@ export default function Eventos() {
       return { month: label, eventos: count };
     });
 
-    const sortedEquipment = Object.entries(byEquipment).sort(([, a], [, b]) => b - a);
-    const topEquipment = sortedEquipment.slice(0, 8).map(([name, value]) => ({ name: name.length > 20 ? name.slice(0, 20) + '...' : name, value }));
-    if (sortedEquipment.length > 8) {
-      topEquipment.push({ name: 'OUTROS EQUIPAMENTOS', value: sortedEquipment.slice(8).reduce((sum, [, val]) => sum + val, 0) });
-    }
+    const topEquipment = Object.entries(byEquipment)
+      .sort(([, a], [, b]) => b - a).slice(0, 8)
+      .map(([name, value]) => ({ name: name.length > 20 ? name.slice(0, 20) + '...' : name, value }));
 
-    const sortedPeople = Object.entries(byPerson).sort(([, a], [, b]) => b - a);
-    const topPeople = sortedPeople.slice(0, 10).map(([name, value]) => ({ name, value }));
+    const topPeople = Object.entries(byPerson)
+      .sort(([, a], [, b]) => b - a).slice(0, 10)
+      .map(([name, value]) => ({ name, value }));
 
     const dayOfWeekOrder = ['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'];
     const dayData = dayOfWeekOrder.map(d => ({
@@ -469,27 +468,14 @@ export default function Eventos() {
       eventos: byDayOfWeek[d] || 0,
     }));
 
-    const sortedLocations = Object.entries(byLocation).sort(([, a], [, b]) => b - a);
-    const topLocations = sortedLocations.slice(0, 6).map(([name, value]) => ({ name, value }));
-    if (sortedLocations.length > 6) {
-      topLocations.push({ name: 'OUTROS LOCAIS', value: sortedLocations.slice(6).reduce((sum, [, val]) => sum + val, 0) });
-    }
-    
+    const topLocations = Object.entries(byLocation)
+      .sort(([, a], [, b]) => b - a).slice(0, 6)
+      .map(([name, value]) => ({ name, value }));
     const yearData = Object.entries(byYear).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, eventos: count }));
 
     const topTipos = Object.entries(byTipoAcidente).map(([name, value]) => ({ name, value }));
-    
-    const sortedAgentes = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a);
-    const topAgentes = sortedAgentes.slice(0, 6).map(([name, value]) => ({ name, value }));
-    if (sortedAgentes.length > 6) {
-      topAgentes.push({ name: 'OUTROS AGENTES', value: sortedAgentes.slice(6).reduce((sum, [, val]) => sum + val, 0) });
-    }
-
-    const sortedPartes = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a);
-    const topPartes = sortedPartes.slice(0, 6).map(([name, value]) => ({ name, value }));
-    if (sortedPartes.length > 6) {
-      topPartes.push({ name: 'OUTRAS PARTES', value: sortedPartes.slice(6).reduce((sum, [, val]) => sum + val, 0) });
-    }
+    const topAgentes = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
+    const topPartes = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
 
     const operationalCount = filtered.length - medicalCount;
     const turnoData = Object.entries(byTurno || {}).sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value }));
@@ -502,11 +488,9 @@ export default function Eventos() {
         name, value, fill: CHART_COLORS[i % CHART_COLORS.length]
       }));
 
-    const sortedCids = Object.entries(byCid).sort(([, a], [, b]) => b - a);
-    const topCids = sortedCids.slice(0, 5).map(([name, value], i) => ({ name, value, fill: CHART_COLORS[i % CHART_COLORS.length] }));
-    if (sortedCids.length > 5) {
-      topCids.push({ name: 'OUTROS CIDs', value: sortedCids.slice(5).reduce((sum, [, val]) => sum + val, 0), fill: '#94a3b8' });
-    }
+    const topCids = Object.entries(byCid)
+      .sort(([, a], [, b]) => b - a).slice(0, 5)
+      .map(([name, value], i) => ({ name, value, fill: CHART_COLORS[i % CHART_COLORS.length] }));
 
     const topAtestados = Object.entries(byAtestado)
       .sort(([, a], [, b]) => b - a).slice(0, 10)
