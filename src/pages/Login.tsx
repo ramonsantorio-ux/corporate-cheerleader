@@ -8,7 +8,7 @@ import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import busatoLogo from '@/assets/busato-logo-hcm.png';
+import busatoLogo from '@/assets/busato-logo-full.png';
 import loginBg from '@/assets/login-bg.jpg';
 
 export default function Login() {
@@ -119,8 +119,8 @@ export default function Login() {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-primary to-blue-500 opacity-80" />
 
           <div className="text-center space-y-4">
-            <div className="bg-black/50 p-4 rounded-xl inline-block shadow-inner backdrop-blur-md border border-white/5">
-              <img src={busatoLogo} alt="Busato HCM Platform" className="h-16 mx-auto object-contain" />
+            <div className="bg-white/95 px-8 py-5 rounded-2xl inline-block shadow-xl shadow-black/20 mb-2 border border-white/20 backdrop-blur-sm transition-transform hover:scale-105 duration-300">
+              <img src={busatoLogo} alt="Busato Group" className="h-12 w-auto mx-auto object-contain drop-shadow-sm" />
             </div>
             
             <div className="space-y-1">
