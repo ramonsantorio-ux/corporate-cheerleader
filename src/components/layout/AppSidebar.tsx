@@ -101,11 +101,9 @@ export default function AppSidebar() {
               animate={{ opacity: 1, x: 0 }} 
               exit={{ opacity: 0, x: -10 }} 
               transition={{ duration: 0.2 }}
-              className="w-full flex items-center"
+              className="w-full flex items-center px-4"
             >
-              <div className="bg-white/95 px-3 py-2 rounded-xl shadow-lg border border-white/20 w-full flex items-center justify-center">
-                <img src={busatoLogoFull} alt="Busato Group" className="h-6 w-auto object-contain" />
-              </div>
+              <img src={busatoLogoFull} alt="Busato Group" className="h-8 w-auto object-contain drop-shadow-sm" />
             </motion.div>
           ) : (
             <motion.div 
@@ -116,9 +114,7 @@ export default function AppSidebar() {
               transition={{ duration: 0.2 }}
               className="w-full flex justify-center"
             >
-              <div className="bg-white/95 w-11 h-11 rounded-xl shadow-lg border border-white/20 flex items-center justify-center">
-                <img src={busatoGlobo} alt="Busato" className="w-7 h-7 object-contain drop-shadow-sm" />
-              </div>
+              <img src={busatoGlobo} alt="Busato" className="w-8 h-8 object-contain drop-shadow-sm" />
             </motion.div>
           )}
         </AnimatePresence>

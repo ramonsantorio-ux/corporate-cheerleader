@@ -113,21 +113,21 @@ export default function Login() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
-        <div className="bg-white/10 dark:bg-black/40 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] rounded-3xl p-10 space-y-8 relative overflow-hidden">
+        <div className="bg-white/90 backdrop-blur-xl border border-white/40 shadow-2xl rounded-3xl p-10 space-y-8 relative overflow-hidden">
           
           {/* Decoração superior */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-primary to-blue-500 opacity-80" />
 
           <div className="text-center space-y-4">
-            <div className="bg-white/95 px-8 py-5 rounded-2xl inline-block shadow-xl shadow-black/20 mb-2 border border-white/20 backdrop-blur-sm transition-transform hover:scale-105 duration-300">
-              <img src={busatoLogo} alt="Busato Group" className="h-12 w-auto mx-auto object-contain drop-shadow-sm" />
+            <div className="mb-2 transition-transform hover:scale-105 duration-300">
+              <img src={busatoLogo} alt="Busato Group" className="h-14 w-auto mx-auto object-contain drop-shadow-sm" />
             </div>
             
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight text-white">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                 {isFirstSetup ? 'Configuração Inicial' : 'Acesso ao Sistema'}
               </h1>
-              <p className="text-sm font-medium text-white/60">
+              <p className="text-sm font-medium text-slate-500">
                 {isFirstSetup ? 'Configure a conta master do painel' : 'Insira suas credenciais corporativas'}
               </p>
             </div>
@@ -136,30 +136,30 @@ export default function Login() {
           <form onSubmit={isFirstSetup ? handleFirstSetup : handleLogin} className="space-y-5">
             {isFirstSetup && (
               <div className="space-y-1.5">
-                <Label className="text-white/80 font-medium">Nome completo</Label>
+                <Label className="text-slate-700 font-semibold">Nome completo</Label>
                 <FastInput
                   type="text"
                   placeholder="Seu nome"
                   value={fullName}
                   onValueChange={setFullName}
-                  className="bg-black/20 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all h-12 rounded-xl"
+                  className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all h-12 rounded-xl"
                 />
               </div>
             )}
             <div className="space-y-1.5">
-              <Label className="text-white/80 font-medium">E-mail corporativo</Label>
+              <Label className="text-slate-700 font-semibold">E-mail corporativo</Label>
               <FastInput
                 type="email"
                 placeholder="seu@busato.com.br"
                 value={email}
                 onValueChange={setEmail}
                 autoComplete="email"
-                className="bg-black/20 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all h-12 rounded-xl"
+                className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all h-12 rounded-xl"
               />
             </div>
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <Label className="text-white/80 font-medium">Senha</Label>
+                <Label className="text-slate-700 font-semibold">Senha</Label>
                 {!isFirstSetup && (
                   <button
                     type="button"
@@ -173,7 +173,7 @@ export default function Login() {
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-white/30" />
+                  <Lock className="h-4 w-4 text-slate-400" />
                 </div>
                 <FastInput
                   type={showPassword ? 'text' : 'password'}
@@ -181,12 +181,12 @@ export default function Login() {
                   value={password}
                   onValueChange={setPassword}
                   autoComplete={isFirstSetup ? 'new-password' : 'current-password'}
-                  className="bg-black/20 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all h-12 rounded-xl pl-10 pr-10"
+                  className="bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus-visible:ring-primary/50 focus-visible:border-primary/50 transition-all h-12 rounded-xl pl-10 pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -213,7 +213,7 @@ export default function Login() {
           <div className="text-center pt-2">
             <button
               onClick={() => setIsFirstSetup(!isFirstSetup)}
-              className="text-xs font-medium text-white/50 hover:text-white transition-colors"
+              className="text-xs font-medium text-slate-500 hover:text-primary transition-colors"
             >
               {isFirstSetup ? 'Já possuo uma conta. Fazer login' : 'Primeiro acesso? Configurar plataforma'}
             </button>
