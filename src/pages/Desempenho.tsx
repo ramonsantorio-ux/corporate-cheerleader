@@ -16,6 +16,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContaine
 
 import Avaliacoes from './Avaliacoes';
 import MetasBusato from '@/components/MetasBusato';
+import MetasPorto from '@/components/MetasPorto';
 import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
 import Feedback360 from './Feedback360';
@@ -122,7 +123,8 @@ export default function Desempenho() {
     { value: 'ciclos', label: 'Ciclos de Avaliação', icon: Calendar },
     { value: 'feedback360', label: 'Avaliações 360º', icon: Brain },
     { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
-    { value: 'metas', label: 'Gestão de Metas', icon: TrendingUp },
+    { value: 'metas', label: 'Metas Busato', icon: TrendingUp },
+    { value: 'metas-porto', label: 'Metas Porto', icon: Target },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
     { value: 'pdi', label: 'PDI', icon: ClipboardList },
   ];
@@ -219,9 +221,14 @@ export default function Desempenho() {
           </motion.div>
         </TabsContent>
 
-        {/* ═══ GESTÃO DE METAS ═══ */}
-        <TabsContent value="metas" className="mt-4">
+        {/* ═══ METAS BUSATO ═══ */}
+        <TabsContent value="metas" className="mt-0">
           <MetasBusato />
+        </TabsContent>
+
+        {/* ═══ METAS PORTO ═══ */}
+        <TabsContent value="metas-porto" className="mt-0">
+          <MetasPorto />
         </TabsContent>
 
         {/* ═══ FIT CULTURAL ═══ */}
