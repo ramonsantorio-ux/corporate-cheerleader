@@ -90,11 +90,11 @@ export default function N3Dashboard() {
             if (!acc[key]) {
               acc[key] = { ...curr, id: key, periodo: 'all', total_verificacoes: 0, total_treinamentos: 0, total_assistencia: 0, verificacoes_nc: 0, perguntas_nc: 0 };
             }
-            acc[key].total_verificacoes += curr.total_verificacoes;
-            acc[key].total_treinamentos += curr.total_treinamentos;
-            acc[key].total_assistencia += curr.total_assistencia;
-            acc[key].verificacoes_nc += curr.verificacoes_nc;
-            acc[key].perguntas_nc += curr.perguntas_nc;
+            acc[key].total_verificacoes += Number(curr.total_verificacoes || 0);
+            acc[key].total_treinamentos += Number(curr.total_treinamentos || 0);
+            acc[key].total_assistencia += Number(curr.total_assistencia || 0);
+            acc[key].verificacoes_nc += Number(curr.verificacoes_nc || 0);
+            acc[key].perguntas_nc += Number(curr.perguntas_nc || 0);
             return acc;
           }, {});
           currentPeriodData = Object.values(aggregated);
@@ -245,15 +245,17 @@ export default function N3Dashboard() {
     const totais = {
       verificacoes: 0,
       treinamentos: 0,
+      assistencia: 0,
       ncs: 0,
       perguntasNc: 0
     };
 
     data.forEach(d => {
-      totais.verificacoes += d.total_verificacoes;
-      totais.treinamentos += d.total_treinamentos;
-      totais.ncs += d.verificacoes_nc;
-      totais.perguntasNc += d.perguntas_nc;
+      totais.verificacoes += Number(d.total_verificacoes || 0);
+      totais.treinamentos += Number(d.total_treinamentos || 0);
+      totais.assistencia += Number(d.total_assistencia || 0);
+      totais.ncs += Number(d.verificacoes_nc || 0);
+      totais.perguntasNc += Number(d.perguntas_nc || 0);
     });
 
     const pctNc = totais.verificacoes > 0 ? ((totais.ncs / totais.verificacoes) * 100).toFixed(1) : '0.0';
@@ -264,9 +266,9 @@ export default function N3Dashboard() {
   const chartData = useMemo(() => {
     return data.map(d => ({
       name: d.nome_email.split(' ')[0] || 'Novo',
-      Verificações: d.total_verificacoes,
-      Treinamentos: d.total_treinamentos,
-      'Não Conformes': d.verificacoes_nc
+      Verificações: Number(d.total_verificacoes || 0),
+      Treinamentos: Number(d.total_treinamentos || 0),
+      'Não Conformes': Number(d.verificacoes_nc || 0)
     }));
   }, [data]);
 
@@ -511,6 +513,22 @@ export default function N3Dashboard() {
                         </TableRow>
                       );
                     })}
+                    {data.length > 0 && periodo === 'all' && (
+                      <TableRow className="bg-slate-100 dark:bg-slate-800/50 font-bold hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                        <TableCell colSpan={2} className="text-right p-4">TOTAL GERAL:</TableCell>
+                        <TableCell className="text-center p-4">{summaryStats.totais.verificacoes}</TableCell>
+                        <TableCell className="text-center p-4">{summaryStats.totais.treinamentos}</TableCell>
+                        <TableCell className="text-center p-4">{summaryStats.totais.assistencia}</TableCell>
+                        <TableCell className="text-center p-4 text-rose-600">{summaryStats.totais.ncs}</TableCell>
+                        <TableCell className="text-center p-4">
+                          <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${Number(summaryStats.pctNc) > 20 ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : Number(summaryStats.pctNc) > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'}`}>
+                            {summaryStats.pctNc}%
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center p-4 text-rose-600">{summaryStats.totais.perguntasNc}</TableCell>
+                        <TableCell></TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
