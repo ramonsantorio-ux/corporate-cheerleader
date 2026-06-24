@@ -15,15 +15,21 @@ export default function ExpandableChart({ title, description, children }: Expand
 
   return (
     <>
-      <Card className="relative group overflow-hidden bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-xl">
-        <CardHeader className="pr-12">
+      <Card 
+        className="relative group overflow-hidden bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-xl cursor-pointer hover:shadow-2xl transition-all"
+        onClick={() => setExpanded(true)}
+      >
+        <CardHeader className="pr-12 pointer-events-none">
           <CardTitle>{title}</CardTitle>
           {description && <CardDescription>{description}</CardDescription>}
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-background/50 hover:bg-background"
-            onClick={() => setExpanded(true)}
+            className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-background/50 hover:bg-background pointer-events-auto"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(true);
+            }}
           >
             <ZoomIn className="w-4 h-4 text-slate-500" />
           </Button>

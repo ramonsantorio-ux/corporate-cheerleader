@@ -283,24 +283,27 @@ export default function N3Dashboard() {
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
   }, [historicalData]);
 
+  const uniqueNames = useMemo(() => {
+    const names = new Set<string>();
+    historicalData.forEach(d => names.add(d.nome_email.split(' ')[0] || 'Novo'));
+    return Array.from(names).sort();
+  }, [historicalData]);
+
   const evolutionByPersonData = useMemo(() => {
     const grouped = historicalData.reduce((acc, curr) => {
       if (!acc[curr.periodo]) {
         acc[curr.periodo] = { periodo: curr.periodo };
+        // Inicializa todos com 0 para não quebrar a linha no gráfico
+        uniqueNames.forEach(name => {
+          acc[curr.periodo][name] = 0;
+        });
       }
       const name = curr.nome_email.split(' ')[0] || 'Novo';
-      if (!acc[curr.periodo][name]) acc[curr.periodo][name] = 0;
       acc[curr.periodo][name] += curr.verificacoes_nc;
       return acc;
     }, {} as Record<string, any>);
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
-  }, [historicalData]);
-
-  const uniqueNames = useMemo(() => {
-    const names = new Set<string>();
-    historicalData.forEach(d => names.add(d.nome_email.split(' ')[0] || 'Novo'));
-    return Array.from(names);
-  }, [historicalData]);
+  }, [historicalData, uniqueNames]);
   
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#ef4444'];
 
