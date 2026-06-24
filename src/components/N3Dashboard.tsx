@@ -518,7 +518,7 @@ export default function N3Dashboard() {
           </Card>
         </div>
 
-        <ExpandableChart title="Engajamento por Colaborador" description="Volume de entregas no período">
+        <ExpandableChart title="Engajamento por Colaborador - CRM" description="Volume de entregas no período">
             <div className="h-[350px] w-full">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -544,7 +544,7 @@ export default function N3Dashboard() {
 
       {/* Gráficos Evolutivos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <ExpandableChart title="Evolução Geral do Contrato" description="Crescimento de Verificações e Não Conformes">
+        <ExpandableChart title="Evolução Geral do Contrato - CRM" description="Crescimento de Verificações e Não Conformes">
             <div className="h-[300px] w-full">
               {evolutionChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -575,7 +575,7 @@ export default function N3Dashboard() {
             </div>
           </ExpandableChart>
 
-        <ExpandableChart title="Evolução por Colaborador" description="Não Conformes ao longo do tempo">
+        <ExpandableChart title="Evolução por Colaborador - CRM" description="Não Conformes ao longo do tempo">
             <div className="h-[300px] w-full">
               {evolutionByPersonData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
