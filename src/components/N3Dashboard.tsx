@@ -267,17 +267,17 @@ export default function N3Dashboard() {
       Verificações: d.total_verificacoes,
       Treinamentos: d.total_treinamentos,
       'Não Conformes': d.verificacoes_nc
-    })).filter(d => d.Verificações > 0 || d.Treinamentos > 0);
+    }));
   }, [data]);
 
   const evolutionChartData = useMemo(() => {
     const grouped = historicalData.reduce((acc, curr) => {
       if (!acc[curr.periodo]) {
-        acc[curr.periodo] = { periodo: curr.periodo, 'Total Verificações': 0, 'Total Treinamentos': 0, 'Não Conformes': 0 };
+        acc[curr.periodo] = { periodo: curr.periodo, 'Total Verificações': 0, 'Total Treinamentos': 0, 'Total Não Conformes': 0 };
       }
       acc[curr.periodo]['Total Verificações'] += curr.total_verificacoes;
       acc[curr.periodo]['Total Treinamentos'] += curr.total_treinamentos;
-      acc[curr.periodo]['Não Conformes'] += curr.verificacoes_nc;
+      acc[curr.periodo]['Total Não Conformes'] += curr.verificacoes_nc;
       return acc;
     }, {} as Record<string, any>);
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
@@ -290,7 +290,7 @@ export default function N3Dashboard() {
       }
       const name = curr.nome_email.split(' ')[0] || 'Novo';
       if (!acc[curr.periodo][name]) acc[curr.periodo][name] = 0;
-      acc[curr.periodo][name] += curr.total_verificacoes;
+      acc[curr.periodo][name] += curr.verificacoes_nc;
       return acc;
     }, {} as Record<string, any>);
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));

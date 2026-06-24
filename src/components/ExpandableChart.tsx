@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Expand } from 'lucide-react';
+import { ZoomIn } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface ExpandableChartProps {
@@ -25,7 +25,7 @@ export default function ExpandableChart({ title, description, children }: Expand
             className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-background/50 hover:bg-background"
             onClick={() => setExpanded(true)}
           >
-            <Expand className="w-4 h-4 text-slate-500" />
+            <ZoomIn className="w-4 h-4 text-slate-500" />
           </Button>
         </CardHeader>
         <CardContent>{children}</CardContent>
