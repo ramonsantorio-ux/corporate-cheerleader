@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3 } from 'lucide-react';
+import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
 interface N3Data {
   id?: string;
   nome_email: string;
+  letra?: string;
   periodo: string;
   total_verificacoes: number;
   total_treinamentos: number;
@@ -22,10 +23,10 @@ interface N3Data {
 }
 
 const DEFAULT_NAMES = [
-  'CRISTALLY NETTO',
-  'GABRIELE MONTARROYOS',
-  'NAIARA SANTOS',
-  'THIAGO GOMES'
+  { nome: 'CRISTALLY NETTO', letra: 'A Noite' },
+  { nome: 'GABRIELE MONTARROYOS', letra: 'A Dia' },
+  { nome: 'NAIARA SANTOS', letra: 'B Dia' },
+  { nome: 'THIAGO GOMES', letra: 'B Noite' }
 ];
 
 export default function N3Dashboard() {
@@ -72,8 +73,9 @@ export default function N3Dashboard() {
 
   const initMockData = () => {
     setData(
-      DEFAULT_NAMES.map(name => ({
-        nome_email: name,
+      DEFAULT_NAMES.map(colab => ({
+        nome_email: colab.nome,
+        letra: colab.letra,
         periodo,
         total_verificacoes: 0,
         total_treinamentos: 0,
@@ -86,7 +88,7 @@ export default function N3Dashboard() {
 
   const handleChange = (index: number, field: keyof N3Data, value: string) => {
     const newData = [...data];
-    if (field === 'nome_email') {
+    if (field === 'nome_email' || field === 'letra') {
       newData[index] = { ...newData[index], [field]: value };
     } else {
       newData[index] = { ...newData[index], [field]: Number(value) || 0 };
@@ -97,6 +99,7 @@ export default function N3Dashboard() {
   const handleAddRow = () => {
     setData([...data, {
       nome_email: '',
+      letra: '',
       periodo,
       total_verificacoes: 0,
       total_treinamentos: 0,
@@ -104,6 +107,12 @@ export default function N3Dashboard() {
       verificacoes_nc: 0,
       perguntas_nc: 0
     }]);
+  };
+
+  const handleRemoveRow = (index: number) => {
+    const newData = [...data];
+    newData.splice(index, 1);
+    setData(newData);
   };
 
   const handleSave = async () => {
@@ -114,6 +123,7 @@ export default function N3Dashboard() {
       const { error } = await supabase.from('ssma_n3').insert(
         data.map(d => ({
           nome_email: d.nome_email || 'SEM NOME',
+          letra: d.letra || '',
           periodo: d.periodo,
           total_verificacoes: d.total_verificacoes,
           total_treinamentos: d.total_treinamentos,
@@ -147,6 +157,7 @@ export default function N3Dashboard() {
 
         const importedData: N3Data[] = rawData.map((row: any) => ({
           nome_email: row['NOME-EMAIL'] || row['Nome'] || '',
+          letra: row['LETRA'] || row['Letra'] || '',
           periodo: periodo,
           total_verificacoes: Number(row['TOTAL VERIFICAÇÕES'] || row['Total Verificações'] || 0),
           total_treinamentos: Number(row['TOTAL TREINAMENTOS'] || row['Total Treinamentos'] || 0),
@@ -173,6 +184,7 @@ export default function N3Dashboard() {
     const templateData = [
       {
         'NOME-EMAIL': 'CRISTALLY NETTO',
+        'LETRA': 'A Noite',
         'TOTAL VERIFICAÇÕES': 1,
         'TOTAL TREINAMENTOS': 1,
         'TOTAL ASSISTÊNCIA': 0,
@@ -351,13 +363,15 @@ export default function N3Dashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="min-w-[200px]">NOME-EMAIL</TableHead>
+                      <TableHead className="min-w-[180px]">NOME-EMAIL</TableHead>
+                      <TableHead>LETRA</TableHead>
                       <TableHead>T. VERIFICAÇÕES</TableHead>
                       <TableHead>T. TREINAMENTOS</TableHead>
                       <TableHead>T. ASSISTÊNCIA</TableHead>
                       <TableHead>VERIFICAÇÕES NC</TableHead>
                       <TableHead>% NC</TableHead>
                       <TableHead>PERGUNTAS NC</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -380,6 +394,14 @@ export default function N3Dashboard() {
                               onChange={(e) => handleChange(idx, 'nome_email', e.target.value)}
                               className={inputStyle}
                               placeholder="Nome do colaborador"
+                            />
+                          </TableCell>
+                          <TableCell className="p-2">
+                            <Input 
+                              value={row.letra || ''} 
+                              onChange={(e) => handleChange(idx, 'letra', e.target.value)}
+                              className={`${inputStyle} w-24 text-center font-semibold text-slate-700 dark:text-slate-300`}
+                              placeholder="Letra"
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -426,6 +448,11 @@ export default function N3Dashboard() {
                               onChange={(e) => handleChange(idx, 'perguntas_nc', e.target.value)}
                               className={`${inputStyle} text-center text-rose-600`}
                             />
+                          </TableCell>
+                          <TableCell className="p-2 text-center">
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveRow(idx)} className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-colors">
+                              <Trash className="w-4 h-4" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       );
