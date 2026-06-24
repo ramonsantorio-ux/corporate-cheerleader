@@ -516,9 +516,9 @@ export default function N3Dashboard() {
                     {(() => {
                       if (data.length === 0 || periodo !== 'all') return null;
                       const totals = data.reduce((acc, curr) => ({
-                        verificacoes: acc.verificacoes + Number(curr.verificacoes || 0),
-                        treinamentos: acc.treinamentos + Number(curr.treinamentos || 0),
-                        assistencia: acc.assistencia + Number(curr.assistencia || 0),
+                        verificacoes: acc.verificacoes + Number(curr.total_verificacoes || 0),
+                        treinamentos: acc.treinamentos + Number(curr.total_treinamentos || 0),
+                        assistencia: acc.assistencia + Number(curr.total_assistencia || 0),
                         ncs: acc.ncs + Number(curr.verificacoes_nc || 0),
                         perguntasNc: acc.perguntasNc + Number(curr.perguntas_nc || 0)
                       }), { verificacoes: 0, treinamentos: 0, assistencia: 0, ncs: 0, perguntasNc: 0 });
@@ -578,7 +578,7 @@ export default function N3Dashboard() {
             <div className="h-[300px] w-full">
               {evolutionChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={evolutionChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart data={evolutionChartData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorVerif" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -611,7 +611,7 @@ export default function N3Dashboard() {
             <div className="h-[300px] w-full">
               {evolutionByPersonData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={evolutionByPersonData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <LineChart data={evolutionByPersonData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-10" />
                     <XAxis dataKey="periodo" axisLine={false} tickLine={false} fontSize={12} tickMargin={10} />
                     <YAxis axisLine={false} tickLine={false} fontSize={12} />
