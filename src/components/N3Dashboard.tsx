@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
 interface N3Data {
   id?: string;
@@ -514,12 +514,7 @@ export default function N3Dashboard() {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Engajamento por Colaborador</CardTitle>
-            <CardDescription>Volume de entregas no período</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <ExpandableChart title="Engajamento por Colaborador" description="Volume de entregas no período">
             <div className="h-[350px] w-full">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -530,7 +525,7 @@ export default function N3Dashboard() {
                     <RechartsTooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                     <Bar dataKey="Verificações" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 4, 4]} />
-                    <Bar dataKey="Treinamentos" stackId="a" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    
                     <Bar dataKey="Não Conformes" fill="#ef4444" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -540,18 +535,12 @@ export default function N3Dashboard() {
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </ExpandableChart>
       </div>
 
       {/* Gráficos Evolutivos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Evolução Geral do Contrato</CardTitle>
-            <CardDescription>Crescimento de Verificações e Treinamentos</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <ExpandableChart title="Evolução Geral do Contrato" description="Crescimento de Verificações e Não Conformes">
             <div className="h-[300px] w-full">
               {evolutionChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -572,22 +561,17 @@ export default function N3Dashboard() {
                     <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                     <Area type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorVerif)" activeDot={{ r: 6, strokeWidth: 0 }} />
-                    <Area type="monotone" dataKey="Total Treinamentos" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorTrein)" activeDot={{ r: 6, strokeWidth: 0 }} />
+                    <Area type="monotone" dataKey="Total Não Conformes" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorTrein)" activeDot={{ r: 6, strokeWidth: 0 }} />
+                    <ReferenceLine y={140} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (140)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground text-sm">Sem dados históricos</div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </ExpandableChart>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Evolução por Colaborador</CardTitle>
-            <CardDescription>Total de Verificações ao longo do tempo</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <ExpandableChart title="Evolução por Colaborador" description="Não Conformes ao longo do tempo">
             <div className="h-[300px] w-full">
               {evolutionByPersonData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -606,8 +590,7 @@ export default function N3Dashboard() {
                 <div className="h-full flex items-center justify-center text-muted-foreground text-sm">Sem dados históricos</div>
               )}
             </div>
-          </CardContent>
-        </Card>
+          </ExpandableChart>
       </div>
     </div>
   );
