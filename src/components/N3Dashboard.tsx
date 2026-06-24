@@ -47,7 +47,7 @@ export default function N3Dashboard() {
     setLoading(true);
     try {
       const { data: allData, error } = await supabase
-        .from('ssma_n3')
+        .from('n3_lancamentos')
         .select('*')
         .order('periodo', { ascending: true });
 
@@ -118,9 +118,9 @@ export default function N3Dashboard() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await supabase.from('ssma_n3').delete().eq('periodo', periodo);
+      await supabase.from('n3_lancamentos').delete().eq('periodo', periodo);
       
-      const { error } = await supabase.from('ssma_n3').insert(
+      const { error } = await supabase.from('n3_lancamentos').insert(
         data.map(d => ({
           nome_email: d.nome_email || 'SEM NOME',
           letra: d.letra || '',
