@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import { BarChart, Bar, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
 interface N3Data {
   id?: string;
@@ -274,57 +274,61 @@ export default function N3Dashboard() {
           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
             <Upload className="w-4 h-4" /> Importar
           </Button>
-          <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
+          <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-full px-6 transition-all hover:scale-[1.02] ml-2">
             <Save className="w-4 h-4" /> {saving ? 'Postando...' : 'Postar Lançamentos do Mês'}
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/40 dark:to-blue-900/10 border-blue-200/60 shadow-sm">
-          <CardContent className="p-5 flex items-center justify-between">
+        <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-blue-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          <CardContent className="p-5 flex items-center justify-between relative z-10">
             <div>
-              <p className="text-sm font-medium text-blue-900/70 dark:text-blue-300">Total Verificações</p>
-              <h3 className="text-3xl font-bold text-blue-900 dark:text-blue-100 mt-1">{kpis.totais.verificacoes}</h3>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Verificações</p>
+              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.verificacoes}</h3>
             </div>
-            <div className="w-12 h-12 rounded-full bg-blue-200/50 dark:bg-blue-800/50 flex items-center justify-center">
-              <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/50 dark:to-blue-800/30 flex items-center justify-center border border-blue-200/50 dark:border-blue-700/50 shadow-inner group-hover:rotate-6 transition-transform duration-300">
+              <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400 drop-shadow-sm" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100/50 dark:from-indigo-950/40 dark:to-indigo-900/10 border-indigo-200/60 shadow-sm">
-          <CardContent className="p-5 flex items-center justify-between">
+        <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-indigo-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          <CardContent className="p-5 flex items-center justify-between relative z-10">
             <div>
-              <p className="text-sm font-medium text-indigo-900/70 dark:text-indigo-300">Total Treinamentos</p>
-              <h3 className="text-3xl font-bold text-indigo-900 dark:text-indigo-100 mt-1">{kpis.totais.treinamentos}</h3>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Treinamentos</p>
+              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.treinamentos}</h3>
             </div>
-            <div className="w-12 h-12 rounded-full bg-indigo-200/50 dark:bg-indigo-800/50 flex items-center justify-center">
-              <Target className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/50 dark:to-indigo-800/30 flex items-center justify-center border border-indigo-200/50 dark:border-indigo-700/50 shadow-inner group-hover:rotate-6 transition-transform duration-300">
+              <Target className="w-6 h-6 text-indigo-600 dark:text-indigo-400 drop-shadow-sm" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-rose-50 to-rose-100/50 dark:from-rose-950/40 dark:to-rose-900/10 border-rose-200/60 shadow-sm">
-          <CardContent className="p-5 flex items-center justify-between">
+        <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-rose-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-rose-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          <CardContent className="p-5 flex items-center justify-between relative z-10">
             <div>
-              <p className="text-sm font-medium text-rose-900/70 dark:text-rose-300">Não Conformidades</p>
-              <h3 className="text-3xl font-bold text-rose-900 dark:text-rose-100 mt-1">{kpis.totais.ncs}</h3>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Não Conformidades</p>
+              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.ncs}</h3>
             </div>
-            <div className="w-12 h-12 rounded-full bg-rose-200/50 dark:bg-rose-800/50 flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/50 dark:to-rose-800/30 flex items-center justify-center border border-rose-200/50 dark:border-rose-700/50 shadow-inner group-hover:rotate-6 transition-transform duration-300">
+              <ShieldAlert className="w-6 h-6 text-rose-600 dark:text-rose-400 drop-shadow-sm" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/40 dark:to-amber-900/10 border-amber-200/60 shadow-sm">
-          <CardContent className="p-5 flex items-center justify-between">
+        <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-amber-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 relative overflow-hidden group">
+          <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          <CardContent className="p-5 flex items-center justify-between relative z-10">
             <div>
-              <p className="text-sm font-medium text-amber-900/70 dark:text-amber-300">Taxa de NC Global</p>
-              <h3 className="text-3xl font-bold text-amber-900 dark:text-amber-100 mt-1">{kpis.pctNc}%</h3>
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Taxa de NC Global</p>
+              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.pctNc}%</h3>
             </div>
-            <div className="w-12 h-12 rounded-full bg-amber-200/50 dark:bg-amber-800/50 flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/50 dark:to-amber-800/30 flex items-center justify-center border border-amber-200/50 dark:border-amber-700/50 shadow-inner group-hover:rotate-6 transition-transform duration-300">
+              <BarChart3 className="w-6 h-6 text-amber-600 dark:text-amber-400 drop-shadow-sm" />
             </div>
           </CardContent>
         </Card>
@@ -362,13 +366,19 @@ export default function N3Dashboard() {
                         ? ((row.verificacoes_nc / row.total_verificacoes) * 100).toFixed(0) 
                         : 0;
                       
+                      const isCritical = Number(pctNC) > 20;
+                      const isWarning = Number(pctNC) > 0 && Number(pctNC) <= 20;
+                      const badgeClass = isCritical ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : isWarning ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400';
+                      
+                      const inputStyle = "h-9 font-medium bg-muted/30 border-transparent hover:border-border focus:bg-background focus:border-primary rounded-xl transition-all";
+                      
                       return (
-                        <TableRow key={idx}>
+                        <TableRow key={idx} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors border-b border-border/50">
                           <TableCell className="p-2">
                             <Input 
                               value={row.nome_email} 
                               onChange={(e) => handleChange(idx, 'nome_email', e.target.value)}
-                              className="h-8 font-medium"
+                              className={inputStyle}
                               placeholder="Nome do colaborador"
                             />
                           </TableCell>
@@ -377,7 +387,7 @@ export default function N3Dashboard() {
                               type="number" min="0" 
                               value={row.total_verificacoes || ''} 
                               onChange={(e) => handleChange(idx, 'total_verificacoes', e.target.value)}
-                              className="h-8 text-center"
+                              className={`${inputStyle} text-center`}
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -385,7 +395,7 @@ export default function N3Dashboard() {
                               type="number" min="0" 
                               value={row.total_treinamentos || ''} 
                               onChange={(e) => handleChange(idx, 'total_treinamentos', e.target.value)}
-                              className="h-8 text-center"
+                              className={`${inputStyle} text-center`}
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -393,7 +403,7 @@ export default function N3Dashboard() {
                               type="number" min="0" 
                               value={row.total_assistencia || ''} 
                               onChange={(e) => handleChange(idx, 'total_assistencia', e.target.value)}
-                              className="h-8 text-center"
+                              className={`${inputStyle} text-center`}
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -401,20 +411,20 @@ export default function N3Dashboard() {
                               type="number" min="0" 
                               value={row.verificacoes_nc || ''} 
                               onChange={(e) => handleChange(idx, 'verificacoes_nc', e.target.value)}
-                              className="h-8 text-center text-rose-600 font-semibold"
+                              className={`${inputStyle} text-center text-rose-600 font-bold`}
                             />
                           </TableCell>
                           <TableCell className="p-2 text-center">
-                            <span className={`font-bold ${Number(pctNC) > 20 ? 'text-rose-600' : 'text-slate-600 dark:text-slate-300'}`}>
+                            <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
                               {pctNC}%
-                            </span>
+                            </div>
                           </TableCell>
                           <TableCell className="p-2">
                             <Input 
                               type="number" min="0" 
                               value={row.perguntas_nc || ''} 
                               onChange={(e) => handleChange(idx, 'perguntas_nc', e.target.value)}
-                              className="h-8 text-center text-rose-600"
+                              className={`${inputStyle} text-center text-rose-600`}
                             />
                           </TableCell>
                         </TableRow>
@@ -468,15 +478,25 @@ export default function N3Dashboard() {
             <div className="h-[300px] w-full">
               {evolutionChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={evolutionChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart data={evolutionChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorVerif" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorTrein" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-10" />
                     <XAxis dataKey="periodo" axisLine={false} tickLine={false} fontSize={12} tickMargin={10} />
                     <YAxis axisLine={false} tickLine={false} fontSize={12} />
-                    <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
+                    <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                    <Line type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="Total Treinamentos" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                  </LineChart>
+                    <Area type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorVerif)" activeDot={{ r: 6, strokeWidth: 0 }} />
+                    <Area type="monotone" dataKey="Total Treinamentos" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorTrein)" activeDot={{ r: 6, strokeWidth: 0 }} />
+                  </AreaChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground text-sm">Sem dados históricos</div>
