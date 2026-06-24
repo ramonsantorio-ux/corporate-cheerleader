@@ -19,11 +19,7 @@ const MESES = [
 ];
 
 
-const evolutionData = MESES.map(m => ({
-  month: m,
-  atingido: METAS_DATA[m as keyof typeof METAS_DATA].atingido,
-  gap: METAS_DATA[m as keyof typeof METAS_DATA].gap,
-}));
+
 
 // Helpers
 const getStatusColor = (status: string) => {
