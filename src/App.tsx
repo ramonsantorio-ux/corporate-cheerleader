@@ -13,6 +13,7 @@ import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import Desempenho from "./pages/Desempenho";
 import Admin from "./pages/Admin";
+import CadastroMetas from "./pages/CadastroMetas";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -91,6 +92,7 @@ function ProtectedRoutes() {
         <Route path="/organograma" element={<Organograma />} />
         <Route path="/sucessao" element={<Sucessao />} />
         <Route path="/evolucao" element={<ErrorBoundary><EvolucaoContrato /></ErrorBoundary>} />
+        <Route path="/cadastro-metas" element={<CadastroMetas />} />
         <Route path="/notificacoes" element={<GestaoNotificacoes />} />
         <Route path="/treinamentos" element={<Treinamentos />} />
         <Route path="/dds" element={<DDS />} />

@@ -38,6 +38,24 @@ export default function N3Dashboard() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleClearMonth = async () => {
+    if (!confirm(`Tem certeza que deseja apagar todos os lançamentos do período ${periodo}?`)) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from('n3_lancamentos').delete().eq('periodo', periodo);
+      if (error) throw error;
+      toast.success('Dados apagados com sucesso!');
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      toast.error('Erro ao apagar dados');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
 
   useEffect(() => {
     fetchData();
@@ -270,10 +288,13 @@ export default function N3Dashboard() {
               <SelectValue placeholder="Selecione o Mês" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="2026-06">Junho 2026</SelectItem>
-              <SelectItem value="2026-05">Maio 2026</SelectItem>
-              <SelectItem value="2026-04">Abril 2026</SelectItem>
-              <SelectItem value="2026-03">Março 2026</SelectItem>
+              {[
+                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+              ].map((m, i) => {
+                const val = '2026-' + (i + 1).toString().padStart(2, '0');
+                return <SelectItem key={val} value={val}>{m} 2026</SelectItem>;
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -286,7 +307,11 @@ export default function N3Dashboard() {
           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
             <Upload className="w-4 h-4" /> Importar
           </Button>
-          <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-full px-6 transition-all hover:scale-[1.02] ml-2">
+          
+          <Button variant="destructive" size="sm" onClick={handleClearMonth} disabled={deleting} className="gap-2 rounded-full">
+            <Trash className="w-4 h-4" /> {deleting ? 'Limpando...' : 'Limpar Mês'}
+          </Button>
+<Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-full px-6 transition-all hover:scale-[1.02] ml-2">
             <Save className="w-4 h-4" /> {saving ? 'Postando...' : 'Postar Lançamentos do Mês'}
           </Button>
         </div>

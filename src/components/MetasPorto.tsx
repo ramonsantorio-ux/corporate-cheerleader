@@ -9,89 +9,17 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Target, TrendingUp, AlertTriangle, CheckCircle2, TrendingDown, ArrowUpRight, ArrowDownRight, Trophy, AlertOctagon, CalendarCheck, CalendarX, Download } from 'lucide-react';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import html2canvas from 'html2canvas';
+import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 
-// --- Dados Fixos (Mock Jan-Mai) ---
-const METAS_DATA = {
-  Janeiro: {
-    atingido: 85.0, gap: 15.0, counts: { acima: 4, aceitavel: 4, abaixo: 2 },
-    metas: [
-      { setor: 'Porto', meta: 'Aderência', ref: 100.0, alc: 92.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'N3 (SSO)', ref: 145.0, alc: 128.0, status: 'Abaixo do Esperado' },
-      { setor: 'Porto', meta: 'Inspeções RAC', ref: 30.0, alc: 35.0, status: 'Acima do Esperado' },
-      { setor: 'Porto', meta: 'Prevenção de Interdições (%)', ref: 100.0, alc: 100.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Treinamentos Realizados (%)', ref: 100.0, alc: 85.0, status: 'Abaixo do Esperado' },
-      { setor: 'Porto', meta: 'NACT Fechados (%)', ref: 100.0, alc: 72.0, status: 'Muito Abaixo do Esperado' },
-      { setor: 'Porto', meta: '5S da Sala (%)', ref: 100.0, alc: 95.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Kaizen', ref: 2.0, alc: 2.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Planejamento Seguro (%)', ref: 100.0, alc: 100.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Programa Tutor', ref: 15.0, alc: 15.0, status: 'Dentro Esperado (Aceitável)' }
-    ]
-  },
-  Fevereiro: {
-    atingido: 88.0, gap: 12.0, counts: { acima: 5, aceitavel: 3, abaixo: 2 },
-    metas: [
-      { setor: 'Porto', meta: 'Aderência', ref: 100.0, alc: 88.0, status: 'Abaixo do Esperado' },
-      { setor: 'Porto', meta: 'N3 (SSO)', ref: 145.0, alc: 140.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Inspeções RAC', ref: 30.0, alc: 43.0, status: 'Muito Acima do Esperado' },
-      { setor: 'Porto', meta: 'Prevenção de Interdições (%)', ref: 100.0, alc: 0.0, status: 'Muito Abaixo do Esperado' }, // Tivemos 1 interdição
-      { setor: 'Porto', meta: 'Treinamentos Realizados (%)', ref: 100.0, alc: 90.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'NACT Fechados (%)', ref: 100.0, alc: 84.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: '5S da Sala (%)', ref: 100.0, alc: 92.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Kaizen', ref: 2.0, alc: 1.0, status: 'Abaixo do Esperado' },
-      { setor: 'Porto', meta: 'Planejamento Seguro (%)', ref: 100.0, alc: 95.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Programa Tutor', ref: 15.0, alc: 12.0, status: 'Abaixo do Esperado' }
-    ]
-  },
-  Março: {
-    atingido: 96.0, gap: 4.0, counts: { acima: 8, aceitavel: 2, abaixo: 0 },
-    metas: [
-      { setor: 'Porto', meta: 'Aderência', ref: 100.0, alc: 95.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'N3 (SSO)', ref: 145.0, alc: 150.0, status: 'Acima do Esperado' },
-      { setor: 'Porto', meta: 'Inspeções RAC', ref: 30.0, alc: 50.0, status: 'Muito Acima do Esperado' },
-      { setor: 'Porto', meta: 'Prevenção de Interdições (%)', ref: 100.0, alc: 100.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Treinamentos Realizados (%)', ref: 100.0, alc: 110.0, status: 'Acima do Esperado' },
-      { setor: 'Porto', meta: 'NACT Fechados (%)', ref: 100.0, alc: 86.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: '5S da Sala (%)', ref: 100.0, alc: 98.0, status: 'Acima do Esperado' },
-      { setor: 'Porto', meta: 'Kaizen', ref: 2.0, alc: 3.0, status: 'Acima do Esperado' },
-      { setor: 'Porto', meta: 'Planejamento Seguro (%)', ref: 100.0, alc: 100.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Programa Tutor', ref: 15.0, alc: 18.0, status: 'Acima do Esperado' }
-    ]
-  },
-  Abril: {
-    atingido: 90.0, gap: 10.0, counts: { acima: 3, aceitavel: 5, abaixo: 2 },
-    metas: [
-      { setor: 'Porto', meta: 'Aderência', ref: 100.0, alc: 90.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'N3 (SSO)', ref: 145.0, alc: 135.0, status: 'Abaixo do Esperado' },
-      { setor: 'Porto', meta: 'Inspeções RAC', ref: 30.0, alc: 39.0, status: 'Acima do Esperado' },
-      { setor: 'Porto', meta: 'Prevenção de Interdições (%)', ref: 100.0, alc: 100.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Treinamentos Realizados (%)', ref: 100.0, alc: 88.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'NACT Fechados (%)', ref: 100.0, alc: 69.0, status: 'Muito Abaixo do Esperado' },
-      { setor: 'Porto', meta: '5S da Sala (%)', ref: 100.0, alc: 94.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Kaizen', ref: 2.0, alc: 2.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Planejamento Seguro (%)', ref: 100.0, alc: 98.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Programa Tutor', ref: 15.0, alc: 14.0, status: 'Dentro Esperado (Aceitável)' }
-    ]
-  },
-  Maio: {
-    atingido: 98.5, gap: 1.5, counts: { acima: 7, aceitavel: 3, abaixo: 0 },
-    metas: [
-      { setor: 'Porto', meta: 'Aderência', ref: 100.0, alc: 98.0, status: 'Acima do Esperado' },
-      { setor: 'Porto', meta: 'N3 (SSO)', ref: 145.0, alc: 160.0, status: 'Muito Acima do Esperado' },
-      { setor: 'Porto', meta: 'Inspeções RAC', ref: 30.0, alc: 60.0, status: 'Muito Acima do Esperado' },
-      { setor: 'Porto', meta: 'Prevenção de Interdições (%)', ref: 100.0, alc: 100.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Treinamentos Realizados (%)', ref: 100.0, alc: 115.0, status: 'Muito Acima do Esperado' },
-      { setor: 'Porto', meta: 'NACT Fechados (%)', ref: 100.0, alc: 90.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: '5S da Sala (%)', ref: 100.0, alc: 100.0, status: 'Acima do Esperado' },
-      { setor: 'Porto', meta: 'Kaizen', ref: 2.0, alc: 4.0, status: 'Muito Acima do Esperado' },
-      { setor: 'Porto', meta: 'Planejamento Seguro (%)', ref: 100.0, alc: 100.0, status: 'Dentro Esperado (Aceitável)' },
-      { setor: 'Porto', meta: 'Programa Tutor', ref: 15.0, alc: 20.0, status: 'Muito Acima do Esperado' }
-    ]
-  }
-};
 
-const meses = Object.keys(METAS_DATA);
+const MESES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
 
-const evolutionData = meses.map(m => ({
+
+const evolutionData = MESES.map(m => ({
   month: m,
   atingido: METAS_DATA[m as keyof typeof METAS_DATA].atingido,
   gap: METAS_DATA[m as keyof typeof METAS_DATA].gap,
@@ -143,6 +71,91 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function MetasPorto() {
+
+  const [dbData, setDbData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMetas() {
+      try {
+        const { data, error } = await supabase
+          .from('indicadores_metas')
+          .select('*')
+          .eq('setor', 'Porto');
+          
+        if (error) throw error;
+        setDbData(data || []);
+      } catch (err) {
+        console.error('Erro ao buscar metas:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchMetas();
+  }, []);
+
+  const METAS_DATA = useMemo(() => {
+    const result: any = {};
+    MESES.forEach(m => { result[m] = { atingido: 0, gap: 100, counts: { acima: 0, aceitavel: 0, abaixo: 0 }, metas: [] }; });
+    
+    if (!dbData || dbData.length === 0) return result;
+
+    const grouped = dbData.reduce((acc: any, row: any) => {
+      if (!acc[row.mes]) acc[row.mes] = [];
+      acc[row.mes].push(row);
+      return acc;
+    }, {});
+
+    Object.keys(grouped).forEach(m => {
+      const metasMes = grouped[m];
+      let somaAtingido = 0;
+      let counts = { acima: 0, aceitavel: 0, abaixo: 0 };
+      
+      const metasFormatadas = metasMes.map((row: any) => {
+        let fillPercentage = row.referencia === 0 ? 100 : Math.min((row.alcancado / row.referencia) * 100, 150);
+        let status = '';
+        
+        // Logica simplificada
+        const isLessIsBetter = row.indicador.toLowerCase().includes('interdições') || row.indicador.toLowerCase().includes('custo');
+        
+        if (isLessIsBetter) {
+            if (row.alcancado === 0) fillPercentage = 100;
+            else if (row.referencia > 0) fillPercentage = Math.max(0, 100 - ((row.alcancado / row.referencia) * 100));
+        }
+
+        const pct = fillPercentage;
+        if (pct >= 110) { status = 'Muito Acima do Esperado'; counts.acima++; }
+        else if (pct >= 100) { status = 'Acima do Esperado'; counts.acima++; }
+        else if (pct >= 90) { status = 'Dentro Esperado (Aceitável)'; counts.aceitavel++; }
+        else if (pct >= 70) { status = 'Abaixo do Esperado'; counts.abaixo++; }
+        else { status = 'Muito Abaixo do Esperado'; counts.abaixo++; }
+
+        somaAtingido += Math.min(pct, 100);
+
+        return {
+          setor: row.setor,
+          meta: row.indicador,
+          ref: row.referencia,
+          alc: row.alcancado,
+          status: status
+        };
+      });
+
+      const atingidoMedio = metasFormatadas.length ? somaAtingido / metasFormatadas.length : 0;
+      
+      result[m] = {
+        atingido: atingidoMedio,
+        gap: 100 - atingidoMedio,
+        counts: counts,
+        metas: metasFormatadas
+      };
+    });
+
+    return result;
+  }, [dbData]);
+
+  const meses = MESES;
+
   const [selectedMonth, setSelectedMonth] = useState<string>('Maio');
   const [isExporting, setIsExporting] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
@@ -167,6 +180,11 @@ export default function MetasPorto() {
       setIsExporting(false);
     }
   };
+  
+  
+  if (isLoading) {
+    return <div className="p-8 text-center text-muted-foreground animate-pulse flex flex-col items-center gap-2"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div><div>Carregando metas do banco de dados...</div></div>;
+  }
   
   const data = METAS_DATA[selectedMonth as keyof typeof METAS_DATA];
   const batidas = data.counts.acima + data.counts.aceitavel;

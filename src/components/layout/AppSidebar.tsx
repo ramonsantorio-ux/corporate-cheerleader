@@ -34,6 +34,7 @@ const navGroups: NavGroup[] = [
     label: 'Performance',
     items: [
       { to: '/desempenho', icon: Target, label: 'Gestão de Performance' },
+      { to: '/cadastro-metas', icon: ClipboardList, label: 'Lançar Metas', badge: 'NOVO' },
       { to: '/sucessao', icon: TrendingUp, label: 'Sucessão & 9Box' },
     ],
   },
