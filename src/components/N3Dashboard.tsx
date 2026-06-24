@@ -30,6 +30,11 @@ const DEFAULT_NAMES = [
 ];
 
 export default function N3Dashboard() {
+  const getMeta = (nome: string) => {
+    const nomeLower = nome.toLowerCase();
+    if (nomeLower.includes('ramon') || nomeLower.includes('eduardo')) return 15;
+    return 35;
+  };
   const [data, setData] = useState<N3Data[]>([]);
   const [historicalData, setHistoricalData] = useState<N3Data[]>([]);
   const [periodo, setPeriodo] = useState<string>(
@@ -76,7 +81,26 @@ export default function N3Dashboard() {
         setHistoricalData(allData || []);
         
         // Filter for current period
-        const currentPeriodData = (allData || []).filter(d => d.periodo === periodo);
+        
+        let currentPeriodData = [];
+        if (periodo === 'all') {
+          const aggregated = (allData || []).reduce((acc: any, curr: any) => {
+            const key = curr.nome_email;
+            if (!acc[key]) {
+              acc[key] = { ...curr, id: key, periodo: 'all', total_verificacoes: 0, total_treinamentos: 0, total_assistencia: 0, verificacoes_nc: 0, perguntas_nc: 0 };
+            }
+            acc[key].total_verificacoes += curr.total_verificacoes;
+            acc[key].total_treinamentos += curr.total_treinamentos;
+            acc[key].total_assistencia += curr.total_assistencia;
+            acc[key].verificacoes_nc += curr.verificacoes_nc;
+            acc[key].perguntas_nc += curr.perguntas_nc;
+            return acc;
+          }, {});
+          currentPeriodData = Object.values(aggregated);
+        } else {
+          currentPeriodData = (allData || []).filter((d: any) => d.periodo === periodo);
+        }
+
         if (currentPeriodData.length > 0) {
           setData(currentPeriodData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)));
         } else {
@@ -288,6 +312,7 @@ export default function N3Dashboard() {
               <SelectValue placeholder="Selecione o Mês" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">Todos os Meses</SelectItem>
               {[
                 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -371,8 +396,8 @@ export default function N3Dashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="flex flex-col gap-6">
+        <div className="space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <div>
