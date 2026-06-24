@@ -605,7 +605,7 @@ export default function N3Dashboard() {
                     <YAxis domain={[0, (dataMax: number) => Math.max(dataMax, 40)]} axisLine={false} tickLine={false} fontSize={12} />
                     <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                    <ReferenceLine y={35} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta (35)', fill: '#ef4444', fontSize: 12 }} />
+                    <ReferenceLine y={35} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (35)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
                     {uniqueNames.map((name, idx) => (
                       <Line key={name} type="monotone" dataKey={name} stroke={colors[idx % colors.length]} strokeWidth={2} dot={{ r: 3 }} />
                     ))}
