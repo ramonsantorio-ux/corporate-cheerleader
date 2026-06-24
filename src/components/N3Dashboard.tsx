@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
 interface N3Data {
   id?: string;
@@ -30,6 +30,7 @@ const DEFAULT_NAMES = [
 
 export default function N3Dashboard() {
   const [data, setData] = useState<N3Data[]>([]);
+  const [historicalData, setHistoricalData] = useState<N3Data[]>([]);
   const [periodo, setPeriodo] = useState<string>(
     new Date().toISOString().substring(0, 7) // Formato "YYYY-MM"
   );
@@ -44,19 +45,24 @@ export default function N3Dashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: n3Data, error } = await supabase
+      const { data: allData, error } = await supabase
         .from('ssma_n3')
         .select('*')
-        .eq('periodo', periodo)
-        .order('nome_email', { ascending: true });
+        .order('periodo', { ascending: true });
 
       if (error) {
         console.error('Tabela n3 não existe ou erro ao buscar. Iniciando com dados locais.');
         initMockData();
-      } else if (n3Data && n3Data.length > 0) {
-        setData(n3Data);
       } else {
-        initMockData();
+        setHistoricalData(allData || []);
+        
+        // Filter for current period
+        const currentPeriodData = (allData || []).filter(d => d.periodo === periodo);
+        if (currentPeriodData.length > 0) {
+          setData(currentPeriodData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)));
+        } else {
+          initMockData();
+        }
       }
     } catch (e) {
       initMockData();
@@ -209,6 +215,40 @@ export default function N3Dashboard() {
     })).filter(d => d.Verificações > 0 || d.Treinamentos > 0);
   }, [data]);
 
+  const evolutionChartData = useMemo(() => {
+    const grouped = historicalData.reduce((acc, curr) => {
+      if (!acc[curr.periodo]) {
+        acc[curr.periodo] = { periodo: curr.periodo, 'Total Verificações': 0, 'Total Treinamentos': 0, 'Não Conformes': 0 };
+      }
+      acc[curr.periodo]['Total Verificações'] += curr.total_verificacoes;
+      acc[curr.periodo]['Total Treinamentos'] += curr.total_treinamentos;
+      acc[curr.periodo]['Não Conformes'] += curr.verificacoes_nc;
+      return acc;
+    }, {} as Record<string, any>);
+    return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
+  }, [historicalData]);
+
+  const evolutionByPersonData = useMemo(() => {
+    const grouped = historicalData.reduce((acc, curr) => {
+      if (!acc[curr.periodo]) {
+        acc[curr.periodo] = { periodo: curr.periodo };
+      }
+      const name = curr.nome_email.split(' ')[0] || 'Novo';
+      if (!acc[curr.periodo][name]) acc[curr.periodo][name] = 0;
+      acc[curr.periodo][name] += curr.total_verificacoes;
+      return acc;
+    }, {} as Record<string, any>);
+    return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
+  }, [historicalData]);
+
+  const uniqueNames = useMemo(() => {
+    const names = new Set<string>();
+    historicalData.forEach(d => names.add(d.nome_email.split(' ')[0] || 'Novo'));
+    return Array.from(names);
+  }, [historicalData]);
+  
+  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#ef4444'];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -234,8 +274,8 @@ export default function N3Dashboard() {
           <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
             <Upload className="w-4 h-4" /> Importar
           </Button>
-          <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Save className="w-4 h-4" /> {saving ? 'Salvando...' : 'Salvar na Nuvem'}
+          <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md">
+            <Save className="w-4 h-4" /> {saving ? 'Postando...' : 'Postar Lançamentos do Mês'}
           </Button>
         </div>
       </div>
@@ -411,6 +451,62 @@ export default function N3Dashboard() {
                 <div className="h-full flex items-center justify-center text-muted-foreground text-sm">
                   Sem dados para o gráfico
                 </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Gráficos Evolutivos */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Evolução Geral do Contrato</CardTitle>
+            <CardDescription>Crescimento de Verificações e Treinamentos</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              {evolutionChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={evolutionChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-10" />
+                    <XAxis dataKey="periodo" axisLine={false} tickLine={false} fontSize={12} tickMargin={10} />
+                    <YAxis axisLine={false} tickLine={false} fontSize={12} />
+                    <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                    <Line type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="Total Treinamentos" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">Sem dados históricos</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Evolução por Colaborador</CardTitle>
+            <CardDescription>Total de Verificações ao longo do tempo</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px] w-full">
+              {evolutionByPersonData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={evolutionByPersonData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-10" />
+                    <XAxis dataKey="periodo" axisLine={false} tickLine={false} fontSize={12} tickMargin={10} />
+                    <YAxis axisLine={false} tickLine={false} fontSize={12} />
+                    <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                    {uniqueNames.map((name, idx) => (
+                      <Line key={name} type="monotone" dataKey={name} stroke={colors[idx % colors.length]} strokeWidth={2} dot={{ r: 3 }} />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-muted-foreground text-sm">Sem dados históricos</div>
               )}
             </div>
           </CardContent>
