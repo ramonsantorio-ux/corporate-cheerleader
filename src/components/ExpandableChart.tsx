@@ -43,7 +43,7 @@ export default function ExpandableChart({ title, description, children }: Expand
             <DialogTitle>{title}</DialogTitle>
             {description && <DialogDescription>{description}</DialogDescription>}
           </DialogHeader>
-          <div className="flex-1 w-full h-full min-h-0 pt-4">
+          <div className="flex-1 w-full h-full min-h-0 pt-4 [&>div]:!h-full">
             {children}
           </div>
         </DialogContent>
