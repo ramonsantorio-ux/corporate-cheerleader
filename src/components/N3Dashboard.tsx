@@ -513,22 +513,34 @@ export default function N3Dashboard() {
                         </TableRow>
                       );
                     })}
-                    {data.length > 0 && periodo === 'all' && (
-                      <TableRow className="bg-slate-100 dark:bg-slate-800/50 font-bold hover:bg-slate-100 dark:hover:bg-slate-800/50">
-                        <TableCell colSpan={2} className="text-right p-4">TOTAL GERAL:</TableCell>
-                        <TableCell className="text-center p-4">{summaryStats.totais.verificacoes}</TableCell>
-                        <TableCell className="text-center p-4">{summaryStats.totais.treinamentos}</TableCell>
-                        <TableCell className="text-center p-4">{summaryStats.totais.assistencia}</TableCell>
-                        <TableCell className="text-center p-4 text-rose-600">{summaryStats.totais.ncs}</TableCell>
-                        <TableCell className="text-center p-4">
-                          <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${Number(summaryStats.pctNc) > 20 ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : Number(summaryStats.pctNc) > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'}`}>
-                            {summaryStats.pctNc}%
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center p-4 text-rose-600">{summaryStats.totais.perguntasNc}</TableCell>
-                        <TableCell></TableCell>
-                      </TableRow>
-                    )}
+                    {(() => {
+                      if (data.length === 0 || periodo !== 'all') return null;
+                      const totals = data.reduce((acc, curr) => ({
+                        verificacoes: acc.verificacoes + Number(curr.verificacoes || 0),
+                        treinamentos: acc.treinamentos + Number(curr.treinamentos || 0),
+                        assistencia: acc.assistencia + Number(curr.assistencia || 0),
+                        ncs: acc.ncs + Number(curr.verificacoes_nc || 0),
+                        perguntasNc: acc.perguntasNc + Number(curr.perguntas_nc || 0)
+                      }), { verificacoes: 0, treinamentos: 0, assistencia: 0, ncs: 0, perguntasNc: 0 });
+                      const pctNc = totals.verificacoes > 0 ? ((totals.ncs / totals.verificacoes) * 100).toFixed(1) : "0.0";
+                      
+                      return (
+                        <TableRow className="bg-slate-100 dark:bg-slate-800/50 font-bold hover:bg-slate-100 dark:hover:bg-slate-800/50">
+                          <TableCell colSpan={2} className="text-right p-4">TOTAL GERAL:</TableCell>
+                          <TableCell className="text-center p-4">{totals.verificacoes}</TableCell>
+                          <TableCell className="text-center p-4">{totals.treinamentos}</TableCell>
+                          <TableCell className="text-center p-4">{totals.assistencia}</TableCell>
+                          <TableCell className="text-center p-4 text-rose-600">{totals.ncs}</TableCell>
+                          <TableCell className="text-center p-4">
+                            <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${Number(pctNc) > 20 ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : Number(pctNc) > 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'}`}>
+                              {pctNc}%
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center p-4 text-rose-600">{totals.perguntasNc}</TableCell>
+                          <TableCell></TableCell>
+                        </TableRow>
+                      );
+                    })()}
                   </TableBody>
                 </Table>
               </div>
