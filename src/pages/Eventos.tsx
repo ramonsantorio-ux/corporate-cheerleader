@@ -22,6 +22,7 @@ import {  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContain
 import * as XLSX from 'xlsx';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { TreinamentosSSMA } from '@/components/TreinamentosSSMA';
+import N3Dashboard from '@/components/N3Dashboard';
 
 interface EventRow {
   id: string;
@@ -778,6 +779,9 @@ export default function Eventos() {
           <TabsTrigger value="treinamentos_ssma" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all flex items-center gap-2">
             <Target className="w-4 h-4" /> Treinamentos SSMA
           </TabsTrigger>
+          <TabsTrigger value="n3" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-rose-600 data-[state=active]:shadow-sm transition-all flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4" /> N3
+          </TabsTrigger>
         </TabsList>
 
         {/* 1. VISÃO GERAL */}
@@ -1248,6 +1252,11 @@ export default function Eventos() {
         {/* 5. TREINAMENTOS SSMA */}
         <TabsContent value="treinamentos_ssma" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
           <TreinamentosSSMA />
+        </TabsContent>
+
+        {/* 6. N3 */}
+        <TabsContent value="n3" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
+          <N3Dashboard />
         </TabsContent>
       </Tabs>
 
