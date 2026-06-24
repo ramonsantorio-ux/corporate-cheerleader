@@ -405,9 +405,9 @@ export default function N3Dashboard() {
       <div className="flex flex-col gap-6">
         <div className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-center justify-between pb-4">
               <div>
-                <CardTitle>Lançamentos N3</CardTitle>
+                <CardTitle className="text-xl">Lançamentos N3 - CRM</CardTitle>
                 <CardDescription>Digite manualmente ou importe via planilha</CardDescription>
               </div>
               <Button onClick={handleAddRow} size="sm" variant="outline" className="gap-1">
