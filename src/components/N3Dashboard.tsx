@@ -578,13 +578,15 @@ export default function N3Dashboard() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-10" />
-                    <XAxis dataKey="periodo" axisLine={false} tickLine={false} fontSize={12} tickMargin={10} />
-                    <YAxis axisLine={false} tickLine={false} fontSize={12} />
-                    <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                    <Area type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorVerif)" activeDot={{ r: 6, strokeWidth: 0 }} />
-                    <Area type="monotone" dataKey="Total Não Conformes" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorTrein)" activeDot={{ r: 6, strokeWidth: 0 }} />
+                    <XAxis dataKey="periodo" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis domain={[0, (dataMax: number) => Math.max(dataMax, 150)]} stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    />
+                    <Legend />
                     <ReferenceLine y={140} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (140)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
+                    <Area type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorVerif)" />
+                    <Area type="monotone" dataKey="Total Não Conformes" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorNC)" />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
@@ -600,9 +602,10 @@ export default function N3Dashboard() {
                   <LineChart data={evolutionByPersonData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-10" />
                     <XAxis dataKey="periodo" axisLine={false} tickLine={false} fontSize={12} tickMargin={10} />
-                    <YAxis axisLine={false} tickLine={false} fontSize={12} />
+                    <YAxis domain={[0, (dataMax: number) => Math.max(dataMax, 40)]} axisLine={false} tickLine={false} fontSize={12} />
                     <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                    <ReferenceLine y={35} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta (35)', fill: '#ef4444', fontSize: 12 }} />
                     {uniqueNames.map((name, idx) => (
                       <Line key={name} type="monotone" dataKey={name} stroke={colors[idx % colors.length]} strokeWidth={2} dot={{ r: 3 }} />
                     ))}
