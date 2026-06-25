@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
-import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain } from 'lucide-react';
+import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -178,15 +178,24 @@ export default function Desempenho() {
           <div className="grid grid-cols-3 gap-4">
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-kpi corporate-kpi-accent">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Realizados</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{totalRealizados}</p>
+              <div className="flex items-end justify-between mt-2">
+                <span className="text-2xl font-bold">{totalRealizados}</span>
+                <CheckCircle2 className="w-5 h-5 opacity-70" />
+              </div>
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="corporate-kpi">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">No Prazo</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{totalNoPrazo}</p>
+              <div className="flex items-end justify-between mt-2">
+                <span className="text-2xl font-bold">{totalNoPrazo}</span>
+                <Clock className="w-5 h-5 opacity-70" />
+              </div>
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-kpi corporate-kpi-danger">
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-kpi corporate-kpi-warning">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pendentes</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{totalPendentes}</p>
+              <div className="flex items-end justify-between mt-2">
+                <span className="text-2xl font-bold">{totalPendentes}</span>
+                <AlertCircle className="w-5 h-5 opacity-70" />
+              </div>
             </motion.div>
           </div>
 

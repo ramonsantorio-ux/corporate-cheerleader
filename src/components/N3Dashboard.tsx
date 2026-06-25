@@ -348,55 +348,51 @@ export default function N3Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-blue-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 relative overflow-hidden group">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-          <CardContent className="p-5 flex items-center justify-between relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Verificações</p>
-              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.verificacoes}</h3>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Verificações</p>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.verificacoes}</h3>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/50 dark:to-blue-800/30 flex items-center justify-center border border-blue-200/50 dark:border-blue-700/50 shadow-inner group-hover:rotate-6 transition-transform duration-300">
-              <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400 drop-shadow-sm" />
+            <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center border border-blue-100 dark:border-blue-800">
+              <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-indigo-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 relative overflow-hidden group">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-indigo-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-          <CardContent className="p-5 flex items-center justify-between relative z-10">
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Treinamentos</p>
-              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.treinamentos}</h3>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Treinamentos</p>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.treinamentos}</h3>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/50 dark:to-indigo-800/30 flex items-center justify-center border border-indigo-200/50 dark:border-indigo-700/50 shadow-inner group-hover:rotate-6 transition-transform duration-300">
-              <Target className="w-6 h-6 text-indigo-600 dark:text-indigo-400 drop-shadow-sm" />
+            <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-800">
+              <Target className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-rose-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-rose-500/10 transition-all duration-300 relative overflow-hidden group">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-rose-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-          <CardContent className="p-5 flex items-center justify-between relative z-10">
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Não Conformidades</p>
-              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.ncs}</h3>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Não Conformidades</p>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.totais.ncs}</h3>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-100 to-rose-50 dark:from-rose-900/50 dark:to-rose-800/30 flex items-center justify-center border border-rose-200/50 dark:border-rose-700/50 shadow-inner group-hover:rotate-6 transition-transform duration-300">
-              <ShieldAlert className="w-6 h-6 text-rose-600 dark:text-rose-400 drop-shadow-sm" />
+            <div className="w-10 h-10 rounded-lg bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center border border-rose-100 dark:border-rose-800">
+              <ShieldAlert className="w-5 h-5 text-rose-600 dark:text-rose-400" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-amber-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 relative overflow-hidden group">
-          <div className="absolute -right-6 -top-6 w-24 h-24 bg-amber-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
-          <CardContent className="p-5 flex items-center justify-between relative z-10">
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+          <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Taxa de NC Global</p>
-              <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.pctNc}%</h3>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Taxa de NC Global</p>
+              <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{kpis.pctNc}%</h3>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/50 dark:to-amber-800/30 flex items-center justify-center border border-amber-200/50 dark:border-amber-700/50 shadow-inner group-hover:rotate-6 transition-transform duration-300">
-              <BarChart3 className="w-6 h-6 text-amber-600 dark:text-amber-400 drop-shadow-sm" />
+            <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center border border-amber-100 dark:border-amber-800">
+              <BarChart3 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
           </CardContent>
         </Card>
