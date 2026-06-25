@@ -32,7 +32,7 @@ export function DailyChart({ data, title, icon, mes, emptyStateMessage }: DailyC
     return null;
   };
 
-  const gradientId = `color-${title.replace(/\s+/g, '')}`;
+  const gradientId = `color-${title.replace(/[^a-zA-Z0-9]/g, '')}`;
   const orderedData = [...data]; // Assuming the order is correct from import
 
   const renderChart = (height: number, isExpandedView: boolean) => (
