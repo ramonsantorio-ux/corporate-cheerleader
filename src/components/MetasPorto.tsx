@@ -170,24 +170,6 @@ export default function MetasPorto() {
       const link = document.createElement('a');
       link.href = image;
       link.download = `Metas_Porto_${selectedMonth}.png`;
-
-  const [selectedMonth, setSelectedMonth] = useState<string>('Maio');
-  const [isExporting, setIsExporting] = useState(false);
-  const dashboardRef = useRef<HTMLDivElement>(null);
-
-  const handleExport = async () => {
-    if (!dashboardRef.current) return;
-    setIsExporting(true);
-    try {
-      const canvas = await html2canvas(dashboardRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff'
-      });
-      const image = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = `Metas_Porto_${selectedMonth}.png`;
       link.click();
     } catch (err) {
       console.error("Failed to export image", err);
