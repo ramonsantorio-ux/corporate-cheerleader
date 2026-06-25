@@ -308,11 +308,11 @@ export default function N3Dashboard() {
   }, [historicalData, uniqueNames]);
   
   const colors = [
-    '#3b82f6', // blue
+    '#ec4899', // pink (antes era blue - Cristally)
     '#10b981', // green
     '#f59e0b', // amber
     '#8b5cf6', // purple
-    '#ec4899', // pink
+    '#3b82f6', // blue (antes era pink - Ramon)
     '#f97316', // orange
     '#06b6d4', // cyan
     '#ef4444', // red
