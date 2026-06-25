@@ -14,7 +14,6 @@ import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, Cell } from 'recharts';
 
-import Avaliacoes from './Avaliacoes';
 import MetasBusato from '@/components/MetasBusato';
 import MetasPorto from '@/components/MetasPorto';
 import Competencias from './Competencias';
@@ -95,18 +94,22 @@ export default function Desempenho() {
   const cargoStats = useMemo(() => {
     const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number }> = {};
     funcionarios.forEach(f => {
-      if (!cargos[f.cargo]) cargos[f.cargo] = { cargo: f.cargo, total: 0, realizados: 0, noPrazo: 0, pendentes: 0 };
-      cargos[f.cargo].total++;
-      const empEvals = evaluations.filter(e => e.evaluated_name.toLowerCase() === f.nome.toLowerCase());
-      if (empEvals.length === 0) { cargos[f.cargo].pendentes++; }
+      const cargoName = f.cargo || 'Sem Cargo';
+      if (!cargos[cargoName]) cargos[cargoName] = { cargo: cargoName, total: 0, realizados: 0, noPrazo: 0, pendentes: 0 };
+      cargos[cargoName].total++;
+      
+      const funcName = (f.nome || '').toLowerCase();
+      const empEvals = evaluations.filter(e => (e.evaluated_name || '').toLowerCase() === funcName);
+      
+      if (empEvals.length === 0) { cargos[cargoName].pendentes++; }
       else {
         const completed = empEvals.filter(e => e.status === 'completed');
         if (completed.length > 0) {
-          cargos[f.cargo].realizados++;
+          cargos[cargoName].realizados++;
           const latest = completed[completed.length - 1];
           const cycle = cycles.find(c => c.id === latest.cycle_id);
-          if (cycle && latest.completed_at && new Date(latest.completed_at) <= new Date(cycle.end_date)) cargos[f.cargo].noPrazo++;
-        } else { cargos[f.cargo].pendentes++; }
+          if (cycle && latest.completed_at && new Date(latest.completed_at) <= new Date(cycle.end_date)) cargos[cargoName].noPrazo++;
+        } else { cargos[cargoName].pendentes++; }
       }
     });
     return Object.values(cargos).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
