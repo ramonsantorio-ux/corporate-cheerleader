@@ -47,12 +47,10 @@ export function AderenciaDiariaViewer({ medicoes, setExpandedChart }: AderenciaD
 
       <DailyChart 
         title="Aderência Geral (Diária)"
-        icon={<TrendingUp className="w-6 h-6 text-success" />}
+        icon={<TrendingUp className="w-6 h-6 text-primary" />}
         mes={selectedMes}
         data={selectedMedicao?.aderenciaDiaria || []}
-        colorName="success"
         emptyStateMessage={`Nenhum dado diário geral lançado para ${selectedMes}. Acesse o Lançar Medição Mensal para importar.`}
-        onClick={() => setExpandedChart('diario')}
       />
 
       <DailyChart 
@@ -60,9 +58,7 @@ export function AderenciaDiariaViewer({ medicoes, setExpandedChart }: AderenciaD
         icon={<Briefcase className="w-6 h-6 text-primary" />}
         mes={selectedMes}
         data={selectedMedicao?.aderenciaMinerioDiaria || []}
-        colorName="primary"
         emptyStateMessage={`Nenhum dado diário de minério lançado para ${selectedMes}. Acesse o Lançar Medição Mensal para importar.`}
-        onClick={() => setExpandedChart('minerio')}
       />
 
       <DailyChart 
@@ -70,9 +66,7 @@ export function AderenciaDiariaViewer({ medicoes, setExpandedChart }: AderenciaD
         icon={<Settings className="w-6 h-6 text-primary" />}
         mes={selectedMes}
         data={selectedMedicao?.aderenciaTpmDiaria || []}
-        colorName="primary"
         emptyStateMessage={`Nenhum dado diário de TPM lançado para ${selectedMes}. Acesse o Lançar Medição Mensal para importar.`}
-        onClick={() => setExpandedChart('tpm')}
       />
     </div>
   );
