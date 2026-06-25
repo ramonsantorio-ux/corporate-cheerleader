@@ -252,7 +252,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
           setState(importados);
           toast({ title: 'Sucesso', description: `${importados.length} dias importados da planilha.` });
         } else {
-          toast({ title: 'Aviso', description: 'Não conseguimos encontrar as colunas "Data - D", "Data - M" e "% DF".', variant: 'destructive' });
+          toast({ title: 'Erro de Formatação no Excel', description: 'Nenhuma linha válida foi importada. Verifique se as colunas "Dia" (ou Data - D) e "Aderência" (ou % DF) existem na sua planilha.', variant: 'destructive', duration: 8000 });
         }
       } catch (err) {
         console.error(err);

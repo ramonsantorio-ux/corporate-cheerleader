@@ -635,27 +635,44 @@ export default function EvolucaoContrato() {
   };
 
   const handleSaveFromComponent = async (novaMedicao: Medicao) => {
+    // Validação anti-duplicação: se não for uma edição (editingId vazio) 
+    // mas o mês já existir na lista, bloqueia o salvamento.
+    if (!editingId) {
+      const isDuplicate = medicoes.some(m => m.mes.toLowerCase().trim() === novaMedicao.mes.toLowerCase().trim());
+      if (isDuplicate) {
+        toast({ title: 'Ação Bloqueada', description: `O mês ${novaMedicao.mes} já existe no sistema. Por favor, edite o registro existente ao invés de criar um novo.`, variant: 'destructive' });
+        return;
+      }
+    }
+
     const medicaoComIdLocal = editingId ? { ...novaMedicao, id: editingId } : { ...novaMedicao, id: Date.now() };
     
-    if (editingId) {
-      const existing = medicoes.find(m => m.id === editingId);
-      if (existing && existing._supabaseId) {
-        await supabase.from('medicoes').update({ mes: medicaoComIdLocal.mes, dados: medicaoComIdLocal }).eq('id', existing._supabaseId);
-        setMedicoes(medicoes.map(m => m.id === editingId ? { ...medicaoComIdLocal, _supabaseId: existing._supabaseId } : m));
+    try {
+      if (editingId) {
+        const existing = medicoes.find(m => m.id === editingId);
+        if (existing && existing._supabaseId) {
+          const { error } = await supabase.from('medicoes').update({ mes: medicaoComIdLocal.mes, dados: medicaoComIdLocal }).eq('id', existing._supabaseId);
+          if (error) throw error;
+          setMedicoes(medicoes.map(m => m.id === editingId ? { ...medicaoComIdLocal, _supabaseId: existing._supabaseId } : m));
+        } else {
+          setMedicoes(medicoes.map(m => m.id === editingId ? medicaoComIdLocal : m));
+        }
+        toast({ title: 'Sucesso', description: 'Fechamento atualizado com sucesso!' });
       } else {
-        setMedicoes(medicoes.map(m => m.id === editingId ? medicaoComIdLocal : m));
+        const { data, error } = await supabase.from('medicoes').insert([{ mes: medicaoComIdLocal.mes, dados: medicaoComIdLocal }]).select();
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setMedicoes([...medicoes, { ...medicaoComIdLocal, _supabaseId: data[0].id }]);
+        } else {
+          setMedicoes([...medicoes, medicaoComIdLocal]);
+        }
+        toast({ title: 'Sucesso', description: 'Fechamento registrado com sucesso!' });
       }
-      toast({ title: 'Sucesso', description: 'Fechamento atualizado com sucesso!' });
-    } else {
-      const { data, error } = await supabase.from('medicoes').insert([{ mes: medicaoComIdLocal.mes, dados: medicaoComIdLocal }]).select();
-      if (!error && data && data.length > 0) {
-        setMedicoes([...medicoes, { ...medicaoComIdLocal, _supabaseId: data[0].id }]);
-      } else {
-        setMedicoes([...medicoes, medicaoComIdLocal]);
-      }
-      toast({ title: 'Sucesso', description: 'Fechamento registrado com sucesso!' });
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Erro de Conexão', description: 'Não foi possível salvar no banco de dados. Tente novamente.', variant: 'destructive' });
     }
-    setIsModalOpen(false);
   };
 
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -758,8 +775,9 @@ export default function EvolucaoContrato() {
     return dataAderenciaDia;
   }, [timeRange]);
 
-  const lastMonth = chartData[chartData.length - 1];
-  const prevMonth = chartData[chartData.length - 2];
+  const lastMonth = [...chartData].reverse().find(m => m.receitaTotal > 0) || chartData[chartData.length - 1];
+  const lastMonthIndex = chartData.findIndex(m => m === lastMonth);
+  const prevMonth = lastMonthIndex > 0 ? chartData[lastMonthIndex - 1] : chartData[chartData.length - 2] || chartData[0];
 
   const ofensoresData = useMemo(() => {
     let glosas = 0;

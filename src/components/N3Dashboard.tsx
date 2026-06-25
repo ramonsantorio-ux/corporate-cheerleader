@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import ExpandableChart from './ExpandableChart';
-import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend, LabelList } from 'recharts';
 
 interface N3Data {
   id?: string;
@@ -558,9 +558,13 @@ export default function N3Dashboard() {
                     <YAxis axisLine={false} tickLine={false} fontSize={12} />
                     <RechartsTooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                    <Bar dataKey="Verificações" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 4, 4]} />
+                    <Bar dataKey="Verificações" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 4, 4]}>
+                      <LabelList dataKey="Verificações" position="center" fill="#ffffff" fontSize={11} fontWeight="bold" />
+                    </Bar>
                     
-                    <Bar dataKey="Não Conformes" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Não Conformes" fill="#ef4444" radius={[4, 4, 0, 0]}>
+                      <LabelList dataKey="Não Conformes" position="top" fill="#ef4444" fontSize={11} fontWeight="bold" />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -597,8 +601,12 @@ export default function N3Dashboard() {
                     />
                     <Legend />
                     <ReferenceLine y={140} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (140)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
-                    <Area type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorVerif)" />
-                    <Area type="monotone" dataKey="Total Não Conformes" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorNC)" />
+                    <Area type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorVerif)">
+                      <LabelList dataKey="Total Verificações" position="top" fill="#3b82f6" fontSize={11} fontWeight="bold" />
+                    </Area>
+                    <Area type="monotone" dataKey="Total Não Conformes" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorNC)">
+                      <LabelList dataKey="Total Não Conformes" position="bottom" fill="#ef4444" fontSize={11} fontWeight="bold" />
+                    </Area>
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
