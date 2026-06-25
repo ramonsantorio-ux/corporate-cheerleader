@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import * as XLSX from 'xlsx';
+import { PerformanceMensalTab } from '@/components/PerformanceMensalTab';
 
 interface OfensorFinanceiro {
   motivo: string;
@@ -85,6 +86,7 @@ interface Medicao {
   folhaInss?: number;
   folhaFgts?: number;
   folhaIrrf?: number;
+  performanceMensal?: { desvio: string; qtde: number }[];
 }
 
 const mockData: Medicao[] = [
@@ -908,6 +910,7 @@ export default function EvolucaoContrato() {
               <TabsTrigger value="custos_metas" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingDown className="w-4 h-4 mr-2" />Custos e Metas</TabsTrigger>
               <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
               <TabsTrigger value="aderencia" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingUp className="w-4 h-4 mr-2" />Aderência</TabsTrigger>
+              <TabsTrigger value="performance_mensal" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><BarChart3 className="w-4 h-4 mr-2" />Performance Mensal</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
@@ -1400,6 +1403,14 @@ export default function EvolucaoContrato() {
           </Card>
           
             </div>
+          </TabsContent>
+
+          <TabsContent value="performance_mensal" className="space-y-6 mt-4">
+            <PerformanceMensalTab 
+              medicoes={medicoes} 
+              setMedicoes={setMedicoes} 
+              timeRange={timeRange} 
+            />
           </TabsContent>
         </Tabs>
       ) : (
