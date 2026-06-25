@@ -20,7 +20,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LabelList, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -730,23 +730,26 @@ export default function PontoFerias() {
       <input ref={feriasFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportFerias} />
       <input ref={extrasFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImportExtras} />
 
-      {/* ═══ HEADER + ACTIONS ═══ */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Gestão à Vista — Ponto / Férias</h1>
-            <p className="text-muted-foreground text-sm mt-1">Painel de controle operacional</p>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm"><Plus className="w-4 h-4 mr-2" />Registrar</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setDialogOpen(true)}><CalendarDays className="w-4 h-4 mr-2" />Registrar Ponto</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setVacDialogOpen(true)}><Sun className="w-4 h-4 mr-2" />Registrar Férias</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+      {/* ═══ HEADER + ACTIONS (Floating Premium) ═══ */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }} 
+        className="glass-card flex flex-col md:flex-row items-center justify-between gap-4 p-4 lg:px-6 lg:py-4 mb-6 z-10 sticky top-4">
+        <div>
+          <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
+            <span className="bg-primary/10 text-primary p-2 rounded-xl"><CalendarDays className="w-5 h-5" /></span>
+            Gestão à Vista — Ponto / Férias
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1 ml-11">Painel de controle operacional centralizado</p>
+        </div>
+        <div className="flex gap-2 flex-wrap items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95"><Plus className="w-4 h-4 mr-2" />Registrar</Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 shadow-xl border-border/40 backdrop-blur-xl bg-card/90">
+              <DropdownMenuItem onClick={() => setDialogOpen(true)} className="cursor-pointer"><CalendarDays className="w-4 h-4 mr-2 text-primary" />Registrar Ponto</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setVacDialogOpen(true)} className="cursor-pointer"><Sun className="w-4 h-4 mr-2 text-warning" />Registrar Férias</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogContent>
@@ -894,11 +897,10 @@ export default function PontoFerias() {
             </DropdownMenu>
 
             {/* Deviations Report */}
-            <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportDeviationsReport}>
+            <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/10 transition-colors shadow-sm bg-card/50" onClick={exportDeviationsReport}>
               <FileText className="w-4 h-4 mr-2" />Relatório de Desvios
             </Button>
           </div>
-        </div>
       </motion.div>
 
       {/* ═══ PERIOD FILTER + EMPLOYEE FILTER ═══ */}
@@ -995,77 +997,109 @@ export default function PontoFerias() {
         </motion.div>
       )}
 
-      {/* ═══ KPI CARDS ═══ */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-        {[
-          { label: 'Total Registros', value: attendance.length, icon: CalendarDays, color: 'border-t-primary' },
-          { label: 'Horas Negativas', value: totalHorasNegativas, icon: MinusCircle, color: 'border-t-orange-500' },
-          { label: 'Faltas Injust.', value: totalFaltasInj, icon: AlertTriangle, color: 'border-t-destructive' },
-          { label: 'Extras', value: totalExtras, icon: TrendingUp, color: 'border-t-purple-500' },
-          { label: 'Atestados', value: totalAtestados, icon: Clock, color: 'border-t-blue-500' },
-          { label: 'Em Férias', value: onVacationNow.length, icon: Sun, color: 'border-t-teal-500' },
-          { label: 'Bloqueados', value: overtimeLimitAlerts.length, icon: Shield, color: 'border-t-destructive' },
-          { label: 'Advertências', value: totalWarnings, icon: ShieldAlert, color: 'border-t-red-600' },
-        ].map((kpi, idx) => (
-          <motion.div key={kpi.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
-            className={`corporate-kpi ${kpi.color}`}>
-            <div className="flex items-center justify-between mb-1">
-              <kpi.icon className="w-4 h-4 text-muted-foreground" />
+      {/* ═══ BENTO GRID KPIs ═══ */}
+      <div className="bento-grid mt-4">
+        
+        {/* 1. Super Card - Meta Diária */}
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 }} 
+          className="bento-col-span-2 bento-row-span-2 glass-card p-6 flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden bg-gradient-to-br from-card to-muted/20">
+          <div className="flex-1 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary" /> Meta de Movimentações
+              </h3>
+              <p className="text-4xl font-black tracking-tight mt-1">
+                {dailyMovements.todayCount} <span className="text-xl text-muted-foreground font-medium">/ {DAILY_MOVEMENT_GOAL} Hoje</span>
+              </p>
             </div>
-            <p className="text-2xl font-bold tracking-tight">{kpi.value}</p>
-            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mt-1">{kpi.label}</p>
+            <div className="grid grid-cols-2 gap-4 mt-6">
+              <div className="bg-background/50 p-3 rounded-xl border border-border/40">
+                <p className="text-xs text-muted-foreground font-medium">Aderência</p>
+                <p className={`text-2xl font-bold ${dailyMovements.goalPct >= 80 ? 'text-success' : dailyMovements.goalPct >= 50 ? 'text-warning' : 'text-destructive'}`}>
+                  {dailyMovements.goalPct}%
+                </p>
+              </div>
+              <div className="bg-background/50 p-3 rounded-xl border border-border/40">
+                <p className="text-xs text-muted-foreground font-medium">Dias Batidos</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {dailyMovements.daysMetGoal}<span className="text-sm text-muted-foreground">/{dailyMovements.totalDays}</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="w-[160px] h-[160px] shrink-0 relative flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadialBarChart 
+                cx="50%" cy="50%" 
+                innerRadius="70%" outerRadius="100%" 
+                barSize={12} 
+                data={[{ name: 'Meta', value: dailyMovements.todayCount, fill: dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? 'hsl(var(--success))' : 'hsl(var(--primary))' }]} 
+                startAngle={90} endAngle={-270}
+              >
+                <PolarAngleAxis type="number" domain={[0, DAILY_MOVEMENT_GOAL]} angleAxisId={0} tick={false} />
+                <RadialBar background={{ fill: 'hsl(var(--muted))' }} dataKey="value" cornerRadius={10} />
+              </RadialBarChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              {dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? (
+                <span className="text-success font-black text-xl">✓</span>
+              ) : (
+                <span className="text-primary font-black text-xl">{Math.round((dailyMovements.todayCount/DAILY_MOVEMENT_GOAL)*100)}%</span>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 2. Critical KPIs */}
+        {[
+          { label: 'Horas Negativas', value: totalHorasNegativas, icon: MinusCircle, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+          { label: 'Faltas Injustificadas', value: totalFaltasInj, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
+        ].map((kpi, idx) => (
+          <motion.div key={kpi.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + (idx * 0.05) }}
+            className="glass-card p-5 flex flex-col justify-between group hover:border-border transition-colors">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-2 rounded-xl ${kpi.bg}`}>
+                <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
+              </div>
+            </div>
+            <div>
+              <p className="text-3xl font-black tracking-tight">{kpi.value}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-1">{kpi.label}</p>
+            </div>
+          </motion.div>
+        ))}
+
+        {/* 3. Secondary KPIs */}
+        {[
+          { label: 'Extras', value: totalExtras, icon: TrendingUp, class: 'purple' },
+          { label: 'Atestados', value: totalAtestados, icon: Clock, class: 'info' },
+          { label: 'Em Férias', value: onVacationNow.length, icon: Sun, class: 'success' },
+          { label: 'Bloqueados', value: overtimeLimitAlerts.length, icon: Shield, class: 'danger' },
+          { label: 'Advertências', value: totalWarnings, icon: ShieldAlert, class: 'danger' },
+          { label: 'Total Reg.', value: attendance.length, icon: CalendarDays, class: 'primary' },
+        ].map((kpi, idx) => (
+          <motion.div key={kpi.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + (idx * 0.05) }}
+            className={`kpi-card ${kpi.class}`}>
+            <div className="flex items-center justify-between mb-2 z-10">
+              <kpi.icon className="w-4 h-4 opacity-70" />
+            </div>
+            <div className="z-10">
+              <p className="text-2xl font-bold tracking-tight">{kpi.value}</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider opacity-70 mt-0.5">{kpi.label}</p>
+            </div>
           </motion.div>
         ))}
       </div>
 
       {/* ═══ TABS CONTAINER ═══ */}
-      <Tabs defaultValue="geral" className="w-full mb-8 mt-6">
-        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
-          <TabsTrigger value="geral" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Visão Geral & Frequência</TabsTrigger>
-          <TabsTrigger value="eventos" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-warning data-[state=active]:shadow-sm transition-all">Advertências & Férias</TabsTrigger>
-          <TabsTrigger value="registros" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">Quadro & Registros de Ponto</TabsTrigger>
+      <Tabs defaultValue="geral" className="w-full mb-8 mt-8">
+        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-card/80 backdrop-blur-md rounded-xl mb-6 border border-border shadow-sm">
+          <TabsTrigger value="geral" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">Visão Geral & Gráficos</TabsTrigger>
+          <TabsTrigger value="eventos" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-warning data-[state=active]:text-warning-foreground data-[state=active]:shadow-md transition-all">Advertências & Férias</TabsTrigger>
+          <TabsTrigger value="registros" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all">Quadro & Registros de Ponto</TabsTrigger>
         </TabsList>
 
         <TabsContent value="geral" className="space-y-6 outline-none">
-      {/* ═══ META DIÁRIA ═══ */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
-        className="corporate-section">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Meta Diária — {DAILY_MOVEMENT_GOAL} Movimentações / Dia
-          </h3>
-          <span className="text-xs text-muted-foreground">Hoje: {dailyMovements.todayCount}/{DAILY_MOVEMENT_GOAL}</span>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-lg p-4 border border-border bg-card">
-            <p className="text-xs text-muted-foreground mb-2">Movimentações Hoje</p>
-            <div className="flex items-center gap-3">
-              <p className={`text-3xl font-bold ${dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? 'text-success' : 'text-warning'}`}>
-                {dailyMovements.todayCount}
-              </p>
-              <div className="flex-1">
-                <Progress value={Math.min((dailyMovements.todayCount / DAILY_MOVEMENT_GOAL) * 100, 100)}
-                  className={`h-2 ${dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? '[&>div]:bg-success' : '[&>div]:bg-warning'}`} />
-              </div>
-              {dailyMovements.todayCount >= DAILY_MOVEMENT_GOAL ? (
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-success/10 text-success">✓ META</span>
-              ) : (
-                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
-              )}
-            </div>
-          </div>
-          <div className="rounded-lg p-4 border border-border bg-card">
-            <p className="text-xs text-muted-foreground mb-2">Dias com Meta Atingida</p>
-            <p className="text-3xl font-bold text-foreground">{dailyMovements.daysMetGoal}<span className="text-sm text-muted-foreground">/{dailyMovements.totalDays}</span></p>
-          </div>
-          <div className="rounded-lg p-4 border border-border bg-card">
-            <p className="text-xs text-muted-foreground mb-2">Aderência à Meta</p>
-            <p className={`text-3xl font-bold ${dailyMovements.goalPct >= 80 ? 'text-success' : dailyMovements.goalPct >= 50 ? 'text-warning' : 'text-destructive'}`}>
-              {dailyMovements.goalPct}%
-            </p>
-          </div>
-        </div>
-      </motion.div>
 
       {/* ═══ CHARTS ROW ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -1129,51 +1163,52 @@ export default function PontoFerias() {
 
             {/* ═══ PAINEL CLÍNICO - ATESTADOS (DASHBOARD VISUAL) ═══ */}
       {totalAtestados > 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.21 }} className="mt-8 bg-[#f4f6f8] p-4 rounded-xl border border-border shadow-sm">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.21 }} className="mt-8 glass-card bg-primary/5 p-6 border-primary/20">
           
-          <div className="flex items-center justify-between mb-6 pb-3 border-b border-border">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/50">
             <div>
-              <h2 className="text-3xl font-black text-[#2f5597] tracking-tighter uppercase leading-none">Dashboard</h2>
-              <h3 className="text-2xl font-bold text-[#4472c4] tracking-tight uppercase">Atestado Médico</h3>
+              <h2 className="text-3xl font-black text-primary tracking-tighter uppercase leading-none">Dashboard</h2>
+              <h3 className="text-2xl font-bold text-primary/80 tracking-tight uppercase">Atestado Médico</h3>
             </div>
-            <div className="bg-white px-4 py-2 rounded shadow-sm flex items-center gap-2 border border-border text-[#2f5597] font-bold text-xs cursor-pointer hover:bg-slate-50">
+            <div className="glass-card px-4 py-2 flex items-center gap-2 text-primary font-bold text-xs cursor-pointer hover:bg-primary/10 transition-colors">
               <Clock className="w-4 h-4" /> Atualizar Dados
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-4">
             
             {/* Esquerda: KPIs e Top 10 Funcionários */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white rounded-lg p-4 shadow-sm border-t-4 border-t-[#eb7d5b] flex flex-col items-center">
-                   <p className="text-xs text-[#2f5597] font-bold mb-2">Quantidade de atestados</p>
+                <div className="glass-card p-5 border-t-4 border-t-destructive flex flex-col items-center justify-center">
+                   <p className="text-xs text-muted-foreground font-bold mb-3 uppercase tracking-wider text-center">Qtd. de Atestados</p>
                    <div className="flex items-center justify-center gap-4">
-                     <div className="w-12 h-12 bg-[#eb7d5b] rounded-full flex items-center justify-center text-white"><User className="w-6 h-6" /></div>
-                     <span className="text-4xl font-light text-slate-700">{totalAtestados}</span>
+                     <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center text-destructive"><User className="w-6 h-6" /></div>
+                     <span className="text-4xl font-light text-foreground">{totalAtestados}</span>
                    </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm border-t-4 border-t-[#4472c4] flex flex-col items-center">
-                   <p className="text-xs text-[#2f5597] font-bold mb-2">Dias perdidos</p>
+                <div className="glass-card p-5 border-t-4 border-t-primary flex flex-col items-center justify-center">
+                   <p className="text-xs text-muted-foreground font-bold mb-3 uppercase tracking-wider text-center">Dias Perdidos</p>
                    <div className="flex items-center justify-center gap-4">
-                     <div className="w-12 h-12 flex items-center justify-center text-[#4472c4]"><Calendar className="w-8 h-8" /></div>
-                     <span className="text-4xl font-light text-slate-700">{atestadosAnalytics.diasPerdidos}</span>
+                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary"><Calendar className="w-6 h-6" /></div>
+                     <span className="text-4xl font-light text-foreground">{atestadosAnalytics.diasPerdidos}</span>
                    </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-4 shadow-sm flex-1">
-                <p className="text-sm text-[#2f5597] font-bold text-center mb-6">Os 10 Funcionários que mais apresentaram atestado</p>
-                <div className="space-y-3">
+              <div className="glass-card p-5 flex-1">
+                <p className="text-sm text-primary font-bold text-center mb-6">Os 10 Funcionários que mais apresentaram atestado</p>
+                <div className="space-y-4">
                   {atestadosAnalytics.topEmpAtestados.slice(0, 10).map((emp) => {
                     const maxAtestados = Math.max(...atestadosAnalytics.topEmpAtestados.map(e => e.count), 1);
                     const pct = (emp.count / maxAtestados) * 100;
                     return (
-                      <div key={emp.name} className="flex items-center gap-3">
-                        <span className="w-[120px] text-right truncate text-xs text-slate-700 font-medium" title={emp.name}>{emp.name}</span>
-                        <div className="flex-1 h-5 bg-transparent relative flex items-center">
-                          <div className="h-full bg-gradient-to-r from-[#2f5597] to-[#5b8cdd] rounded shadow-sm" style={{ width: `${pct}%` }}></div>
-                          <span className="absolute right-[-24px] font-bold text-xs text-slate-800">{emp.count}</span>
+                      <div key={emp.name} className="flex items-center gap-4">
+                        <span className="w-[130px] text-right truncate text-xs text-foreground font-medium" title={emp.name}>{emp.name}</span>
+                        <div className="flex-1 h-6 bg-muted/30 rounded-full relative flex items-center overflow-visible">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, ease: "easeOut" }} 
+                            className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full shadow-sm"></motion.div>
+                          <span className="absolute right-[-28px] font-bold text-xs text-foreground bg-background px-1.5 py-0.5 rounded shadow-sm border border-border">{emp.count}</span>
                         </div>
                         <div className="w-8"></div>
                       </div>
@@ -1184,46 +1219,46 @@ export default function PontoFerias() {
             </div>
 
             {/* Direita: Gráficos */}
-            <div className="lg:col-span-2 flex flex-col gap-4">
-              <div className="bg-white rounded-lg p-4 shadow-sm h-[200px] flex flex-col">
-                 <p className="text-sm text-[#2f5597] font-bold text-center mb-2">Os 7 CIDs mais predominantes</p>
+            <div className="lg:col-span-2 flex flex-col gap-6">
+              <div className="glass-card p-5 h-[240px] flex flex-col">
+                 <p className="text-sm text-primary font-bold text-center mb-4">Os 7 CIDs mais predominantes</p>
                  <div className="flex-1 w-full">
                    <ResponsiveContainer width="100%" height="100%">
-                     <BarChart data={atestadosAnalytics.topCids.slice(0, 7)} margin={{ top: 15, bottom: 5 }}>
-                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                       <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#666' }} axisLine={false} tickLine={false} />
-                       <Bar dataKey="value" fill="#2f5597" radius={[2, 2, 0, 0]} barSize={40}>
-                         <LabelList dataKey="value" position="top" style={{ fill: '#666', fontSize: 10, fontWeight: 'bold' }} />
+                     <BarChart data={atestadosAnalytics.topCids.slice(0, 7)} margin={{ top: 20, bottom: 5 }}>
+                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                       <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                       <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={40}>
+                         <LabelList dataKey="value" position="top" style={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 'bold' }} />
                        </Bar>
                      </BarChart>
                    </ResponsiveContainer>
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 h-[200px]">
-                <div className="bg-white rounded-lg p-4 shadow-sm flex flex-col">
-                   <p className="text-sm text-[#2f5597] font-bold text-center mb-2">5 CRMs mais predominantes</p>
+              <div className="grid grid-cols-2 gap-6 h-[240px]">
+                <div className="glass-card p-5 flex flex-col">
+                   <p className="text-sm text-primary font-bold text-center mb-4">5 CRMs mais predominantes</p>
                    <div className="flex-1 w-full">
                      <ResponsiveContainer width="100%" height="100%">
-                       <BarChart data={atestadosAnalytics.topCrms.slice(0, 5)} margin={{ top: 15, bottom: 5 }}>
-                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                         <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#666' }} axisLine={false} tickLine={false} />
-                         <Bar dataKey="value" fill="#2f5597" radius={[2, 2, 0, 0]} barSize={30}>
-                           <LabelList dataKey="value" position="top" style={{ fill: '#666', fontSize: 10, fontWeight: 'bold' }} />
+                       <BarChart data={atestadosAnalytics.topCrms.slice(0, 5)} margin={{ top: 20, bottom: 5 }}>
+                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                         <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                         <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={30}>
+                           <LabelList dataKey="value" position="top" style={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 'bold' }} />
                          </Bar>
                        </BarChart>
                      </ResponsiveContainer>
                    </div>
                 </div>
-                <div className="bg-white rounded-lg p-4 shadow-sm flex flex-col">
-                   <p className="text-sm text-[#2f5597] font-bold text-center mb-2">5 Funções que mais apresenta atestado</p>
+                <div className="glass-card p-5 flex flex-col">
+                   <p className="text-sm text-primary font-bold text-center mb-4">5 Funções com mais atestados</p>
                    <div className="flex-1 w-full">
                      <ResponsiveContainer width="100%" height="100%">
-                       <BarChart data={atestadosAnalytics.topCargos.slice(0, 5)} margin={{ top: 15, bottom: 5 }}>
-                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                         <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#666' }} axisLine={false} tickLine={false} />
-                         <Bar dataKey="value" fill="#2f5597" radius={[2, 2, 0, 0]} barSize={30}>
-                           <LabelList dataKey="value" position="top" style={{ fill: '#666', fontSize: 10, fontWeight: 'bold' }} />
+                       <BarChart data={atestadosAnalytics.topCargos.slice(0, 5)} margin={{ top: 20, bottom: 5 }}>
+                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                         <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                         <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} barSize={30}>
+                           <LabelList dataKey="value" position="top" style={{ fill: 'hsl(var(--foreground))', fontSize: 11, fontWeight: 'bold' }} />
                          </Bar>
                        </BarChart>
                      </ResponsiveContainer>
