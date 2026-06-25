@@ -112,7 +112,8 @@ export default function MetasBusato() {
         let status = '';
         
         // Logica simplificada
-        const isLessIsBetter = row.indicador.toLowerCase().includes('interdições') || row.indicador.toLowerCase().includes('custo');
+        const indicadorNome = row.indicador || '';
+        const isLessIsBetter = indicadorNome.toLowerCase().includes('interdições') || indicadorNome.toLowerCase().includes('custo');
         
         if (isLessIsBetter) {
             if (row.alcancado === 0) fillPercentage = 100;
