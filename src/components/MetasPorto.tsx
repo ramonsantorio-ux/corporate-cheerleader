@@ -222,7 +222,8 @@ export default function MetasPorto() {
   const evolutionData = useMemo(() => {
     return meses.map(m => ({
       month: m.substring(0, 3),
-      atingido: METAS_DATA[m as keyof typeof METAS_DATA].atingido
+      atingido: METAS_DATA[m as keyof typeof METAS_DATA].atingido,
+      meta: 100
     }));
   }, [meses, METAS_DATA]);
 
@@ -462,10 +463,12 @@ export default function MetasPorto() {
                     <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--muted))', strokeWidth: 2, strokeDasharray: '5 5' }} />
-                    <Area type="monotone" dataKey="atingido" name="Atingido" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorAtingido)" activeDot={{ r: 6 }}>
+                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                    <Area type="monotone" dataKey="atingido" name="Aderência" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorAtingido)" activeDot={{ r: 6 }}>
                       <LabelList dataKey="atingido" position="top" style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} formatter={(val: number) => val.toFixed(0) + '%'} offset={10} />
                     </Area>
-                    <ReferenceLine y={100} stroke="hsl(var(--destructive))" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Meta (100%)', fill: 'hsl(var(--destructive))', fontSize: 10 }} />
+                    <Area type="monotone" dataKey="meta" name="Meta" stroke="hsl(var(--destructive))" strokeWidth={2} strokeDasharray="3 3" fill="none" activeDot={false} />
+                    <ReferenceLine y={100} stroke="hsl(var(--destructive))" strokeDasharray="3 3" />
                   </AreaChart>
                 </ResponsiveContainer>
               </ExpandableChart>
