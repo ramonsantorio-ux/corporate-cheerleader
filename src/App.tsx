@@ -72,42 +72,44 @@ function ProtectedRoutes() {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <Routes>
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Index />} />
-        <Route path="/colaboradores" element={<Colaboradores />} />
-        <Route path="/cadastro" element={<Navigate to="/colaboradores" replace />} />
-        <Route path="/feedbacks" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
-        <Route path="/feedbacks/:id" element={<FeedbackDetail />} />
-        <Route path="/novo" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
-        <Route path="/relatorios" element={<Relatorios />} />
-        <Route path="/configuracoes" element={<Configuracoes />} />
-        <Route path="/desempenho" element={<Desempenho />} />
-        <Route path="/desempenho/avaliacoes" element={<Navigate to="/desempenho?tab=metas" replace />} />
-        <Route path="/desempenho/competencias" element={<Navigate to="/desempenho?tab=fit-cultural" replace />} />
-        <Route path="/desempenho/pdi" element={<Navigate to="/desempenho?tab=pdi" replace />} />
-        <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
-        <Route path="/eventos" element={<ErrorBoundary><Eventos /></ErrorBoundary>} />
-        <Route path="/ausencias" element={<Ausencias />} />
-        <Route path="/organograma" element={<Organograma />} />
-        <Route path="/sucessao" element={<Sucessao />} />
-        <Route path="/evolucao" element={<ErrorBoundary><EvolucaoContrato /></ErrorBoundary>} />
-        <Route path="/cadastro-metas" element={<CadastroMetas />} />
-        <Route path="/notificacoes" element={<GestaoNotificacoes />} />
-        <Route path="/treinamentos" element={<Treinamentos />} />
-        <Route path="/dds" element={<DDS />} />
-        <Route path="/assessments" element={<Treinamentos />} />
-        <Route path="/assessment/:type" element={<AssessmentHub />} />
-        <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
-        <Route path="/feedback360" element={<Navigate to="/desempenho?tab=feedback360" replace />} />
-        {/* Legacy compat */}
-        <Route path="/disc" element={<DiscTest />} />
-        <Route path="/disc/:id" element={<DiscTest />} />
+    <ErrorBoundary>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Index />} />
+          <Route path="/colaboradores" element={<Colaboradores />} />
+          <Route path="/cadastro" element={<Navigate to="/colaboradores" replace />} />
+          <Route path="/feedbacks" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
+          <Route path="/feedbacks/:id" element={<FeedbackDetail />} />
+          <Route path="/novo" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
+          <Route path="/relatorios" element={<Relatorios />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/desempenho" element={<Desempenho />} />
+          <Route path="/desempenho/avaliacoes" element={<Navigate to="/desempenho?tab=metas" replace />} />
+          <Route path="/desempenho/competencias" element={<Navigate to="/desempenho?tab=fit-cultural" replace />} />
+          <Route path="/desempenho/pdi" element={<Navigate to="/desempenho?tab=pdi" replace />} />
+          <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
+          <Route path="/eventos" element={<Eventos />} />
+          <Route path="/ausencias" element={<Ausencias />} />
+          <Route path="/organograma" element={<Organograma />} />
+          <Route path="/sucessao" element={<Sucessao />} />
+          <Route path="/evolucao" element={<EvolucaoContrato />} />
+          <Route path="/cadastro-metas" element={<CadastroMetas />} />
+          <Route path="/notificacoes" element={<GestaoNotificacoes />} />
+          <Route path="/treinamentos" element={<Treinamentos />} />
+          <Route path="/dds" element={<DDS />} />
+          <Route path="/assessments" element={<Treinamentos />} />
+          <Route path="/assessment/:type" element={<AssessmentHub />} />
+          <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
+          <Route path="/feedback360" element={<Navigate to="/desempenho?tab=feedback360" replace />} />
+          {/* Legacy compat */}
+          <Route path="/disc" element={<DiscTest />} />
+          <Route path="/disc/:id" element={<DiscTest />} />
 
-        <Route path="/admin" element={<Admin />} />
-      </Route>
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+          <Route path="/admin" element={<Admin />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }
 
