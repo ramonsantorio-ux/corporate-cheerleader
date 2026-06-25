@@ -211,7 +211,7 @@ export default function Desempenho() {
                     <div>
                       <h3 className="font-medium text-sm text-foreground">{cycle.name}</h3>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {new Date(cycle.start_date).toLocaleDateString('pt-BR')} → {new Date(cycle.end_date).toLocaleDateString('pt-BR')}
+                        {cycle.start_date ? new Date(cycle.start_date).toLocaleDateString('pt-BR') : 'N/A'} → {cycle.end_date ? new Date(cycle.end_date).toLocaleDateString('pt-BR') : 'N/A'}
                       </p>
                     </div>
                     <span className={`corporate-badge ${statusColor[cycle.status] || 'bg-muted text-muted-foreground'}`}>

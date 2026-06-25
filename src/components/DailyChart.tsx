@@ -54,6 +54,9 @@ export function DailyChart({ data, title, icon, mes, emptyStateMessage }: DailyC
             
             <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="5 5" label={{ position: 'top', value: 'Meta (95%)', fill: 'hsl(var(--warning))', fontSize: isExpandedView ? 13 : 11, fontWeight: 'bold' }} />
             
+            {/* Fake line just to show "Meta (95%)" in the Legend without plotting extra points */}
+            <Line dataKey="fakeMeta" name="Meta (95%)" stroke="hsl(var(--warning))" strokeDasharray="5 5" dot={false} activeDot={false} strokeWidth={2} isAnimationActive={false} />
+
             <Area type="monotone" dataKey="aderencia" fill={`url(#${gradientId})`} stroke="none" legendType="none" />
             <Line 
               type="monotone" 
