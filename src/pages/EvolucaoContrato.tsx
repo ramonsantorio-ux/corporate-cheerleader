@@ -853,139 +853,91 @@ export default function EvolucaoContrato() {
     <>
       {/* KPI TOP CARDS */}
       {lastMonth && (
-        <div className="flex flex-wrap gap-4 [&>*]:flex-1 [&>*]:min-w-[220px]">
-          {/* Aderência SLA */}
-          <div className={`relative overflow-hidden glass-card rounded-xl p-6 border-none transition-all duration-300 group ${lastMonth.aderencia < 95 ? 'bg-gradient-to-br from-destructive/5 to-transparent' : 'bg-gradient-to-br from-primary/5 to-transparent'}`}>
-            <div className={`absolute top-0 left-0 w-1.5 h-full ${lastMonth.aderencia < 95 ? 'bg-destructive' : 'bg-primary'}`} />
-            <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl transition-colors ${lastMonth.aderencia < 95 ? 'bg-destructive/10 group-hover:bg-destructive/20' : 'bg-primary/10 group-hover:bg-primary/20'}`} />
-            <div className="relative flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Aderência SLA</p>
-                <div className="flex items-end gap-3 mt-2">
-                  <h3 className={`text-3xl font-black tracking-tight transition-all duration-300 ${hiddenCards['aderencia'] ? 'blur-md select-none opacity-50 text-foreground' : (lastMonth.aderencia < 95 ? 'text-destructive' : '')}`}>{lastMonth.aderencia}%</h3>
-                  {prevMonth && (() => {
-                    const Trend = getTrend(lastMonth.aderencia, prevMonth.aderencia).icon;
-                    const color = getTrend(lastMonth.aderencia, prevMonth.aderencia).color;
-                    return <Trend className={`w-5 h-5 mb-1.5 ${color}`} />;
-                  })()}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <button onClick={() => toggleCardVisibility('aderencia')} className="text-muted-foreground hover:text-foreground transition-colors absolute top-0 right-0">
-                  {hiddenCards['aderencia'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-                <div className={`p-3 rounded-xl mt-5 ${lastMonth.aderencia < 95 ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
-                  <Target className="w-6 h-6" />
-                </div>
-              </div>
+        <div className="flex flex-wrap gap-4 [&>*]:flex-1 [&>*]:min-w-[200px]">
+          <div className={`glass-card rounded-xl p-4 border-l-4 ${lastMonth.aderencia < 95 ? 'border-l-destructive bg-destructive/5' : 'border-l-primary'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <p className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${lastMonth.aderencia < 95 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                <Target className="w-3.5 h-3.5" /> Aderência SLA
+              </p>
+              <button onClick={() => toggleCardVisibility('aderencia')} className="text-muted-foreground hover:text-foreground transition-colors">
+                {hiddenCards['aderencia'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-2xl font-black tracking-tight transition-all duration-300 ${hiddenCards['aderencia'] ? 'blur-md select-none opacity-50 text-foreground' : (lastMonth.aderencia < 95 ? 'text-destructive' : '')}`}>{lastMonth.aderencia}%</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.aderencia, prevMonth.aderencia).icon;
+                const color = getTrend(lastMonth.aderencia, prevMonth.aderencia).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
             </div>
           </div>
           
-          {/* Faturamento Bruto */}
-          <div className="relative overflow-hidden glass-card rounded-xl p-6 border-none transition-all duration-300 bg-gradient-to-br from-blue-500/5 to-transparent group">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors" />
-            <div className="relative flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Faturamento Bruto</p>
-                <div className="flex items-end gap-3 mt-2">
-                  <h3 className={`text-2xl font-black text-foreground tracking-tight transition-all duration-300 ${hiddenCards['faturamento'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.receitaTotal)}</h3>
-                  {prevMonth && (() => {
-                    const Trend = getTrend(lastMonth.receitaTotal, prevMonth.receitaTotal).icon;
-                    const color = getTrend(lastMonth.receitaTotal, prevMonth.receitaTotal).color;
-                    return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
-                  })()}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <button onClick={() => toggleCardVisibility('faturamento')} className="text-muted-foreground hover:text-foreground transition-colors absolute top-0 right-0">
-                  {hiddenCards['faturamento'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-                <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500 mt-5">
-                  <DollarSign className="w-6 h-6" />
-                </div>
-              </div>
+          <div className="glass-card rounded-xl p-4 border-l-4 border-l-blue-500">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5" /> Faturamento Bruto</p>
+              <button onClick={() => toggleCardVisibility('faturamento')} className="text-muted-foreground hover:text-foreground transition-colors">
+                {hiddenCards['faturamento'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-xl font-black text-foreground tracking-tight transition-all duration-300 ${hiddenCards['faturamento'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.receitaTotal)}</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.receitaTotal, prevMonth.receitaTotal).icon;
+                const color = getTrend(lastMonth.receitaTotal, prevMonth.receitaTotal).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
             </div>
           </div>
 
-          {/* Lucro Líquido Real */}
-          <div className="relative overflow-hidden glass-card rounded-xl p-6 border-none transition-all duration-300 bg-gradient-to-br from-success/5 to-transparent group">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-success" />
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-success/10 rounded-full blur-2xl group-hover:bg-success/20 transition-colors" />
-            <div className="relative flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Lucro Líquido Real</p>
-                <div className="flex items-end gap-3 mt-2">
-                  <h3 className={`text-2xl font-black text-success tracking-tight transition-all duration-300 ${hiddenCards['lucro'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.saldo)}</h3>
-                  {prevMonth && (() => {
-                    const Trend = getTrend(lastMonth.saldo, prevMonth.saldo).icon;
-                    const color = getTrend(lastMonth.saldo, prevMonth.saldo).color;
-                    return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
-                  })()}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <button onClick={() => toggleCardVisibility('lucro')} className="text-muted-foreground hover:text-foreground transition-colors absolute top-0 right-0">
-                  {hiddenCards['lucro'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-                <div className="p-3 bg-success/10 rounded-xl text-success mt-5">
-                  <TrendingUp className="w-6 h-6" />
-                </div>
-              </div>
+          <div className="glass-card rounded-xl p-4 border-l-4 border-l-success bg-success/5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-success uppercase tracking-wider flex items-center gap-1.5"><TrendingUp className="w-3.5 h-3.5" /> Lucro Líquido Real</p>
+              <button onClick={() => toggleCardVisibility('lucro')} className="text-success/70 hover:text-success transition-colors">
+                {hiddenCards['lucro'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-xl font-black text-success tracking-tight transition-all duration-300 ${hiddenCards['lucro'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.saldo)}</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.saldo, prevMonth.saldo).icon;
+                const color = getTrend(lastMonth.saldo, prevMonth.saldo).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
             </div>
           </div>
 
-          {/* Margem Líquida */}
-          <div className="relative overflow-hidden glass-card rounded-xl p-6 border-none transition-all duration-300 bg-gradient-to-br from-purple-500/5 to-transparent group">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-purple-500" />
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors" />
-            <div className="relative flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Margem Líquida</p>
-                <div className="flex items-end gap-3 mt-2">
-                  <h3 className={`text-3xl font-black tracking-tight transition-all duration-300 ${hiddenCards['margem'] ? 'blur-md select-none opacity-50 text-foreground' : 'text-purple-500'}`}>{lastMonth.margem}%</h3>
-                  {prevMonth && (() => {
-                    const Trend = getTrend(lastMonth.margem, prevMonth.margem).icon;
-                    const color = getTrend(lastMonth.margem, prevMonth.margem).color;
-                    return <Trend className={`w-5 h-5 mb-1.5 ${color}`} />;
-                  })()}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <button onClick={() => toggleCardVisibility('margem')} className="text-muted-foreground hover:text-foreground transition-colors absolute top-0 right-0">
-                  {hiddenCards['margem'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-                <div className="p-3 bg-purple-500/10 rounded-xl text-purple-500 mt-5">
-                  <Calculator className="w-6 h-6" />
-                </div>
-              </div>
+          <div className="glass-card rounded-xl p-4 border-l-4 border-l-primary">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5"><Calculator className="w-3.5 h-3.5" /> Margem Líquida</p>
+              <button onClick={() => toggleCardVisibility('margem')} className="text-muted-foreground hover:text-foreground transition-colors">
+                {hiddenCards['margem'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-2xl font-black tracking-tight transition-all duration-300 ${hiddenCards['margem'] ? 'blur-md select-none opacity-50 text-foreground' : 'text-primary'}`}>{lastMonth.margem}%</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.margem, prevMonth.margem).icon;
+                const color = getTrend(lastMonth.margem, prevMonth.margem).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
             </div>
           </div>
 
-          {/* Sangria */}
-          <div className="relative overflow-hidden glass-card rounded-xl p-6 border-none transition-all duration-300 bg-gradient-to-br from-destructive/5 to-transparent group">
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />
-            <div className="absolute -right-4 -top-4 w-24 h-24 bg-destructive/10 rounded-full blur-2xl group-hover:bg-destructive/20 transition-colors" />
-            <div className="relative flex justify-between items-start">
-              <div>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Sangria (Glosas+Multas)</p>
-                <div className="flex items-end gap-3 mt-2">
-                  <h3 className={`text-2xl font-black text-destructive tracking-tight transition-all duration-300 ${hiddenCards['perdas'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.perdas)}</h3>
-                  {prevMonth && (() => {
-                    const Trend = getTrend(lastMonth.perdas, prevMonth.perdas, true).icon;
-                    const color = getTrend(lastMonth.perdas, prevMonth.perdas, true).color;
-                    return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
-                  })()}
-                </div>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <button onClick={() => toggleCardVisibility('perdas')} className="text-muted-foreground hover:text-foreground transition-colors absolute top-0 right-0">
-                  {hiddenCards['perdas'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-                <div className="p-3 bg-destructive/10 rounded-xl text-destructive mt-5">
-                  <AlertTriangle className="w-6 h-6" />
-                </div>
-              </div>
+          <div className="glass-card rounded-xl p-4 border-l-4 border-l-destructive bg-destructive/5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-destructive uppercase tracking-wider flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" /> Sangria (Glosas+Multas)</p>
+              <button onClick={() => toggleCardVisibility('perdas')} className="text-destructive/70 hover:text-destructive transition-colors">
+                {hiddenCards['perdas'] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-end justify-between">
+              <h3 className={`text-xl font-black text-destructive tracking-tight transition-all duration-300 ${hiddenCards['perdas'] ? 'blur-md select-none opacity-50' : ''}`}>{formatCurrency(lastMonth.perdas)}</h3>
+              {prevMonth && (() => {
+                const Trend = getTrend(lastMonth.perdas, prevMonth.perdas, true).icon;
+                const color = getTrend(lastMonth.perdas, prevMonth.perdas, true).color;
+                return <Trend className={`w-5 h-5 mb-1 ${color}`} />;
+              })()}
             </div>
           </div>
         </div>
