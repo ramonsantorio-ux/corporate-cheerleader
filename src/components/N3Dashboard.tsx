@@ -307,7 +307,17 @@ export default function N3Dashboard() {
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
   }, [historicalData, uniqueNames]);
   
-  const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6', '#ef4444'];
+  const colors = [
+    '#3b82f6', // blue
+    '#10b981', // green
+    '#f59e0b', // amber
+    '#8b5cf6', // purple
+    '#ec4899', // pink
+    '#f97316', // orange
+    '#06b6d4', // cyan
+    '#ef4444', // red
+    '#84cc16'  // lime
+  ];
 
   return (
     <div className="space-y-6">
@@ -627,7 +637,9 @@ export default function N3Dashboard() {
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                     <ReferenceLine y={35} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (35)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
                     {uniqueNames.map((name, idx) => (
-                      <Line key={name} type="monotone" dataKey={name} stroke={colors[idx % colors.length]} strokeWidth={2} dot={{ r: 3 }} />
+                      <Line key={name} type="monotone" dataKey={name} stroke={colors[idx % colors.length]} strokeWidth={2} dot={{ r: 4 }}>
+                        <LabelList dataKey={name} position="top" fill={colors[idx % colors.length]} fontSize={11} fontWeight="bold" />
+                      </Line>
                     ))}
                   </LineChart>
                 </ResponsiveContainer>
