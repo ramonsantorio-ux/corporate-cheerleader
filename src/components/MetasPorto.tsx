@@ -218,6 +218,14 @@ export default function MetasPorto() {
     }).sort((a, b) => b.variance - a.variance);
   }, [data]);
 
+  // Evolution Data for AreaChart
+  const evolutionData = useMemo(() => {
+    return meses.map(m => ({
+      month: m.substring(0, 3),
+      atingido: METAS_DATA[m as keyof typeof METAS_DATA].atingido
+    }));
+  }, [meses, METAS_DATA]);
+
   if (isLoading) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse flex flex-col items-center gap-2"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div><div>Carregando metas do banco de dados...</div></div>;
   }
