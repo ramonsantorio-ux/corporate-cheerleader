@@ -16,6 +16,7 @@ import { supabase } from "@/lib/supabase";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import * as XLSX from 'xlsx';
 import { PerformanceMensalTab } from '@/components/PerformanceMensalTab';
+import { AderenciaDiariaChart } from '@/components/AderenciaDiariaChart';
 
 interface OfensorFinanceiro {
   motivo: string;
@@ -87,6 +88,7 @@ interface Medicao {
   folhaFgts?: number;
   folhaIrrf?: number;
   performanceMensal?: { desvio: string; qtde: number }[];
+  aderenciaDiaria?: { dia: string; aderencia: number }[];
 }
 
 const mockData: Medicao[] = [
@@ -1372,35 +1374,11 @@ export default function EvolucaoContrato() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('diario')}>
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-2"><TrendingUp className="w-6 h-6 text-success" /> Evolução Aderência Mês (Diário)</CardTitle>
-              <CardDescription>Acompanhamento diário da aderência de 21/abr a 20/mai</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[350px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={filteredAderenciaDia} margin={{ top: 30, right: 30, bottom: 5, left: -15 }}>
-                    <defs>
-                      <linearGradient id="colorAderenciaDia" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="dia" stroke="hsl(var(--muted-foreground))" fontSize={10} tickMargin={10} angle={-45} textAnchor="end" height={60} />
-                    <YAxis domain={[85, 105]} stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(val) => `${val}%`} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '20px' }} />
-                    <ReferenceLine y={95} stroke="hsl(var(--warning))" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta (95%)', fill: 'hsl(var(--warning))', fontSize: 11, fontWeight: 'bold' }} />
-                    <Area type="monotone" dataKey="aderencia" name="Aderência (%)" fill="url(#colorAderenciaDia)" stroke="hsl(var(--success))" strokeWidth={3} dot={{ r: 4, fill: "hsl(var(--background))", strokeWidth: 2 }} activeDot={{ r: 6, fill: "hsl(var(--success))" }}>
-                      <LabelList dataKey="aderencia" position="top" offset={12} formatter={(val: number) => val === 100 ? '100' : val.toFixed(1)} style={{ fontSize: '9px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }} />
-                    </Area>
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <AderenciaDiariaChart 
+            medicoes={medicoes} 
+            setMedicoes={setMedicoes} 
+            setExpandedChart={setExpandedChart} 
+          />
           
             </div>
           </TabsContent>
