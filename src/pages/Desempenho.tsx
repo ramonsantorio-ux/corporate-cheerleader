@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
-import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain } from 'lucide-react';
+import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
 import Feedback360 from './Feedback360';
 import PDIPage from './PDI';
+import { PremiumKPI } from '@/components/ui/PremiumKPI';
 
 interface EvaluationCycle {
   id: string; name: string; start_date: string; end_date: string; status: string; created_at: string;
@@ -175,19 +176,28 @@ export default function Desempenho() {
           <PeriodFilter value={period} onChange={setPeriod} />
 
           {/* KPIs */}
-          <div className="grid grid-cols-3 gap-4">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-kpi corporate-kpi-accent">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Realizados</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{totalRealizados}</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="corporate-kpi">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">No Prazo</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{totalNoPrazo}</p>
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-kpi corporate-kpi-danger">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pendentes</p>
-              <p className="text-3xl font-bold text-foreground mt-1">{totalPendentes}</p>
-            </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <PremiumKPI 
+              title="Avaliações Realizadas" 
+              value={totalRealizados} 
+              icon={CheckCircle2} 
+              iconColor="text-emerald-500" 
+              delay={0.1}
+            />
+            <PremiumKPI 
+              title="No Prazo" 
+              value={totalNoPrazo} 
+              icon={Clock} 
+              iconColor="text-blue-500" 
+              delay={0.2}
+            />
+            <PremiumKPI 
+              title="Pendentes" 
+              value={totalPendentes} 
+              icon={AlertCircle} 
+              iconColor="text-rose-500" 
+              delay={0.3}
+            />
           </div>
 
           {/* Cycles list */}
