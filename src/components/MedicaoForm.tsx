@@ -30,6 +30,9 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
   const [multasList, setMultasList] = useState<OfensorFinanceiro[]>([]);
   const [notificacoesList, setNotificacoesList] = useState<OfensorNotificacao[]>([]);
   const [equipamentosList, setEquipamentosList] = useState<{ motivo: string; aderencia: string }[]>([]);
+  const [aderenciaDiaria, setAderenciaDiaria] = useState<{ dia: string; aderencia: number }[]>([]);
+  const [aderenciaMinerioDiaria, setAderenciaMinerioDiaria] = useState<{ dia: string; aderencia: number }[]>([]);
+  const [aderenciaTpmDiaria, setAderenciaTpmDiaria] = useState<{ dia: string; aderencia: number }[]>([]);
 
 
   useEffect(() => {
@@ -90,6 +93,9 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
       setMultasList([...(m.multas || [])]);
       setNotificacoesList([...(m.notificacoes || [])]);
       setEquipamentosList([...(m.equipamentosPerdidos || [])]);
+      setAderenciaDiaria([...(m.aderenciaDiaria || [])]);
+      setAderenciaMinerioDiaria([...(m.aderenciaMinerioDiaria || [])]);
+      setAderenciaTpmDiaria([...(m.aderenciaTpmDiaria || [])]);
     } else {
       setFormData({ 
         mes: '', aderencia: '', fatLocacao: '', fatMaoDeObra: '', eventuais: '', 
@@ -192,6 +198,71 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleImportExcelDiario = (e: React.ChangeEvent<HTMLInputElement>, setState: (data: { dia: string; aderencia: number }[]) => void) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = event.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const json = XLSX.utils.sheet_to_json<any>(worksheet);
+
+        const importados: { dia: string; aderencia: number }[] = [];
+        
+        json.forEach((row) => {
+          const diaKey = Object.keys(row).find(k => k.toLowerCase().includes('data - d') || k.toLowerCase().includes('dia'));
+          const mesKey = Object.keys(row).find(k => k.toLowerCase().includes('data - m') || k.toLowerCase().includes('mês') || k.toLowerCase().includes('mes'));
+          const aderenciaKey = Object.keys(row).find(k => k.toLowerCase().includes('% df') || k.toLowerCase().includes('aderencia') || k.toLowerCase().includes('aderência'));
+
+          if (diaKey && aderenciaKey) {
+            let diaFormatado = String(row[diaKey]);
+            if (mesKey && row[mesKey]) {
+               const mesStr = String(row[mesKey]).substring(0, 3).toLowerCase();
+               diaFormatado = `${diaFormatado.padStart(2, '0')}/${mesStr}`;
+            }
+
+            let aderenciaValor = row[aderenciaKey];
+            let aderenciaNum = 0;
+            
+            if (typeof aderenciaValor === 'string') {
+              aderenciaValor = aderenciaValor.replace('%', '').replace(',', '.');
+              aderenciaNum = parseFloat(aderenciaValor);
+            } else if (typeof aderenciaValor === 'number') {
+              if (aderenciaValor <= 1) {
+                aderenciaNum = aderenciaValor * 100;
+              } else {
+                aderenciaNum = aderenciaValor;
+              }
+            }
+
+            if (!isNaN(aderenciaNum)) {
+              importados.push({
+                dia: diaFormatado,
+                aderencia: Number(aderenciaNum.toFixed(2))
+              });
+            }
+          }
+        });
+
+        if (importados.length > 0) {
+          setState(importados);
+          toast({ title: 'Sucesso', description: `${importados.length} dias importados da planilha.` });
+        } else {
+          toast({ title: 'Aviso', description: 'Não conseguimos encontrar as colunas "Data - D", "Data - M" e "% DF".', variant: 'destructive' });
+        }
+      } catch (err) {
+        console.error(err);
+        toast({ title: 'Erro', description: 'Falha ao processar o arquivo Excel.', variant: 'destructive' });
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = ''; // reset
+  };
+
   const handleSaveMedicao = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.mes || !formData.fatLocacao) {
@@ -254,6 +325,9 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
       beneficioRefeicao: parseFloat(formData.beneficioRefeicao) || 0,
 
       folhaIrrf: parseFloat(formData.folhaIrrf) || 0,
+      aderenciaDiaria,
+      aderenciaMinerioDiaria,
+      aderenciaTpmDiaria,
     };
 
     onSave(novaMedicao);
@@ -581,6 +655,40 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
                   ))}
                 </div>
 
+              </div>
+
+              {/* GRÁFICOS DIÁRIOS (EXCEL) */}
+              <div className="bg-muted/30 p-5 rounded-xl border border-border/50">
+                <h4 className="font-bold text-sm mb-4 flex items-center gap-2 text-primary"><LineChartIcon className="w-4 h-4" /> Importação de Gráficos Diários</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  <div className="space-y-2 relative">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">Aderência Geral (Diária)</Label>
+                    <div className="relative">
+                      <Button variant="outline" className="w-full text-left justify-start border-primary/20 hover:bg-primary/5 text-primary">
+                        <TrendingUp className="w-4 h-4 mr-2" /> {aderenciaDiaria.length > 0 ? `${aderenciaDiaria.length} dias importados` : 'Importar Excel Geral'}
+                      </Button>
+                      <input type="file" accept=".xlsx, .xls, .csv" onChange={(e) => handleImportExcelDiario(e, setAderenciaDiaria)} className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 relative">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">Aderência Minério</Label>
+                    <div className="relative">
+                      <Button variant="outline" className="w-full text-left justify-start border-primary/20 hover:bg-primary/5 text-primary">
+                        <Briefcase className="w-4 h-4 mr-2" /> {aderenciaMinerioDiaria.length > 0 ? `${aderenciaMinerioDiaria.length} dias importados` : 'Importar Excel Minério'}
+                      </Button>
+                      <input type="file" accept=".xlsx, .xls, .csv" onChange={(e) => handleImportExcelDiario(e, setAderenciaMinerioDiaria)} className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 relative">
+                    <Label className="text-xs font-bold uppercase text-muted-foreground">Aderência TPM</Label>
+                    <div className="relative">
+                      <Button variant="outline" className="w-full text-left justify-start border-primary/20 hover:bg-primary/5 text-primary">
+                        <Settings className="w-4 h-4 mr-2" /> {aderenciaTpmDiaria.length > 0 ? `${aderenciaTpmDiaria.length} dias importados` : 'Importar Excel TPM'}
+                      </Button>
+                      <input type="file" accept=".xlsx, .xls, .csv" onChange={(e) => handleImportExcelDiario(e, setAderenciaTpmDiaria)} className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <Button type="submit" size="lg" className="w-full font-bold text-md">{medicaoToEdit ? 'Salvar Alterações' : 'Registrar Fechamento do Mês'}</Button>
