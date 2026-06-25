@@ -170,6 +170,24 @@ export default function MetasBusato() {
       const link = document.createElement('a');
       link.href = image;
       link.download = `Metas_Busato_${selectedMonth}.png`;
+
+  const [selectedMonth, setSelectedMonth] = useState<string>('Maio');
+  const [isExporting, setIsExporting] = useState(false);
+  const dashboardRef = useRef<HTMLDivElement>(null);
+
+  const handleExport = async () => {
+    if (!dashboardRef.current) return;
+    setIsExporting(true);
+    try {
+      const canvas = await html2canvas(dashboardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      const image = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = image;
+      link.download = `Metas_Busato_${selectedMonth}.png`;
       link.click();
     } catch (err) {
       console.error("Failed to export image", err);
@@ -177,11 +195,6 @@ export default function MetasBusato() {
       setIsExporting(false);
     }
   };
-  
-  
-  if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground animate-pulse flex flex-col items-center gap-2"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div><div>Carregando metas do banco de dados...</div></div>;
-  }
   
   const data = METAS_DATA[selectedMonth as keyof typeof METAS_DATA];
   const batidas = data.counts.acima + data.counts.aceitavel;
@@ -206,7 +219,13 @@ export default function MetasBusato() {
   // Ofensores/Impulsionadores Data
   const varianceData = useMemo(() => {
     return data.metas.map(m => {
-      const variance = m.alc - m.ref; // Absoluto de gap/ganho em relação a ref
+      let variance = 0;
+      if (m.meta.includes('Interdições')) {
+        variance = m.alc - m.ref;
+      } else {
+        variance = m.alc - m.ref; 
+      }
+      
       return {
         name: m.meta.replace(/ \(\%\)/g, '').substring(0, 12) + '...',
         fullName: m.meta,
@@ -216,9 +235,12 @@ export default function MetasBusato() {
     }).sort((a, b) => b.variance - a.variance);
   }, [data]);
 
+  if (isLoading) {
+    return <div className="p-8 text-center text-muted-foreground animate-pulse flex flex-col items-center gap-2"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin"></div><div>Carregando metas do banco de dados...</div></div>;
+  }
+  
   return (
     <div className="space-y-6 bg-background rounded-xl" ref={dashboardRef}>
-      
       {/* 1. Timeline Semafórica do Ano */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
