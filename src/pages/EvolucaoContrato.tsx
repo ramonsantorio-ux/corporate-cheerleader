@@ -528,6 +528,26 @@ export default function EvolucaoContrato() {
   const [medicoes, setMedicoes] = useState<Medicao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const mergeMedicoes = (arr: any[]) => {
+    return arr.reduce((acc, curr) => {
+      const existing = acc.find((m: any) => m.mes === curr.mes);
+      if (existing) {
+        Object.keys(curr).forEach(key => {
+          if (Array.isArray(curr[key]) && curr[key].length > 0) {
+            existing[key] = curr[key];
+          } else if (typeof curr[key] === 'number' && curr[key] !== 0 && existing[key] === 0) {
+            existing[key] = curr[key];
+          } else if (curr[key] && !existing[key]) {
+            existing[key] = curr[key];
+          }
+        });
+      } else {
+        acc.push({ ...curr });
+      }
+      return acc;
+    }, [] as any[]);
+  };
+
   useEffect(() => {
     const fetchMedicoes = async () => {
       try {
@@ -538,18 +558,18 @@ export default function EvolucaoContrato() {
         
         if (data && data.length > 0) {
           const mappedData = data.map(d => ({ ...d.dados, _supabaseId: d.id }));
-          setMedicoes(mappedData);
+          setMedicoes(mergeMedicoes(mappedData));
         } else if (data && data.length === 0) {
           setMedicoes([]);
         } else if (saved) {
-          setMedicoes(JSON.parse(saved));
+          setMedicoes(mergeMedicoes(JSON.parse(saved)));
         } else {
           setMedicoes([]);
         }
       } catch (error) {
         console.error('Erro ao buscar do supabase:', error);
         const saved = localStorage.getItem('corporate_cheerleader_medicoes');
-        if (saved) setMedicoes(JSON.parse(saved));
+        if (saved) setMedicoes(mergeMedicoes(JSON.parse(saved)));
         else setMedicoes([]);
       } finally {
         setIsLoading(false);
