@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { FileWarning, Plus, Trash2, Pencil, Calendar, MapPin, Target, AlertTriangle, ShieldAlert, CheckCircle2, Search, SlidersHorizontal, ArrowUpRight, ArrowDownRight, PieChart as PieChartIcon, Check } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import ExpandableChart from '@/components/ExpandableChart';
 
 export interface NotificacaoGlobal {
   id: string;
@@ -249,13 +250,10 @@ const GestaoNotificacoes = () => {
 
           {/* Core Analytics Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="shadow-sm col-span-1 lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-lg">Volume de Ocorrências no Tempo</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
-                  <AreaChart data={chartDataEvolucao} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <ExpandableChart title="Volume de Ocorrências no Tempo" description="Histórico de multas e notificações">
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartDataEvolucao} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorNotif" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
@@ -271,38 +269,38 @@ const GestaoNotificacoes = () => {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <Tooltip />
                     <Legend />
-                    <Area type="monotone" dataKey="Notificacoes" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorNotif)" />
-                    <Area type="monotone" dataKey="Multas" stroke="hsl(var(--destructive))" fillOpacity={1} fill="url(#colorMulta)" />
+                    <Area type="monotone" dataKey="Notificacoes" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorNotif)">
+                      <LabelList dataKey="Notificacoes" position="top" fill="hsl(var(--primary))" fontSize={11} fontWeight="bold" />
+                    </Area>
+                    <Area type="monotone" dataKey="Multas" stroke="hsl(var(--destructive))" fillOpacity={1} fill="url(#colorMulta)">
+                      <LabelList dataKey="Multas" position="bottom" fill="hsl(var(--destructive))" fontSize={11} fontWeight="bold" />
+                    </Area>
                   </AreaChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
+              </div>
+            </ExpandableChart>
 
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Top Locais Ofensores</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
+            <ExpandableChart title="Top Locais Ofensores" description="Frequência por localidade">
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartDataLocais} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" />
                     <XAxis type="number" tick={{fontSize: 12}} />
                     <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 12}} />
                     <Tooltip />
-                    <Bar dataKey="value" name="Ocorrências" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="value" name="Ocorrências" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]}>
+                      <LabelList dataKey="value" position="right" fill="hsl(var(--primary))" fontSize={11} fontWeight="bold" />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
+              </div>
+            </ExpandableChart>
 
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Status dos Planos de Ação</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
+            <ExpandableChart title="Status dos Planos de Ação" description="Distribuição de SLA">
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={chartDataStatus} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
+                    <Pie data={chartDataStatus} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`} labelLine={false}>
                       {chartDataStatus.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
@@ -311,8 +309,8 @@ const GestaoNotificacoes = () => {
                     <Legend verticalAlign="bottom" height={36}/>
                   </PieChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
+              </div>
+            </ExpandableChart>
           </div>
         </TabsContent>
 
