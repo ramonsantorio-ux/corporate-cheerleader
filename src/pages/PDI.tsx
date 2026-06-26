@@ -58,6 +58,29 @@ const pdiStatusLabels: Record<string, string> = {
   cancelled: 'Cancelado',
 };
 
+const categoryLabels: Record<string, string> = {
+  '70_experience': '70% Experiência (Prática)',
+  '20_exposure': '20% Exposição (Social)',
+  '10_education': '10% Educação (Formal)'
+};
+
+const categoryColors: Record<string, string> = {
+  '70_experience': 'bg-blue-100 text-blue-700 border-blue-200',
+  '20_exposure': 'bg-purple-100 text-purple-700 border-purple-200',
+  '10_education': 'bg-orange-100 text-orange-700 border-orange-200'
+};
+
+const parseActionMeta = (desc: string | null) => {
+  if (!desc) return { text: '', category: '70_experience' };
+  try {
+    const parsed = JSON.parse(desc);
+    if (parsed.category) return parsed;
+    return { text: desc, category: '70_experience' };
+  } catch {
+    return { text: desc, category: '70_experience' };
+  }
+};
+
 interface PDIPageProps {
   initialEmployeeName?: string;
   autoOpenDialog?: boolean;
@@ -74,7 +97,7 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
   const [dialogOpen, setDialogOpen] = useState(false);
   const [actionDialogPdiId, setActionDialogPdiId] = useState<string | null>(null);
   const [pdiForm, setPdiForm] = useState({ cycle_id: '', employee_name: '' });
-  const [actionForm, setActionForm] = useState({ title: '', description: '', deadline: '', competency_id: '' });
+  const [actionForm, setActionForm] = useState({ title: '', description: '', deadline: '', competency_id: '', category: '70_experience' });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -147,10 +170,15 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
       toast({ title: 'Informe o título da ação', variant: 'destructive' });
       return;
     }
+    const actionMeta = JSON.stringify({
+      text: actionForm.description,
+      category: actionForm.category
+    });
+
     const { error } = await supabase.from('pdi_actions').insert([{
       pdi_id: actionDialogPdiId,
       title: actionForm.title,
-      description: actionForm.description || null,
+      description: actionMeta,
       deadline: actionForm.deadline || null,
       competency_id: actionForm.competency_id || null,
     }]);
@@ -159,7 +187,7 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
     } else {
       toast({ title: 'Ação adicionada!' });
       setActionDialogPdiId(null);
-      setActionForm({ title: '', description: '', deadline: '', competency_id: '' });
+      setActionForm({ title: '', description: '', deadline: '', competency_id: '', category: '70_experience' });
       fetchPDIs();
     }
   }
@@ -182,6 +210,36 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
     const pdiActions = actions[pdiId] || [];
     if (pdiActions.length === 0) return 0;
     return Math.round(pdiActions.reduce((acc, a) => acc + a.progress, 0) / pdiActions.length);
+  };
+
+  const renderBalance = (pdiActions: PDIAction[]) => {
+    const total = pdiActions.length;
+    if (total === 0) return null;
+    let count70 = 0, count20 = 0, count10 = 0;
+    pdiActions.forEach(a => {
+      const meta = parseActionMeta(a.description);
+      if (meta.category === '70_experience') count70++;
+      else if (meta.category === '20_exposure') count20++;
+      else count10++;
+    });
+    const p70 = (count70/total)*100;
+    const p20 = (count20/total)*100;
+    const p10 = (count10/total)*100;
+    
+    return (
+      <div className="w-full mt-3 px-1">
+        <div className="flex justify-between text-[10px] uppercase font-bold tracking-wider mb-1">
+          <span className="text-blue-700">70% Prática ({Math.round(p70)}%)</span>
+          <span className="text-purple-700">20% Social ({Math.round(p20)}%)</span>
+          <span className="text-orange-700">10% Formal ({Math.round(p10)}%)</span>
+        </div>
+        <div className="flex h-2 w-full rounded-full overflow-hidden bg-muted">
+          <div style={{ width: `${p70}%` }} className="bg-blue-500 transition-all duration-500" />
+          <div style={{ width: `${p20}%` }} className="bg-purple-500 transition-all duration-500" />
+          <div style={{ width: `${p10}%` }} className="bg-orange-500 transition-all duration-500" />
+        </div>
+      </div>
+    );
   };
 
   const careerLevels = [
@@ -221,18 +279,33 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
 
       {/* Action creation dialog */}
       <Dialog open={!!actionDialogPdiId} onOpenChange={open => !open && setActionDialogPdiId(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Nova Ação de Desenvolvimento</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Adicionar Ação de Desenvolvimento</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
-            <div><Label>Título</Label><FastInput value={actionForm.title} onValueChange={v => setActionForm(f => ({ ...f, title: v }))} placeholder="Ex: Curso de liderança" /></div>
-            <div><Label>Descrição</Label><FastTextarea value={actionForm.description} onValueChange={v => setActionForm(f => ({ ...f, description: v }))} /></div>
-            <div><Label>Prazo</Label><Input type="date" value={actionForm.deadline} onChange={e => setActionForm({ ...actionForm, deadline: e.target.value })} /></div>
             <div>
-              <Label>Competência vinculada (opcional)</Label>
-              <Select value={actionForm.competency_id} onValueChange={v => setActionForm({ ...actionForm, competency_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
-                <SelectContent>{competencies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+              <Label>Tipo de Aprendizado (70:20:10)</Label>
+              <Select value={actionForm.category} onValueChange={v => setActionForm({ ...actionForm, category: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione o tipo..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="70_experience">70% Experiência (Projetos, Prática, Desafios)</SelectItem>
+                  <SelectItem value="20_exposure">20% Exposição (Mentoria, Feedback, Observação)</SelectItem>
+                  <SelectItem value="10_education">10% Educação (Cursos, Livros, Workshops)</SelectItem>
+                </SelectContent>
               </Select>
+            </div>
+            <div><Label>Título (Meta SMART)</Label><FastInput value={actionForm.title} onValueChange={v => setActionForm({ ...actionForm, title: v })} placeholder="Ex: Liderar o projeto X até o fim do mês" /></div>
+            <div><Label>Descrição / Como Fazer</Label><FastTextarea value={actionForm.description} onValueChange={v => setActionForm({ ...actionForm, description: v })} placeholder="Detalhe as etapas e recursos necessários..." /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Prazo</Label><Input type="date" value={actionForm.deadline} onChange={e => setActionForm({ ...actionForm, deadline: e.target.value })} /></div>
+              <div>
+                <Label>Competência Foco</Label>
+                <Select value={actionForm.competency_id} onValueChange={v => setActionForm({ ...actionForm, competency_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                  <SelectContent>
+                    {competencies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <Button onClick={createAction} className="w-full">Adicionar Ação</Button>
           </div>
@@ -250,7 +323,7 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
               <h3 className="font-semibold text-foreground text-sm mb-1">{level.cargo}</h3>
               <p className="text-xs text-muted-foreground">{level.requisito}</p>
               {i < careerLevels.length - 1 && (
-                <div className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">â†’</div>
+                <div className="hidden lg:block absolute -right-4 top-1/2 -translate-y-1/2 text-muted-foreground z-10">→</div>
               )}
             </div>
           ))}
@@ -274,13 +347,16 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
                 <div className="p-4 flex items-center gap-4 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : pdi.id)}>
                   <div className="flex-1">
                     <h3 className="font-medium text-foreground">{pdi.employee_name}</h3>
-                    <p className="text-sm text-muted-foreground">Ciclo: {cycleName(pdi.cycle_id)} Â· {pdiActions.length} ações Â· {pdiStatusLabels[pdi.status]}</p>
+                    <p className="text-sm text-muted-foreground">Ciclo: {cycleName(pdi.cycle_id)} · {pdiActions.length} ações · {pdiStatusLabels[pdi.status]}</p>
                   </div>
-                  <div className="flex items-center gap-3 min-w-[140px]">
+                  <div className="flex-1 max-w-[300px] hidden md:block">
+                    {renderBalance(pdiActions)}
+                  </div>
+                  <div className="flex items-center gap-3 min-w-[140px] ml-4">
                     <Progress value={progress} className="h-2 flex-1" />
                     <span className="text-sm font-medium text-foreground w-10 text-right">{progress}%</span>
                   </div>
-                  {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+                  {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground ml-2" /> : <ChevronDown className="w-5 h-5 text-muted-foreground ml-2" />}
                 </div>
                 {isExpanded && (
                   <div className="px-4 pb-4 border-t border-border pt-3 space-y-2">
@@ -288,25 +364,35 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
                       <p className="text-sm text-muted-foreground">Nenhuma ação adicionada.</p>
                     ) : pdiActions.map(action => {
                       const Icon = statusIcons[action.status] || Clock;
+                      const meta = parseActionMeta(action.description);
                       return (
-                        <div key={action.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-                          <Icon className={`w-4 h-4 flex-shrink-0 ${action.status === 'completed' ? 'text-green-600' : action.status === 'in_progress' ? 'text-blue-600' : 'text-yellow-600'}`} />
+                        <div key={action.id} className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 rounded-xl bg-muted/20 border border-border/50 hover:bg-muted/40 transition-colors">
+                          <Icon className={`w-5 h-5 flex-shrink-0 mt-1 md:mt-0 ${action.status === 'completed' ? 'text-green-600' : action.status === 'in_progress' ? 'text-blue-600' : 'text-yellow-600'}`} />
                           <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${categoryColors[meta.category]}`}>{categoryLabels[meta.category]}</span>
+                            </div>
                             <p className="text-sm font-medium text-foreground">{action.title}</p>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                              {action.competency_id && <span className="px-1.5 py-0.5 bg-primary/10 text-primary rounded">{compName(action.competency_id)}</span>}
-                              {action.deadline && <span>Prazo: {action.deadline}</span>}
-                              <span className={`px-1.5 py-0.5 rounded ${statusColors[action.status]}`}>{statusLabels[action.status]}</span>
+                            {meta.text && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{meta.text}</p>}
+                            <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground mt-2">
+                              {action.competency_id && <span className="px-2 py-1 bg-primary/10 text-primary rounded-md font-medium">Foco: {compName(action.competency_id)}</span>}
+                              {action.deadline && <span className="px-2 py-1 bg-background border rounded-md">Prazo: {new Date(action.deadline).toLocaleDateString('pt-BR')}</span>}
+                              <span className={`px-2 py-1 rounded-md font-medium ${statusColors[action.status]}`}>{statusLabels[action.status]}</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number" min={0} max={100} value={action.progress}
-                              onChange={e => updateActionProgress(action.id, parseInt(e.target.value) || 0)}
-                              className="w-16 h-8 text-xs text-center"
-                            />
-                            <span className="text-xs text-muted-foreground">%</span>
-                            <button onClick={() => deleteAction(action.id)} className="text-muted-foreground hover:text-destructive p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end mt-4 md:mt-0 pt-3 md:pt-0 border-t md:border-0 border-border/50">
+                            <div className="flex items-center gap-2">
+                              <Label className="text-xs text-muted-foreground hidden md:block">Progresso:</Label>
+                              <Input
+                                type="number" min={0} max={100} value={action.progress}
+                                onChange={e => updateActionProgress(action.id, parseInt(e.target.value) || 0)}
+                                className="w-16 h-8 text-xs text-center font-semibold bg-background"
+                              />
+                              <span className="text-xs font-medium text-muted-foreground">%</span>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => deleteAction(action.id)} className="text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
                         </div>
                       );
