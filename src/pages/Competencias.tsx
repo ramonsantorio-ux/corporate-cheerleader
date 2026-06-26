@@ -164,19 +164,18 @@ export default function Competencias() {
     if (!evalForm.employee_id) return toast({ title: 'Selecione um colaborador', variant: 'destructive' });
     if (!evalForm.cycle_id) return toast({ title: 'Selecione um ciclo', variant: 'destructive' });
     
-    const activeComps = competencies.filter(c => !c.cycle_id || c.cycle_id === evalForm.cycle_id);
-    if (activeComps.length === 0) {
+    if (competencies.length === 0) {
       return toast({ title: 'Nenhum critério de Fit Cultural cadastrado.', variant: 'destructive' });
     }
 
     // Validação
-    for (const c of activeComps) {
+    for (const c of competencies) {
       if (!evalScores[c.id]) {
          return toast({ title: 'Por favor, avalie todas as competências.', variant: 'destructive' });
       }
     }
 
-    const inserts = activeComps.map(c => ({
+    const inserts = competencies.map(c => ({
       employee_id: evalForm.employee_id,
       criteria: c.name,
       score: evalScores[c.id],
@@ -188,7 +187,7 @@ export default function Competencias() {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     } else {
       // Calcular média
-      const avg = Math.round(Object.values(evalScores).reduce((a,b)=>a+b,0) / activeComps.length);
+      const avg = Math.round(Object.values(evalScores).reduce((a,b)=>a+b,0) / competencies.length);
       await supabase.from('funcionarios').update({ fit_cultural: avg }).eq('id', evalForm.employee_id);
       
       toast({ title: 'Avaliação de Fit Cultural concluída com sucesso!' });
@@ -266,13 +265,13 @@ export default function Competencias() {
                   <div className="space-y-6">
                     <p className="text-sm text-muted-foreground mb-4">Avalie a aderência do colaborador para cada critério da nossa cultura (1 = Muito Baixa, 5 = Muito Alta).</p>
                     <div className="max-h-[50vh] overflow-y-auto space-y-4 pr-2">
-                      {competencies.filter(c => !c.cycle_id || c.cycle_id === evalForm.cycle_id).length === 0 ? (
+                      {competencies.length === 0 ? (
                         <div className="text-center p-6 bg-muted/20 border border-dashed border-border rounded-lg">
                           <p className="text-sm font-medium text-foreground">Nenhum critério cadastrado.</p>
                           <p className="text-xs text-muted-foreground mt-1">Antes de avaliar o colaborador, você precisa clicar em <b>"+ Cadastrar Critério"</b> na tela anterior e registrar os pilares da cultura da empresa (ex: Liderança, Comunicação).</p>
                         </div>
                       ) : (
-                        competencies.filter(c => !c.cycle_id || c.cycle_id === evalForm.cycle_id).map(c => (
+                        competencies.map(c => (
                           <div key={c.id} className="p-4 bg-muted/30 border border-border/50 rounded-lg">
                             <h4 className="font-semibold text-foreground text-sm">{c.name}</h4>
                             {c.description && <p className="text-xs text-muted-foreground mt-1 mb-3">{c.description}</p>}
