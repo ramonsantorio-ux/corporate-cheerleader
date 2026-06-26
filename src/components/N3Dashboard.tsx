@@ -557,9 +557,12 @@ export default function N3Dashboard() {
             </CardContent>
           </Card>
         </div>
+      </div>
 
-        <ExpandableChart title="Engajamento por Colaborador - CRM" description="Volume de entregas no período">
-            <div className="h-[350px] w-full">
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
+        <ExpandableChart title="Engajamento por Colaborador" description="Volume de entregas no período">
+            <div className="h-[240px] w-full">
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -584,12 +587,9 @@ export default function N3Dashboard() {
               )}
             </div>
           </ExpandableChart>
-      </div>
 
-      {/* Gráficos Evolutivos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <ExpandableChart title="Evolução Geral do Contrato - CRM" description="Crescimento de Verificações e Não Conformes">
-            <div className="h-[300px] w-full">
+        <ExpandableChart title="Evolução Geral do Contrato" description="Crescimento de Verificações e Não Conformes">
+            <div className="h-[240px] w-full">
               {evolutionChartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={evolutionChartData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
@@ -625,8 +625,8 @@ export default function N3Dashboard() {
             </div>
           </ExpandableChart>
 
-        <ExpandableChart title="Evolução por Colaborador - CRM" description="Não Conformes ao longo do tempo">
-            <div className="h-[300px] w-full">
+        <ExpandableChart title="Evolução por Colaborador" description="Não Conformes ao longo do tempo">
+            <div className="h-[240px] w-full">
               {evolutionByPersonData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={evolutionByPersonData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>

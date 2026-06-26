@@ -876,7 +876,7 @@ export default function Eventos() {
             </Card>
           </motion.div>
 
-          <div className="grid grid-cols-1 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -885,7 +885,7 @@ export default function Eventos() {
                 <CardDescription>Acompanhamento histórico da volumetria de eventos registrados</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[350px] w-full">
+                <div className="h-[240px] w-full mt-2">
                   <ExpandableChart title="Evolução Mensal de Eventos">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={analytics.monthTrend} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
@@ -917,7 +917,7 @@ export default function Eventos() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[280px]">
+                <div className="h-[240px] mt-2">
                   <ExpandableChart title="Comparativo Anual">
                     <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={analytics.yearData} margin={{ top: 25, right: 20, bottom: 5, left: -20 }}>
@@ -947,7 +947,7 @@ export default function Eventos() {
 
         {/* 2. OPERAÇÃO E TURNOS */}
         <TabsContent value="operacao" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
             <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -955,7 +955,7 @@ export default function Eventos() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[280px]">
+                <div className="h-[240px] mt-2">
                   <ExpandableChart title="Principais Locais">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -991,7 +991,7 @@ export default function Eventos() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[280px]">
+                <div className="h-[240px] mt-2">
                   <ExpandableChart title="Por Tipo de Equipamento">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analytics.topEquipment} layout="vertical" margin={{ left: 10 }}>
@@ -1016,7 +1016,7 @@ export default function Eventos() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[250px] w-full">
+                <div className="h-[240px] w-full mt-2">
                   <ExpandableChart title="Horário dos Eventos">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
@@ -1043,7 +1043,7 @@ export default function Eventos() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[280px]">
+                <div className="h-[240px] mt-2">
                   <ExpandableChart title="Por Dia da Semana">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analytics.dayData}>
@@ -1070,7 +1070,7 @@ export default function Eventos() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[280px] w-full">
+                <div className="h-[240px] w-full mt-2">
                   <ExpandableChart title="Eventos por Letra">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analytics.letraData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>

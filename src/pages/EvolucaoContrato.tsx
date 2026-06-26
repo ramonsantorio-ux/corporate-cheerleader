@@ -971,16 +971,16 @@ export default function EvolucaoContrato() {
           </div>
 
           <TabsContent value="visao_executiva" className="space-y-6 mt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 
           {/* NOVO GRÁFICO DIRETORIA - ADERÊNCIA SLA */}
-          <Card className="shadow-sm border-border lg:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('sla')}>
-            <CardHeader>
-              <CardTitle className="text-xl">Evolução da Aderência (SLA)</CardTitle>
-              <CardDescription>Visão executiva do cumprimento de qualidade operacional frente à meta contratual de 95%.</CardDescription>
+          <Card className="shadow-sm border-border lg:col-span-2 xl:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('sla')}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Evolução da Aderência (SLA)</CardTitle>
+              <CardDescription className="text-xs">Visão executiva do SLA vs meta de 95%.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[350px] w-full mt-4">
+              <div className="h-[240px] w-full mt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={filteredChartData} margin={{ top: 20, right: 30, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
@@ -1004,13 +1004,13 @@ export default function EvolucaoContrato() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('resumo')}>
-            <CardHeader>
-              <CardTitle className="text-lg">Aderência vs Margem</CardTitle>
-              <CardDescription>Correlação entre a qualidade do serviço e a rentabilidade do contrato.</CardDescription>
+          <Card className="shadow-sm border-border lg:col-span-1 xl:col-span-1 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('resumo')}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Aderência vs Margem</CardTitle>
+              <CardDescription className="text-xs">Correlação qualidade vs lucro.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full mt-4">
+              <div className="h-[240px] w-full mt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
@@ -1033,13 +1033,13 @@ export default function EvolucaoContrato() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('rentabilidade')}>
-            <CardHeader>
-              <CardTitle className="text-lg">Análise de Rentabilidade</CardTitle>
-              <CardDescription>Receita vs Lucro vs Ofensores Financeiros (Glosas+Multas+Custos Extras).</CardDescription>
+          <Card className="shadow-sm border-border lg:col-span-2 xl:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('rentabilidade')}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Análise de Rentabilidade</CardTitle>
+              <CardDescription className="text-xs">Receita vs Lucro vs Ofensores Financeiros.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full mt-4">
+              <div className="h-[240px] w-full mt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={handleChartClick} style={{ cursor: 'pointer' }}>
                     <defs>
@@ -1063,13 +1063,13 @@ export default function EvolucaoContrato() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-sm border-border transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('ofensores')}>
-            <CardHeader>
-              <CardTitle className="text-lg">Mapa de Ofensores (Acumulado)</CardTitle>
-              <CardDescription>Principais ralos financeiros corroendo a margem do contrato no ano.</CardDescription>
+          <Card className="shadow-sm border-border lg:col-span-1 xl:col-span-1 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('ofensores')}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Mapa de Ofensores</CardTitle>
+              <CardDescription className="text-xs">Ralos financeiros acumulados no ano.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full mt-4">
+              <div className="h-[240px] w-full mt-2">
                 {ofensoresData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
