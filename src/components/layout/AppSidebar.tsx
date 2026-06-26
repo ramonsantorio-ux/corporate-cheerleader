@@ -3,7 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BarChart3, Settings, ChevronLeft, ChevronRight,
   Users, Target, Shield, LogOut, Calendar, AlertTriangle, CalendarDays,
-  Briefcase, Brain, ClipboardList, GitMerge, TrendingUp, FileText, FileWarning, MessageSquare
+  Briefcase, Brain, ClipboardList, GitMerge, TrendingUp, FileText, FileWarning, MessageSquare, BrainCircuit
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -44,6 +44,12 @@ const navGroups: NavGroup[] = [
       { to: '/assessment/disc', icon: Brain, label: 'Teste DISC' },
       { to: '/assessment/mbti', icon: Brain, label: 'MBTI' },
       { to: '/assessment/bigfive', icon: Brain, label: 'Big Five' },
+    ],
+  },
+  {
+    label: 'Liderança & Gestão',
+    items: [
+      { to: '/painel-gestor', icon: BrainCircuit, label: 'Painel do Gestor', badge: 'NOVO' },
     ],
   },
   {
