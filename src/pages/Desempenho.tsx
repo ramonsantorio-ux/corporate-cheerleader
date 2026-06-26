@@ -14,8 +14,6 @@ import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, Cell } from 'recharts';
 
-import MetasBusato from '@/components/MetasBusato';
-import MetasPorto from '@/components/MetasPorto';
 import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
 import Feedback360 from './Feedback360';
@@ -126,8 +124,6 @@ export default function Desempenho() {
     { value: 'ciclos', label: 'Ciclos de Avaliação', icon: Calendar },
     { value: 'feedback360', label: 'Avaliações 360º', icon: Brain },
     { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
-    { value: 'metas', label: 'Metas Busato', icon: TrendingUp },
-    { value: 'metas-porto', label: 'Metas Porto', icon: Target },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
     { value: 'pdi', label: 'PDI', icon: ClipboardList },
   ];
@@ -222,16 +218,6 @@ export default function Desempenho() {
               )}
             </div>
           </motion.div>
-        </TabsContent>
-
-        {/* ═══ METAS BUSATO ═══ */}
-        <TabsContent value="metas" className="mt-0">
-          <MetasBusato />
-        </TabsContent>
-
-        {/* ═══ METAS PORTO ═══ */}
-        <TabsContent value="metas-porto" className="mt-0">
-          <MetasPorto />
         </TabsContent>
 
         {/* ═══ FIT CULTURAL ═══ */}

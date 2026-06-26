@@ -15,7 +15,6 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { statusLabels, statusColors, priorityLabels, priorityColors, FeedbackStatus, FeedbackPriority } from '@/lib/feedbackData';
-import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
@@ -852,12 +851,7 @@ export default function FuncionarioProfile() {
               </Tabs>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {/* ——— FIT CULTURAL ——— */}
-              <div className="glass-card rounded-xl p-6 border-t-4 border-t-chart-2 shadow-sm flex flex-col">
-                <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
-              </div>
-
+            <div className="grid grid-cols-1 gap-6">
               {/* ——— NINE BOX ——— */}
               <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
                 <NineBoxSection 

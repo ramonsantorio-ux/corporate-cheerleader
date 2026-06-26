@@ -17,6 +17,8 @@ import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianG
 import * as XLSX from 'xlsx';
 import { PerformanceMensalTab } from '@/components/PerformanceMensalTab';
 import { AderenciaDiariaViewer } from '@/components/AderenciaDiariaViewer';
+import MetasBusato from '@/components/MetasBusato';
+import MetasPorto from '@/components/MetasPorto';
 
 interface OfensorFinanceiro {
   motivo: string;
@@ -953,6 +955,8 @@ export default function EvolucaoContrato() {
               <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
               <TabsTrigger value="aderencia" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingUp className="w-4 h-4 mr-2" />Aderência</TabsTrigger>
               <TabsTrigger value="performance_mensal" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><BarChart3 className="w-4 h-4 mr-2" />Performance Mensal</TabsTrigger>
+              <TabsTrigger value="metas_busato" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Busato</TabsTrigger>
+              <TabsTrigger value="metas_porto" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Porto</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
@@ -1374,6 +1378,12 @@ export default function EvolucaoContrato() {
               setMedicoes={setMedicoes} 
               timeRange={timeRange} 
             />
+          </TabsContent>
+          <TabsContent value="metas_busato" className="space-y-6 mt-4">
+            <MetasBusato />
+          </TabsContent>
+          <TabsContent value="metas_porto" className="space-y-6 mt-4">
+            <MetasPorto />
           </TabsContent>
         </Tabs>
       ) : (
