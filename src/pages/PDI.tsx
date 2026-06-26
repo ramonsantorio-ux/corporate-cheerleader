@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, ChevronDown, ChevronUp, CheckCircle2, Clock, PlayCircle, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,7 +58,13 @@ const pdiStatusLabels: Record<string, string> = {
   cancelled: 'Cancelado',
 };
 
-export default function PDIPage() {
+interface PDIPageProps {
+  initialEmployeeName?: string;
+  autoOpenDialog?: boolean;
+  onDialogClose?: () => void;
+}
+
+export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogClose }: PDIPageProps = {}) {
   const [pdis, setPdis] = useState<PDI[]>([]);
   const [actions, setActions] = useState<Record<string, PDIAction[]>>({});
   const [cycles, setCycles] = useState<Cycle[]>([]);
@@ -74,6 +80,20 @@ export default function PDIPage() {
   useEffect(() => {
     Promise.all([fetchPDIs(), fetchCycles(), fetchCompetencies()]);
   }, []);
+
+  useEffect(() => {
+    if (autoOpenDialog && initialEmployeeName) {
+      setPdiForm(prev => ({ ...prev, employee_name: initialEmployeeName }));
+      setDialogOpen(true);
+    }
+  }, [autoOpenDialog, initialEmployeeName]);
+
+  const handleOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open && onDialogClose) {
+      onDialogClose();
+    }
+  };
 
   async function fetchPDIs() {
     const { data } = await supabase.from('pdis').select('*').order('created_at', { ascending: false });
@@ -116,7 +136,7 @@ export default function PDIPage() {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'PDI criado!' });
-      setDialogOpen(false);
+      handleOpenChange(false);
       setPdiForm({ cycle_id: '', employee_name: '' });
       fetchPDIs();
     }
@@ -178,7 +198,7 @@ export default function PDIPage() {
           <h1 className="text-2xl font-bold text-foreground">PDI - Plano de Desenvolvimento</h1>
           <p className="text-muted-foreground text-sm mt-1">Ações de desenvolvimento vinculadas a competências</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> Novo PDI</Button>
           </DialogTrigger>

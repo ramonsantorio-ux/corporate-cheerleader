@@ -2,11 +2,15 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, AlertTriangle, TrendingUp, Target, BrainCircuit, Activity } from "lucide-react";
+import { Users, AlertTriangle, TrendingUp, Target, BrainCircuit, Activity, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import PDIPage from "./PDI";
 
 export default function GestaoLideranca() {
   const [loading, setLoading] = useState(true);
   const [team, setTeam] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("visao-geral");
+  const [pdiEmployee, setPdiEmployee] = useState<string | undefined>();
 
   useEffect(() => {
     fetchTeamData();
@@ -76,7 +80,7 @@ export default function GestaoLideranca() {
         </Card>
       </div>
 
-      <Tabs defaultValue="visao-geral" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="visao-geral" className="flex items-center gap-2"><Activity className="w-4 h-4" /> Visão da Equipe</TabsTrigger>
           <TabsTrigger value="pdi" className="flex items-center gap-2"><Target className="w-4 h-4" /> PDI (Planos de Desenvolvimento)</TabsTrigger>
@@ -100,7 +104,12 @@ export default function GestaoLideranca() {
                           <p className="font-semibold text-sm">{t.nome}</p>
                           <p className="text-xs text-muted-foreground">{t.cargo}</p>
                         </div>
-                        <span className="text-xs bg-background border px-2 py-1 rounded-md">Desempenho Baixo</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs bg-background border px-2 py-1 rounded-md text-red-600 font-medium">Baixo Desempenho</span>
+                          <Button size="sm" variant="outline" className="h-7 text-xs border-red-200 hover:bg-red-50 text-red-600" onClick={() => { setPdiEmployee(t.nome); setActiveTab("pdi"); }}>
+                            <Plus className="w-3 h-3 mr-1" /> Criar PDI
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -124,7 +133,12 @@ export default function GestaoLideranca() {
                           <p className="font-semibold text-sm">{t.nome}</p>
                           <p className="text-xs text-muted-foreground">{t.cargo}</p>
                         </div>
-                        <span className="text-xs bg-background border px-2 py-1 rounded-md text-green-600 font-medium">Promoção/Sucessão</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs bg-background border px-2 py-1 rounded-md text-green-600 font-medium">Promoção/Sucessão</span>
+                          <Button size="sm" variant="outline" className="h-7 text-xs border-green-200 hover:bg-green-50 text-green-600" onClick={() => { setPdiEmployee(t.nome); setActiveTab("pdi"); }}>
+                            <Plus className="w-3 h-3 mr-1" /> Criar PDI
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -134,26 +148,12 @@ export default function GestaoLideranca() {
           </div>
         </TabsContent>
 
-        <TabsContent value="pdi" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Planos de Desenvolvimento Individual (PDI)</CardTitle>
-              <CardDescription>Crie e acompanhe as metas de evolução da sua equipe.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-xl bg-muted/20">
-                <Target className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                <h3 className="font-bold text-lg text-foreground mb-2">Módulo PDI Ativo</h3>
-                <p className="text-sm text-muted-foreground max-w-md">
-                  Aqui o gestor poderá cadastrar objetivos de desenvolvimento técnico ou comportamental (soft skills) para cada liderado, com prazos e status.
-                </p>
-                {/* Aqui seria incluída a interface completa do PDI num passo futuro */}
-                <div className="mt-6 bg-background px-4 py-2 rounded-full border text-sm font-medium text-primary shadow-sm">
-                  Em implantação nas próximas atualizações
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="pdi" className="mt-4">
+          <PDIPage 
+            initialEmployeeName={pdiEmployee} 
+            autoOpenDialog={!!pdiEmployee} 
+            onDialogClose={() => setPdiEmployee(undefined)} 
+          />
         </TabsContent>
       </Tabs>
     </div>
