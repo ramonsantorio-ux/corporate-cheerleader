@@ -971,7 +971,7 @@ export default function EvolucaoContrato() {
           </div>
 
           <TabsContent value="visao_executiva" className="space-y-6 mt-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           {/* NOVO GRÁFICO DIRETORIA - ADERÊNCIA SLA */}
           <Card className="shadow-sm border-border lg:col-span-2 xl:col-span-2 transition-all duration-300 hover:shadow-lg hover:border-primary/50 hover:scale-[1.01] cursor-pointer" onClick={() => setExpandedChart('sla')}>
@@ -990,7 +990,7 @@ export default function EvolucaoContrato() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} interval={0} angle={-45} textAnchor="end" height={60} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} minTickGap={15} angle={-45} textAnchor="end" height={60} />
                     <YAxis domain={['auto', 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
@@ -1020,7 +1020,7 @@ export default function EvolucaoContrato() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} interval={0} angle={-45} textAnchor="end" height={60} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} minTickGap={15} angle={-45} textAnchor="end" height={60} />
                     <YAxis yAxisId="left" orientation="left" stroke="hsl(var(--primary))" fontSize={12} domain={[80, 100]} />
                     <YAxis yAxisId="right" orientation="right" stroke="hsl(var(--blue-500))" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip content={<CustomTooltip />} />
@@ -1049,7 +1049,7 @@ export default function EvolucaoContrato() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} interval={0} angle={-45} textAnchor="end" height={60} />
+                    <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={11} tickMargin={10} minTickGap={15} angle={-45} textAnchor="end" height={60} />
                     <YAxis yAxisId="left" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 'auto']} />
                     <YAxis yAxisId="right" orientation="right" tickFormatter={(val) => `R${(val/1000).toFixed(0)}k`} stroke="hsl(var(--destructive))" fontSize={12} domain={[0, 'auto']} />
                     <Tooltip content={<CustomTooltip />} />
@@ -1077,8 +1077,8 @@ export default function EvolucaoContrato() {
                         data={ofensoresData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={90}
-                        outerRadius={120}
+                        innerRadius={60}
+                        outerRadius={80}
                         paddingAngle={5}
                         dataKey="value"
                         stroke="none"
