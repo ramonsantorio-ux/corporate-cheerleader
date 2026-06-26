@@ -62,6 +62,10 @@ export default function Competencias() {
   const [evalCycles, setEvalCycles] = useState<EvaluationCycle[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [evalDialogOpen, setEvalDialogOpen] = useState(false);
+  const [evalStep, setEvalStep] = useState(1);
+  const [evalForm, setEvalForm] = useState({ employee_id: '', cycle_id: '' });
+  const [evalScores, setEvalScores] = useState<Record<string, number>>({});
   const [filterCycle, setFilterCycle] = useState<string>('all');
   const [form, setForm] = useState({ name: '', description: '', cycle_id: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
@@ -156,6 +160,45 @@ export default function Competencias() {
     fetchCompetencies();
   }
 
+  async function submitEvaluation() {
+    if (!evalForm.employee_id) return toast({ title: 'Selecione um colaborador', variant: 'destructive' });
+    if (!evalForm.cycle_id) return toast({ title: 'Selecione um ciclo', variant: 'destructive' });
+    
+    const activeComps = competencies.filter(c => !c.cycle_id || c.cycle_id === evalForm.cycle_id);
+    if (activeComps.length === 0) {
+      return toast({ title: 'Nenhum critério de Fit Cultural cadastrado.', variant: 'destructive' });
+    }
+
+    // Validação
+    for (const c of activeComps) {
+      if (!evalScores[c.id]) {
+         return toast({ title: 'Por favor, avalie todas as competências.', variant: 'destructive' });
+      }
+    }
+
+    const inserts = activeComps.map(c => ({
+      employee_id: evalForm.employee_id,
+      criteria: c.name,
+      score: evalScores[c.id],
+      stage: evalForm.cycle_id
+    }));
+
+    const { error } = await supabase.from('fit_cultural').insert(inserts);
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+    } else {
+      // Calcular média
+      const avg = Math.round(Object.values(evalScores).reduce((a,b)=>a+b,0) / activeComps.length);
+      await supabase.from('funcionarios').update({ fit_cultural: avg }).eq('id', evalForm.employee_id);
+      
+      toast({ title: 'Avaliação de Fit Cultural concluída com sucesso!' });
+      setEvalDialogOpen(false);
+      setEvalStep(1);
+      setEvalForm({ employee_id: '', cycle_id: '' });
+      setEvalScores({});
+    }
+  }
+
   const filtered = filterCycle === 'all'
     ? competencies
     : competencies.filter(c => c.cycle_id === filterCycle);
@@ -167,28 +210,90 @@ export default function Competencias() {
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Fit Cultural</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerencie competências e fit cultural por ciclo</p>
+          <p className="text-muted-foreground text-sm mt-1">Gerencie competências e avalie o fit cultural da equipe</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Nova Competência</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Criar Competência</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div><Label>Nome</Label><FastInput value={form.name} onValueChange={v => setForm({ ...form, name: v })} placeholder="Ex: Liderança" /></div>
-              <div><Label>Descrição</Label><FastTextarea value={form.description} onValueChange={v => setForm({ ...form, description: v })} placeholder="Descreva a competência" /></div>
-              <div>
-                <Label>Ciclo (opcional)</Label>
-                <Select value={form.cycle_id} onValueChange={v => setForm({ ...form, cycle_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Geral (todos os ciclos)" /></SelectTrigger>
-                  <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                </Select>
+        <div className="flex items-center gap-3">
+          <Button variant="secondary" onClick={() => setEvalDialogOpen(true)} className="bg-primary/10 text-primary hover:bg-primary/20">
+            <Target className="w-4 h-4 mr-2" /> Avaliar Colaborador
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="w-4 h-4 mr-2" /> Cadastrar Critério</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Criar Critério de Fit Cultural</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div><Label>Nome (Critério)</Label><FastInput value={form.name} onValueChange={v => setForm({ ...form, name: v })} placeholder="Ex: Liderança, Comunicação..." /></div>
+                <div><Label>Descrição</Label><FastTextarea value={form.description} onValueChange={v => setForm({ ...form, description: v })} placeholder="O que significa essa competência na nossa cultura?" /></div>
+                <div>
+                  <Label>Ciclo (opcional)</Label>
+                  <Select value={form.cycle_id} onValueChange={v => setForm({ ...form, cycle_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Geral (todos os ciclos)" /></SelectTrigger>
+                    <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={createCompetency} className="w-full">Cadastrar Critério</Button>
               </div>
-              <Button onClick={createCompetency} className="w-full">Criar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={evalDialogOpen} onOpenChange={open => { setEvalDialogOpen(open); if(!open){ setEvalStep(1); setEvalScores({}); } }}>
+            <DialogContent className="max-w-xl">
+              <DialogHeader><DialogTitle>Questionário de Fit Cultural</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-4">
+                {evalStep === 1 ? (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Colaborador</Label>
+                      <Select value={evalForm.employee_id} onValueChange={v => setEvalForm({ ...evalForm, employee_id: v })}>
+                        <SelectTrigger><SelectValue placeholder="Selecione quem será avaliado..." /></SelectTrigger>
+                        <SelectContent>{funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} - {f.cargo}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Ciclo de Avaliação</Label>
+                      <Select value={evalForm.cycle_id} onValueChange={v => setEvalForm({ ...evalForm, cycle_id: v })}>
+                        <SelectTrigger><SelectValue placeholder="Selecione o ciclo..." /></SelectTrigger>
+                        <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={() => {
+                      if(!evalForm.employee_id || !evalForm.cycle_id) return toast({ title: 'Preencha os campos', variant: 'destructive' });
+                      setEvalStep(2);
+                    }} className="w-full mt-4">Iniciar Questionário</Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <p className="text-sm text-muted-foreground mb-4">Avalie a aderência do colaborador para cada critério da nossa cultura (1 = Muito Baixa, 5 = Muito Alta).</p>
+                    <div className="max-h-[50vh] overflow-y-auto space-y-4 pr-2">
+                      {competencies.filter(c => !c.cycle_id || c.cycle_id === evalForm.cycle_id).map(c => (
+                        <div key={c.id} className="p-4 bg-muted/30 border border-border/50 rounded-lg">
+                          <h4 className="font-semibold text-foreground text-sm">{c.name}</h4>
+                          {c.description && <p className="text-xs text-muted-foreground mt-1 mb-3">{c.description}</p>}
+                          <div className="flex items-center gap-2 mt-2">
+                            {[1,2,3,4,5].map(note => (
+                              <button
+                                key={note}
+                                onClick={() => setEvalScores(prev => ({ ...prev, [c.id]: note }))}
+                                className={`flex-1 py-1.5 text-sm font-medium rounded-md border transition-colors ${evalScores[c.id] === note ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-border/50 text-foreground'}`}
+                              >
+                                {note}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex gap-3 pt-2 border-t border-border/50">
+                      <Button variant="outline" onClick={() => setEvalStep(1)} className="flex-1">Voltar</Button>
+                      <Button onClick={submitEvaluation} className="flex-1">Concluir Avaliação</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </motion.div>
 
       {/* Avaliações por Cargo Chart */}
