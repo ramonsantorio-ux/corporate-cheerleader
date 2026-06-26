@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-const busatoGlobo = '/logo.svg';
+const busatoGlobo = '/logo.png';
 import busatoLogoFull from '@/assets/busato-logo-full.png';
 
 interface NavItem { to: string; icon: any; label: string; badge?: string }
