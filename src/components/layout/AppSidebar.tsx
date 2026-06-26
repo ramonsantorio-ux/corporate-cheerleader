@@ -34,14 +34,13 @@ const navGroups: NavGroup[] = [
     label: 'Performance',
     items: [
       { to: '/desempenho', icon: Target, label: 'Gestão de Performance' },
-      { to: '/cadastro-metas', icon: ClipboardList, label: 'Lançar Metas', badge: 'NOVO' },
       { to: '/sucessao', icon: TrendingUp, label: 'Sucessão & 9Box' },
     ],
   },
   {
     label: 'Talentos & Comportamento',
     items: [
-      { to: '/treinamentos', icon: ClipboardList, label: 'Assessments Hub', badge: 'NOVO' },
+      { to: '/treinamentos', icon: ClipboardList, label: 'Central de Assessments', badge: 'NOVO' },
       { to: '/assessment/disc', icon: Brain, label: 'Teste DISC' },
       { to: '/assessment/mbti', icon: Brain, label: 'MBTI' },
       { to: '/assessment/bigfive', icon: Brain, label: 'Big Five' },
