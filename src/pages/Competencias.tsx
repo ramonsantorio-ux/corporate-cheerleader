@@ -266,23 +266,30 @@ export default function Competencias() {
                   <div className="space-y-6">
                     <p className="text-sm text-muted-foreground mb-4">Avalie a aderência do colaborador para cada critério da nossa cultura (1 = Muito Baixa, 5 = Muito Alta).</p>
                     <div className="max-h-[50vh] overflow-y-auto space-y-4 pr-2">
-                      {competencies.filter(c => !c.cycle_id || c.cycle_id === evalForm.cycle_id).map(c => (
-                        <div key={c.id} className="p-4 bg-muted/30 border border-border/50 rounded-lg">
-                          <h4 className="font-semibold text-foreground text-sm">{c.name}</h4>
-                          {c.description && <p className="text-xs text-muted-foreground mt-1 mb-3">{c.description}</p>}
-                          <div className="flex items-center gap-2 mt-2">
-                            {[1,2,3,4,5].map(note => (
-                              <button
-                                key={note}
-                                onClick={() => setEvalScores(prev => ({ ...prev, [c.id]: note }))}
-                                className={`flex-1 py-1.5 text-sm font-medium rounded-md border transition-colors ${evalScores[c.id] === note ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-border/50 text-foreground'}`}
-                              >
-                                {note}
-                              </button>
-                            ))}
-                          </div>
+                      {competencies.filter(c => !c.cycle_id || c.cycle_id === evalForm.cycle_id).length === 0 ? (
+                        <div className="text-center p-6 bg-muted/20 border border-dashed border-border rounded-lg">
+                          <p className="text-sm font-medium text-foreground">Nenhum critério cadastrado.</p>
+                          <p className="text-xs text-muted-foreground mt-1">Antes de avaliar o colaborador, você precisa clicar em <b>"+ Cadastrar Critério"</b> na tela anterior e registrar os pilares da cultura da empresa (ex: Liderança, Comunicação).</p>
                         </div>
-                      ))}
+                      ) : (
+                        competencies.filter(c => !c.cycle_id || c.cycle_id === evalForm.cycle_id).map(c => (
+                          <div key={c.id} className="p-4 bg-muted/30 border border-border/50 rounded-lg">
+                            <h4 className="font-semibold text-foreground text-sm">{c.name}</h4>
+                            {c.description && <p className="text-xs text-muted-foreground mt-1 mb-3">{c.description}</p>}
+                            <div className="flex items-center gap-2 mt-2">
+                              {[1,2,3,4,5].map(note => (
+                                <button
+                                  key={note}
+                                  onClick={() => setEvalScores(prev => ({ ...prev, [c.id]: note }))}
+                                  className={`flex-1 py-1.5 text-sm font-medium rounded-md border transition-colors ${evalScores[c.id] === note ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-border/50 text-foreground'}`}
+                                >
+                                  {note}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                     <div className="flex gap-3 pt-2 border-t border-border/50">
                       <Button variant="outline" onClick={() => setEvalStep(1)} className="flex-1">Voltar</Button>
