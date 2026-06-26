@@ -701,6 +701,9 @@ export type Database = {
           pos_graduacao: boolean
           pos_graduacao_tipo: string
           turno: string
+          nine_box_desempenho: string | null
+          nine_box_potencial: string | null
+          fit_cultural: number | null
         }
         Insert: {
           cargo: string
@@ -720,6 +723,9 @@ export type Database = {
           pos_graduacao?: boolean
           pos_graduacao_tipo?: string
           turno?: string
+          nine_box_desempenho?: string | null
+          nine_box_potencial?: string | null
+          fit_cultural?: number | null
         }
         Update: {
           cargo?: string
@@ -739,6 +745,9 @@ export type Database = {
           pos_graduacao?: boolean
           pos_graduacao_tipo?: string
           turno?: string
+          nine_box_desempenho?: string | null
+          nine_box_potencial?: string | null
+          fit_cultural?: number | null
         }
         Relationships: [
           {

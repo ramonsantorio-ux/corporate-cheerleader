@@ -21,12 +21,14 @@ import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
 import { DiscReport, MbtiReport, BigFiveReport } from '@/components/ExecutiveReports';
 import Organograma from './Organograma';
+import NineBoxSection from '@/components/nine-box/NineBoxSection';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
   feedbacks_recebidos: number; feedbacks_resolvidos: number; email: string; data_admissao: string;
   escolaridade: string; graduacao: string; pos_graduacao: boolean; pos_graduacao_tipo: string;
   turno: string; letra: string; encarregado_id: string | null;
+  nine_box_desempenho: string | null; nine_box_potencial: string | null; fit_cultural: number | null;
 }
 
 interface FeedbackItem { id: string; titulo: string; status: string; prioridade: string; criado_em: string; gestor: string; autor: string; }
@@ -83,6 +85,12 @@ export default function FuncionarioProfile() {
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
   const [goalForm, setGoalForm] = useState(emptyGoalForm);
   const cargoSemMeta = func ? CARGOS_SEM_META.includes(func.cargo) : false;
+
+  const refreshFunc = async () => {
+    if (!id) return;
+    const { data } = await supabase.from('funcionarios').select('*').eq('id', id).single();
+    if (data) setFunc(data as unknown as Funcionario);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -844,13 +852,26 @@ export default function FuncionarioProfile() {
               </Tabs>
             </div>
 
-            {/* â•â•â• FIT CULTURAL â•â•â• */}
-            <div className="glass-card rounded-xl p-6 border-t-4 border-t-chart-2 shadow-sm flex flex-col">
-              <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {/* ——— FIT CULTURAL ——— */}
+              <div className="glass-card rounded-xl p-6 border-t-4 border-t-chart-2 shadow-sm flex flex-col">
+                <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
+              </div>
+
+              {/* ——— NINE BOX ——— */}
+              <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
+                <NineBoxSection 
+                  employeeId={func.id} 
+                  initialDesempenho={func.nine_box_desempenho} 
+                  initialPotencial={func.nine_box_potencial} 
+                  cargo={func.cargo} 
+                  onUpdate={refreshFunc} 
+                />
+              </div>
             </div>
           </div>
 
-          {/* â•â•â• GAMIFICAÃ‡ÃƒO â•â•â• */}
+          {/* ——— GAMIFICAÇÃO ——— */}
           <div className="glass-card rounded-xl p-6 border-t-4 border-t-yellow-500 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold flex items-center gap-2"><Award className="w-5 h-5 text-yellow-500" />Conquistas e Badges</h3>

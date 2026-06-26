@@ -1,15 +1,8 @@
-﻿import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-
-const mockEmployees = [
-  { name: "João", role: "Dev", perf: "Alto", pot: "Alto", box: "top-right" },
-  { name: "Maria", role: "Design", perf: "Médio", pot: "Alto", box: "top-center" },
-  { name: "Carlos", role: "QA", perf: "Baixo", pot: "Baixo", box: "bottom-left" },
-  { name: "Ana", role: "PM", perf: "Alto", pot: "Médio", box: "center-right" },
-  { name: "Pedro", role: "Dev", perf: "Alto", pot: "Baixo", box: "bottom-right" },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 const boxLabels: Record<string, { title: string, desc: string }> = {
   "0-0": { title: "Enigma (Question Mark)", desc: "Baixo Desempenho / Alto Potencial. Requer treinamento e alinhamento de expectativas." },
@@ -24,7 +17,27 @@ const boxLabels: Record<string, { title: string, desc: string }> = {
 };
 
 export default function Sucessao() {
-  const [selectedBox, setSelectedBox] = useState<{ x: number, y: number, emps: typeof mockEmployees } | null>(null);
+  const [employees, setEmployees] = useState<{ name: string, role: string, perf: string, pot: string }[]>([]);
+  const [selectedBox, setSelectedBox] = useState<{ x: number, y: number, emps: typeof employees } | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      const { data } = await supabase.from('funcionarios').select('nome, cargo, nine_box_desempenho, nine_box_potencial');
+      if (data) {
+        const eligible = data.filter(e => ['analista', 'supervisor', 'coordenador', 'gerente'].some(c => e.cargo.toLowerCase().includes(c)));
+        const mapped = eligible
+          .filter(e => e.nine_box_desempenho && e.nine_box_potencial)
+          .map(e => ({
+            name: e.nome,
+            role: e.cargo,
+            perf: e.nine_box_desempenho as string,
+            pot: e.nine_box_potencial as string
+          }));
+        setEmployees(mapped);
+      }
+    }
+    fetchData();
+  }, []);
 
   const getBoxStyle = (x: number, y: number) => {
     // x: 0=Baixo, 1=Médio, 2=Alto (Desempenho)
@@ -66,7 +79,7 @@ export default function Sucessao() {
         <div className="grid grid-cols-3 gap-2 md:gap-4 min-w-[600px] md:min-w-[800px] lg:min-w-[900px] pb-8 md:pb-0">
           {[0, 1, 2].map(y => (
             [0, 1, 2].map(x => {
-              const emps = mockEmployees.filter(e => mapToXY(e.pot, e.perf).x === x && mapToXY(e.pot, e.perf).y === y);
+              const emps = employees.filter(e => mapToXY(e.pot, e.perf).x === x && mapToXY(e.pot, e.perf).y === y);
               const label = boxLabels[`${x}-${y}`];
               return (
                 <Card 
