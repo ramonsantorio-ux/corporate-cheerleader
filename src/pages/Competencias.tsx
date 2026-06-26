@@ -290,42 +290,7 @@ export default function Competencias() {
         </motion.div>
       )}
 
-      <div className="flex items-center gap-3">
-        <Label className="text-sm text-muted-foreground">Filtrar por ciclo:</Label>
-        <Select value={filterCycle} onValueChange={setFilterCycle}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
 
-      {loading ? (
-        <p className="text-muted-foreground text-sm">Carregando...</p>
-      ) : filtered.length === 0 ? (
-        <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma competência encontrada.</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {filtered.map((comp, i) => (
-            <motion.div key={comp.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
-              className="glass-card rounded-xl p-4 flex items-start gap-3"
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Target className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-foreground">{comp.name}</h3>
-                {comp.description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{comp.description}</p>}
-                <span className="text-xs text-muted-foreground mt-1 inline-block">Ciclo: {cycleName(comp.cycle_id)}</span>
-              </div>
-              <button onClick={() => deleteCompetency(comp.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </motion.div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
