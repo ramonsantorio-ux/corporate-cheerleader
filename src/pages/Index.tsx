@@ -7,6 +7,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
+import { ENPSVoting } from '@/components/ENPSVoting';
 import {
   ComposedChart, ScatterChart, Scatter, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   ZAxis, Area, ReferenceLine, Cell
@@ -188,9 +189,14 @@ export default function Index() {
 
   if (!isAdmin) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Meu Painel</h1>
-        <p className="text-muted-foreground">Acesso restrito para visualização executiva.</p>
+      <div className="p-6 md:p-8 max-w-[1400px] mx-auto space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold">Meu Painel</h1>
+          <p className="text-muted-foreground">Acesso restrito para visualização executiva. Por favor, deixe sua avaliação de clima abaixo.</p>
+        </div>
+        <div className="max-w-md">
+          <ENPSVoting />
+        </div>
       </div>
     );
   }
@@ -263,17 +269,22 @@ export default function Index() {
         </div>
       </div>
 
-      {/* ── AI PREDICTIVE INSIGHTS ── */}
+      {/* ── AI PREDICTIVE INSIGHTS & eNPS ── */}
       {!sel && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 command-card p-0 flex flex-col md:flex-row border-l-4 border-l-primary/60">
-          <div className="bg-primary/10 p-4 flex items-center justify-center border-r border-border/50 shrink-0">
-            <Zap className="w-6 h-6 text-primary animate-pulse" />
-          </div>
-          <div className="p-4 flex-1 flex flex-col justify-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">Módulo Predict-AI (Simulado)</p>
-            <p className="text-sm font-medium text-foreground font-mono leading-relaxed">{aiInsight}</p>
-          </div>
-        </motion.div>
+        <div className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="command-card p-0 flex flex-col md:flex-row border-l-4 border-l-primary/60 lg:col-span-2">
+            <div className="bg-primary/10 p-4 flex items-center justify-center border-r border-border/50 shrink-0">
+              <Zap className="w-6 h-6 text-primary animate-pulse" />
+            </div>
+            <div className="p-4 flex-1 flex flex-col justify-center">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">Módulo Predict-AI (Simulado)</p>
+              <p className="text-sm font-medium text-foreground font-mono leading-relaxed">{aiInsight}</p>
+            </div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-1">
+            <ENPSVoting />
+          </motion.div>
+        </div>
       )}
 
       {/* ── MACRO DOUBLE-DATA KPIs ── */}

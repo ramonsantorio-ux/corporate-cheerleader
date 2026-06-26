@@ -30,7 +30,6 @@ import Treinamentos from "./pages/Treinamentos";
 import DDS from "./pages/DDS";
 import AssessmentHub from "./pages/AssessmentHub";
 import Feedback360 from "./pages/Feedback360";
-import GestaoLideranca from "./pages/GestaoLideranca";
 import { InstallPWA } from './components/InstallPWA';
 
 class ErrorBoundary extends React.Component<any, any> {
@@ -99,7 +98,6 @@ function ProtectedRoutes() {
           <Route path="/treinamentos" element={<Treinamentos />} />
           <Route path="/dds" element={<DDS />} />
           <Route path="/assessments" element={<Treinamentos />} />
-          <Route path="/painel-gestor" element={<GestaoLideranca />} />
           <Route path="/assessment/:type" element={<AssessmentHub />} />
           <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
           <Route path="/feedback360" element={<Navigate to="/desempenho?tab=feedback360" replace />} />

@@ -31,9 +31,9 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Performance',
+    label: 'Liderança & Gestão',
     items: [
-      { to: '/desempenho', icon: Target, label: 'Gestão de Performance' },
+      { to: '/desempenho', icon: BrainCircuit, label: 'Painel do Gestor', badge: 'NOVO' },
       { to: '/sucessao', icon: TrendingUp, label: 'Sucessão & 9Box' },
     ],
   },
@@ -44,12 +44,6 @@ const navGroups: NavGroup[] = [
       { to: '/assessment/disc', icon: Brain, label: 'Teste DISC' },
       { to: '/assessment/mbti', icon: Brain, label: 'MBTI' },
       { to: '/assessment/bigfive', icon: Brain, label: 'Big Five' },
-    ],
-  },
-  {
-    label: 'Liderança & Gestão',
-    items: [
-      { to: '/painel-gestor', icon: BrainCircuit, label: 'Painel do Gestor', badge: 'NOVO' },
     ],
   },
   {

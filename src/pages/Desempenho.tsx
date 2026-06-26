@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
-import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain } from 'lucide-react';
+import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain, Activity, HeartPulse, AlertTriangle } from 'lucide-react';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,8 @@ import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
 import Feedback360 from './Feedback360';
 import PDIPage from './PDI';
+import { ENPSDashboard } from '@/components/ENPSDashboard';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 
 interface EvaluationCycle {
   id: string; name: string; start_date: string; end_date: string; status: string; created_at: string;
@@ -25,6 +27,7 @@ interface EvaluationCycle {
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string;
+  nine_box_desempenho?: string; nine_box_potencial?: string;
 }
 
 interface Evaluation {
@@ -58,7 +61,7 @@ export default function Desempenho() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const activeTab = searchParams.get('tab') || 'ciclos';
+  const activeTab = searchParams.get('tab') || 'visao-geral';
 
   function handleTabChange(value: string) {
     setSearchParams({ tab: value }, { replace: true });
@@ -67,7 +70,7 @@ export default function Desempenho() {
   useEffect(() => {
     Promise.all([
       supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false }),
-      supabase.from('funcionarios').select('id, nome, cargo, departamento'),
+      supabase.from('funcionarios').select('id, nome, cargo, departamento, nine_box_desempenho, nine_box_potencial'),
       supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at'),
     ]).then(([cyclesRes, funcRes, evalRes]) => {
       if (cyclesRes.data) setCycles(cyclesRes.data as EvaluationCycle[]);
@@ -113,6 +116,9 @@ export default function Desempenho() {
     return Object.values(cargos).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
   }, [funcionarios, evaluations, cycles]);
 
+  const talentosRisco = funcionarios.filter(t => t.nine_box_desempenho === 'Baixo' && t.nine_box_potencial === 'Baixo');
+  const topTalentos = funcionarios.filter(t => t.nine_box_desempenho === 'Alto' && t.nine_box_potencial === 'Alto');
+
   const totalRealizados = cargoStats.reduce((a, c) => a + c.realizados, 0);
   const totalPendentes = cargoStats.reduce((a, c) => a + c.pendentes, 0);
   const totalNoPrazo = cargoStats.reduce((a, c) => a + c.noPrazo, 0);
@@ -121,11 +127,13 @@ export default function Desempenho() {
   const statusLabel: Record<string, string> = { active: 'Ativo', draft: 'Rascunho', closed: 'Encerrado' };
 
   const tabs = [
-    { value: 'ciclos', label: 'Ciclos de Avaliação', icon: Calendar },
+    { value: 'visao-geral', label: 'Visão da Equipe', icon: Activity },
+    { value: 'ciclos', label: 'Ciclos & Avaliações', icon: Calendar },
     { value: 'feedback360', label: 'Avaliações 360º', icon: Brain },
     { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
     { value: 'pdi', label: 'PDI', icon: ClipboardList },
+    { value: 'clima', label: 'Clima (eNPS)', icon: HeartPulse },
   ];
 
   return (
@@ -133,8 +141,8 @@ export default function Desempenho() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Gestão de Pessoas</p>
-          <h1 className="text-2xl font-bold text-foreground">Avaliações</h1>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Liderança & Gestão</p>
+          <h1 className="text-2xl font-bold text-foreground">Painel do Gestor</h1>
         </div>
         {activeTab === 'ciclos' && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -165,6 +173,105 @@ export default function Desempenho() {
             </TabsTrigger>
           ))}
         </TabsList>
+
+        {/* ═══ VISÃO GERAL ═══ */}
+        <TabsContent value="visao-geral" className="space-y-6 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <Card className="border-l-4 border-l-blue-500 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-500" /> Total da Equipe
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{funcionarios.length}</div>
+                <p className="text-xs text-muted-foreground mt-1">Colaboradores ativos sob sua gestão</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-red-500 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-500" /> Risco de Turnover
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-500">{talentosRisco.length}</div>
+                <p className="text-xs text-muted-foreground mt-1">Classificados como Enigma/Risco (9-Box)</p>
+              </CardContent>
+            </Card>
+            <Card className="border-l-4 border-l-green-500 shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-green-500" /> Top Talents
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-500">{topTalentos.length}</div>
+                <p className="text-xs text-muted-foreground mt-1">Prontos para promoção</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Colaboradores em Foco (Risco)</CardTitle>
+                <CardDescription>Membros da equipe que precisam de acompanhamento próximo.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {talentosRisco.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground text-sm">Nenhum colaborador em área de risco no 9-Box.</div>
+                ) : (
+                  <div className="space-y-4">
+                    {talentosRisco.map(t => (
+                      <div key={t.id} className="flex justify-between items-center bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                        <div>
+                          <p className="font-semibold text-sm">{t.nome}</p>
+                          <p className="text-xs text-muted-foreground">{t.cargo}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs bg-background border px-2 py-1 rounded-md text-red-600 font-medium">Baixo Desempenho</span>
+                          <Button size="sm" variant="outline" className="h-7 text-xs border-red-200 hover:bg-red-50 text-red-600" onClick={() => { setSearchParams({ tab: 'pdi' }); }}>
+                            <Plus className="w-3 h-3 mr-1" /> Criar PDI
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Destaques (Prontos para Sucessão)</CardTitle>
+                <CardDescription>Membros com alto desempenho e alto potencial.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {topTalentos.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground text-sm">Ainda sem avaliações de Top Talent.</div>
+                ) : (
+                  <div className="space-y-4">
+                    {topTalentos.map(t => (
+                      <div key={t.id} className="flex justify-between items-center bg-green-500/10 p-3 rounded-lg border border-green-500/20">
+                        <div>
+                          <p className="font-semibold text-sm">{t.nome}</p>
+                          <p className="text-xs text-muted-foreground">{t.cargo}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs bg-background border px-2 py-1 rounded-md text-green-600 font-medium">Promoção/Sucessão</span>
+                          <Button size="sm" variant="outline" className="h-7 text-xs border-green-200 hover:bg-green-50 text-green-600" onClick={() => { setSearchParams({ tab: 'pdi' }); }}>
+                            <Plus className="w-3 h-3 mr-1" /> Criar PDI
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* ═══ CICLOS ═══ */}
         <TabsContent value="ciclos" className="space-y-6 mt-4">
@@ -237,6 +344,11 @@ export default function Desempenho() {
         {/* ═══ PDI ═══ */}
         <TabsContent value="pdi" className="mt-4">
           <PDIPage />
+        </TabsContent>
+
+        {/* ═══ CLIMA ═══ */}
+        <TabsContent value="clima" className="mt-4">
+          <ENPSDashboard />
         </TabsContent>
       </Tabs>
     </div>
