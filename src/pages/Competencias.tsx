@@ -6,6 +6,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 import { FastTextarea } from '@/components/ui/fast-textarea';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -66,7 +68,11 @@ export default function Competencias() {
   const [evalStep, setEvalStep] = useState(1);
   const [evalForm, setEvalForm] = useState({ employee_id: '', cycle_id: '' });
   const [evalScores, setEvalScores] = useState<Record<string, number>>({});
-  const [filterCycle, setFilterCycle] = useState<string>('all');
+  const [filterCycle, setFilterCycle] = useState('all');
+  
+  // States para a avaliação inline de 4 etapas
+  const [selectedEvalEmployee, setSelectedEvalEmployee] = useState<string | null>(null);
+  const [selectedEvalCycle, setSelectedEvalCycle] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', description: '', cycle_id: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
   const { toast } = useToast();
@@ -212,9 +218,19 @@ export default function Competencias() {
           <p className="text-muted-foreground text-sm mt-1">Gerencie competências e avalie o fit cultural da equipe</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => setEvalDialogOpen(true)} className="bg-primary/10 text-primary hover:bg-primary/20">
-            <Target className="w-4 h-4 mr-2" /> Avaliar Colaborador
-          </Button>
+          {!selectedEvalEmployee && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={() => {
+                navigator.clipboard.writeText(window.location.origin + '/autoavaliacao-fit-cultural');
+                toast({ title: 'Link copiado!', description: 'Envie para os colaboradores responderem.' });
+              }}>
+                Copiar Link Colaborador
+              </Button>
+              <Button variant="secondary" onClick={() => setEvalDialogOpen(true)} className="bg-primary/10 text-primary hover:bg-primary/20">
+                <Target className="w-4 h-4 mr-2" /> Avaliar Colaborador
+              </Button>
+            </div>
+          )}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="w-4 h-4 mr-2" /> Cadastrar Critério</Button>
@@ -249,11 +265,19 @@ export default function Competencias() {
                         <SelectContent>{funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} - {f.cargo}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
+                    <div>
+                      <Label>Ciclo de Avaliação</Label>
+                      <Select value={evalForm.cycle_id} onValueChange={v => setEvalForm({ ...evalForm, cycle_id: v })}>
+                        <SelectTrigger><SelectValue placeholder="Selecione o ciclo..." /></SelectTrigger>
+                        <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
                     <Button onClick={() => {
-                      if(!evalForm.employee_id) return toast({ title: 'Preencha o colaborador', variant: 'destructive' });
+                      if(!evalForm.employee_id || !evalForm.cycle_id) return toast({ title: 'Preencha o colaborador e o ciclo', variant: 'destructive' });
                       setEvalDialogOpen(false);
-                      window.location.href = `/colaboradores/${evalForm.employee_id}?tab=fit-cultural`;
-                    }} className="w-full mt-4">Acessar Questionário de 4 Etapas</Button>
+                      setSelectedEvalEmployee(evalForm.employee_id);
+                      setSelectedEvalCycle(evalForm.cycle_id);
+                    }} className="w-full mt-4">Iniciar Avaliação de 4 Etapas</Button>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -296,8 +320,21 @@ export default function Competencias() {
         </div>
       </motion.div>
 
-      {/* Avaliações por Cargo Chart */}
-      {cargoStats.length > 0 && (
+      {selectedEvalEmployee && selectedEvalCycle ? (
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-4">
+          <Button variant="ghost" onClick={() => setSelectedEvalEmployee(null)} className="mb-4 text-muted-foreground hover:text-foreground">
+            ← Voltar para listagem
+          </Button>
+          <FitCulturalSection 
+            employeeId={selectedEvalEmployee} 
+            employeeName={funcionarios.find(f => f.id === selectedEvalEmployee)?.nome || 'Colaborador'} 
+            cycleId={selectedEvalCycle}
+          />
+        </motion.div>
+      ) : (
+        <>
+          {/* Avaliações por Cargo Chart */}
+          {cargoStats.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-section">
           <div className="corporate-section-header">
             <div className="flex items-center gap-2">
@@ -390,6 +427,8 @@ export default function Competencias() {
             </motion.div>
           ))}
         </div>
+      )}
+      </>
       )}
     </div>
   );

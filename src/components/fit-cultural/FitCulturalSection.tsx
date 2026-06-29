@@ -11,6 +11,7 @@ interface FitScore {
   criteria: string;
   stage: string;
   score: number | null;
+  cycle_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -68,22 +69,31 @@ const STAGES = [
 interface Props {
   employeeId: string;
   employeeName: string;
+  cycleId?: string;
 }
 
-export default function FitCulturalSection({ employeeId, employeeName }: Props) {
+export default function FitCulturalSection({ employeeId, employeeName, cycleId }: Props) {
   const [scores, setScores] = useState<FitScore[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchScores();
-  }, [employeeId]);
+  }, [employeeId, cycleId]);
 
   async function fetchScores() {
-    const { data } = await supabase
+    let query = supabase
       .from('fit_cultural')
       .select('*')
       .eq('employee_id', employeeId);
+      
+    if (cycleId) {
+      query = query.eq('cycle_id', cycleId);
+    } else {
+      query = query.is('cycle_id', null);
+    }
+
+    const { data } = await query;
     if (data) setScores(data as unknown as FitScore[]);
     setLoading(false);
   }
@@ -104,7 +114,7 @@ export default function FitCulturalSection({ employeeId, employeeName }: Props) 
     } else {
       await supabase
         .from('fit_cultural')
-        .insert([{ employee_id: employeeId, criteria, stage, score }]);
+        .insert([{ employee_id: employeeId, criteria, stage, score, cycle_id: cycleId || null }]);
     }
 
     toast({ title: 'Nota salva!' });

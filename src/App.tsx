@@ -12,6 +12,7 @@ import FeedbackDetail from "./pages/FeedbackDetail";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import Desempenho from "./pages/Desempenho";
+import AutoAvaliacaoFit from "./pages/AutoAvaliacaoFit";
 import Admin from "./pages/Admin";
 import CadastroMetas from "./pages/CadastroMetas";
 import Login from "./pages/Login";
@@ -74,6 +75,7 @@ function ProtectedRoutes() {
   return (
     <ErrorBoundary>
       <Routes>
+        <Route path="/autoavaliacao-fit-cultural" element={<AutoAvaliacaoFit />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<Index />} />
           <Route path="/colaboradores" element={<Colaboradores />} />
