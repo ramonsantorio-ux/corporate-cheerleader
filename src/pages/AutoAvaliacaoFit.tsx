@@ -122,28 +122,62 @@ export default function AutoAvaliacaoFit() {
                 <p>Nenhum critério definido para este ciclo.</p>
               </div>
             ) : (
-              relevantCompetencies.map(c => (
-                <div key={c.id} className="bg-white p-6 rounded-2xl shadow-sm border border-border/50">
-                  <h4 className="font-bold text-lg text-foreground">{c.name}</h4>
-                  {c.description && <p className="text-sm text-muted-foreground mt-1 mb-4">{c.description}</p>}
-                  
-                  <div className="flex gap-2">
-                    {[1,2,3,4,5].map(note => (
-                      <button
-                        key={note}
-                        onClick={() => setScores(prev => ({ ...prev, [c.id]: note }))}
-                        className={`flex-1 py-3 text-lg font-bold rounded-xl border-2 transition-all ${scores[c.id] === note ? 'bg-primary text-primary-foreground border-primary shadow-md scale-105' : 'bg-background hover:bg-muted border-border/50 text-foreground'}`}
-                      >
-                        {note}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground mt-2 font-medium px-1">
-                    <span>1 = Muito Baixo</span>
-                    <span>5 = Muito Alto</span>
+              <div className="bg-white rounded-2xl shadow-sm border border-border/50 overflow-hidden">
+                <div className="p-4 border-b border-border bg-primary/5 flex items-center gap-2">
+                  <User className="w-5 h-5 text-primary" />
+                  <div>
+                    <h4 className="font-semibold text-foreground text-sm">Auto Avaliação</h4>
+                    <p className="text-xs text-muted-foreground">O funcionário avalia a si mesmo</p>
                   </div>
                 </div>
-              ))
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/30">
+                        <th className="text-left p-3 font-semibold text-foreground min-w-[280px]">Critério</th>
+                        {[
+                          { value: 1, label: 'Muito abaixo', short: '(1)' },
+                          { value: 2, label: 'Abaixo', short: '(2)' },
+                          { value: 3, label: 'Dentro do esperado', short: '(3)' },
+                          { value: 4, label: 'Acima do esperado', short: '(4)' },
+                          { value: 5, label: 'Muito acima do esperado', short: '(5)' },
+                        ].map(col => (
+                          <th key={col.value} className="p-2 text-center font-medium text-foreground min-w-[90px]">
+                            <div className="text-xs leading-tight">{col.label}</div>
+                            <div className="text-[10px] text-muted-foreground">{col.short}</div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {relevantCompetencies.map((c, ci) => (
+                        <tr key={c.id} className={`border-b border-border/50 ${ci % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                          <td className="p-3">
+                            <span className="font-medium text-foreground">{c.name}</span>
+                            {c.description && <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>}
+                          </td>
+                          {[1,2,3,4,5].map(note => (
+                            <td key={note} className="p-2 text-center">
+                              <button
+                                onClick={() => setScores(prev => ({ ...prev, [c.id]: note }))}
+                                className={`w-6 h-6 rounded-full border-2 mx-auto flex items-center justify-center transition-all ${
+                                  scores[c.id] === note
+                                    ? 'border-primary bg-primary shadow-md scale-110'
+                                    : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
+                                }`}
+                                title={`Nota ${note}`}
+                              >
+                                {scores[c.id] === note && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
+                              </button>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
 
             <Button 
