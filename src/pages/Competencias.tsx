@@ -61,20 +61,15 @@ export default function Competencias() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [evalCycles, setEvalCycles] = useState<EvaluationCycle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [evalDialogOpen, setEvalDialogOpen] = useState(false);
   const [evalStep, setEvalStep] = useState(1);
   const [evalForm, setEvalForm] = useState({ employee_id: '', cycle_id: '' });
   const [evalScores, setEvalScores] = useState<Record<string, number>>({});
+  const [filterCycle, setFilterCycle] = useState<string>('all');
+  const [form, setForm] = useState({ name: '', description: '', cycle_id: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const standardCriteria = [
-    { id: 'c1', name: 'Alinhamento aos Valores', description: 'Atua de acordo com os princípios e valores da empresa.' },
-    { id: 'c2', name: 'Trabalho em Equipe', description: 'Colabora de forma construtiva e respeitosa com os colegas.' },
-    { id: 'c3', name: 'Comunicação', description: 'Comunica-se de forma clara, objetiva e transparente.' },
-    { id: 'c4', name: 'Foco em Resultados', description: 'Demonstra dedicação e entrega resultados com qualidade.' },
-    { id: 'c5', name: 'Adaptabilidade e Inovação', description: 'Lida bem com mudanças e propõe melhorias.' },
-  ];
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -160,18 +155,27 @@ export default function Competencias() {
     }
   }
 
+  async function deleteCompetency(id: string) {
+    await supabase.from('competencies').delete().eq('id', id);
+    fetchCompetencies();
+  }
+
   async function submitEvaluation() {
     if (!evalForm.employee_id) return toast({ title: 'Selecione um colaborador', variant: 'destructive' });
     if (!evalForm.cycle_id) return toast({ title: 'Selecione um ciclo', variant: 'destructive' });
     
-    // Validar se todas as notas foram dadas
-    for (const c of standardCriteria) {
+    if (competencies.length === 0) {
+      return toast({ title: 'Nenhum critério de Fit Cultural cadastrado.', variant: 'destructive' });
+    }
+
+    // Validação
+    for (const c of competencies) {
       if (!evalScores[c.id]) {
          return toast({ title: 'Por favor, avalie todas as competências.', variant: 'destructive' });
       }
     }
 
-    const inserts = standardCriteria.map(c => ({
+    const inserts = competencies.map(c => ({
       employee_id: evalForm.employee_id,
       criteria: c.name,
       score: evalScores[c.id],
@@ -179,11 +183,11 @@ export default function Competencias() {
     }));
 
     const { error } = await supabase.from('fit_cultural').insert(inserts);
-
     if (error) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     } else {
-      const avg = Math.round(Object.values(evalScores).reduce((a,b)=>a+b,0) / standardCriteria.length);
+      // Calcular média
+      const avg = Math.round(Object.values(evalScores).reduce((a,b)=>a+b,0) / competencies.length);
       await supabase.from('funcionarios').update({ fit_cultural: avg }).eq('id', evalForm.employee_id);
       
       toast({ title: 'Avaliação de Fit Cultural concluída com sucesso!' });
@@ -191,27 +195,50 @@ export default function Competencias() {
       setEvalStep(1);
       setEvalForm({ employee_id: '', cycle_id: '' });
       setEvalScores({});
-      
-      const { data } = await supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at');
-      if (data) setEvaluations(data as Evaluation[]);
     }
   }
+
+  const filtered = filterCycle === 'all'
+    ? competencies
+    : competencies.filter(c => c.cycle_id === filterCycle);
+
+  const cycleName = (id: string | null) => cycles.find(c => c.id === id)?.name || 'Geral';
 
   return (
     <div className="space-y-6">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Fit Cultural</h1>
-          <p className="text-muted-foreground text-sm mt-1">Avalie de forma simples e rápida o fit cultural da equipe</p>
+          <p className="text-muted-foreground text-sm mt-1">Gerencie competências e avalie o fit cultural da equipe</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button onClick={() => setEvalDialogOpen(true)}>
+          <Button variant="secondary" onClick={() => setEvalDialogOpen(true)} className="bg-primary/10 text-primary hover:bg-primary/20">
             <Target className="w-4 h-4 mr-2" /> Avaliar Colaborador
           </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="w-4 h-4 mr-2" /> Cadastrar Critério</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Criar Critério de Fit Cultural</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div><Label>Nome (Critério)</Label><FastInput value={form.name} onValueChange={v => setForm({ ...form, name: v })} placeholder="Ex: Liderança, Comunicação..." /></div>
+                <div><Label>Descrição</Label><FastTextarea value={form.description} onValueChange={v => setForm({ ...form, description: v })} placeholder="O que significa essa competência na nossa cultura?" /></div>
+                <div>
+                  <Label>Ciclo (opcional)</Label>
+                  <Select value={form.cycle_id} onValueChange={v => setForm({ ...form, cycle_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Geral (todos os ciclos)" /></SelectTrigger>
+                    <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={createCompetency} className="w-full">Cadastrar Critério</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
-          <Dialog open={evalDialogOpen} onOpenChange={open => { setEvalDialogOpen(open); if(!open){ setEvalStep(1); setEvalScores({}); setEvalForm({ employee_id: '', cycle_id: '' }); } }}>
+          <Dialog open={evalDialogOpen} onOpenChange={open => { setEvalDialogOpen(open); if(!open){ setEvalStep(1); setEvalScores({}); } }}>
             <DialogContent className="max-w-xl">
-              <DialogHeader><DialogTitle>Avaliação de Fit Cultural</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>Questionário de Fit Cultural</DialogTitle></DialogHeader>
               <div className="space-y-4 pt-4">
                 {evalStep === 1 ? (
                   <div className="space-y-4">
@@ -229,7 +256,6 @@ export default function Competencias() {
                         <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    
                     <Button onClick={() => {
                       if(!evalForm.employee_id || !evalForm.cycle_id) return toast({ title: 'Preencha os campos', variant: 'destructive' });
                       setEvalStep(2);
@@ -239,23 +265,30 @@ export default function Competencias() {
                   <div className="space-y-6">
                     <p className="text-sm text-muted-foreground mb-4">Avalie a aderência do colaborador para cada critério da nossa cultura (1 = Muito Baixa, 5 = Muito Alta).</p>
                     <div className="max-h-[50vh] overflow-y-auto space-y-4 pr-2">
-                      {standardCriteria.map(c => (
-                        <div key={c.id} className="p-4 bg-muted/30 border border-border/50 rounded-lg">
-                          <h4 className="font-semibold text-foreground text-sm">{c.name}</h4>
-                          <p className="text-xs text-muted-foreground mt-1 mb-3">{c.description}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            {[1,2,3,4,5].map(note => (
-                              <button
-                                key={note}
-                                onClick={() => setEvalScores(prev => ({ ...prev, [c.id]: note }))}
-                                className={`flex-1 py-1.5 text-sm font-medium rounded-md border transition-colors ${evalScores[c.id] === note ? 'bg-primary text-primary-foreground border-primary scale-105 shadow-sm' : 'bg-background hover:bg-muted border-border/50 text-foreground'}`}
-                              >
-                                {note}
-                              </button>
-                            ))}
-                          </div>
+                      {competencies.length === 0 ? (
+                        <div className="text-center p-6 bg-muted/20 border border-dashed border-border rounded-lg">
+                          <p className="text-sm font-medium text-foreground">Nenhum critério cadastrado.</p>
+                          <p className="text-xs text-muted-foreground mt-1">Antes de avaliar o colaborador, você precisa clicar em <b>"+ Cadastrar Critério"</b> na tela anterior e registrar os pilares da cultura da empresa (ex: Liderança, Comunicação).</p>
                         </div>
-                      ))}
+                      ) : (
+                        competencies.map(c => (
+                          <div key={c.id} className="p-4 bg-muted/30 border border-border/50 rounded-lg">
+                            <h4 className="font-semibold text-foreground text-sm">{c.name}</h4>
+                            {c.description && <p className="text-xs text-muted-foreground mt-1 mb-3">{c.description}</p>}
+                            <div className="flex items-center gap-2 mt-2">
+                              {[1,2,3,4,5].map(note => (
+                                <button
+                                  key={note}
+                                  onClick={() => setEvalScores(prev => ({ ...prev, [c.id]: note }))}
+                                  className={`flex-1 py-1.5 text-sm font-medium rounded-md border transition-colors ${evalScores[c.id] === note ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-border/50 text-foreground'}`}
+                                >
+                                  {note}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                     <div className="flex gap-3 pt-2 border-t border-border/50">
                       <Button variant="outline" onClick={() => setEvalStep(1)} className="flex-1">Voltar</Button>
@@ -328,7 +361,42 @@ export default function Competencias() {
         </motion.div>
       )}
 
+      <div className="flex items-center gap-3">
+        <Label className="text-sm text-muted-foreground">Filtrar por ciclo:</Label>
+        <Select value={filterCycle} onValueChange={setFilterCycle}>
+          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
+      {loading ? (
+        <p className="text-muted-foreground text-sm">Carregando...</p>
+      ) : filtered.length === 0 ? (
+        <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhuma competência encontrada.</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {filtered.map((comp, i) => (
+            <motion.div key={comp.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
+              className="glass-card rounded-xl p-4 flex items-start gap-3"
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Target className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-foreground">{comp.name}</h3>
+                {comp.description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{comp.description}</p>}
+                <span className="text-xs text-muted-foreground mt-1 inline-block">Ciclo: {cycleName(comp.cycle_id)}</span>
+              </div>
+              <button onClick={() => deleteCompetency(comp.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
