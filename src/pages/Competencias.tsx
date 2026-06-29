@@ -249,17 +249,11 @@ export default function Competencias() {
                         <SelectContent>{funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} - {f.cargo}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <Label>Ciclo de Avaliação</Label>
-                      <Select value={evalForm.cycle_id} onValueChange={v => setEvalForm({ ...evalForm, cycle_id: v })}>
-                        <SelectTrigger><SelectValue placeholder="Selecione o ciclo..." /></SelectTrigger>
-                        <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
                     <Button onClick={() => {
-                      if(!evalForm.employee_id || !evalForm.cycle_id) return toast({ title: 'Preencha os campos', variant: 'destructive' });
-                      setEvalStep(2);
-                    }} className="w-full mt-4">Iniciar Questionário</Button>
+                      if(!evalForm.employee_id) return toast({ title: 'Preencha o colaborador', variant: 'destructive' });
+                      setEvalDialogOpen(false);
+                      window.location.href = `/colaboradores/${evalForm.employee_id}?tab=fit-cultural`;
+                    }} className="w-full mt-4">Acessar Questionário de 4 Etapas</Button>
                   </div>
                 ) : (
                   <div className="space-y-6">

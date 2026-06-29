@@ -663,11 +663,12 @@ export default function FuncionarioProfile() {
         </div>
       </motion.div>
 
-      <Tabs defaultValue="visao-geral" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
+      <Tabs defaultValue={initialTab || 'visao-geral'} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
           <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
           <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Desempenho & Organograma</TabsTrigger>
           <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil Psicométrico</TabsTrigger>
+          <TabsTrigger value="fit-cultural" className="py-2.5 rounded-lg text-sm font-medium">Fit Cultural</TabsTrigger>
           <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">Dossiê (RH)</TabsTrigger>
         </TabsList>
 
@@ -852,12 +853,7 @@ export default function FuncionarioProfile() {
               </Tabs>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {/* ——— FIT CULTURAL ——— */}
-              <div className="glass-card rounded-xl p-6 border-t-4 border-t-chart-2 shadow-sm flex flex-col">
-                <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
-              </div>
-
+            <div className="grid grid-cols-1 gap-6">
               {/* ——— NINE BOX ——— */}
               <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
                 <NineBoxSection 
@@ -913,7 +909,14 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
-        {/* â•â•â•â• DOSSIÃŠ (RH) TAB (Histórico Disciplinar e Assiduidade) â•â•â•â• */}
+        {/* ——— FIT CULTURAL ——— */}
+        <TabsContent value="fit-cultural" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="glass-card rounded-xl p-6 shadow-sm border-t-4 border-t-chart-2">
+            <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
+          </div>
+        </TabsContent>
+
+        {/* ═══ DOSSIÊ (RH) TAB (Histórico Disciplinar e Assiduidade) ═══ */}
         <TabsContent value="dossie" className="space-y-6 mt-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 glass-card rounded-xl p-6 border-l-4 border-l-orange-500">
             <div>
