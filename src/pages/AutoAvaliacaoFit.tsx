@@ -142,7 +142,8 @@ export default function AutoAvaliacaoFit() {
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
+        backgroundAttachment: 'fixed',
+        colorScheme: 'light'
       }}
     >
       <div className="absolute inset-0 bg-slate-50/90 backdrop-blur-sm"></div>
