@@ -9,7 +9,6 @@ import { useOfflineSync } from "./hooks/useOfflineSync";
 import AppLayout from "./components/layout/AppLayout";
 import Index from "./pages/Index";
 import FeedbackDetail from "./pages/FeedbackDetail";
-import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import Desempenho from "./pages/Desempenho";
 import AutoAvaliacaoFit from "./pages/AutoAvaliacaoFit";
@@ -28,7 +27,6 @@ import EvolucaoContrato from "./pages/EvolucaoContrato";
 import GestaoNotificacoes from "./pages/GestaoNotificacoes";
 import DiscTest from "./pages/DiscTest";
 import Treinamentos from "./pages/Treinamentos";
-import DDS from "./pages/DDS";
 import AssessmentHub from "./pages/AssessmentHub";
 import Feedback360 from "./pages/Feedback360";
 import { InstallPWA } from './components/InstallPWA';
@@ -82,7 +80,6 @@ function ProtectedRoutes() {
           <Route path="/feedbacks" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
           <Route path="/feedbacks/:id" element={<FeedbackDetail />} />
           <Route path="/novo" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
-          <Route path="/relatorios" element={<Relatorios />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
           <Route path="/desempenho" element={<Desempenho />} />
           <Route path="/desempenho/avaliacoes" element={<Navigate to="/desempenho?tab=metas" replace />} />
@@ -97,7 +94,6 @@ function ProtectedRoutes() {
           <Route path="/cadastro-metas" element={<CadastroMetas />} />
           <Route path="/notificacoes" element={<GestaoNotificacoes />} />
           <Route path="/treinamentos" element={<Treinamentos />} />
-          <Route path="/dds" element={<DDS />} />
           <Route path="/assessments" element={<Treinamentos />} />
           <Route path="/assessment/:type" element={<AssessmentHub />} />
           <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
