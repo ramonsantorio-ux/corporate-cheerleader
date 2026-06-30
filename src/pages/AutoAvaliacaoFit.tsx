@@ -292,8 +292,8 @@ export default function AutoAvaliacaoFit() {
                   <div>
                     <Label className="text-base font-semibold">Quem é você?</Label>
             <Select value={selectedFunc} onValueChange={setSelectedFunc}>
-              <SelectTrigger className="mt-1.5 h-12"><SelectValue placeholder="Selecione seu nome na lista..." /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger className="mt-1.5 h-12 bg-white text-slate-900 border-slate-200"><SelectValue placeholder="Selecione seu nome na lista..." /></SelectTrigger>
+              <SelectContent className="bg-white text-slate-900 border-slate-200">
                 {funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} - {f.cargo}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -303,8 +303,8 @@ export default function AutoAvaliacaoFit() {
           <div>
             <Label className="text-base font-semibold">Qual ciclo você está avaliando?</Label>
             <Select value={selectedCycle} onValueChange={setSelectedCycle}>
-              <SelectTrigger className="mt-1.5 h-12"><SelectValue placeholder="Selecione o semestre/ciclo..." /></SelectTrigger>
-              <SelectContent>
+              <SelectTrigger className="mt-1.5 h-12 bg-white text-slate-900 border-slate-200"><SelectValue placeholder="Selecione o semestre/ciclo..." /></SelectTrigger>
+              <SelectContent className="bg-white text-slate-900 border-slate-200">
                 {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
