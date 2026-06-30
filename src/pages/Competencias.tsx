@@ -11,7 +11,8 @@ import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 import { FastTextarea } from '@/components/ui/fast-textarea';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
 
@@ -78,6 +79,10 @@ export default function Competencias() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Link generation
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [selectedLinkEmployee, setSelectedLinkEmployee] = useState('');
+
   useEffect(() => {
     Promise.all([
       fetchCompetencies(),
@@ -100,7 +105,6 @@ export default function Competencias() {
   }
 
   const cargoStats = useMemo(() => {
-    // Normalize cargo: remove trailing Roman numerals/levels and unify gender variants (Técnica/Técnico)
     const normalizeCargo = (cargo: string) => {
       let normalized = cargo.replace(/\s+(I{1,3}|IV|V|VI{0,3}|[0-9]+)\s*$/i, '').trim();
       normalized = normalized.replace(/\bTécnica\b/gi, 'Técnico');
@@ -174,7 +178,6 @@ export default function Competencias() {
       return toast({ title: 'Nenhum critério de Fit Cultural cadastrado.', variant: 'destructive' });
     }
 
-    // Validação
     for (const c of competencies) {
       if (!evalScores[c.id]) {
          return toast({ title: 'Por favor, avalie todas as competências.', variant: 'destructive' });
@@ -192,7 +195,6 @@ export default function Competencias() {
     if (error) {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     } else {
-      // Calcular média
       const avg = Math.round(Object.values(evalScores).reduce((a,b)=>a+b,0) / competencies.length);
       await supabase.from('funcionarios').update({ fit_cultural: avg }).eq('id', evalForm.employee_id);
       
@@ -220,11 +222,8 @@ export default function Competencias() {
         <div className="flex items-center gap-3">
           {!selectedEvalEmployee && (
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => {
-                navigator.clipboard.writeText(window.location.origin + '/autoavaliacao-fit-cultural');
-                toast({ title: 'Link copiado!', description: 'Envie para os colaboradores responderem.' });
-              }}>
-                Copiar Link Colaborador
+              <Button variant="outline" onClick={() => setLinkDialogOpen(true)}>
+                Gerar Link Colaborador
               </Button>
               <Button variant="secondary" onClick={() => setEvalDialogOpen(true)} className="bg-primary/10 text-primary hover:bg-primary/20">
                 <Target className="w-4 h-4 mr-2" /> Avaliar Colaborador
@@ -308,9 +307,62 @@ export default function Competencias() {
                         ))
                       )}
                     </div>
-                    <div className="flex gap-3 pt-2 border-t border-border/50">
-                      <Button variant="outline" onClick={() => setEvalStep(1)} className="flex-1">Voltar</Button>
-                      <Button onClick={submitEvaluation} className="flex-1">Concluir Avaliação</Button>
+                    <DialogFooter>
+                      <div className="flex gap-3 pt-2 border-t border-border/50 w-full">
+                        <Button variant="outline" onClick={() => setEvalStep(1)} className="flex-1">Voltar</Button>
+                        <Button onClick={submitEvaluation} className="flex-1">Concluir Avaliação</Button>
+                      </div>
+                    </DialogFooter>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+            <DialogContent className="sm:max-w-[450px]">
+              <DialogHeader>
+                <DialogTitle>Gerar Link de Autoavaliação</DialogTitle>
+                <DialogDescription>
+                  Selecione o colaborador para gerar um link personalizado e único para ele responder.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Selecionar Colaborador</Label>
+                  <Select value={selectedLinkEmployee} onValueChange={setSelectedLinkEmployee}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha quem vai responder..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {funcionarios.map(emp => (
+                        <SelectItem key={emp.id} value={emp.id}>{emp.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedLinkEmployee && (
+                  <div className="space-y-2">
+                    <Label>Link Personalizado</Label>
+                    <div className="flex items-center gap-2">
+                      <Input 
+                        readOnly 
+                        value={`${window.location.origin}/autoavaliacao-fit-cultural?uid=${selectedLinkEmployee}`}
+                        className="bg-muted/50 font-mono text-xs"
+                      />
+                      <Button 
+                        variant="secondary"
+                        onClick={() => {
+                          navigator.clipboard.writeText(`${window.location.origin}/autoavaliacao-fit-cultural?uid=${selectedLinkEmployee}`);
+                          toast({ title: 'Link copiado!', description: 'Envie este link para o colaborador.' });
+                          setLinkDialogOpen(false);
+                          setSelectedLinkEmployee('');
+                        }}
+                      >
+                        Copiar
+                      </Button>
                     </div>
                   </div>
                 )}

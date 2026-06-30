@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { CheckCircle2, Loader2, User, ChevronRight, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useSearchParams } from 'react-router-dom';
 import loginBg from '@/assets/login-bg.jpg';
 
 const CRITERIA = [
@@ -66,6 +67,14 @@ export default function AutoAvaliacaoFit() {
   const [acceptedGuide, setAcceptedGuide] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const uidParam = searchParams.get('uid');
+
+  useEffect(() => {
+    if (uidParam) {
+      setSelectedFunc(uidParam);
+    }
+  }, [uidParam]);
 
   useEffect(() => {
     Promise.all([
@@ -279,8 +288,9 @@ export default function AutoAvaliacaoFit() {
               </div>
 
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-border/50 space-y-4">
-                <div>
-                  <Label className="text-base font-semibold">Quem é você?</Label>
+                {!uidParam && (
+                  <div>
+                    <Label className="text-base font-semibold">Quem é você?</Label>
             <Select value={selectedFunc} onValueChange={setSelectedFunc}>
               <SelectTrigger className="mt-1.5 h-12"><SelectValue placeholder="Selecione seu nome na lista..." /></SelectTrigger>
               <SelectContent>
