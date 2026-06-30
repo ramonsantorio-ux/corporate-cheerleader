@@ -50,10 +50,8 @@ const navGroups: NavGroup[] = [
     label: 'Operações',
     items: [
       { to: '/eventos', icon: AlertTriangle, label: 'SSMA' },
-      { to: '/dds', icon: MessageSquare, label: 'DDS Diário' },
       { to: '/evolucao', icon: Briefcase, label: 'Contratos' },
       { to: '/notificacoes', icon: FileWarning, label: 'Notificações/Multas' },
-      { to: '/relatorios', icon: BarChart3, label: 'C-Level Analytics' },
     ],
   },
   {

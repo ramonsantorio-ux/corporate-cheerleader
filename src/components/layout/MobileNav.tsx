@@ -13,9 +13,7 @@ const mainItems = [
 const moreItems = [
   { to: '/desempenho', icon: Target, label: 'Avaliações' },
   { to: '/eventos', icon: AlertTriangle, label: 'Eventos' },
-  { to: '/dds', icon: MessageSquare, label: 'DDS' },
   { to: '/reunioes', icon: Calendar, label: 'Reuniões' },
-  { to: '/relatorios', icon: BarChart3, label: 'Relatórios' },
   { to: '/configuracoes', icon: Settings, label: 'Config.' },
 ];
 
