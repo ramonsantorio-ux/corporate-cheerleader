@@ -190,8 +190,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
                     <th className="text-left p-3 font-semibold text-foreground min-w-[280px]">Critério</th>
                     {SCORE_COLUMNS.map(col => (
                       <th key={col.value} className="p-2 text-center font-medium text-foreground min-w-[90px]">
-                        <div className="text-xs leading-tight">{col.label}</div>
-                        <div className="text-[10px] text-muted-foreground">{col.short}</div>
+                        <div className="text-sm font-bold">{col.value}</div>
                       </th>
                     ))}
                     <th className="p-2 text-center w-10"></th>
