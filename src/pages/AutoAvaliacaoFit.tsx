@@ -107,11 +107,18 @@ export default function AutoAvaliacaoFit() {
         cycle_id: selectedCycle
       }));
 
-      await supabase.from('fit_cultural').insert(inserts);
+      const { error } = await supabase.from('fit_cultural').insert(inserts);
+      
+      if (error) {
+        console.error("Erro Supabase:", error);
+        throw error;
+      }
+      
       setSubmitted(true);
       toast({ title: 'Avaliação enviada com sucesso!' });
     } catch (e: any) {
-      toast({ title: 'Erro ao enviar', description: e.message, variant: 'destructive' });
+      console.error(e);
+      toast({ title: 'Erro ao enviar', description: e.message || JSON.stringify(e), variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
