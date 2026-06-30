@@ -60,6 +60,14 @@ export default function AutoAvaliacaoFit() {
   const [selectedFunc, setSelectedFunc] = useState('');
   const [selectedCycle, setSelectedCycle] = useState('');
   
+  const SCORE_COLUMNS = [
+    { value: 1, label: 'Muito abaixo', short: '(1)' },
+    { value: 2, label: 'Abaixo', short: '(2)' },
+    { value: 3, label: 'Dentro do esperado', short: '(3)' },
+    { value: 4, label: 'Acima do esperado', short: '(4)' },
+    { value: 5, label: 'Muito acima do esperado', short: '(5)' },
+  ];
+
   const [scores, setScores] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -340,9 +348,10 @@ export default function AutoAvaliacaoFit() {
                     <thead>
                       <tr className="border-b border-slate-200 !bg-slate-100">
                         <th className="text-left p-3 font-semibold !text-slate-900 min-w-[280px]">Critério</th>
-                        {[1, 2, 3, 4, 5].map(note => (
-                          <th key={note} className="p-2 text-center font-medium !text-slate-900 min-w-[60px]">
-                            <div className="text-sm font-bold">{note}</div>
+                        {SCORE_COLUMNS.map(col => (
+                          <th key={col.value} className="p-2 text-center font-medium !text-slate-900 min-w-[90px]">
+                            <div className="text-xs leading-tight">{col.label}</div>
+                            <div className="text-[10px] text-muted-foreground">{col.short}</div>
                           </th>
                         ))}
                       </tr>
@@ -354,18 +363,18 @@ export default function AutoAvaliacaoFit() {
                             <span className="font-medium !text-slate-900">{c.label}</span>
                             {c.desc && <p className="text-xs !text-slate-500 mt-0.5">{c.desc}</p>}
                           </td>
-                          {[1,2,3,4,5].map(note => (
-                            <td key={note} className="p-2 text-center">
+                          {SCORE_COLUMNS.map(col => (
+                            <td key={col.value} className="p-2 text-center">
                               <button
-                                onClick={() => setScores(prev => ({ ...prev, [c.label]: note }))}
+                                onClick={() => setScores(prev => ({ ...prev, [c.label]: col.value }))}
                                 className={`w-6 h-6 rounded-full border-2 mx-auto flex items-center justify-center transition-all ${
-                                  scores[c.label] === note
+                                  scores[c.label] === col.value
                                     ? 'border-primary bg-primary shadow-md scale-110'
                                     : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
                                 }`}
-                                title={`Nota ${note}`}
+                                title={`${col.label} ${col.short}`}
                               >
-                                {scores[c.label] === note && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
+                                {scores[c.label] === col.value && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
                               </button>
                             </td>
                           ))}
