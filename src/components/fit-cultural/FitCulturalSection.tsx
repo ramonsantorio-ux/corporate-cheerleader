@@ -85,12 +85,11 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
     let query = supabase
       .from('fit_cultural')
       .select('*')
-      .eq('employee_id', employeeId);
+      .eq('employee_id', employeeId)
+      .order('created_at', { ascending: false });
       
     if (cycleId) {
       query = query.eq('cycle_id', cycleId);
-    } else {
-      query = query.is('cycle_id', null);
     }
 
     const { data } = await query;
