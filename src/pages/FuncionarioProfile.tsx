@@ -666,7 +666,7 @@ export default function FuncionarioProfile() {
       <Tabs defaultValue={initialTab || 'visao-geral'} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
           <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
-          <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Desempenho & Organograma</TabsTrigger>
+          <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Feedbacks</TabsTrigger>
           <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil Psicométrico</TabsTrigger>
           <TabsTrigger value="fit-cultural" className="py-2.5 rounded-lg text-sm font-medium">Fit Cultural</TabsTrigger>
           <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">Dossiê (RH)</TabsTrigger>
@@ -744,36 +744,6 @@ export default function FuncionarioProfile() {
         </TabsContent>
 
         <TabsContent value="desempenho" className="space-y-6 mt-4">
-          {/* Comparativo e Reuniões */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="glass-card rounded-xl p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" />Comparativo com Equipe ({func.departamento})</h3>
-              <div className="space-y-3">
-                <div><div className="flex justify-between text-sm mb-1"><span>{func.nome}</span><span className="font-bold">{pctResolvido}%</span></div><Progress value={pctResolvido} className="h-3" /></div>
-                <div><div className="flex justify-between text-sm mb-1"><span>Média da equipe</span><span className="font-bold">{deptAvg}%</span></div><Progress value={deptAvg} className="h-3" /></div>
-              </div>
-            </div>
-            <div className="glass-card rounded-xl p-6">
-              <h3 className="font-semibold mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" />Últimas Reuniões 1:1</h3>
-              {meetings.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma reunião registrada.</p> : (
-                <div className="space-y-3">{meetings.slice(0, 5).map(m => (
-                  <div key={m.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                    <Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 min-w-0"><p className="text-sm font-medium">{new Date(m.meeting_date).toLocaleDateString('pt-BR')} — {m.manager_name}</p><p className="text-xs text-muted-foreground truncate">{m.notes || 'Sem anotações'}</p></div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>{m.status === 'completed' ? 'Concluída' : 'Agendada'}</span>
-                  </div>
-                ))}</div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <h3 className="text-lg font-bold flex items-center gap-2"><Users className="w-5 h-5 text-primary" />Organograma Corporativo</h3>
-            <div className="glass-card rounded-xl overflow-hidden bg-background/50 border border-border/50">
-              <Organograma />
-            </div>
-          </div>
-
           <div className="space-y-4">
             <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
             {employeeFeedbacks.length === 0 ? (
