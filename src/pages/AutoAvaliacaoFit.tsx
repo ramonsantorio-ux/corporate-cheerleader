@@ -330,8 +330,8 @@ export default function AutoAvaliacaoFit() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border bg-muted/30">
-                        <th className="text-left p-3 font-semibold text-foreground min-w-[280px]">Critério</th>
+                      <tr className="border-b border-slate-200 bg-slate-100">
+                        <th className="text-left p-3 font-semibold text-slate-900 min-w-[280px]">Critério</th>
                         {[
                           { value: 1, label: 'Muito abaixo', short: '(1)' },
                           { value: 2, label: 'Abaixo', short: '(2)' },
@@ -339,19 +339,19 @@ export default function AutoAvaliacaoFit() {
                           { value: 4, label: 'Acima do esperado', short: '(4)' },
                           { value: 5, label: 'Muito acima do esperado', short: '(5)' },
                         ].map(col => (
-                          <th key={col.value} className="p-2 text-center font-medium text-foreground min-w-[90px]">
+                          <th key={col.value} className="p-2 text-center font-medium text-slate-900 min-w-[90px]">
                             <div className="text-xs leading-tight">{col.label}</div>
-                            <div className="text-[10px] text-muted-foreground">{col.short}</div>
+                            <div className="text-[10px] text-slate-500">{col.short}</div>
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {CRITERIA.map((c, ci) => (
-                        <tr key={c.label} className={`border-b border-border/50 ${ci % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                        <tr key={c.label} className={`border-b border-slate-200 ${ci % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
                           <td className="p-3">
-                            <span className="font-medium text-foreground">{c.label}</span>
-                            {c.desc && <p className="text-xs text-muted-foreground mt-0.5">{c.desc}</p>}
+                            <span className="font-medium text-slate-900">{c.label}</span>
+                            {c.desc && <p className="text-xs text-slate-500 mt-0.5">{c.desc}</p>}
                           </td>
                           {[1,2,3,4,5].map(note => (
                             <td key={note} className="p-2 text-center">
