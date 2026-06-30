@@ -251,9 +251,9 @@ export default function AutoAvaliacaoFit() {
                   />
                   <div className="grid gap-1.5 leading-none">
                     <label htmlFor="terms" className="text-sm font-medium leading-tight cursor-pointer">
-                      Li e concordo com os itens acima
+                      Li e compreendo as orientações acima
                     </label>
-                    <p className="text-xs text-muted-foreground">Você precisa aceitar os termos do guia para prosseguir com a sua autoavaliação.</p>
+                    <p className="text-xs text-muted-foreground">Confirmo que entendi como a avaliação funciona e os critérios que serão analisados.</p>
                   </div>
                 </div>
 
