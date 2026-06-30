@@ -16,8 +16,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContaine
 
 import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
-import Feedback360 from './Feedback360';
 import PDIPage from './PDI';
+import Sucessao from './Sucessao';
 import { ENPSDashboard } from '@/components/ENPSDashboard';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 
@@ -129,11 +129,11 @@ export default function Desempenho() {
   const tabs = [
     { value: 'visao-geral', label: 'Visão da Equipe', icon: Activity },
     { value: 'ciclos', label: 'Ciclos & Avaliações', icon: Calendar },
-    { value: 'feedback360', label: 'Avaliações 360º', icon: Brain },
     { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
     { value: 'pdi', label: 'PDI', icon: ClipboardList },
     { value: 'clima', label: 'Clima (eNPS)', icon: HeartPulse },
+    { value: 'sucessao', label: 'Sucessão & 9Box', icon: TrendingUp },
   ];
 
   return (
@@ -333,12 +333,13 @@ export default function Desempenho() {
         </TabsContent>
 
         {/* ═══ FEEDBACKS ═══ */}
-        <TabsContent value="feedback360" className="mt-4">
-          <Feedback360 />
-        </TabsContent>
-
         <TabsContent value="feedbacks" className="mt-4">
           <Feedbacks />
+        </TabsContent>
+
+        {/* ═══ SUCESSAO ═══ */}
+        <TabsContent value="sucessao" className="mt-4">
+          <Sucessao />
         </TabsContent>
 
         {/* ═══ PDI ═══ */}

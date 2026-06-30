@@ -28,7 +28,6 @@ import GestaoNotificacoes from "./pages/GestaoNotificacoes";
 import DiscTest from "./pages/DiscTest";
 import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
-import Feedback360 from "./pages/Feedback360";
 import { InstallPWA } from './components/InstallPWA';
 
 class ErrorBoundary extends React.Component<any, any> {
@@ -89,7 +88,7 @@ function ProtectedRoutes() {
           <Route path="/eventos" element={<Eventos />} />
           <Route path="/ausencias" element={<Ausencias />} />
           <Route path="/organograma" element={<Organograma />} />
-          <Route path="/sucessao" element={<Sucessao />} />
+          <Route path="/sucessao" element={<Navigate to="/desempenho?tab=sucessao" replace />} />
           <Route path="/evolucao" element={<EvolucaoContrato />} />
           <Route path="/cadastro-metas" element={<CadastroMetas />} />
           <Route path="/notificacoes" element={<GestaoNotificacoes />} />
@@ -97,7 +96,6 @@ function ProtectedRoutes() {
           <Route path="/assessments" element={<Treinamentos />} />
           <Route path="/assessment/:type" element={<AssessmentHub />} />
           <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
-          <Route path="/feedback360" element={<Navigate to="/desempenho?tab=feedback360" replace />} />
           {/* Legacy compat */}
           <Route path="/disc" element={<DiscTest />} />
           <Route path="/disc/:id" element={<DiscTest />} />

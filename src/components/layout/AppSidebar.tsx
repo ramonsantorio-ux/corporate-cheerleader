@@ -34,7 +34,6 @@ const navGroups: NavGroup[] = [
     label: 'Liderança & Gestão',
     items: [
       { to: '/desempenho', icon: BrainCircuit, label: 'Painel do Gestor', badge: 'NOVO' },
-      { to: '/sucessao', icon: TrendingUp, label: 'Sucessão & 9Box' },
     ],
   },
   {
