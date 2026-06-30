@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { useAuth } from '@/contexts/AuthContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface FitScore {
   id: string;
@@ -74,21 +76,31 @@ interface Props {
   cycleId?: string;
 }
 
-export default function FitCulturalSection({ employeeId, employeeName, cycleId }: Props) {
+export default function FitCulturalSection({ employeeId, employeeName, cycleId: initialCycleId }: Props) {
   const { isAdmin, permissions, user } = useAuth();
-  const [scores, setScores] = useState<FitScore[]>([]);
+  
+  // States
+  const [cycles, setCycles] = useState<any[]>([]);
+  const [activeCycleId, setActiveCycleId] = useState<string>(initialCycleId || '');
+  const [allScores, setAllScores] = useState<FitScore[]>([]);
+  
   const [isClosed, setIsClosed] = useState(false);
   const [closing, setClosing] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchScores();
-    checkIfClosed();
-  }, [employeeId, cycleId]);
+    fetchData();
+  }, [employeeId]);
 
-  async function checkIfClosed() {
-    if (!cycleId) {
+  useEffect(() => {
+    if (activeCycleId) {
+      checkIfClosed(activeCycleId);
+    }
+  }, [activeCycleId, employeeId]);
+
+  async function checkIfClosed(cid: string) {
+    if (!cid) {
       setIsClosed(false);
       return;
     }
@@ -96,34 +108,48 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
       .from('fit_cultural_closures')
       .select('*')
       .eq('employee_id', employeeId)
-      .eq('cycle_id', cycleId)
+      .eq('cycle_id', cid)
       .maybeSingle();
     setIsClosed(!!data);
   }
 
-  async function fetchScores() {
-    let query = supabase
+  async function fetchData() {
+    // Busca ciclos
+    const { data: cData } = await supabase.from('evaluation_cycles').select('*').order('start_date', { ascending: true });
+    if (cData) {
+      setCycles(cData);
+      if (!activeCycleId) {
+        const active = cData.find(c => c.is_active) || cData[cData.length - 1];
+        if (active) setActiveCycleId(active.id);
+      }
+    }
+
+    // Busca todas as notas deste funcionario
+    const { data: sData } = await supabase
       .from('fit_cultural')
       .select('*')
       .eq('employee_id', employeeId)
       .order('created_at', { ascending: false });
       
-    if (cycleId) {
-      query = query.eq('cycle_id', cycleId);
-    }
-
-    const { data } = await query;
-    if (data) setScores(data as unknown as FitScore[]);
+    if (sData) setAllScores(sData as unknown as FitScore[]);
     setLoading(false);
   }
 
+  const currentCycleScores = useMemo(() => {
+    return allScores.filter(s => s.cycle_id === activeCycleId);
+  }, [allScores, activeCycleId]);
+
   function getScore(criteria: string, stage: string): number | null {
-    const found = scores.find(s => s.criteria === criteria && s.stage === stage);
+    const found = currentCycleScores.find(s => s.criteria === criteria && s.stage === stage);
     return found?.score ?? null;
   }
 
   async function setScore(criteria: string, stage: string, score: number) {
-    const existing = scores.find(s => s.criteria === criteria && s.stage === stage);
+    if (!activeCycleId) {
+      toast({ title: 'Selecione um ciclo primeiro', variant: 'destructive' });
+      return;
+    }
+    const existing = currentCycleScores.find(s => s.criteria === criteria && s.stage === stage);
 
     let result;
     if (existing) {
@@ -134,7 +160,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
     } else {
       result = await supabase
         .from('fit_cultural')
-        .insert([{ employee_id: employeeId, criteria, stage, score, cycle_id: cycleId || null }]);
+        .insert([{ employee_id: employeeId, criteria, stage, score, cycle_id: activeCycleId }]);
     }
 
     if (result.error) {
@@ -144,11 +170,11 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
     }
 
     toast({ title: 'Nota salva!' });
-    fetchScores();
+    fetchData();
   }
 
   async function clearScore(criteria: string, stage: string) {
-    const existing = scores.find(s => s.criteria === criteria && s.stage === stage);
+    const existing = currentCycleScores.find(s => s.criteria === criteria && s.stage === stage);
     if (!existing) return;
 
     const result = await supabase
@@ -163,22 +189,22 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
     }
 
     toast({ title: 'Nota removida!' });
-    fetchScores();
+    fetchData();
   }
 
   function getStageAvg(stage: string): string {
-    const stageScores = scores.filter(s => s.stage === stage && s.score != null);
+    const stageScores = currentCycleScores.filter(s => s.stage === stage && s.score != null);
     if (stageScores.length === 0) return '—';
     const avg = stageScores.reduce((sum, s) => sum + (s.score ?? 0), 0) / stageScores.length;
     return avg.toFixed(1);
   }
 
   async function handleClose() {
-    if (!cycleId || !user) return;
+    if (!activeCycleId || !user) return;
     setClosing(true);
     const { error } = await supabase
       .from('fit_cultural_closures')
-      .insert([{ employee_id: employeeId, cycle_id: cycleId, closed_by: user.id }]);
+      .insert([{ employee_id: employeeId, cycle_id: activeCycleId, closed_by: user.id }]);
     
     if (error) {
       toast({ title: 'Erro ao encerrar', description: error.message, variant: 'destructive' });
@@ -193,6 +219,22 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
 
   const canClose = isAdmin || permissions['colaboradores']?.can_edit;
 
+  const chartData = useMemo(() => {
+    if (cycles.length === 0 || allScores.length === 0) return [];
+    
+    return cycles.map(cycle => {
+      const cycleScores = allScores.filter(s => s.cycle_id === cycle.id && s.score != null);
+      let avg = 0;
+      if (cycleScores.length > 0) {
+         avg = cycleScores.reduce((sum, s) => sum + (s.score || 0), 0) / cycleScores.length;
+      }
+      return {
+        name: cycle.name,
+        media: Number(avg.toFixed(1))
+      };
+    }).filter(d => d.media > 0); // show only cycles that have scores
+  }, [cycles, allScores]);
+
   const SCORE_COLUMNS = [
     { value: 1, label: 'Muito abaixo', short: '(1)' },
     { value: 2, label: 'Abaixo', short: '(2)' },
@@ -203,12 +245,48 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-          <Star className="w-5 h-5 text-primary" /> FIT Cultural — {employeeName}
-        </h3>
-        <p className="text-sm text-muted-foreground mt-1">Avaliação de competências comportamentais em 4 etapas</p>
+      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Star className="w-5 h-5 text-primary" /> FIT Cultural — {employeeName}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">Avaliação de competências comportamentais em 4 etapas</p>
+        </div>
+        
+        <div className="w-full md:w-64">
+          <Select value={activeCycleId} onValueChange={setActiveCycleId}>
+            <SelectTrigger className="w-full bg-white border-border/50">
+              <SelectValue placeholder="Selecione o período..." />
+            </SelectTrigger>
+            <SelectContent>
+              {cycles.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name} {c.is_active ? '(Atual)' : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {chartData.length > 0 && (
+        <div className="glass-card p-4 rounded-xl border-border/50">
+          <h4 className="text-sm font-semibold mb-4 text-foreground">Evolução Histórica do Fit Cultural</h4>
+          <div className="h-48 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                <YAxis domain={[0, 5]} axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                />
+                <Line type="monotone" dataKey="media" name="Média Geral" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6, fill: '#2563eb' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6">
         {isClosed && (
@@ -304,7 +382,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
           ))}
         </Accordion>
 
-        {canClose && !isClosed && cycleId && (
+        {canClose && !isClosed && activeCycleId && (
           <div className="mt-6 flex justify-end">
             <Button
               variant="destructive"
