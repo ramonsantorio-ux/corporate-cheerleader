@@ -7,7 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
-  permissions: Record<string, { can_view: boolean; can_edit: boolean }>;
+  permissions: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -23,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [permissions, setPermissions] = useState<Record<string, { can_view: boolean; can_edit: boolean }>>({});
+  const [permissions, setPermissions] = useState<Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>>({});
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -55,18 +55,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function fetchRoleAndPermissions(userId: string) {
-    const [rolesRes, permsRes] = await Promise.all([
-      supabase.from('user_roles').select('role').eq('user_id', userId),
-      supabase.from('user_permissions').select('page, can_view, can_edit').eq('user_id', userId),
-    ]);
-
-    const roles = rolesRes.data?.map((r: any) => r.role) ?? [];
+    const { data: rolesData } = await supabase.from('user_roles').select('role, profile_id').eq('user_id', userId);
+    const roles = rolesData?.map((r: any) => r.role) ?? [];
     setIsAdmin(roles.includes('admin'));
 
-    const permsMap: Record<string, { can_view: boolean; can_edit: boolean }> = {};
-    permsRes.data?.forEach((p: any) => {
-      permsMap[p.page] = { can_view: p.can_view, can_edit: p.can_edit };
-    });
+    const profileId = rolesData?.[0]?.profile_id;
+    const permsMap: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }> = {};
+
+    if (profileId) {
+      const { data: permsRes } = await supabase.from('access_profile_permissions')
+        .select('page, can_view, can_create, can_edit, can_delete')
+        .eq('profile_id', profileId);
+        
+      permsRes?.forEach((p: any) => {
+        permsMap[p.page] = { 
+          can_view: p.can_view, 
+          can_create: p.can_create,
+          can_edit: p.can_edit,
+          can_delete: p.can_delete
+        };
+      });
+    }
+
+    // Fallback permissões baseadas em role antigo se necessário
+    if (!profileId && roles.includes('admin')) {
+       // Se for admin e não tiver perfil, libera tudo
+       ['dashboard', 'cadastro', 'colaboradores', 'feedbacks', 'novo_feedback', 'desempenho', 'relatorios', 'reunioes', 'eventos', 'ausencias', 'cco', 'configuracoes'].forEach(page => {
+         permsMap[page] = { can_view: true, can_create: true, can_edit: true, can_delete: true };
+       });
+    }
+
     setPermissions(permsMap);
     setLoading(false);
   }

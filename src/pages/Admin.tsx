@@ -1,6 +1,9 @@
 ﻿import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Shield, Users, Eye, Edit, Lock, Ban, KeyRound, Check, Trash2 } from 'lucide-react';
+import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PerfisDeAcesso } from '@/components/admin/PerfisDeAcesso';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -32,7 +35,7 @@ interface UserWithRole {
   full_name: string;
   role: string;
   banned: boolean;
-  permissions: { page: string; can_view: boolean; can_edit: boolean }[];
+  profile_id: string | null;
 }
 
 export default function Admin() {
@@ -40,7 +43,9 @@ export default function Admin() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ email: '', password: '', full_name: '' });
+  const { user } = useAuth();
+  const [newUser, setNewUser] = useState({ email: '', password: '', full_name: '', profile_id: '' });
+  const [accessProfiles, setAccessProfiles] = useState<{id: string, name: string}[]>([]);
 
   const [creating, setCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
@@ -66,6 +71,12 @@ export default function Admin() {
     if (isAdmin) fetchUsers();
   }, [isAdmin]);
 
+  useEffect(() => {
+    if (isAdmin) {
+      supabase.from('access_profiles').select('id, name').then(({data}) => setAccessProfiles(data || []));
+    }
+  }, [isAdmin]);
+
   async function fetchUsers() {
     const { data: profiles } = await supabase.from('profiles').select('*');
     if (!profiles) { setLoading(false); return; }
@@ -76,14 +87,14 @@ export default function Admin() {
       if (p.full_name === '__DELETED__') continue;
 
       const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', p.id);
-      const { data: perms } = await supabase.from('user_permissions').select('page, can_view, can_edit').eq('user_id', p.id);
+      // perms omitted for profile-based RBAC
       usersWithRoles.push({
         id: p.id,
         email: p.email,
         full_name: p.full_name,
         role: (roles as any)?.[0]?.role || 'user',
         banned: false,
-        permissions: (perms as any[]) || [],
+        profile_id: (roles as any)?.[0]?.profile_id || null,
       });
     }
     setUsers(usersWithRoles);
@@ -355,54 +366,7 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Permissions dialog */}
-      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Permissões — {editingUser?.full_name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 pt-2">
-            {editPerms.map((perm, idx) => {
-              const pageLabel = PAGES.find(p => p.key === perm.page)?.label || perm.page;
-              return (
-                <div key={perm.page} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                  <span className="text-sm font-medium">{pageLabel}</span>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-1.5 text-xs">
-                      <Eye className="w-3.5 h-3.5 text-muted-foreground" />
-                      <Switch
-                        checked={perm.can_view}
-                        onCheckedChange={(checked) => {
-                          const updated = [...editPerms];
-                          updated[idx] = { ...perm, can_view: checked };
-                          if (!checked) updated[idx].can_edit = false;
-                          setEditPerms(updated);
-                        }}
-                      />
-                    </label>
-                    <label className="flex items-center gap-1.5 text-xs">
-                      <Edit className="w-3.5 h-3.5 text-muted-foreground" />
-                      <Switch
-                        checked={perm.can_edit}
-                        disabled={!perm.can_view}
-                        onCheckedChange={(checked) => {
-                          const updated = [...editPerms];
-                          updated[idx] = { ...perm, can_edit: checked };
-                          setEditPerms(updated);
-                        }}
-                      />
-                    </label>
-                  </div>
-                </div>
-              );
-            })}
-            <Button onClick={savePermissions} className="w-full mt-2">
-              Salvar Permissões
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
+      {/* Permissions dialog REMOVED */}
       {/* Edit user dialog */}
       <Dialog open={!!editUserDialog} onOpenChange={(open) => !open && setEditUserDialog(null)}>
         <DialogContent className="max-w-sm">
@@ -469,6 +433,9 @@ export default function Admin() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+        </TabsContent>
+      </Tabs>
 
       {/* Delete user confirmation */}
       <AlertDialog open={!!deleteUser} onOpenChange={(open) => !open && setDeleteUser(null)}>
