@@ -655,7 +655,6 @@ export default function FuncionarioProfile() {
           
           <div className="flex flex-col gap-3 shrink-0 w-full lg:w-48">
             <Button className="w-full justify-start shadow-sm" onClick={() => navigate('/desempenho?tab=feedbacks')}><MessageSquare className="w-4 h-4 mr-2" /> Dar Feedback</Button>
-            <Button variant="secondary" className="w-full justify-start shadow-sm" onClick={() => navigate('/reunioes')}><Calendar className="w-4 h-4 mr-2" /> Agendar 1:1</Button>
             <Button variant="outline" className="w-full justify-start border-orange-500/30 text-orange-600 hover:bg-orange-500/10 shadow-sm" onClick={exportEmployeeDeviationsReport}>
               <FileText className="w-4 h-4 mr-2" /> Dossiê (RH)
             </Button>
