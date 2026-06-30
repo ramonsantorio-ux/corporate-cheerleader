@@ -83,6 +83,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
   const [cycles, setCycles] = useState<any[]>([]);
   const [activeCycleId, setActiveCycleId] = useState<string>(initialCycleId || '');
   const [allScores, setAllScores] = useState<FitScore[]>([]);
+  const [chartPeriod, setChartPeriod] = useState<'semestral' | 'anual'>('semestral');
   
   const [isClosed, setIsClosed] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -220,18 +221,41 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
   const chartData = useMemo(() => {
     if (cycles.length === 0 || allScores.length === 0) return [];
     
-    return cycles.map(cycle => {
-      const cycleScores = allScores.filter(s => s.cycle_id === cycle.id && s.score != null);
-      let avg = 0;
-      if (cycleScores.length > 0) {
-         avg = cycleScores.reduce((sum, s) => sum + (s.score || 0), 0) / cycleScores.length;
-      }
-      return {
-        name: cycle.name,
-        media: Number(avg.toFixed(1))
-      };
-    }).filter(d => d.media > 0); // show only cycles that have scores
-  }, [cycles, allScores]);
+    if (chartPeriod === 'semestral') {
+      return cycles.map(cycle => {
+        const cycleScores = allScores.filter(s => s.cycle_id === cycle.id && s.score != null);
+        let avg = 0;
+        if (cycleScores.length > 0) {
+           avg = cycleScores.reduce((sum, s) => sum + (s.score || 0), 0) / cycleScores.length;
+        }
+        return {
+          name: cycle.name,
+          media: Number(avg.toFixed(1))
+        };
+      }).filter(d => d.media > 0); // show only cycles that have scores
+    } else {
+      // Anual grouping
+      const scoresByYear: Record<string, number[]> = {};
+      
+      allScores.forEach(score => {
+         if (score.score == null || !score.cycle_id) return;
+         const cycle = cycles.find(c => c.id === score.cycle_id);
+         if (!cycle || !cycle.start_date) return;
+         const year = new Date(cycle.start_date).getFullYear().toString();
+         if (!scoresByYear[year]) scoresByYear[year] = [];
+         scoresByYear[year].push(score.score);
+      });
+
+      return Object.keys(scoresByYear).sort().map(year => {
+        const yearScores = scoresByYear[year];
+        const avg = yearScores.reduce((sum, val) => sum + val, 0) / yearScores.length;
+        return {
+          name: year,
+          media: Number(avg.toFixed(1))
+        };
+      });
+    }
+  }, [cycles, allScores, chartPeriod]);
 
   const SCORE_COLUMNS = [
     { value: 1, label: 'Muito abaixo', short: '(1)' },
@@ -271,7 +295,23 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
 
       {chartData.length > 0 && (
         <div className="glass-card p-4 rounded-xl border-border/50">
-          <h4 className="text-sm font-semibold mb-4 text-foreground">Evolução Histórica do Fit Cultural</h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-sm font-semibold text-foreground">Evolução Histórica do Fit Cultural</h4>
+            <div className="flex bg-muted/30 p-1 rounded-lg">
+              <button 
+                onClick={() => setChartPeriod('semestral')}
+                className={`text-xs px-3 py-1 rounded-md transition-colors ${chartPeriod === 'semestral' ? 'bg-white shadow-sm text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Por Ciclo
+              </button>
+              <button 
+                onClick={() => setChartPeriod('anual')}
+                className={`text-xs px-3 py-1 rounded-md transition-colors ${chartPeriod === 'anual' ? 'bg-white shadow-sm text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Anual
+              </button>
+            </div>
+          </div>
           <div className="h-48 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
