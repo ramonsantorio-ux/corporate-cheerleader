@@ -215,8 +215,6 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     setClosing(false);
   }
 
-  if (loading) return <p className="text-sm text-muted-foreground">Carregando FIT Cultural...</p>;
-
   const canClose = isAdmin || permissions['colaboradores']?.can_edit;
 
   const chartData = useMemo(() => {
@@ -242,6 +240,8 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     { value: 4, label: 'Acima do esperado', short: '(4)' },
     { value: 5, label: 'Muito acima do esperado', short: '(5)' },
   ];
+
+  if (loading) return <p className="text-sm text-muted-foreground">Carregando FIT Cultural...</p>;
 
   return (
     <div className="space-y-6">
