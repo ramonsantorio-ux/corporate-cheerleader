@@ -106,15 +106,22 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
   async function setScore(criteria: string, stage: string, score: number) {
     const existing = scores.find(s => s.criteria === criteria && s.stage === stage);
 
+    let result;
     if (existing) {
-      await supabase
+      result = await supabase
         .from('fit_cultural')
         .update({ score, updated_at: new Date().toISOString() })
         .eq('id', existing.id);
     } else {
-      await supabase
+      result = await supabase
         .from('fit_cultural')
         .insert([{ employee_id: employeeId, criteria, stage, score, cycle_id: cycleId || null }]);
+    }
+
+    if (result.error) {
+      console.error('Erro ao salvar nota de fit cultural:', result.error);
+      toast({ title: 'Erro ao salvar', description: result.error.message, variant: 'destructive' });
+      return;
     }
 
     toast({ title: 'Nota salva!' });
@@ -125,10 +132,16 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
     const existing = scores.find(s => s.criteria === criteria && s.stage === stage);
     if (!existing) return;
 
-    await supabase
+    const result = await supabase
       .from('fit_cultural')
       .delete()
       .eq('id', existing.id);
+
+    if (result.error) {
+      console.error('Erro ao remover nota de fit cultural:', result.error);
+      toast({ title: 'Erro ao remover', description: result.error.message, variant: 'destructive' });
+      return;
+    }
 
     toast({ title: 'Nota removida!' });
     fetchScores();
@@ -190,7 +203,8 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
                     <th className="text-left p-3 font-semibold text-foreground min-w-[280px]">Critério</th>
                     {SCORE_COLUMNS.map(col => (
                       <th key={col.value} className="p-2 text-center font-medium text-foreground min-w-[90px]">
-                        <div className="text-sm font-bold">{col.value}</div>
+                        <div className="text-xs leading-tight">{col.label}</div>
+                        <div className="text-[10px] text-muted-foreground">{col.short}</div>
                       </th>
                     ))}
                     <th className="p-2 text-center w-10"></th>
@@ -208,12 +222,13 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
                         {SCORE_COLUMNS.map(col => (
                           <td key={col.value} className="p-2 text-center">
                             <button
+                              disabled={stage.key === 'autoavaliacao'}
                               onClick={() => setScore(criteria.label, stage.key, col.value)}
                               className={`w-8 h-8 rounded-full border-2 transition-all mx-auto flex items-center justify-center ${
                                 currentScore === col.value
                                   ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-md'
                                   : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
-                              }`}
+                              } ${stage.key === 'autoavaliacao' ? 'opacity-70 cursor-not-allowed hover:bg-transparent hover:border-muted-foreground/30' : ''}`}
                               title={`${col.label} ${col.short}`}
                             >
                               {currentScore === col.value && (
@@ -223,7 +238,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId }
                           </td>
                         ))}
                         <td className="p-2 text-center">
-                          {currentScore != null && (
+                          {currentScore != null && stage.key !== 'autoavaliacao' && (
                             <button
                               onClick={() => clearScore(criteria.label, stage.key)}
                               className="p-1 rounded hover:bg-muted transition-colors"
