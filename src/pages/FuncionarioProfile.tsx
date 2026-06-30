@@ -374,9 +374,10 @@ export default function FuncionarioProfile() {
     return null;
   };
 
-  // â”€â”€â”€ Deviations Report PDF for this employee â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  async function exportEmployeeDeviationsReport() {
+  async function exportFullProfileReport() {
     if (!func) return;
+    toast({ title: 'Gerando PDF consolidado...', description: 'Aguarde um momento enquanto os dados são reunidos.' });
+    
     const logoBase64 = await getBusatoLogoBase64();
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -396,18 +397,17 @@ export default function FuncionarioProfile() {
 
     function drawSectionHeadingLocal(title: string, yPos: number) {
       doc.setFillColor(...blueLt);
-      doc.rect(margin, yPos, pageWidth - margin * 2, 10, 'F');
+      doc.rect(margin, yPos, pageWidth - margin * 2, 8, 'F');
       doc.setFillColor(...blue);
-      doc.rect(margin, yPos, 3, 10, 'F');
+      doc.rect(margin, yPos, 3, 8, 'F');
       doc.setTextColor(...blue);
-      doc.setFontSize(11);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.text(title, margin + 7, yPos + 7);
+      doc.text(title, margin + 7, yPos + 6);
       doc.setTextColor(0, 0, 0);
-      return yPos + 14;
+      return yPos + 12;
     }
 
-    // â”€â”€ Helper: check page break â”€â”€
     function checkPageBreak(y: number, needed: number): number {
       if (y + needed > pageHeight - 25) {
         doc.addPage();
@@ -417,88 +417,131 @@ export default function FuncionarioProfile() {
       return y;
     }
 
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• PAGE 1 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // ─── START DOC ───
     drawHeader();
-
     let y = 36;
 
-    // Title block
+    // Title
     doc.setFillColor(250, 250, 250);
     doc.setDrawColor(220, 220, 220);
-    doc.roundedRect(margin, y, pageWidth - margin * 2, 18, 2, 2, 'FD');
-    doc.setFontSize(14);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 16, 2, 2, 'FD');
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(30, 30, 30);
-    doc.text('RELATÃ“RIO DE DESVIOS DO COLABORADOR', margin + 6, y + 8);
+    doc.text('DOSSIÊ COMPLETO DO COLABORADOR', margin + 6, y + 7);
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Matrícula: ${func.id.slice(0, 8).toUpperCase()}`, margin + 6, y + 15);
+    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} | Matrícula: ${func.id.slice(0, 8).toUpperCase()}`, margin + 6, y + 13);
     doc.setTextColor(0, 0, 0);
 
-    y = y + 24;
+    y = y + 20;
 
-    // â”€â”€ DADOS CADASTRAIS â”€â”€
-    y = drawSectionHeadingLocal('DADOS CADASTRAIS', y);
+    // ─── DADOS CADASTRAIS & PERFORMANCE ───
+    y = drawSectionHeadingLocal('DADOS CADASTRAIS E PERFORMANCE', y);
 
-    const info = [
-      ['Nome Completo', func.nome.toUpperCase()],
-      ['Cargo', func.cargo],
-      ['Departamento', func.departamento],
-      ['E-mail', func.email || '—'],
-      ['Turno', func.turno],
-      
-      ['Escolaridade', func.escolaridade || '—'],
-      ['Data de Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR')],
+    const infoBody = [
+      ['Nome Completo', func.nome.toUpperCase(), 'Fit Cultural', func.fit_cultural ? `${func.fit_cultural}%` : 'Não Avaliado'],
+      ['Cargo', func.cargo, 'Nine Box (Desemp.)', func.nine_box_desempenho || 'Não Avaliado'],
+      ['Departamento', func.departamento, 'Nine Box (Potenc.)', func.nine_box_potencial || 'Não Avaliado'],
+      ['E-mail', func.email || '—', 'Turno', func.turno],
+      ['Data de Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR'), 'Escolaridade', func.escolaridade || '—'],
     ];
 
     autoTable(doc, {
       startY: y,
-      body: info,
+      body: infoBody,
       theme: 'plain',
-      styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 6, right: 4 } },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 50 } },
-      margin: { left: margin + 4, right: margin + 4 },
+      styles: { fontSize: 8, cellPadding: { top: 2, bottom: 2, left: 4, right: 4 } },
+      columnStyles: { 
+        0: { fontStyle: 'bold', cellWidth: 35 }, 
+        1: { cellWidth: 55 },
+        2: { fontStyle: 'bold', cellWidth: 35 }, 
+        3: { cellWidth: 55 }
+      },
+      margin: { left: margin, right: margin },
     });
 
-    y = (doc as any).lastAutoTable?.finalY + 6 || y + 80;
+    y = (doc as any).lastAutoTable?.finalY + 6 || y + 40;
 
-    // â”€â”€ RESUMO DE DESVIOS â”€â”€
+    // ─── PERFIL PSICOMÉTRICO ───
+    y = checkPageBreak(y, 30);
+    y = drawSectionHeadingLocal('PERFIL PSICOMÉTRICO', y);
+
+    const tests = [
+      ['DISC', discResult ? `Perfil Predominante: ${discResult.profile_name || 'Concluído'}` : 'Não realizado'],
+      ['MBTI', mbtiResult ? `Tipo: ${mbtiResult.mbti_type || 'Concluído'}` : 'Não realizado'],
+      ['Big Five', bigFiveResult ? 'Avaliação concluída e registrada no sistema' : 'Não realizado'],
+    ];
+
+    autoTable(doc, {
+      startY: y,
+      body: tests,
+      theme: 'plain',
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 35 } },
+      margin: { left: margin, right: margin },
+    });
+
+    y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
+
+    // ─── RESUMO DE OCORRÊNCIAS ───
     const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
     const faltasJust = attendanceRecords.filter(a => a.status === 'falta_justificada').length;
     const atestados = attendanceRecords.filter(a => a.status === 'atestado').length;
     const hrsNeg = faltasInj + faltasJust + atestados;
     const advApplied = employeeWarnings.filter(w => w.applied).length;
-    const advPending = employeeWarnings.filter(w => !w.applied).length;
 
-    y = checkPageBreak(y, 60);
-    y = drawSectionHeadingLocal('RESUMO DE DESVIOS', y);
+    y = checkPageBreak(y, 40);
+    y = drawSectionHeadingLocal('RESUMO DE OCORRÊNCIAS DISCIPLINARES', y);
 
     autoTable(doc, {
       startY: y,
       head: [['Indicador', 'Quantidade']],
       body: [
-        ['Horas Negativas (Total)', String(hrsNeg)],
         ['Faltas Injustificadas', String(faltasInj)],
-        ['Faltas Justificadas', String(faltasJust)],
-        ['Atestados Médicos', String(atestados)],
-        ['Horas Extras', String(extrasCount)],
+        ['Faltas Justificadas / Atestados', String(faltasJust + atestados)],
         ['Advertências Aplicadas', String(advApplied)],
-        ['Advertências Pendentes', String(advPending)],
-        ['Eventos Registrados', String(employeeEvents.length)],
+        ['Total de Eventos Registrados', String(employeeEvents.length)],
       ],
-      styles: { fontSize: 9, cellPadding: 3 },
+      styles: { fontSize: 8, cellPadding: 3 },
       headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
       alternateRowStyles: { fillColor: blueLt },
-      columnStyles: { 1: { halign: 'center', fontStyle: 'bold' } },
-      margin: { left: margin + 4, right: margin + 4 },
+      margin: { left: margin, right: margin },
     });
 
-    y = (doc as any).lastAutoTable?.finalY + 6 || y + 50;
+    y = (doc as any).lastAutoTable?.finalY + 6 || y + 40;
 
-    // â”€â”€ HISTÃ“RICO DE ADVERTÃŠNCIAS â”€â”€
-    y = checkPageBreak(y, 30);
-    y = drawSectionHeadingLocal(`HISTÃ“RICO DE ADVERTÃŠNCIAS (${employeeWarnings.length})`, y);
+    // ─── FEEDBACKS ───
+    y = checkPageBreak(y, 40);
+    y = drawSectionHeadingLocal(`FEEDBACKS (${employeeFeedbacks.length})`, y);
+
+    if (employeeFeedbacks.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Data', 'Título', 'Gestor', 'Status']],
+        body: employeeFeedbacks.slice(0, 15).map(f => [
+          new Date(f.criado_em).toLocaleDateString('pt-BR'),
+          f.titulo.length > 50 ? f.titulo.substring(0, 47) + '...' : f.titulo,
+          f.gestor || '—',
+          statusLabels[f.status as FeedbackStatus] || f.status
+        ]),
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
+    } else {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Nenhum feedback registrado.', margin, y);
+      y += 8;
+    }
+
+    // ─── HISTÓRICO DE ADVERTÊNCIAS E EVENTOS ───
+    y = checkPageBreak(y, 40);
+    y = drawSectionHeadingLocal(`HISTÓRICO DE ADVERTÊNCIAS E DESVIOS GRAVES`, y);
 
     if (employeeWarnings.length > 0) {
       autoTable(doc, {
@@ -507,80 +550,23 @@ export default function FuncionarioProfile() {
         body: employeeWarnings.map(w => [
           new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'),
           w.reason,
-          w.applied ? 'SIM' : 'NÃƒO',
+          w.applied ? 'SIM' : 'NÃO',
           w.observation || '—',
         ]),
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
         alternateRowStyles: { fillColor: blueLt },
-        margin: { left: margin + 4, right: margin + 4 },
+        margin: { left: margin, right: margin },
       });
       y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
     } else {
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Nenhuma advertência registrada.', margin + 6, y + 4);
-      y += 10;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Nenhuma advertência registrada.', margin, y);
+      y += 8;
     }
 
-    // â”€â”€ HISTÃ“RICO DE EVENTOS â”€â”€
-    y = checkPageBreak(y, 30);
-    y = drawSectionHeadingLocal(`HISTÃ“RICO DE EVENTOS (${employeeEvents.length})`, y);
-
-    if (employeeEvents.length > 0) {
-      autoTable(doc, {
-        startY: y,
-        head: [['Data', 'Descrição', 'Local', 'Equipamento']],
-        body: employeeEvents.map(ev => [
-          new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR'),
-          ev.description.length > 60 ? ev.description.slice(0, 57) + '...' : ev.description,
-          ev.location || '—',
-          ev.equipment || '—',
-        ]),
-        styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: blueLt },
-        margin: { left: margin + 4, right: margin + 4 },
-      });
-      y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
-    } else {
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Nenhum evento registrado.', margin + 6, y + 4);
-      y += 10;
-    }
-
-    // â”€â”€ HISTÃ“RICO DE REGISTROS (PONTO) â”€â”€
-    const deviationRecords = attendanceRecords.filter(a =>
-      ['falta', 'falta_injustificada', 'falta_justificada', 'atestado'].includes(a.status)
-    );
-
-    y = checkPageBreak(y, 30);
-    y = drawSectionHeadingLocal(`HISTÃ“RICO DE REGISTROS (${deviationRecords.length})`, y);
-
-    if (deviationRecords.length > 0) {
-      autoTable(doc, {
-        startY: y,
-        head: [['Data', 'Status', 'Observação']],
-        body: deviationRecords.map(a => [
-          new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR'),
-          attendanceStatusLabels[a.status] || a.status,
-          a.observation || '—',
-        ]),
-        styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: blueLt },
-        margin: { left: margin + 4, right: margin + 4 },
-      });
-      y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
-    } else {
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Nenhum registro de desvio encontrado.', margin + 6, y + 4);
-      y += 10;
-    }
-
-    // â”€â”€ ASSINATURAS â”€â”€
+    // ─── ASSINATURAS ───
     y = checkPageBreak(y, 40);
     y = y + 20;
     doc.setDrawColor(0);
@@ -590,9 +576,9 @@ export default function FuncionarioProfile() {
     doc.setTextColor(120, 120, 120);
     doc.setFont('helvetica', 'normal');
     doc.text('Assinatura do Colaborador', margin + 25, y + 5);
-    doc.text('Assinatura do Gestor', pageWidth / 2 + 30, y + 5);
+    doc.text('Assinatura do Gestor/RH', pageWidth / 2 + 25, y + 5);
 
-    // â”€â”€ FOOTER on all pages â”€â”€
+    // ─── FOOTER on all pages ───
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -655,19 +641,20 @@ export default function FuncionarioProfile() {
           
           <div className="flex flex-col gap-3 shrink-0 w-full lg:w-48">
             <Button className="w-full justify-start shadow-sm" onClick={() => navigate('/desempenho?tab=feedbacks')}><MessageSquare className="w-4 h-4 mr-2" /> Dar Feedback</Button>
-            <Button variant="outline" className="w-full justify-start border-orange-500/30 text-orange-600 hover:bg-orange-500/10 shadow-sm" onClick={exportEmployeeDeviationsReport}>
-              <FileText className="w-4 h-4 mr-2" /> Dossiê (RH)
+            <Button variant="outline" className="w-full justify-start border-primary/30 text-primary hover:bg-primary/10 shadow-sm" onClick={exportFullProfileReport}>
+              <FileText className="w-4 h-4 mr-2" /> Exportar Dossiê Completo
             </Button>
           </div>
         </div>
       </motion.div>
 
       <Tabs defaultValue={initialTab || 'visao-geral'} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
           <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
           <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Feedbacks</TabsTrigger>
           <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil Psicométrico</TabsTrigger>
           <TabsTrigger value="fit-cultural" className="py-2.5 rounded-lg text-sm font-medium">Fit Cultural</TabsTrigger>
+          <TabsTrigger value="nine-box" className="py-2.5 rounded-lg text-sm font-medium">Nine Box</TabsTrigger>
           <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">Dossiê (RH)</TabsTrigger>
         </TabsList>
 
@@ -822,18 +809,6 @@ export default function FuncionarioProfile() {
               </Tabs>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
-              {/* ——— NINE BOX ——— */}
-              <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
-                <NineBoxSection 
-                  employeeId={func.id} 
-                  initialDesempenho={func.nine_box_desempenho} 
-                  initialPotencial={func.nine_box_potencial} 
-                  cargo={func.cargo} 
-                  onUpdate={refreshFunc} 
-                />
-              </div>
-            </div>
           </div>
 
           {/* ——— GAMIFICAÇÃO ——— */}
@@ -885,6 +860,19 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
+        {/* ——— NINE BOX ——— */}
+        <TabsContent value="nine-box" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
+            <NineBoxSection 
+              employeeId={func.id} 
+              initialDesempenho={func.nine_box_desempenho} 
+              initialPotencial={func.nine_box_potencial} 
+              cargo={func.cargo} 
+              onUpdate={refreshFunc} 
+            />
+          </div>
+        </TabsContent>
+
         {/* ═══ DOSSIÊ (RH) TAB (Histórico Disciplinar e Assiduidade) ═══ */}
         <TabsContent value="dossie" className="space-y-6 mt-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 glass-card rounded-xl p-6 border-l-4 border-l-orange-500">
@@ -892,9 +880,6 @@ export default function FuncionarioProfile() {
               <h2 className="text-xl font-bold flex items-center gap-2"><FileText className="w-6 h-6 text-orange-500" /> Dossiê Funcional (RH)</h2>
               <p className="text-sm text-muted-foreground">Histórico completo de assiduidade, ocorrências, advertências e documentações para uso estratégico.</p>
             </div>
-            <Button variant="default" className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm flex-shrink-0" onClick={exportEmployeeDeviationsReport}>
-              <FileText className="w-4 h-4 mr-2" /> Baixar PDF Oficial
-            </Button>
           </div>
 
           {isOnVacation && vacationInfo && (
@@ -916,21 +901,7 @@ export default function FuncionarioProfile() {
             </div>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {[
-              { label: 'Total Registros', value: attendanceRecords.length, icon: CalendarDays, color: 'text-primary' },
-              { label: 'Presenças', value: attendanceStats.presente || 0, icon: Users, color: 'text-success' },
-              { label: 'Faltas Injust.', value: (attendanceStats.falta_injustificada || 0), icon: AlertTriangle, color: 'text-destructive' },
-              { label: 'Atestados', value: attendanceStats.atestado || 0, icon: Clock, color: 'text-blue-600' },
-              { label: 'Extras', value: extrasCount, icon: TrendingUp, color: extrasCount >= 3 ? 'text-destructive' : 'text-primary' },
-            ].map(k => (
-              <div key={k.label} className="glass-card rounded-xl p-4 text-center">
-                <k.icon className={`w-5 h-5 mx-auto mb-2 ${k.color}`} />
-                <p className="text-2xl font-bold">{k.value}</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{k.label}</p>
-              </div>
-            ))}
-          </div>
+
 
           <div className="glass-card rounded-xl p-5">
             <h3 className="font-semibold flex items-center gap-2 mb-3"><Shield className="w-5 h-5 text-primary" />Controle de Horas Extras</h3>
@@ -1015,9 +986,6 @@ export default function FuncionarioProfile() {
           {/* â”€â”€ Desvios e Advertências â”€â”€ */}
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-destructive" />Desvios e Advertências</h3>
-            <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600" onClick={exportEmployeeDeviationsReport}>
-              <FileText className="w-4 h-4 mr-2" />Exportar PDF (RH)
-            </Button>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
