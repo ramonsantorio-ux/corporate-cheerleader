@@ -75,7 +75,6 @@ function ProtectedRoutes() {
   return (
     <ErrorBoundary>
       <Routes>
-        <Route path="/autoavaliacao-fit-cultural" element={<AutoAvaliacaoFit />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<Index />} />
           <Route path="/colaboradores" element={<Colaboradores />} />
@@ -126,6 +125,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/autoavaliacao-fit-cultural" element={<AutoAvaliacaoFit />} />
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </AuthProvider>
