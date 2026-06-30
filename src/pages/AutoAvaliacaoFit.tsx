@@ -39,7 +39,7 @@ const CRITERIA = [
     desc: 'Não compactua com corrupção, uso indevido de recursos da empresa, apropriação indevida de qualquer natureza',
   },
   {
-    label: 'Atua de forma alinhada com os 3 C\'s da empresa',
+    label: 'Atua de forma alinhada com os 4 C\'s da empresa',
     desc: 'Disciplina com horário, com as demandas, com os valores, com os compromissos assumidos',
   },
   {
