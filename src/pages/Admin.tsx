@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -264,11 +264,25 @@ export default function Admin() {
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+      <Tabs defaultValue="usuarios" className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Administração</h1>
           <p className="text-muted-foreground text-sm mt-1">Gerenciar usuários e permissões</p>
         </div>
+        <TabsList>
+          <TabsTrigger value="usuarios">Usuários</TabsTrigger>
+          <TabsTrigger value="perfis">Perfis de Acesso</TabsTrigger>
+        </TabsList>
+      </div>
+
+      <TabsContent value="perfis">
+        <PerfisDeAcesso />
+      </TabsContent>
+
+      <TabsContent value="usuarios" className="space-y-6">
+        <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+          <div />
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button>

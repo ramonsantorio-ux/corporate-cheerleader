@@ -298,6 +298,7 @@ export default function AutoAvaliacaoFit() {
               </SelectContent>
             </Select>
           </div>
+        )}
           
           <div>
             <Label className="text-base font-semibold">Qual ciclo você está avaliando?</Label>
