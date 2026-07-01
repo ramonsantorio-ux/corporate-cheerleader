@@ -105,7 +105,7 @@ export default function Treinamentos() {
           console.error("Erro ao buscar funcionários:", error);
         }
 
-        const { data: assessments } = await supabase.from('assessment_results').select('user_id, type, result_data, created_at').catch(() => ({ data: [] }));
+        const { data: assessments } = await supabase.from('assessment_results').select('user_id, type, result_data, created_at');
         setAssessmentsData(assessments || []);
         
         const enriched = (employeesList || []).map(f => {
