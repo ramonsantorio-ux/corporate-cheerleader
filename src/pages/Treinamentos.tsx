@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/components/ExecutiveReports';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
+import { Link } from 'lucide-react';
 
 const assessments = [
   {
@@ -49,6 +52,13 @@ export default function Treinamentos() {
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
 
   const [reportModal, setReportModal] = useState<{open: boolean; type: string; data: any; empName: string}>({open: false, type: '', data: null, empName: ''});
+  const { toast } = useToast();
+
+  const copyLink = (type: string, id: string) => {
+    const url = `${window.location.origin}/assessment/${type}/${id}`;
+    navigator.clipboard.writeText(url);
+    toast({ title: 'Link copiado!', description: `Envie este link para o colaborador responder o teste.` });
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -209,9 +219,20 @@ export default function Treinamentos() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <div className="flex gap-1 justify-center">
+                      <div className="flex gap-1 justify-center items-center">
                         <Button size="sm" variant="outline" className="text-xs h-7 px-2" onClick={() => navigate(`/funcionario/${f.id}`)}>Perfil</Button>
-                        <Button size="sm" variant="ghost" className="text-xs h-7 px-2 text-primary" onClick={() => navigate(`/assessment/disc/${f.id}`)}>+</Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button size="sm" variant="ghost" className="text-xs h-7 px-2 text-primary" title="Gerar link para o colaborador">
+                              <Link className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-white">
+                            <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('disc', f.id)}>Copiar Link DISC</DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('mbti', f.id)}>Copiar Link MBTI</DropdownMenuItem>
+                            <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('bigfive', f.id)}>Copiar Link Big Five</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </motion.tr>
