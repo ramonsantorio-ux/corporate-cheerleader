@@ -185,7 +185,7 @@ export default function Configuracoes() {
                     <p className="text-sm font-medium">Feedbacks (PDF)</p>
                     <p className="text-xs text-muted-foreground">Relatório completo em PDF</p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={exportPDF}><FileText className="w-4 h-4 mr-2" />PDF</Button>
+                  <Button variant="outline" size="sm" onClick={exportToPDF}><FileText className="w-4 h-4 mr-2" />PDF</Button>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div>
