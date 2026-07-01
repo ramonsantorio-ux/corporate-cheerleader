@@ -43,6 +43,31 @@ serve(async (req) => {
 
     const { action, user_id, email, full_name, password } = await req.json();
 
+    if (action === 'list_users') {
+      const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
+      if (error) throw error;
+      
+      const { data: profiles } = await supabaseAdmin.from('profiles').select('*');
+      const { data: roles } = await supabaseAdmin.from('user_roles').select('*');
+
+      const result = profiles?.map(p => {
+        const authUser = users.find(u => u.id === p.id);
+        const userRoles = roles?.filter(r => r.user_id === p.id);
+        return {
+          id: p.id,
+          email: p.email,
+          full_name: p.full_name,
+          role: userRoles?.[0]?.role || 'user',
+          profile_id: userRoles?.[0]?.profile_id || null,
+          banned: authUser?.banned_until != null,
+        };
+      }) || [];
+
+      return new Response(JSON.stringify({ success: true, users: result }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (action === 'update') {
       // Update user email and profile name
       const updates: any = {};
