@@ -185,7 +185,6 @@ export default function Admin() {
           await supabase.from('user_roles').insert({ user_id: userId, role: 'user' });
         }
         fetchUsers();
-      }
     } catch (err: any) {
       toast.error(err.message || 'Erro inesperado');
     }
