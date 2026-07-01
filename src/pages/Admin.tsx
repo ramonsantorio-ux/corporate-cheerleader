@@ -90,19 +90,21 @@ export default function Admin() {
     const { data: profiles } = await supabase.from('profiles').select('*');
     if (!profiles) { setLoading(false); return; }
 
+    const { data: bannedRows } = await supabase.from('user_permissions').select('user_id').eq('page', 'banned');
+    const bannedUserIds = new Set(bannedRows?.map(r => r.user_id) || []);
+
     const usersWithRoles: UserWithRole[] = [];
     for (const p of profiles) {
-      // Skip deleted users
       if (p.full_name === '__DELETED__') continue;
 
-      const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', p.id);
-      // perms omitted for profile-based RBAC
+      const { data: roles } = await supabase.from('user_roles').select('role, profile_id').eq('user_id', p.id);
+      
       usersWithRoles.push({
         id: p.id,
         email: p.email,
         full_name: p.full_name,
         role: (roles as any)?.[0]?.role || 'user',
-        banned: false,
+        banned: bannedUserIds.has(p.id),
         profile_id: (roles as any)?.[0]?.profile_id || null,
       });
     }
@@ -228,6 +230,12 @@ export default function Admin() {
     setSavingBlock(true);
     try {
       await adminAuthRequest('manage', { action: blockAction, user_id: blockUser.id });
+
+      if (blockAction === 'ban') {
+        await supabase.from('user_permissions').insert({ user_id: blockUser.id, page: 'banned', can_view: true });
+      } else {
+        await supabase.from('user_permissions').delete().eq('user_id', blockUser.id).eq('page', 'banned');
+      }
 
       toast.success(blockAction === 'ban' ? 'Usuário bloqueado!' : 'Usuário desbloqueado!');
       setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
