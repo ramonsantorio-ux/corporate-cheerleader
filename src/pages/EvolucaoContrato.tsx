@@ -1362,12 +1362,9 @@ export default function EvolucaoContrato() {
                 </TabsContent>
           <TabsContent value="aderencia" className="space-y-6 mt-4">
             <div className="grid grid-cols-1 gap-6">
-          {/* GRÁFICOS DIÁRIOS (GERAL, MINÉRIO, TPM) */}
-          <AderenciaDiariaViewer 
-            medicoes={medicoes} 
-            setExpandedChart={setExpandedChart} 
-          />
-          
+              <div className="text-center p-12 border-2 border-dashed border-border rounded-xl">
+                <p className="text-muted-foreground">O visualizador de aderência diária foi desativado temporariamente.</p>
+              </div>
             </div>
           </TabsContent>
 
