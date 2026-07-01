@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
@@ -396,7 +397,49 @@ export default function Admin() {
         </div>
       )}
 
-      {/* Permissions dialog REMOVED */}
+      {/* Permissions dialog */}
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Permissões — {editingUser?.full_name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto space-y-3 pt-2">
+            <div className="grid grid-cols-[1fr_80px_80px] gap-4 px-2 mb-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">Módulo / Página</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Ver</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Editar</span>
+            </div>
+            
+            {editPerms.map((perm, idx) => {
+              const pageLabel = PAGES.find(p => p.key === perm.page)?.label || perm.page;
+              return (
+                <div key={perm.page} className="grid grid-cols-[1fr_80px_80px] gap-4 px-2 py-3 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
+                  <span className="text-sm font-medium">{pageLabel}</span>
+                  <div className="flex justify-center">
+                    <Checkbox checked={perm.can_view} onCheckedChange={(c: boolean) => {
+                      const upd = [...editPerms];
+                      upd[idx].can_view = c;
+                      if (!c) upd[idx].can_edit = false;
+                      setEditPerms(upd);
+                    }} />
+                  </div>
+                  <div className="flex justify-center">
+                    <Checkbox checked={perm.can_edit} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                      const upd = [...editPerms]; upd[idx].can_edit = c; setEditPerms(upd);
+                    }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="pt-4 border-t mt-auto">
+            <Button onClick={savePermissions} className="w-full">
+              Salvar Permissões
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit user dialog */}
       <Dialog open={!!editUserDialog} onOpenChange={(open) => !open && setEditUserDialog(null)}>
         <DialogContent className="max-w-sm">

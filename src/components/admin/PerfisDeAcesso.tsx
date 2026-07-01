@@ -44,6 +44,9 @@ export function PerfisDeAcesso() {
   const [newProfileOpen, setNewProfileOpen] = useState(false);
   const [newProfile, setNewProfile] = useState({ name: '', description: '' });
   
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const [editProfileData, setEditProfileData] = useState<{ id: string; name: string; description: string } | null>(null);
+  
   const [editingProfile, setEditingProfile] = useState<AccessProfile | null>(null);
   const [editingPerms, setEditingPerms] = useState<ProfilePermission[]>([]);
   const [savingPerms, setSavingPerms] = useState(false);
@@ -76,6 +79,27 @@ export function PerfisDeAcesso() {
       setProfiles([...profiles, data]);
       setNewProfileOpen(false);
       setNewProfile({ name: '', description: '' });
+    }
+  }
+
+  function openEditProfile(profile: AccessProfile) {
+    setEditProfileData({ id: profile.id, name: profile.name, description: profile.description || '' });
+    setEditProfileOpen(true);
+  }
+
+  async function handleSaveEditProfile() {
+    if (!editProfileData || !editProfileData.name) return toast.error('Nome do perfil é obrigatório');
+    const { error } = await supabase.from('access_profiles').update({
+      name: editProfileData.name,
+      description: editProfileData.description
+    }).eq('id', editProfileData.id);
+
+    if (error) {
+      toast.error('Erro ao atualizar perfil');
+    } else {
+      toast.success('Perfil atualizado com sucesso!');
+      setProfiles(profiles.map(p => p.id === editProfileData.id ? { ...p, name: editProfileData.name, description: editProfileData.description } : p));
+      setEditProfileOpen(false);
     }
   }
 
@@ -175,9 +199,12 @@ export function PerfisDeAcesso() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="flex-1" onClick={() => openPermissions(p)}>
-                <Edit className="w-3.5 h-3.5 mr-1" /> Permissões
+                <Shield className="w-3.5 h-3.5 mr-1" /> Permissões
               </Button>
-              <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteProfile(p.id)}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => openEditProfile(p)} title="Editar Perfil">
+                <Edit className="w-3.5 h-3.5" />
+              </Button>
+              <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteProfile(p.id)} title="Excluir Perfil">
                 <Trash2 className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -237,6 +264,25 @@ export function PerfisDeAcesso() {
               Salvar Permissões
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar Perfil</DialogTitle></DialogHeader>
+          {editProfileData && (
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>Nome do Perfil</Label>
+                <FastInput value={editProfileData.name} onValueChange={v => setEditProfileData({ ...editProfileData, name: v })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <FastInput value={editProfileData.description} onValueChange={v => setEditProfileData({ ...editProfileData, description: v })} />
+              </div>
+              <Button onClick={handleSaveEditProfile} className="w-full">Salvar Alterações</Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
