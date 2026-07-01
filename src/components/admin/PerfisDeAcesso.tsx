@@ -236,26 +236,37 @@ export function PerfisDeAcesso() {
                           <div key={page.key} className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 px-2 py-2 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
                             <span className="text-sm font-medium text-muted-foreground">{page.label}</span>
                             <div className="flex justify-center items-center">
-                              <Checkbox checked={perm.can_view} disabled={!isAdmin} onCheckedChange={(c: boolean) => {
+                              <Checkbox checked={perm.can_view} disabled={!isAdmin} onCheckedChange={(c) => {
+                                const isChecked = c === true;
                                 const upd = [...editingPerms];
-                                upd[permIdx].can_view = c;
-                                if (!c) { upd[permIdx].can_create = false; upd[permIdx].can_edit = false; upd[permIdx].can_delete = false; }
+                                upd[permIdx] = { ...upd[permIdx], can_view: isChecked };
+                                if (!isChecked) {
+                                  upd[permIdx].can_create = false;
+                                  upd[permIdx].can_edit = false;
+                                  upd[permIdx].can_delete = false;
+                                }
                                 setEditingPerms(upd);
                               }} />
                             </div>
                             <div className="flex justify-center items-center">
-                              <Checkbox checked={perm.can_create} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
-                                const upd = [...editingPerms]; upd[permIdx].can_create = c; setEditingPerms(upd);
+                              <Checkbox checked={perm.can_create} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c) => {
+                                const upd = [...editingPerms];
+                                upd[permIdx] = { ...upd[permIdx], can_create: c === true };
+                                setEditingPerms(upd);
                               }} />
                             </div>
                             <div className="flex justify-center items-center">
-                              <Checkbox checked={perm.can_edit} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
-                                const upd = [...editingPerms]; upd[permIdx].can_edit = c; setEditingPerms(upd);
+                              <Checkbox checked={perm.can_edit} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c) => {
+                                const upd = [...editingPerms];
+                                upd[permIdx] = { ...upd[permIdx], can_edit: c === true };
+                                setEditingPerms(upd);
                               }} />
                             </div>
                             <div className="flex justify-center items-center">
-                              <Checkbox checked={perm.can_delete} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
-                                const upd = [...editingPerms]; upd[permIdx].can_delete = c; setEditingPerms(upd);
+                              <Checkbox checked={perm.can_delete} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c) => {
+                                const upd = [...editingPerms];
+                                upd[permIdx] = { ...upd[permIdx], can_delete: c === true };
+                                setEditingPerms(upd);
                               }} />
                             </div>
                           </div>
