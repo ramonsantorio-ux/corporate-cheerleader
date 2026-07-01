@@ -644,6 +644,44 @@ export type Database = {
         }
         Relationships: []
       }
+      nine_box_historico: {
+        Row: {
+          id: string
+          employee_id: string
+          desempenho: string
+          potencial: string
+          cycle: string
+          observacao: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          employee_id: string
+          desempenho: string
+          potencial: string
+          cycle: string
+          observacao?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          employee_id?: string
+          desempenho?: string
+          potencial?: string
+          cycle?: string
+          observacao?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nine_box_historico_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "funcionarios"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       fit_cultural: {
         Row: {
           created_at: string
