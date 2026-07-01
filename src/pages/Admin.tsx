@@ -58,6 +58,7 @@ export default function Admin() {
   const [editUserDialog, setEditUserDialog] = useState<UserWithRole | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [editProfileId, setEditProfileId] = useState<string>('');
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Change password dialog
@@ -173,7 +174,7 @@ export default function Admin() {
             can_edit: false,
           }));
           await supabase.from('user_permissions').insert(defaultPerms);
-          await supabase.from('user_roles').insert({ user_id: userId, role: 'user' });
+          await supabase.from('user_roles').insert({ user_id: userId, role: 'user', profile_id: newUser.profile_id || null });
         }
         fetchUsers();
     } catch (err: any) {
@@ -206,6 +207,7 @@ export default function Admin() {
     setEditUserDialog(user);
     setEditName(user.full_name);
     setEditEmail(user.email);
+    setEditProfileId(user.profile_id || '');
   }
 
   async function saveEditUser() {
@@ -213,6 +215,13 @@ export default function Admin() {
     setSavingEdit(true);
     try {
       await adminAuthRequest('manage', { action: 'update', user_id: editUserDialog.id, email: editEmail, full_name: editName });
+
+      const { data: roleData } = await supabase.from('user_roles').select('*').eq('user_id', editUserDialog.id).maybeSingle();
+      if (roleData) {
+         await supabase.from('user_roles').update({ profile_id: editProfileId || null }).eq('user_id', editUserDialog.id);
+      } else {
+         await supabase.from('user_roles').insert({ user_id: editUserDialog.id, role: 'user', profile_id: editProfileId || null });
+      }
 
       toast.success('Usuário atualizado com sucesso!');
       setEditUserDialog(null);
@@ -314,6 +323,20 @@ export default function Admin() {
                 <FastInput type="email" value={newUser.email} onValueChange={v => setNewUser({ ...newUser, email: v })} placeholder="email@empresa.com" />
               </div>
               <div className="space-y-2">
+                <Label>Perfil de Acesso</Label>
+                <Select value={newUser.profile_id || 'none'} onValueChange={(v) => setNewUser({...newUser, profile_id: v === 'none' ? '' : v})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um perfil (Opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum (Permissões individuais)</SelectItem>
+                    {accessProfiles.map(p => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Senha</Label>
                 <div className="relative">
                   <FastInput type={showPassword ? "text" : "password"} value={newUser.password} onValueChange={v => setNewUser({ ...newUser, password: v })} placeholder="Mínimo 6 caracteres" />
@@ -359,6 +382,11 @@ export default function Admin() {
                 }`}>
                   {u.role === 'admin' ? 'Admin' : 'Usuário'}
                 </span>
+                {u.profile_id && (
+                  <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                    {accessProfiles.find(p => p.id === u.profile_id)?.name || 'Perfil desconhecido'}
+                  </span>
+                )}
                 {u.banned && (
                   <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-destructive/10 text-destructive">
                     Bloqueado
@@ -455,6 +483,20 @@ export default function Admin() {
             <div className="space-y-2">
               <Label>E-mail</Label>
               <FastInput type="email" value={editEmail} onValueChange={setEditEmail} />
+            </div>
+            <div className="space-y-2">
+              <Label>Perfil de Acesso</Label>
+              <Select value={editProfileId || 'none'} onValueChange={(v) => setEditProfileId(v === 'none' ? '' : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um perfil (Opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum (Permissões individuais)</SelectItem>
+                  {accessProfiles.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button onClick={saveEditUser} className="w-full" disabled={savingEdit}>
               {savingEdit ? 'Salvando...' : 'Salvar Alterações'}
