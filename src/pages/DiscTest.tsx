@@ -443,26 +443,11 @@ export default function DiscTest() {
               key="form"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="space-y-6 max-w-3xl mx-auto pb-20"
+              className="space-y-6"
             >
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-black tracking-tight text-primary bg-white/80 backdrop-blur inline-block px-6 py-2 rounded-full shadow-sm">Avaliação DISC</h1>
                 <p className="text-slate-700 mt-2">Responda com base no seu comportamento natural.</p>
-              </div>
-
-              <div className="glass-card rounded-xl p-6 border-l-4 border-l-primary bg-white/90">
-                <label className="text-sm font-semibold mb-2 block">Funcionário Avaliado:</label>
-                <select 
-                  className="w-full bg-background border border-input rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-primary/50"
-                  value={selectedEmpId}
-                  onChange={(e) => setSelectedEmpId(e.target.value)}
-                  disabled={!!id}
-                >
-                  <option value="" disabled>Selecione quem está realizando o teste...</option>
-                  {employees.map(e => (
-                    <option key={e.id} value={e.id}>{e.nome} - {e.cargo}</option>
-                  ))}
-                </select>
               </div>
 
               <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 p-4 rounded-xl flex gap-3 text-sm font-medium bg-white/90">
@@ -483,39 +468,61 @@ export default function DiscTest() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       key={block.id} 
-                      className={`rounded-2xl overflow-hidden transition-all duration-300 ${isCurrent ? 'shadow-lg border-2 border-primary/50 bg-card' : 'shadow-sm border border-border/50 bg-muted/20 opacity-70'}`}
+                      className={`bg-white rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-300 ${isCurrent ? 'ring-2 ring-primary/50' : 'opacity-80'}`}
                     >
-                      <div className="bg-muted/50 p-3 px-6 border-b border-border/50 flex justify-between items-center bg-white/50">
-                        <span className="font-bold text-sm text-foreground/70">Questão {index + 1} de 28</span>
-                        {isDone && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                      <div className="p-4 border-b border-border bg-primary/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Brain className="w-5 h-5 text-primary" />
+                          <div>
+                            <h4 className="font-semibold text-foreground text-sm">Questão {index + 1} de 28</h4>
+                            <p className="text-xs text-muted-foreground">Escolha o que mais e menos te define</p>
+                          </div>
+                        </div>
+                        {isDone && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
                       </div>
                       
-                      <div className="p-0 bg-white/80">
+                      <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="bg-muted/30">
-                              <th className="py-3 px-6 text-left font-semibold w-1/2">Característica</th>
-                              <th className="py-3 px-2 text-center font-bold text-primary w-1/4">MAIS</th>
-                              <th className="py-3 px-2 text-center font-bold text-destructive w-1/4">MENOS</th>
+                            <tr className="border-b border-slate-200 !bg-slate-100">
+                              <th className="text-left p-3 font-semibold !text-slate-900 w-1/2">Característica</th>
+                              <th className="p-3 text-center font-bold text-primary w-1/4">MAIS</th>
+                              <th className="p-3 text-center font-bold text-destructive w-1/4">MENOS</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {block.words.map((wordObj) => {
+                            {block.words.map((wordObj, wordIndex) => {
                               const isMais = answers[block.id]?.mais === wordObj.l;
                               const isMenos = answers[block.id]?.menos === wordObj.l;
 
                               return (
-                                <tr key={wordObj.w} className="border-t border-border/30 hover:bg-muted/20 transition-colors">
-                                  <td className="py-4 px-6 font-medium text-foreground/90">{wordObj.w}</td>
-                                  <td className="py-4 px-2 text-center cursor-pointer" onClick={() => handleSelect(block.id, 'mais', wordObj.l)}>
-                                    <div className={`w-6 h-6 mx-auto rounded-full border-2 flex items-center justify-center transition-all ${isMais ? 'border-primary bg-primary' : 'border-muted-foreground/30 hover:border-primary/50'}`}>
-                                      {isMais && <div className="w-2.5 h-2.5 bg-background rounded-full" />}
-                                    </div>
+                                <tr key={wordObj.w} className={`border-b border-slate-200 ${wordIndex % 2 === 0 ? '!bg-white' : '!bg-slate-50'}`}>
+                                  <td className="p-3">
+                                    <span className="font-medium !text-slate-900">{wordObj.w}</span>
                                   </td>
-                                  <td className="py-4 px-2 text-center cursor-pointer" onClick={() => handleSelect(block.id, 'menos', wordObj.l)}>
-                                    <div className={`w-6 h-6 mx-auto rounded-full border-2 flex items-center justify-center transition-all ${isMenos ? 'border-destructive bg-destructive' : 'border-muted-foreground/30 hover:border-destructive/50'}`}>
-                                      {isMenos && <div className="w-2.5 h-2.5 bg-background rounded-full" />}
-                                    </div>
+                                  <td className="p-3 text-center">
+                                    <button
+                                      onClick={() => handleSelect(block.id, 'mais', wordObj.l)}
+                                      className={`w-6 h-6 rounded-full border-2 mx-auto flex items-center justify-center transition-all ${
+                                        isMais
+                                          ? 'border-primary bg-primary shadow-md scale-110'
+                                          : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
+                                      }`}
+                                    >
+                                      {isMais && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
+                                    </button>
+                                  </td>
+                                  <td className="p-3 text-center">
+                                    <button
+                                      onClick={() => handleSelect(block.id, 'menos', wordObj.l)}
+                                      className={`w-6 h-6 rounded-full border-2 mx-auto flex items-center justify-center transition-all ${
+                                        isMenos
+                                          ? 'border-destructive bg-destructive shadow-md scale-110'
+                                          : 'border-muted-foreground/30 hover:border-destructive/50 hover:bg-destructive/10'
+                                      }`}
+                                    >
+                                      {isMenos && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
+                                    </button>
                                   </td>
                                 </tr>
                               );
@@ -528,15 +535,15 @@ export default function DiscTest() {
                 })}
               </div>
 
-              <div className="glass-card rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between sticky bottom-6 shadow-2xl bg-white/95 backdrop-blur z-10 border-t-4 border-t-primary gap-4">
-                <div className="text-sm font-bold text-foreground">
+              <div className="bg-white rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between shadow-sm border border-border/50 gap-4">
+                <div className="text-sm font-bold text-slate-800">
                   Progresso: <span className="text-primary">{completedCount}</span> de 28
                 </div>
                 <Button 
                   onClick={handleSubmit} 
                   disabled={isSubmitting || completedCount < 28 || !selectedEmpId}
                   size="lg"
-                  className="w-full sm:w-auto font-bold px-8 shadow-lg shadow-primary/20"
+                  className="w-full sm:w-auto text-base rounded-xl"
                 >
                   {isSubmitting ? 'Gerando Laudo Ipsativo...' : (
                     <>Finalizar Avaliação DISC <Send className="w-4 h-4 ml-2" /></>
