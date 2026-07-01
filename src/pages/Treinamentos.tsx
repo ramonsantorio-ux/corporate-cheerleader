@@ -87,32 +87,36 @@ export default function Treinamentos() {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: emps, error } = await supabase.from('funcionarios').select('*').order('nome');
-      
-      let employeesList = emps;
-      
-      // Fallback para mock data se o banco estiver vazio
-      if (!employeesList || employeesList.length === 0) {
-        employeesList = [
-          { id: 'mock-1', nome: 'Eduardo Silva', cargo: 'Analista Sênior', departamento: 'TI', foto_url: '' },
-          { id: 'mock-2', nome: 'Ramon Leonard', cargo: 'Diretor', departamento: 'Diretoria', foto_url: '' },
-          { id: 'mock-3', nome: 'Mariana Costa', cargo: 'Gerente de Projetos', departamento: 'Projetos', foto_url: '' }
-        ];
-      }
+      try {
+        const { data: emps, error } = await supabase.from('funcionarios').select('id, nome, cargo, foto_url').order('nome');
+        
+        let employeesList = emps;
+        
+        // Fallback para mock data se o banco estiver vazio
+        if (!employeesList || employeesList.length === 0) {
+          employeesList = [
+            { id: 'mock-1', nome: 'Eduardo Silva', cargo: 'Analista Sênior', departamento: 'TI', foto_url: '' },
+            { id: 'mock-2', nome: 'Ramon Leonard', cargo: 'Diretor', departamento: 'Diretoria', foto_url: '' },
+            { id: 'mock-3', nome: 'Mariana Costa', cargo: 'Gerente de Projetos', departamento: 'Projetos', foto_url: '' }
+          ];
+        }
 
-      if (error) {
-        console.error("Erro ao buscar funcionários:", error);
-      }
+        if (error) {
+          console.error("Erro ao buscar funcionários:", error);
+        }
 
-      const { data: assessments } = await supabase.from('assessment_results').select('user_id, type, result_data, created_at').catch(() => ({ data: [] }));
-      setAssessmentsData(assessments || []);
-      
-      const enriched = (employeesList || []).map(f => {
-        return {
-          ...f,
-        };
-      });
-      setEmployees(enriched);
+        const { data: assessments } = await supabase.from('assessment_results').select('user_id, type, result_data, created_at').catch(() => ({ data: [] }));
+        setAssessmentsData(assessments || []);
+        
+        const enriched = (employeesList || []).map(f => {
+          return {
+            ...f,
+          };
+        });
+        setEmployees(enriched);
+      } catch (err) {
+        console.error("Fatal error in fetchData:", err);
+      }
     }
     fetchData();
   }, []);
@@ -453,9 +457,13 @@ export default function Treinamentos() {
                   <SelectValue placeholder="Escolha quem vai responder..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.map(emp => (
-                    <SelectItem key={emp.id} value={String(emp.id)}>{emp.nome}</SelectItem>
-                  ))}
+                  {employees.length === 0 ? (
+                    <div className="p-2 text-sm text-muted-foreground text-center">Nenhum colaborador encontrado.</div>
+                  ) : (
+                    employees.map(emp => (
+                      <SelectItem key={emp.id} value={String(emp.id)}>{emp.nome}</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
