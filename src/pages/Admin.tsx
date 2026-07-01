@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
-import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2 } from 'lucide-react';
+import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PerfisDeAcesso } from '@/components/admin/PerfisDeAcesso';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,6 +62,8 @@ export default function Admin() {
   const [passwordUser, setPasswordUser] = useState<UserWithRole | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
 
   // Block confirmation
   const [blockUser, setBlockUser] = useState<UserWithRole | null>(null);
@@ -136,9 +138,16 @@ export default function Admin() {
     if (!deleteUser) return;
     setSavingDelete(true);
     try {
-      const adminClient = getAdminClient();
-      const { error: updateErr } = await adminClient.from('profiles').update({ full_name: '__DELETED__', email: deleteUser.email }).eq('id', deleteUser.id);
-      if (updateErr) throw new Error(updateErr.message || 'Erro ao marcar perfil');
+      const profRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${deleteUser.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+        },
+        body: JSON.stringify({ full_name: '__DELETED__', email: deleteUser.email })
+      });
+      if (!profRes.ok) throw new Error('Erro ao marcar perfil como excluído');
 
       await adminAuthRequest('PUT', `users/${deleteUser.id}`, { ban_duration: '876000h' });
 
@@ -221,11 +230,18 @@ export default function Admin() {
     if (!editUserDialog) return;
     setSavingEdit(true);
     try {
-      const adminClient = getAdminClient();
       await adminAuthRequest('PUT', `users/${editUserDialog.id}`, { email: editEmail, user_metadata: { full_name: editName } });
       
-      const { error: profErr } = await adminClient.from('profiles').update({ full_name: editName, email: editEmail }).eq('id', editUserDialog.id);
-      if (profErr) throw profErr;
+      const profRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${editUserDialog.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
+          'apikey': import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+        },
+        body: JSON.stringify({ full_name: editName, email: editEmail })
+      });
+      if (!profRes.ok) throw new Error('Erro ao atualizar perfil');
 
       toast.success('Usuário atualizado com sucesso!');
       setEditUserDialog(null);
@@ -329,7 +345,12 @@ export default function Admin() {
               </div>
               <div className="space-y-2">
                 <Label>Senha</Label>
-                <FastInput type="password" value={newUser.password} onValueChange={v => setNewUser({ ...newUser, password: v })} placeholder="Mínimo 6 caracteres" />
+                <div className="relative">
+                  <FastInput type={showPassword ? "text" : "password"} value={newUser.password} onValueChange={v => setNewUser({ ...newUser, password: v })} placeholder="Mínimo 6 caracteres" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
               <Button onClick={createUser} className="w-full" disabled={creating}>
                 {creating ? 'Criando...' : 'Criar Usuário'}
@@ -439,12 +460,17 @@ export default function Admin() {
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label>Nova senha</Label>
-              <FastInput
-                type="password"
-                value={newPassword}
-                onValueChange={setNewPassword}
-                placeholder="Mínimo 6 caracteres"
-              />
+              <div className="relative">
+                <FastInput
+                  type={showNewPassword ? "text" : "password"}
+                  value={newPassword}
+                  onValueChange={setNewPassword}
+                  placeholder="Mínimo 6 caracteres"
+                />
+                <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
             <Button onClick={savePassword} className="w-full" disabled={savingPassword}>
               {savingPassword ? 'Salvando...' : 'Alterar Senha'}
