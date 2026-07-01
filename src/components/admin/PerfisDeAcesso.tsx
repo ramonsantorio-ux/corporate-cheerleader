@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner';
 
 import { PAGES, PAGE_GROUPS } from '@/lib/permissions';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AccessProfile {
   id: string;
@@ -26,6 +27,7 @@ interface ProfilePermission {
 }
 
 export function PerfisDeAcesso() {
+  const { isAdmin } = useAuth();
   const [profiles, setProfiles] = useState<AccessProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [newProfileOpen, setNewProfileOpen] = useState(false);
@@ -154,25 +156,27 @@ export function PerfisDeAcesso() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Perfis de Acesso</h2>
-        <Dialog open={newProfileOpen} onOpenChange={setNewProfileOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm"><Plus className="w-4 h-4 mr-2" /> Novo Perfil</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Criar Novo Perfil</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label>Nome do Perfil</Label>
-                <FastInput value={newProfile.name} onValueChange={v => setNewProfile({ ...newProfile, name: v })} placeholder="Ex: Analista de RH" />
+        {isAdmin && (
+          <Dialog open={newProfileOpen} onOpenChange={setNewProfileOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm"><Plus className="w-4 h-4 mr-2" /> Novo Perfil</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Criar Novo Perfil</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="space-y-2">
+                  <Label>Nome do Perfil</Label>
+                  <FastInput value={newProfile.name} onValueChange={v => setNewProfile({ ...newProfile, name: v })} placeholder="Ex: Analista de RH" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Descrição</Label>
+                  <FastInput value={newProfile.description} onValueChange={v => setNewProfile({ ...newProfile, description: v })} placeholder="Acessos do departamento..." />
+                </div>
+                <Button onClick={handleCreateProfile} className="w-full">Criar Perfil</Button>
               </div>
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <FastInput value={newProfile.description} onValueChange={v => setNewProfile({ ...newProfile, description: v })} placeholder="Acessos do departamento..." />
-              </div>
-              <Button onClick={handleCreateProfile} className="w-full">Criar Perfil</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -185,15 +189,19 @@ export function PerfisDeAcesso() {
               <p className="text-xs text-muted-foreground mt-1 min-h-[32px]">{p.description || 'Sem descrição'}</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => openPermissions(p)}>
+              <Button variant="outline" size="sm" className={isAdmin ? "flex-1" : "w-full"} onClick={() => openPermissions(p)}>
                 <Shield className="w-3.5 h-3.5 mr-1" /> Permissões
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => openEditProfile(p)} title="Editar Perfil">
-                <Edit className="w-3.5 h-3.5" />
-              </Button>
-              <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteProfile(p.id)} title="Excluir Perfil">
-                <Trash2 className="w-3.5 h-3.5" />
-              </Button>
+              {isAdmin && (
+                <>
+                  <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => openEditProfile(p)} title="Editar Perfil">
+                    <Edit className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteProfile(p.id)} title="Excluir Perfil">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         ))}
@@ -228,7 +236,7 @@ export function PerfisDeAcesso() {
                         <div key={page.key} className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 px-2 py-2 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
                           <span className="text-sm font-medium text-muted-foreground">{page.label}</span>
                           <div className="flex justify-center items-center">
-                            <Checkbox checked={perm.can_view} onCheckedChange={(c: boolean) => {
+                            <Checkbox checked={perm.can_view} disabled={!isAdmin} onCheckedChange={(c: boolean) => {
                               const upd = [...editingPerms];
                               upd[permIdx].can_view = c;
                               if (!c) { upd[permIdx].can_create = false; upd[permIdx].can_edit = false; upd[permIdx].can_delete = false; }
@@ -236,17 +244,17 @@ export function PerfisDeAcesso() {
                             }} />
                           </div>
                           <div className="flex justify-center items-center">
-                            <Checkbox checked={perm.can_create} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                            <Checkbox checked={perm.can_create} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
                               const upd = [...editingPerms]; upd[permIdx].can_create = c; setEditingPerms(upd);
                             }} />
                           </div>
                           <div className="flex justify-center items-center">
-                            <Checkbox checked={perm.can_edit} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                            <Checkbox checked={perm.can_edit} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
                               const upd = [...editingPerms]; upd[permIdx].can_edit = c; setEditingPerms(upd);
                             }} />
                           </div>
                           <div className="flex justify-center items-center">
-                            <Checkbox checked={perm.can_delete} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                            <Checkbox checked={perm.can_delete} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
                               const upd = [...editingPerms]; upd[permIdx].can_delete = c; setEditingPerms(upd);
                             }} />
                           </div>
@@ -259,10 +267,14 @@ export function PerfisDeAcesso() {
             </div>
           </div>
           <div className="pt-4 border-t mt-auto">
-            <Button onClick={savePermissions} className="w-full" disabled={savingPerms}>
-              {savingPerms ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-              Salvar Permissões
-            </Button>
+            {isAdmin ? (
+              <Button onClick={savePermissions} className="w-full" disabled={savingPerms}>
+                {savingPerms ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                Salvar Permissões
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center">Apenas administradores podem alterar permissões.</p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
