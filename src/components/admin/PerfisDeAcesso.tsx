@@ -9,20 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
-const PAGES = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'cadastro', label: 'Cadastro' },
-  { key: 'colaboradores', label: 'Colaboradores' },
-  { key: 'feedbacks', label: 'Feedbacks' },
-  { key: 'novo_feedback', label: 'Novo Feedback' },
-  { key: 'desempenho', label: 'Desempenho' },
-  { key: 'relatorios', label: 'Relatórios' },
-  { key: 'reunioes', label: 'Reuniões 1:1' },
-  { key: 'eventos', label: 'Eventos' },
-  { key: 'ausencias', label: 'Ausências' },
-  { key: 'cco', label: 'CCO / Informações' },
-  { key: 'configuracoes', label: 'Configurações' },
-];
+import { PAGES, PAGE_GROUPS } from '@/lib/permissions';
 
 interface AccessProfile {
   id: string;
@@ -226,37 +213,50 @@ export function PerfisDeAcesso() {
               <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Excluir</span>
             </div>
             
-            {editingPerms.map((perm, idx) => {
-              const pageLabel = PAGES.find(p => p.key === perm.page)?.label || perm.page;
-              return (
-                <div key={perm.page} className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 px-2 py-3 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
-                  <span className="text-sm font-medium">{pageLabel}</span>
-                  <div className="flex justify-center">
-                    <Checkbox checked={perm.can_view} onCheckedChange={(c: boolean) => {
-                      const upd = [...editingPerms];
-                      upd[idx].can_view = c;
-                      if (!c) { upd[idx].can_create = false; upd[idx].can_edit = false; upd[idx].can_delete = false; }
-                      setEditingPerms(upd);
-                    }} />
-                  </div>
-                  <div className="flex justify-center">
-                    <Checkbox checked={perm.can_create} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
-                      const upd = [...editingPerms]; upd[idx].can_create = c; setEditingPerms(upd);
-                    }} />
-                  </div>
-                  <div className="flex justify-center">
-                    <Checkbox checked={perm.can_edit} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
-                      const upd = [...editingPerms]; upd[idx].can_edit = c; setEditingPerms(upd);
-                    }} />
-                  </div>
-                  <div className="flex justify-center">
-                    <Checkbox checked={perm.can_delete} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
-                      const upd = [...editingPerms]; upd[idx].can_delete = c; setEditingPerms(upd);
-                    }} />
+            <div className="space-y-6">
+              {PAGE_GROUPS.map((group) => (
+                <div key={group.module} className="space-y-2">
+                  <h4 className="text-sm font-semibold text-primary/80 uppercase tracking-wider px-2">
+                    {group.module}
+                  </h4>
+                  <div className="space-y-1">
+                    {group.pages.map((page) => {
+                      const permIdx = editingPerms.findIndex(p => p.page === page.key);
+                      const perm = editingPerms[permIdx];
+                      if (!perm) return null;
+                      return (
+                        <div key={page.key} className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 px-2 py-2 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
+                          <span className="text-sm font-medium text-muted-foreground">{page.label}</span>
+                          <div className="flex justify-center items-center">
+                            <Checkbox checked={perm.can_view} onCheckedChange={(c: boolean) => {
+                              const upd = [...editingPerms];
+                              upd[permIdx].can_view = c;
+                              if (!c) { upd[permIdx].can_create = false; upd[permIdx].can_edit = false; upd[permIdx].can_delete = false; }
+                              setEditingPerms(upd);
+                            }} />
+                          </div>
+                          <div className="flex justify-center items-center">
+                            <Checkbox checked={perm.can_create} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                              const upd = [...editingPerms]; upd[permIdx].can_create = c; setEditingPerms(upd);
+                            }} />
+                          </div>
+                          <div className="flex justify-center items-center">
+                            <Checkbox checked={perm.can_edit} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                              const upd = [...editingPerms]; upd[permIdx].can_edit = c; setEditingPerms(upd);
+                            }} />
+                          </div>
+                          <div className="flex justify-center items-center">
+                            <Checkbox checked={perm.can_delete} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                              const upd = [...editingPerms]; upd[permIdx].can_delete = c; setEditingPerms(upd);
+                            }} />
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
           <div className="pt-4 border-t mt-auto">
             <Button onClick={savePermissions} className="w-full" disabled={savingPerms}>
