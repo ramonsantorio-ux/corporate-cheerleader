@@ -116,9 +116,25 @@ export default function Treinamentos() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20">
-      <div className="page-header">
-        <h1 className="flex items-center gap-2"><ClipboardList className="w-6 h-6 text-primary" />Central de Assessments</h1>
-        <p>Mapeamento comportamental e de competências da sua equipe.</p>
+      <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="flex items-center gap-2"><ClipboardList className="w-6 h-6 text-primary" />Central de Assessments</h1>
+          <p>Mapeamento comportamental e de competências da sua equipe.</p>
+        </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-medium border-slate-200 shadow-sm">
+              <Link className="w-4 h-4 mr-2" /> Gerar Link Colaborador
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-white w-56">
+            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">Link de Teste (Geral)</div>
+            <DropdownMenuItem className="cursor-pointer font-medium" onClick={() => copyLink('disc')}>Copiar Link DISC</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer font-medium" onClick={() => copyLink('mbti')}>Copiar Link MBTI</DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer font-medium" onClick={() => copyLink('bigfive')}>Copiar Link Big Five</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <Tabs defaultValue="assessments" className="w-full mt-6">
         <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
