@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
 import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -67,6 +68,14 @@ export default function Admin() {
   const [blockAction, setBlockAction] = useState<'ban' | 'unban'>('ban');
   const [savingBlock, setSavingBlock] = useState(false);
 
+  const getAdminClient = () => {
+    return createClient(
+      import.meta.env.VITE_SUPABASE_URL,
+      import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+  };
+
   useEffect(() => {
     if (isAdmin) fetchUsers();
   }, [isAdmin]);
@@ -109,17 +118,12 @@ export default function Admin() {
     if (!deleteUser) return;
     setSavingDelete(true);
     try {
-      // 1. Mark profile as deleted via Edge Function (uses service role, bypasses RLS)
-      const updateRes = await supabase.functions.invoke('manage-user', {
-        body: { action: 'update', user_id: deleteUser.id, full_name: '__DELETED__', email: deleteUser.email },
-      });
-      if (updateRes.error) throw new Error(updateRes.error.message || 'Erro ao marcar perfil');
+      const adminClient = getAdminClient();
+      const { error: updateErr } = await adminClient.from('profiles').update({ full_name: '__DELETED__', email: deleteUser.email }).eq('id', deleteUser.id);
+      if (updateErr) throw new Error(updateErr.message || 'Erro ao marcar perfil');
 
-      // 2. Ban the auth user so they can't login
-      const banRes = await supabase.functions.invoke('manage-user', {
-        body: { action: 'ban', user_id: deleteUser.id },
-      });
-      if (banRes.error) throw new Error(banRes.error.message || 'Erro ao desativar conta');
+      const { error: banErr } = await adminClient.auth.admin.updateUserById(deleteUser.id, { ban_duration: '876000h' });
+      if (banErr) throw new Error(banErr.message || 'Erro ao desativar conta');
 
       toast.success(`Conta de "${deleteUser.full_name}" excluída com sucesso!`);
       setUsers(prev => prev.filter(u => u.id !== deleteUser.id));
@@ -142,26 +146,18 @@ export default function Admin() {
     setCreating(true);
     
     try {
-      // Criar um client secundário para não deslogar o admin atual
-      const { createClient } = await import('@supabase/supabase-js');
-      const secondaryClient = createClient(
-        import.meta.env.VITE_SUPABASE_URL,
-        import.meta.env.VITE_SUPABASE_ANON_KEY,
-        { auth: { persistSession: false, autoRefreshToken: false } }
-      );
-
-      const res = await secondaryClient.auth.signUp({
+      const adminClient = getAdminClient();
+      const res = await adminClient.auth.admin.createUser({
         email: newUser.email,
         password: newUser.password,
-        options: {
-          data: { full_name: newUser.full_name }
-        }
+        user_metadata: { full_name: newUser.full_name },
+        email_confirm: true,
       });
 
       if (res.error) {
         toast.error(res.error.message || 'Erro ao criar usuário');
       } else {
-        toast.success('Usuário criado com sucesso! Ele precisa confirmar o e-mail (se ativado).');
+        toast.success('Usuário criado com sucesso!');
         setNewUser({ email: '', password: '', full_name: '', profile_id: '' });
         setDialogOpen(false);
         const userId = res.data?.user?.id;
@@ -212,15 +208,19 @@ export default function Admin() {
   async function saveEditUser() {
     if (!editUserDialog) return;
     setSavingEdit(true);
-    const res = await supabase.functions.invoke('manage-user', {
-      body: { action: 'update', user_id: editUserDialog.id, email: editEmail, full_name: editName },
-    });
-    if (res.error) {
-      toast.error(res.error.message || 'Erro ao atualizar');
-    } else {
+    try {
+      const adminClient = getAdminClient();
+      const { error: authErr } = await adminClient.auth.admin.updateUserById(editUserDialog.id, { email: editEmail, user_metadata: { full_name: editName } });
+      if (authErr) throw authErr;
+      
+      const { error: profErr } = await adminClient.from('profiles').update({ full_name: editName, email: editEmail }).eq('id', editUserDialog.id);
+      if (profErr) throw profErr;
+
       toast.success('Usuário atualizado com sucesso!');
       setEditUserDialog(null);
       fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao atualizar');
     }
     setSavingEdit(false);
   }
@@ -233,15 +233,17 @@ export default function Admin() {
   async function confirmBlock() {
     if (!blockUser) return;
     setSavingBlock(true);
-    const res = await supabase.functions.invoke('manage-user', {
-      body: { action: blockAction, user_id: blockUser.id },
-    });
-    if (res.error) {
-      toast.error(res.error.message || 'Erro');
-    } else {
+    try {
+      const adminClient = getAdminClient();
+      const ban_duration = blockAction === 'ban' ? '876000h' : 'none';
+      const { error } = await adminClient.auth.admin.updateUserById(blockUser.id, { ban_duration });
+      if (error) throw error;
+
       toast.success(blockAction === 'ban' ? 'Usuário bloqueado!' : 'Usuário desbloqueado!');
       setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
       setBlockUser(null);
+    } catch(err:any) {
+      toast.error(err.message || 'Erro');
     }
     setSavingBlock(false);
   }
@@ -258,15 +260,15 @@ export default function Admin() {
       return;
     }
     setSavingPassword(true);
-    const res = await supabase.functions.invoke('manage-user', {
-      body: { action: 'change_password', user_id: passwordUser.id, password: newPassword },
-    });
-    if (res.error) {
-      toast.error(res.error.message || 'Erro ao alterar senha');
-    } else {
+    try {
+      const adminClient = getAdminClient();
+      const { error } = await adminClient.auth.admin.updateUserById(passwordUser.id, { password: newPassword });
+      if (error) throw error;
       toast.success('Senha alterada com sucesso!');
       setPasswordUser(null);
       setNewPassword('');
+    } catch(err:any) {
+      toast.error(err.message || 'Erro ao alterar senha');
     }
     setSavingPassword(false);
   }

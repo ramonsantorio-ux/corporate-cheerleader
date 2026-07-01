@@ -113,7 +113,7 @@ export default function PontoFerias() {
     return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
   }, [employeeSearch, funcionarios]);
 
-  const [form, setForm] = useState({ employee_id: '', date: '', status: 'presente', observation: '', cid: '', crm: '', dias_afastamento: '0' });
+  const [form, setForm] = useState({ employee_id: '', date: '', status: 'falta_injustificada', observation: '', cid: '', crm: '', dias_afastamento: '1' });
   const [vacForm, setVacForm] = useState({
     employee_id: '', days_count: '30', scheduled_month: '', start_date: '', end_date: '', observation: ''
   });
@@ -249,7 +249,7 @@ export default function PontoFerias() {
     }
 
     setDialogOpen(false);
-    setForm({ employee_id: '', date: '', status: 'presente', observation: '', cid: '', crm: '', dias_afastamento: '0' });
+    setForm({ employee_id: '', date: '', status: 'falta_injustificada', observation: '', cid: '', crm: '', dias_afastamento: '1' });
     toast.success('Ponto registrado com sucesso');
     fetchAll();
   }
@@ -588,6 +588,17 @@ export default function PontoFerias() {
       }));
   }, [attendance]);
 
+  const medicalAlerts = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return attendance.filter(a => (a.status === 'atestado' || a.status === 'afastamento') && a.date).filter(a => {
+      const start = new Date(a.date + 'T00:00:00');
+      const dias = a.dias_afastamento || 1;
+      const end = new Date(start.getTime() + (dias - 1) * 86400000);
+      return today >= start && today <= end;
+    });
+  }, [attendance]);
+
   // ─── Employee-filtered data ───────────────────────────────────────────
   const empAttendance = useMemo(() => {
     if (!selectedEmployee) return attendance;
@@ -780,7 +791,9 @@ export default function PontoFerias() {
                     <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {Object.entries(statusLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                        {Object.entries(statusLabels)
+                          .filter(([k]) => k !== 'presente' && k !== 'falta_justificada')
+                          .map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
                       </SelectContent>
                     </Select>
                     {form.status === 'falta_injustificada' && (
@@ -794,6 +807,25 @@ export default function PontoFerias() {
                         </p>
                       );
                     })()}
+                    {(form.status === 'atestado' || form.status === 'afastamento') && (
+                      <div className="space-y-3 mt-4 border-t border-border pt-4">
+                        <div className="space-y-2">
+                          <Label>Número de Dias</Label>
+                          <Input type="number" min="1" value={form.dias_afastamento} onChange={e => setForm({ ...form, dias_afastamento: e.target.value })} />
+                        </div>
+                        {form.date && parseInt(form.dias_afastamento) > 0 && (
+                          <div className="bg-blue-500/10 border border-blue-500/20 rounded p-2 text-sm text-blue-700 flex flex-col gap-1">
+                            <span className="font-semibold text-xs uppercase tracking-wider">Retorno ao Trabalho</span>
+                            <span>{(() => {
+                              const start = new Date(form.date + 'T00:00:00');
+                              const dias = parseInt(form.dias_afastamento);
+                              const end = new Date(start.getTime() + dias * 86400000);
+                              return end.toLocaleDateString('pt-BR');
+                            })()}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Observação</Label>
@@ -970,7 +1002,7 @@ export default function PontoFerias() {
       )}
 
       {/* ═══ ALERTS BANNER ═══ */}
-      {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0) && (
+      {(vacationAlerts.length > 0 || overtimeLimitAlerts.length > 0 || medicalAlerts.length > 0) && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {vacationAlerts.map(v => {
             const start = new Date(v.start_date!);
@@ -994,6 +1026,20 @@ export default function PontoFerias() {
               </p>
             </div>
           ))}
+          {medicalAlerts.map(a => {
+            const start = new Date(a.date + 'T00:00:00');
+            const dias = a.dias_afastamento || 1;
+            const end = new Date(start.getTime() + (dias - 1) * 86400000);
+            const isAfastamento = a.status === 'afastamento';
+            return (
+              <div key={a.id} className={`flex items-center gap-3 rounded-lg p-3 border ${isAfastamento ? 'bg-orange-500/5 border-orange-500/20 text-orange-700' : 'bg-blue-500/5 border-blue-500/20 text-blue-700'}`}>
+                <Clock className={`w-4 h-4 flex-shrink-0 ${isAfastamento ? 'text-orange-500' : 'text-blue-500'}`} />
+                <p className="text-sm">
+                  <span className="font-semibold">{a.employee_name}</span> — <strong>{a.status === 'atestado' ? 'Atestado Médico' : 'Afastamento'}</strong> até {formatDate(end.toISOString().split('T')[0])}
+                </p>
+              </div>
+            );
+          })}
         </motion.div>
       )}
 
