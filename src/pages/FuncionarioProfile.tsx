@@ -601,9 +601,6 @@ export default function FuncionarioProfile() {
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="w-5 h-5" /></Button>
         <div className="flex-1"><h1 className="text-2xl font-bold">Perfil do Funcionário</h1><p className="text-muted-foreground text-sm">Visão consolidada de desempenho</p></div>
-        <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/5" onClick={exportEmployeeDeviationsReport}>
-          <FileText className="w-4 h-4 mr-2" />Relatório de Desvios (RH)
-        </Button>
       </motion.div>
 
       {/* Header Card Moderno (Bento/Lattice style) */}
