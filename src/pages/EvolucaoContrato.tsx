@@ -1367,6 +1367,7 @@ export default function EvolucaoContrato() {
               medicoes={medicoes} 
               setMedicoes={setMedicoes} 
               timeRange={timeRange} 
+              chartData={filteredChartData}
             />
           </TabsContent>
           <TabsContent value="metas_busato" className="space-y-6 mt-4">
