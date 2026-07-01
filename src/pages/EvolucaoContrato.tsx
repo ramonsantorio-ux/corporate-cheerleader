@@ -952,7 +952,7 @@ export default function EvolucaoContrato() {
               <TabsTrigger value="visao_executiva" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Visão Executiva</TabsTrigger>
               <TabsTrigger value="custos_metas" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingDown className="w-4 h-4 mr-2" />Custos e Metas</TabsTrigger>
               <TabsTrigger value="dre" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><DollarSign className="w-4 h-4 mr-2" />DRE Detalhada</TabsTrigger>
-              <TabsTrigger value="aderencia" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><TrendingUp className="w-4 h-4 mr-2" />Aderência</TabsTrigger>
+
               <TabsTrigger value="performance_mensal" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><BarChart3 className="w-4 h-4 mr-2" />Performance Mensal</TabsTrigger>
               <TabsTrigger value="metas_busato" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Busato</TabsTrigger>
               <TabsTrigger value="metas_porto" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Porto</TabsTrigger>
@@ -1360,13 +1360,7 @@ export default function EvolucaoContrato() {
       )}
 
                 </TabsContent>
-          <TabsContent value="aderencia" className="space-y-6 mt-4">
-            <div className="grid grid-cols-1 gap-6">
-              <div className="text-center p-12 border-2 border-dashed border-border rounded-xl">
-                <p className="text-muted-foreground">O visualizador de aderência diária foi desativado temporariamente.</p>
-              </div>
-            </div>
-          </TabsContent>
+
 
           <TabsContent value="performance_mensal" className="space-y-6 mt-4">
             <PerformanceMensalTab 
