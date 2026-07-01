@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Upload, BarChart3, Trash2, Save, FileSpreadsheet, TrendingUp, TrendingDown, DollarSign, Target, AlertTriangle, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
-import { ResponsiveContainer, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList, Line, Legend } from 'recharts';
+import { ResponsiveContainer, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList, Line, Legend, ReferenceLine } from 'recharts';
 import { supabase } from '@/lib/supabase';
 
 interface DesvioMensal {
