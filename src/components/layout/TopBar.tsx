@@ -1,4 +1,4 @@
-import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock, Moon, Sun } from 'lucide-react';
+import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock, Moon, Sun, LogOut, User, Settings } from 'lucide-react';
 import busatoGlobo from '@/assets/busato-globo.png';
 import { useTheme } from '@/components/ThemeProvider';
 
@@ -8,6 +8,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface AlertItem {
   id: string;
@@ -31,6 +34,10 @@ export default function TopBar() {
     } catch { return new Set(); }
   });
   const { theme, setTheme } = useTheme();
+  const { user, signOut } = useAuth();
+  
+  const userName = user?.user_metadata?.full_name || user?.email || 'Usuário';
+  const initials = userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
 
   useEffect(() => {
     fetchAlerts();
@@ -210,9 +217,41 @@ export default function TopBar() {
             </ScrollArea>
           </PopoverContent>
         </Popover>
-        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-semibold">
-          JD
-        </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="outline-none">
+              <Avatar className="w-8 h-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary/50">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 mt-2">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">{userName}</p>
+                <p className="text-xs leading-none text-muted-foreground truncate">
+                  {user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/configuracoes')} className="cursor-pointer">
+              <Settings className="w-4 h-4 mr-2" />
+              Configurações
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={async () => {
+              await signOut();
+              navigate('/');
+            }} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair do sistema
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );
