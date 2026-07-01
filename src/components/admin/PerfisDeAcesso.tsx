@@ -30,15 +30,12 @@ export function PerfisDeAcesso() {
   const { isAdmin } = useAuth();
   const [profiles, setProfiles] = useState<AccessProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newProfileOpen, setNewProfileOpen] = useState(false);
-  const [newProfile, setNewProfile] = useState({ name: '', description: '' });
   
-  const [editProfileOpen, setEditProfileOpen] = useState(false);
-  const [editProfileData, setEditProfileData] = useState<{ id: string; name: string; description: string } | null>(null);
-  
-  const [editingProfile, setEditingProfile] = useState<AccessProfile | null>(null);
+  // Unified dialog state
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [profileData, setProfileData] = useState<{ id: string | null; name: string; description: string }>({ id: null, name: '', description: '' });
   const [editingPerms, setEditingPerms] = useState<ProfilePermission[]>([]);
-  const [savingPerms, setSavingPerms] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchProfiles();
@@ -54,46 +51,22 @@ export function PerfisDeAcesso() {
     setLoading(false);
   }
 
-  async function handleCreateProfile() {
-    if (!newProfile.name) return toast.error('Nome do perfil é obrigatório');
-    const { data, error } = await supabase.from('access_profiles').insert({
-      name: newProfile.name,
-      description: newProfile.description
-    }).select().single();
-
-    if (error) {
-      toast.error('Erro ao criar perfil');
-    } else {
-      toast.success('Perfil criado com sucesso!');
-      setProfiles([...profiles, data]);
-      setNewProfileOpen(false);
-      setNewProfile({ name: '', description: '' });
-    }
+  function openCreateProfile() {
+    setProfileData({ id: null, name: '', description: '' });
+    const defaultPerms = PAGES.map(p => ({
+      page: p.key,
+      can_view: false,
+      can_create: false,
+      can_edit: false,
+      can_delete: false,
+    }));
+    setEditingPerms(defaultPerms);
+    setDialogOpen(true);
   }
 
-  function openEditProfile(profile: AccessProfile) {
-    setEditProfileData({ id: profile.id, name: profile.name, description: profile.description || '' });
-    setEditProfileOpen(true);
-  }
-
-  async function handleSaveEditProfile() {
-    if (!editProfileData || !editProfileData.name) return toast.error('Nome do perfil é obrigatório');
-    const { error } = await supabase.from('access_profiles').update({
-      name: editProfileData.name,
-      description: editProfileData.description
-    }).eq('id', editProfileData.id);
-
-    if (error) {
-      toast.error('Erro ao atualizar perfil');
-    } else {
-      toast.success('Perfil atualizado com sucesso!');
-      setProfiles(profiles.map(p => p.id === editProfileData.id ? { ...p, name: editProfileData.name, description: editProfileData.description } : p));
-      setEditProfileOpen(false);
-    }
-  }
-
-  async function openPermissions(profile: AccessProfile) {
-    setEditingProfile(profile);
+  async function openEditProfile(profile: AccessProfile) {
+    setProfileData({ id: profile.id, name: profile.name, description: profile.description || '' });
+    
     const { data, error } = await supabase.from('access_profile_permissions').select('*').eq('profile_id', profile.id);
     
     if (error) {
@@ -113,30 +86,61 @@ export function PerfisDeAcesso() {
       };
     });
     setEditingPerms(defaultPerms);
+    setDialogOpen(true);
   }
 
-  async function savePermissions() {
-    if (!editingProfile) return;
-    setSavingPerms(true);
+  async function handleSaveProfile() {
+    if (!profileData.name) return toast.error('Nome do perfil é obrigatório');
+    setSaving(true);
     
-    // Deleta permissões antigas
-    await supabase.from('access_profile_permissions').delete().eq('profile_id', editingProfile.id);
+    let profileId = profileData.id;
     
-    // Insere as novas
+    if (!profileId) {
+      // Create new profile
+      const { data, error } = await supabase.from('access_profiles').insert({
+        name: profileData.name,
+        description: profileData.description
+      }).select().single();
+      
+      if (error) {
+        toast.error('Erro ao criar perfil');
+        setSaving(false);
+        return;
+      }
+      profileId = data.id;
+      setProfiles([...profiles, data]);
+    } else {
+      // Update existing profile
+      const { error } = await supabase.from('access_profiles').update({
+        name: profileData.name,
+        description: profileData.description
+      }).eq('id', profileId);
+      
+      if (error) {
+        toast.error('Erro ao atualizar perfil');
+        setSaving(false);
+        return;
+      }
+      setProfiles(profiles.map(p => p.id === profileId ? { ...p, name: profileData.name, description: profileData.description } : p));
+    }
+    
+    // Save permissions
+    await supabase.from('access_profile_permissions').delete().eq('profile_id', profileId);
+    
     const toInsert = editingPerms.map(p => ({
-      profile_id: editingProfile.id,
+      profile_id: profileId,
       ...p
     }));
 
-    const { error } = await supabase.from('access_profile_permissions').insert(toInsert);
+    const { error: permsError } = await supabase.from('access_profile_permissions').insert(toInsert);
     
-    if (error) {
+    if (permsError) {
       toast.error('Erro ao salvar permissões');
     } else {
-      toast.success('Permissões salvas com sucesso!');
-      setEditingProfile(null);
+      toast.success(profileData.id ? 'Perfil atualizado com sucesso!' : 'Perfil criado com sucesso!');
+      setDialogOpen(false);
     }
-    setSavingPerms(false);
+    setSaving(false);
   }
 
   async function handleDeleteProfile(id: string) {
@@ -157,25 +161,7 @@ export function PerfisDeAcesso() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Perfis de Acesso</h2>
         {isAdmin && (
-          <Dialog open={newProfileOpen} onOpenChange={setNewProfileOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm"><Plus className="w-4 h-4 mr-2" /> Novo Perfil</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Criar Novo Perfil</DialogTitle></DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div className="space-y-2">
-                  <Label>Nome do Perfil</Label>
-                  <FastInput value={newProfile.name} onValueChange={v => setNewProfile({ ...newProfile, name: v })} placeholder="Ex: Analista de RH" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Descrição</Label>
-                  <FastInput value={newProfile.description} onValueChange={v => setNewProfile({ ...newProfile, description: v })} placeholder="Acessos do departamento..." />
-                </div>
-                <Button onClick={handleCreateProfile} className="w-full">Criar Perfil</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button size="sm" onClick={openCreateProfile}><Plus className="w-4 h-4 mr-2" /> Novo Perfil</Button>
         )}
       </div>
 
@@ -189,7 +175,7 @@ export function PerfisDeAcesso() {
               <p className="text-xs text-muted-foreground mt-1 min-h-[32px]">{p.description || 'Sem descrição'}</p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className={isAdmin ? "flex-1" : "w-full"} onClick={() => openPermissions(p)}>
+              <Button variant="outline" size="sm" className={isAdmin ? "flex-1" : "w-full"} onClick={() => openEditProfile(p)}>
                 <Shield className="w-3.5 h-3.5 mr-1" /> Permissões
               </Button>
               {isAdmin && (
@@ -207,94 +193,90 @@ export function PerfisDeAcesso() {
         ))}
       </div>
 
-      <Dialog open={!!editingProfile} onOpenChange={(open) => !open && setEditingProfile(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Permissões — {editingProfile?.name}</DialogTitle>
+            <DialogTitle>{profileData.id ? 'Editar Perfil' : 'Criar Novo Perfil'}</DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto space-y-3 pt-2">
-            <div className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 px-2 mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase">Módulo / Página</span>
-              <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Ver</span>
-              <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Criar</span>
-              <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Editar</span>
-              <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Excluir</span>
+          
+          <div className="flex-1 overflow-y-auto space-y-6 pt-2 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-2">
+              <div className="space-y-2">
+                <Label>Nome do Perfil</Label>
+                <FastInput disabled={!isAdmin} value={profileData.name} onValueChange={v => setProfileData({ ...profileData, name: v })} placeholder="Ex: Analista de RH" />
+              </div>
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <FastInput disabled={!isAdmin} value={profileData.description} onValueChange={v => setProfileData({ ...profileData, description: v })} placeholder="Acessos do departamento..." />
+              </div>
             </div>
-            
-            <div className="space-y-6">
-              {PAGE_GROUPS.map((group) => (
-                <div key={group.module} className="space-y-2">
-                  <h4 className="text-sm font-semibold text-primary/80 uppercase tracking-wider px-2">
-                    {group.module}
-                  </h4>
-                  <div className="space-y-1">
-                    {group.pages.map((page) => {
-                      const permIdx = editingPerms.findIndex(p => p.page === page.key);
-                      const perm = editingPerms[permIdx];
-                      if (!perm) return null;
-                      return (
-                        <div key={page.key} className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 px-2 py-2 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
-                          <span className="text-sm font-medium text-muted-foreground">{page.label}</span>
-                          <div className="flex justify-center items-center">
-                            <Checkbox checked={perm.can_view} disabled={!isAdmin} onCheckedChange={(c: boolean) => {
-                              const upd = [...editingPerms];
-                              upd[permIdx].can_view = c;
-                              if (!c) { upd[permIdx].can_create = false; upd[permIdx].can_edit = false; upd[permIdx].can_delete = false; }
-                              setEditingPerms(upd);
-                            }} />
+
+            <div className="space-y-3">
+              <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider px-2 pt-2 border-t border-border">Permissões de Acesso</h3>
+              <div className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 px-2 mb-2">
+                <span className="text-xs font-semibold text-muted-foreground uppercase">Módulo / Página</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Ver</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Criar</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Editar</span>
+                <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Excluir</span>
+              </div>
+              
+              <div className="space-y-6">
+                {PAGE_GROUPS.map((group) => (
+                  <div key={group.module} className="space-y-2">
+                    <h4 className="text-sm font-semibold text-primary/80 uppercase tracking-wider px-2">
+                      {group.module}
+                    </h4>
+                    <div className="space-y-1">
+                      {group.pages.map((page) => {
+                        const permIdx = editingPerms.findIndex(p => p.page === page.key);
+                        const perm = editingPerms[permIdx];
+                        if (!perm) return null;
+                        return (
+                          <div key={page.key} className="grid grid-cols-[1fr_80px_80px_80px_80px] gap-4 px-2 py-2 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
+                            <span className="text-sm font-medium text-muted-foreground">{page.label}</span>
+                            <div className="flex justify-center items-center">
+                              <Checkbox checked={perm.can_view} disabled={!isAdmin} onCheckedChange={(c: boolean) => {
+                                const upd = [...editingPerms];
+                                upd[permIdx].can_view = c;
+                                if (!c) { upd[permIdx].can_create = false; upd[permIdx].can_edit = false; upd[permIdx].can_delete = false; }
+                                setEditingPerms(upd);
+                              }} />
+                            </div>
+                            <div className="flex justify-center items-center">
+                              <Checkbox checked={perm.can_create} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
+                                const upd = [...editingPerms]; upd[permIdx].can_create = c; setEditingPerms(upd);
+                              }} />
+                            </div>
+                            <div className="flex justify-center items-center">
+                              <Checkbox checked={perm.can_edit} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
+                                const upd = [...editingPerms]; upd[permIdx].can_edit = c; setEditingPerms(upd);
+                              }} />
+                            </div>
+                            <div className="flex justify-center items-center">
+                              <Checkbox checked={perm.can_delete} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
+                                const upd = [...editingPerms]; upd[permIdx].can_delete = c; setEditingPerms(upd);
+                              }} />
+                            </div>
                           </div>
-                          <div className="flex justify-center items-center">
-                            <Checkbox checked={perm.can_create} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
-                              const upd = [...editingPerms]; upd[permIdx].can_create = c; setEditingPerms(upd);
-                            }} />
-                          </div>
-                          <div className="flex justify-center items-center">
-                            <Checkbox checked={perm.can_edit} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
-                              const upd = [...editingPerms]; upd[permIdx].can_edit = c; setEditingPerms(upd);
-                            }} />
-                          </div>
-                          <div className="flex justify-center items-center">
-                            <Checkbox checked={perm.can_delete} disabled={!perm.can_view || !isAdmin} onCheckedChange={(c: boolean) => {
-                              const upd = [...editingPerms]; upd[permIdx].can_delete = c; setEditingPerms(upd);
-                            }} />
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
           <div className="pt-4 border-t mt-auto">
             {isAdmin ? (
-              <Button onClick={savePermissions} className="w-full" disabled={savingPerms}>
-                {savingPerms ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Salvar Permissões
+              <Button onClick={handleSaveProfile} className="w-full" disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                {profileData.id ? 'Salvar Alterações' : 'Criar Perfil'}
               </Button>
             ) : (
               <p className="text-sm text-muted-foreground text-center">Apenas administradores podem alterar permissões.</p>
             )}
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Editar Perfil</DialogTitle></DialogHeader>
-          {editProfileData && (
-            <div className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label>Nome do Perfil</Label>
-                <FastInput value={editProfileData.name} onValueChange={v => setEditProfileData({ ...editProfileData, name: v })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <FastInput value={editProfileData.description} onValueChange={v => setEditProfileData({ ...editProfileData, description: v })} />
-              </div>
-              <Button onClick={handleSaveEditProfile} className="w-full">Salvar Alterações</Button>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </div>
