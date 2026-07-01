@@ -94,7 +94,6 @@ function ProtectedRoutes() {
           <Route path="/notificacoes" element={<GestaoNotificacoes />} />
           <Route path="/treinamentos" element={<Treinamentos />} />
           <Route path="/assessments" element={<Treinamentos />} />
-          <Route path="/assessment/:type" element={<AssessmentHub />} />
           {/* Legacy compat */}
           <Route path="/disc" element={<DiscTest />} />
           <Route path="/disc/:id" element={<DiscTest />} />
@@ -119,6 +118,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/autoavaliacao-fit-cultural" element={<AutoAvaliacaoFit />} />
+            <Route path="/assessment/:type" element={<AssessmentHub />} />
             <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>

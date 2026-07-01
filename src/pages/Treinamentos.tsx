@@ -54,8 +54,8 @@ export default function Treinamentos() {
   const [reportModal, setReportModal] = useState<{open: boolean; type: string; data: any; empName: string}>({open: false, type: '', data: null, empName: ''});
   const { toast } = useToast();
 
-  const copyLink = (type: string, id: string) => {
-    const url = `${window.location.origin}/assessment/${type}/${id}`;
+  const copyLink = (type: string, id: string = '') => {
+    const url = id ? `${window.location.origin}/assessment/${type}/${id}` : `${window.location.origin}/assessment/${type}`;
     navigator.clipboard.writeText(url);
     toast({ title: 'Link copiado!', description: `Envie este link para o colaborador responder o teste.` });
   };
@@ -147,10 +147,13 @@ export default function Treinamentos() {
                   <span key={t} className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${a.bg} ${a.text} border ${a.border}`}>{t}</span>
                 ))}
               </div>
-              <div className="mt-auto">
-                <Button size="sm" className={`w-full bg-gradient-to-r ${a.color} text-white border-0 hover:opacity-90`}
+              <div className="mt-auto flex gap-2">
+                <Button size="sm" className={`flex-1 bg-gradient-to-r ${a.color} text-white border-0 hover:opacity-90`}
                   onClick={() => navigate(`/assessment/${a.id}`)}>
                   Iniciar Teste
+                </Button>
+                <Button size="sm" variant="outline" className={`shrink-0 ${a.border} hover:bg-${a.bg.split(' ')[0]} transition-colors`} onClick={() => copyLink(a.id)} title="Copiar Link para Compartilhar">
+                  <Link className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </div>
             </motion.div>
