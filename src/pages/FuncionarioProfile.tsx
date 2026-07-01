@@ -204,8 +204,6 @@ export default function FuncionarioProfile() {
   const [discResult, setDiscResult] = useState<any>(null);
   const [mbtiResult, setMbtiResult] = useState<any>(null);
   const [bigFiveResult, setBigFiveResult] = useState<any>(null);
-  const [gallupResult, setGallupResult] = useState<any>(null);
-  const [lpiResult, setLpiResult] = useState<any>(null);
 
   useEffect(() => {
     if (func?.id) {
@@ -219,28 +217,20 @@ export default function FuncionarioProfile() {
             const disc = data.find(d => d.type === 'disc');
             const mbti = data.find(d => d.type === 'mbti');
             const bigfive = data.find(d => d.type === 'bigfive');
-            const gallup = data.find(d => d.type === 'gallup');
-            const lpi = data.find(d => d.type === 'lpi');
             
             setDiscResult(disc ? disc.result_data : parse(`disc_${func.id}`));
             setMbtiResult(mbti ? mbti.result_data : parse(`mbti_${func.id}`));
             setBigFiveResult(bigfive ? bigfive.result_data : parse(`bigfive_${func.id}`));
-            setGallupResult(gallup ? gallup.result_data : parse(`gallup_${func.id}`));
-            setLpiResult(lpi ? lpi.result_data : parse(`lpi_${func.id}`));
           } else {
             // Fallback
             setDiscResult(parse(`disc_${func.id}`));
             setMbtiResult(parse(`mbti_${func.id}`));
             setBigFiveResult(parse(`bigfive_${func.id}`));
-            setGallupResult(parse(`gallup_${func.id}`));
-            setLpiResult(parse(`lpi_${func.id}`));
           }
         } catch (err) {
           setDiscResult(parse(`disc_${func.id}`));
           setMbtiResult(parse(`mbti_${func.id}`));
           setBigFiveResult(parse(`bigfive_${func.id}`));
-          setGallupResult(parse(`gallup_${func.id}`));
-          setLpiResult(parse(`lpi_${func.id}`));
         }
       };
       

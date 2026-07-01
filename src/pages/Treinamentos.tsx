@@ -39,43 +39,7 @@ const assessments = [
     questions: 25,
     desc: 'Modelo mais validado cientificamente — Abertura, Conscienciosidade, Extroversão, Amabilidade e Neuroticismo.',
     tags: ['Científico', '25 questões', 'Escala 1–5'],
-  },
-  {
-    id: 'gallup', label: 'CliftonStrengths (Gallup)', icon: Zap,
-    color: 'from-amber-500 to-orange-500',
-    bg: 'bg-amber-50 dark:bg-amber-950/30',
-    border: 'border-amber-200 dark:border-amber-800',
-    text: 'text-amber-700 dark:text-amber-400',
-    questions: 0,
-    desc: 'Identifica as 5 maiores forças naturais do colaborador (Top 5 Gallup). Resultado inserido pelo RH.',
-    tags: ['Forças', 'Resultado Manual', 'Gallup®'],
-  },
-  {
-    id: 'lpi', label: 'LPI — Práticas de Liderança', icon: Award,
-    color: 'from-rose-600 to-pink-600',
-    bg: 'bg-rose-50 dark:bg-rose-950/30',
-    border: 'border-rose-200 dark:border-rose-800',
-    text: 'text-rose-700 dark:text-rose-400',
-    questions: 0,
-    desc: 'Mensura 5 práticas de liderança: Modelar o Caminho, Inspirar Visão, Desafiar, Capacitar e Encorajar.',
-    tags: ['Liderança', 'Resultado Manual', 'LPI®'],
-  },
-];
-
-const gallupStrengths = [
-  'Realizador','Ativador','Adaptabilidade','Analítico','Crença','Comando','Comunicação','Competição',
-  'Conectividade','Consistência','Contexto','Deliberativo','Desenvolvedor','Disciplina','Empatia',
-  'Estudioso','Estratégico','Excelência','Foco','Futurista','Harmonia','Idealismo','Individualização',
-  'Intelecção','Maximizador','Positivo','Relacionamento','Responsabilidade','Restaurador','Significância',
-  'Sociabilidade','Vencedor','Woo'
-];
-
-const lpiDimensions = [
-  { key: 'modelar', label: 'Modelar o Caminho' },
-  { key: 'inspirar', label: 'Inspirar Visão Compartilhada' },
-  { key: 'desafiar', label: 'Desafiar o Processo' },
-  { key: 'capacitar', label: 'Capacitar os Outros' },
-  { key: 'encorajar', label: 'Encorajar o Coração' },
+  }
 ];
 
 export default function Treinamentos() {
@@ -84,11 +48,6 @@ export default function Treinamentos() {
   const [search, setSearch] = useState('');
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
 
-  // Gallup / LPI manual modals
-  const [gallupModal, setGallupModal] = useState<{open:boolean; empId:string}>({ open: false, empId: '' });
-  const [lpiModal, setLpiModal] = useState<{open:boolean; empId:string}>({ open: false, empId: '' });
-  const [gallupSelected, setGallupSelected] = useState<string[]>([]);
-  const [lpiScores, setLpiScores] = useState<Record<string,number>>({});
   const [reportModal, setReportModal] = useState<{open: boolean; type: string; data: any; empName: string}>({open: false, type: '', data: null, empName: ''});
 
   useEffect(() => {
@@ -130,46 +89,20 @@ export default function Treinamentos() {
           disc: userAss.find(a => a.type === 'disc')?.result_data || tryParse(`disc_${f.id}`) || mockDisc,
           mbti: userAss.find(a => a.type === 'mbti')?.result_data || tryParse(`mbti_${f.id}`) || mockMbti,
           bigfive: userAss.find(a => a.type === 'bigfive')?.result_data || tryParse(`bigfive_${f.id}`) || mockBigFive,
-          gallup: userAss.find(a => a.type === 'gallup')?.result_data || tryParse(`gallup_${f.id}`),
-          lpi: userAss.find(a => a.type === 'lpi')?.result_data || tryParse(`lpi_${f.id}`),
         };
       });
       setEmployees(enriched);
     }
     fetchData();
-  }, [gallupModal.open, lpiModal.open]);
+  }, []);
 
   function tryParse(key: string) {
     try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : null; } catch { return null; }
   }
 
-  async function saveGallup() {
-    if (gallupSelected.length !== 5) return;
-    const result = { top5: gallupSelected };
-    try {
-      const { error } = await supabase.from('assessment_results').insert({ user_id: gallupModal.empId, type: 'gallup', result_data: result });
-      if (error) localStorage.setItem(`gallup_${gallupModal.empId}`, JSON.stringify(result));
-    } catch {
-      localStorage.setItem(`gallup_${gallupModal.empId}`, JSON.stringify(result));
-    }
-    setGallupModal({ open: false, empId: '' });
-    setGallupSelected([]);
-  }
-
-  async function saveLpi() {
-    try {
-      const { error } = await supabase.from('assessment_results').insert({ user_id: lpiModal.empId, type: 'lpi', result_data: lpiScores });
-      if (error) localStorage.setItem(`lpi_${lpiModal.empId}`, JSON.stringify(lpiScores));
-    } catch {
-      localStorage.setItem(`lpi_${lpiModal.empId}`, JSON.stringify(lpiScores));
-    }
-    setLpiModal({ open: false, empId: '' });
-    setLpiScores({});
-  }
-
   const filtered = employees.filter(f => f.nome.toLowerCase().includes(search.toLowerCase()));
 
-  const totalTests = (f: any) => [f.disc, f.mbti, f.bigfive, f.gallup, f.lpi].filter(Boolean).length;
+  const totalTests = (f: any) => [f.disc, f.mbti, f.bigfive].filter(Boolean).length;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-20">
@@ -205,17 +138,10 @@ export default function Treinamentos() {
                 ))}
               </div>
               <div className="mt-auto">
-                {a.questions > 0 ? (
-                  <Button size="sm" className={`w-full bg-gradient-to-r ${a.color} text-white border-0 hover:opacity-90`}
-                    onClick={() => navigate(`/assessment/${a.id}`)}>
-                    Iniciar Teste
-                  </Button>
-                ) : (
-                  <Button size="sm" variant="outline" className="w-full"
-                    onClick={() => a.id === 'gallup' ? setGallupModal({ open: true, empId: '' }) : setLpiModal({ open: true, empId: '' })}>
-                    Registrar Resultado
-                  </Button>
-                )}
+                <Button size="sm" className={`w-full bg-gradient-to-r ${a.color} text-white border-0 hover:opacity-90`}
+                  onClick={() => navigate(`/assessment/${a.id}`)}>
+                  Iniciar Teste
+                </Button>
               </div>
             </motion.div>
           );
@@ -242,8 +168,6 @@ export default function Treinamentos() {
                 <th className="px-4 py-3 text-center font-medium">DISC</th>
                 <th className="px-4 py-3 text-center font-medium">MBTI</th>
                 <th className="px-4 py-3 text-center font-medium">Big Five</th>
-                <th className="px-4 py-3 text-center font-medium">Gallup</th>
-                <th className="px-4 py-3 text-center font-medium">LPI</th>
                 <th className="px-4 py-3 text-center font-medium">Completude</th>
                 <th className="px-4 py-3 text-center font-medium">Ações</th>
               </tr>
@@ -269,8 +193,6 @@ export default function Treinamentos() {
                       { key: 'disc', val: f.disc?.dominant?.letter, fullData: f.disc },
                       { key: 'mbti', val: f.mbti?.type, fullData: f.mbti },
                       { key: 'bigfive', val: f.bigfive ? '✓' : null, fullData: f.bigfive },
-                      { key: 'gallup', val: f.gallup ? '✓' : null, fullData: f.gallup },
-                      { key: 'lpi', val: f.lpi ? '✓' : null, fullData: f.lpi },
                     ].map(col => (
                       <td key={col.key} className="px-4 py-3 text-center">
                         {col.val
@@ -280,9 +202,9 @@ export default function Treinamentos() {
                     ))}
                     <td className="px-4 py-3">
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-xs font-semibold">{done}/5</span>
+                        <span className="text-xs font-semibold">{done}/3</span>
                         <div className="h-1.5 w-20 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${(done/5)*100}%` }} />
+                          <div className="h-full bg-primary rounded-full" style={{ width: `${(done/3)*100}%` }} />
                         </div>
                       </div>
                     </td>
@@ -302,77 +224,6 @@ export default function Treinamentos() {
       </TabsContent>
       </Tabs>
 
-      {/* ── Gallup Modal ── */}
-      {gallupModal.open && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl">
-            <h2 className="font-bold text-lg mb-1 flex items-center gap-2"><Zap className="w-5 h-5 text-amber-500" />CliftonStrengths — Top 5</h2>
-            <p className="text-sm text-muted-foreground mb-4">Selecione exatamente 5 forças do relatório oficial do Gallup.</p>
-
-            <label className="text-sm font-medium block mb-2">Funcionário:</label>
-            <select className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm mb-4"
-              value={gallupModal.empId} onChange={e => setGallupModal(m => ({ ...m, empId: e.target.value }))}>
-              <option value="" disabled>Selecione...</option>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
-            </select>
-
-            <div className="flex flex-wrap gap-2 mb-4">
-              {gallupStrengths.map(s => {
-                const sel = gallupSelected.includes(s);
-                return (
-                  <button key={s} onClick={() => {
-                    if (sel) setGallupSelected(prev => prev.filter(x => x !== s));
-                    else if (gallupSelected.length < 5) setGallupSelected(prev => [...prev, s]);
-                  }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${sel ? 'bg-amber-500 text-white border-amber-500' : 'bg-background border-border hover:border-amber-400'}`}>
-                    {sel && <span className="mr-1">✓</span>}{s}
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">{gallupSelected.length}/5 forças selecionadas</p>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => { setGallupModal({ open:false, empId:'' }); setGallupSelected([]); }}>Cancelar</Button>
-              <Button className="flex-1" disabled={gallupSelected.length !== 5 || !gallupModal.empId} onClick={saveGallup}>Salvar</Button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* ── LPI Modal ── */}
-      {lpiModal.open && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-card border border-border rounded-2xl p-6 max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-2xl">
-            <h2 className="font-bold text-lg mb-1 flex items-center gap-2"><Award className="w-5 h-5 text-rose-500" />Práticas de Liderança LPI</h2>
-            <p className="text-sm text-muted-foreground mb-4">Insira o score (escala recomendada 0 a 50) para cada uma das 5 práticas de liderança de Kouzes e Posner.</p>
-            
-            <label className="text-sm font-medium block mb-2">Funcionário:</label>
-            <select className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm mb-4"
-              value={lpiModal.empId} onChange={e => setLpiModal(m => ({ ...m, empId: e.target.value }))}>
-              <option value="" disabled>Selecione...</option>
-              {employees.map(e => <option key={e.id} value={e.id}>{e.nome}</option>)}
-            </select>
-
-            <div className="space-y-3 mb-6">
-              {lpiDimensions.map(d => (
-                <div key={d.key} className="flex items-center gap-3">
-                  <label className="text-xs font-medium w-48 shrink-0">{d.label}</label>
-                  <input type="number" min="0" max="50" placeholder="Score"
-                    className="flex-1 bg-background border border-input rounded-lg px-3 py-1.5 text-sm"
-                    value={lpiScores[d.key] || ''}
-                    onChange={e => setLpiScores(prev => ({ ...prev, [d.key]: Number(e.target.value) }))} />
-                </div>
-              ))}
-            </div>
-            
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => { setLpiModal({ open:false, empId:'' }); setLpiScores({}); }}>Cancelar</Button>
-              <Button className="flex-1" disabled={!lpiModal.empId || Object.keys(lpiScores).length !== 5} onClick={saveLpi}>Salvar Resultados</Button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
       {/* ── Report Modal ── */}
       <Dialog open={reportModal.open} onOpenChange={(open) => !open && setReportModal({ open: false, type: '', data: null, empName: '' })}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -382,9 +233,6 @@ export default function Treinamentos() {
           {reportModal.type === 'disc' && reportModal.data && <DiscReport resultScreen={reportModal.data} />}
           {reportModal.type === 'mbti' && reportModal.data && <MbtiReport resultScreen={reportModal.data} />}
           {reportModal.type === 'bigfive' && reportModal.data && <BigFiveReport resultScreen={reportModal.data} />}
-          {(reportModal.type === 'gallup' || reportModal.type === 'lpi') && (
-            <div className="text-center py-10 text-muted-foreground">O relatório executivo para este assessment está sendo processado.</div>
-          )}
         </DialogContent>
       </Dialog>
     </div>
