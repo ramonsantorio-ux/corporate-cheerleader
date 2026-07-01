@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, CheckCircle2, ArrowLeft, Send, AlertTriangle } from 'lucide-react';
@@ -59,6 +59,7 @@ export default function DiscTest() {
   const [selectedEmpId, setSelectedEmpId] = useState<string>(id || '');
   const [answers, setAnswers] = useState<AnswersState>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Embaralha blocos e palavras (Randomização Dupla)
   const randomizedBlocks = useMemo(() => {
@@ -136,7 +137,7 @@ export default function DiscTest() {
     return result;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (completedCount < 28) {
       toast({ title: 'Atenção', description: 'Responda as categorias MAIS e MENOS de todos os 28 blocos.', variant: 'destructive' });
       return;
@@ -149,13 +150,39 @@ export default function DiscTest() {
     setIsSubmitting(true);
     const result = calculateResult();
     
-    localStorage.setItem(`disc_${selectedEmpId}`, JSON.stringify(result));
-
-    setTimeout(() => {
-      toast({ title: 'Teste concluído!', description: `O perfil dominante é ${result.dominant.title}.` });
-      navigate(`/funcionario/${selectedEmpId}`);
-    }, 1500);
+    try {
+      const { error } = await supabase.from('assessment_results').insert({
+        user_id: selectedEmpId,
+        type: 'disc',
+        result_data: result
+      });
+      if (error) {
+        console.error(error);
+        localStorage.setItem(`disc_${selectedEmpId}`, JSON.stringify(result));
+      }
+    } catch (e) {
+      console.error(e);
+      localStorage.setItem(`disc_${selectedEmpId}`, JSON.stringify(result));
+    }
+    
+    setIsSubmitting(false);
+    setIsSubmitted(true);
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-white p-8 rounded-2xl shadow-sm border border-border/50 max-w-md w-full">
+          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Muito Obrigado!</h2>
+          <p className="text-muted-foreground mb-6">Sua avaliação DISC foi registrada com sucesso e já está vinculada ao seu perfil.</p>
+          <Button onClick={() => window.location.reload()} variant="outline" className="w-full">Voltar</Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-20">

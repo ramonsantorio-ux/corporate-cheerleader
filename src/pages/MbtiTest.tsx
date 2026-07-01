@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Brain, CheckCircle2, Send } from 'lucide-react';
@@ -64,6 +64,7 @@ export default function MbtiTest() {
   const [selectedEmpId, setSelectedEmpId] = useState<string>(id || '');
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Dupla randomização (blocos e ordem de A/B)
   const randomizedBlocks = useMemo(() => {
@@ -121,15 +122,28 @@ export default function MbtiTest() {
       if (error) {
         localStorage.setItem(`mbti_${selectedEmpId}`, JSON.stringify(resultData));
       }
-      toast({ title: 'Avaliação MBTI finalizada com sucesso!' });
-      window.location.href = `/funcionario/${selectedEmpId}`;
     } catch (e) {
       localStorage.setItem(`mbti_${selectedEmpId}`, JSON.stringify(resultData));
-      window.location.href = `/funcionario/${selectedEmpId}`;
     } finally {
       setIsSubmitting(false);
+      setIsSubmitted(true);
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-white p-8 rounded-2xl shadow-sm border border-border/50 max-w-md w-full">
+          <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Muito Obrigado!</h2>
+          <p className="text-muted-foreground mb-6">Sua avaliação MBTI foi registrada com sucesso e já está vinculada ao seu perfil.</p>
+          <Button onClick={() => window.location.reload()} variant="outline" className="w-full">Voltar</Button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in text-left pb-20 mt-6">
