@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Shield, Users, Palette, Download, Moon, Sun, Eye, EyeOff, FileText, FileSpreadsheet } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
@@ -9,6 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { setorLabels, FeedbackSetor } from '@/lib/feedbackData';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { getBusatoLogoBase64, drawBusatoHeader } from '@/lib/pdfLogo';
 
 export default function Configuracoes() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
@@ -43,23 +46,22 @@ export default function Configuracoes() {
     toast.success('CSV exportado!');
   }
 
-  async function exportPDF() {
+  async function exportToPDF() {
     const { data } = await supabase.from('feedbacks').select('*').order('criado_em', { ascending: false });
     if (!data || data.length === 0) { toast.error('Nenhum dado para exportar'); return; }
-    const { default: jsPDF } = await import('jspdf');
-    const { default: autoTable } = await import('jspdf-autotable');
-    const { getBusatoLogoBase64, drawBusatoHeader } = await import('@/lib/pdfLogo');
-    const logoBase64 = await getBusatoLogoBase64();
     const doc = new jsPDF();
+    const logoBase64 = await getBusatoLogoBase64();
     drawBusatoHeader(doc, logoBase64);
     autoTable(doc, {
       startY: 34,
       head: [['Título', 'Funcionário', 'Gestor', 'Setor', 'Status', 'Data']],
       body: data.map((f: any) => [f.titulo, f.autor, f.gestor || '-', setorLabels[f.setor as FeedbackSetor] || f.setor, f.status, new Date(f.criado_em).toLocaleDateString('pt-BR')]),
-      styles: { fontSize: 7 },
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 187] }
     });
-    doc.save('busato-gestao-dados.pdf');
-    toast.success('PDF exportado!');
+    doc.save('Exportacao_Feedbacks.pdf');
+    toast.success('Relatório PDF exportado!');
   }
 
   async function exportFuncionariosCSV() {
