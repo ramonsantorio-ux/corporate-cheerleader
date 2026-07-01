@@ -1,25 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Bell, Palette, Download, Moon, Sun } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { useTheme } from '@/components/ThemeProvider';
 
 export default function Configuracoes() {
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  const { theme, setTheme } = useTheme();
   const [notifVencimento, setNotifVencimento] = useState(true);
   const [notifGlosas, setNotifGlosas] = useState(true);
   const [notifSSMA, setNotifSSMA] = useState(true);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
   function toggleTheme() {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-    toast.success(`Tema alterado para ${theme === 'dark' ? 'claro' : 'escuro'}`);
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const newTheme = isDark ? 'light' : 'dark';
+    setTheme(newTheme);
+    toast.success(`Tema alterado para ${newTheme === 'dark' ? 'escuro' : 'claro'}`);
   }
 
   return (
@@ -43,9 +41,9 @@ export default function Configuracoes() {
               <p className="text-sm text-muted-foreground mb-4">Alterne entre modo claro e escuro</p>
               <div className="flex items-center gap-4">
                 <Sun className="w-5 h-5 text-warning" />
-                <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+                <Switch checked={theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)} onCheckedChange={toggleTheme} />
                 <Moon className="w-5 h-5 text-primary" />
-                <span className="text-sm text-muted-foreground ml-2">{theme === 'dark' ? 'Modo escuro' : 'Modo claro'}</span>
+                <span className="text-sm text-muted-foreground ml-2">{(theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) ? 'Modo escuro' : 'Modo claro'}</span>
               </div>
             </div>
           </motion.div>
