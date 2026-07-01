@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
-import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2, Eye, EyeOff, MoreHorizontal } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PerfisDeAcesso } from '@/components/admin/PerfisDeAcesso';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,6 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 
 const PAGES = [
@@ -365,32 +366,32 @@ export default function Admin() {
                 )}
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
-                <Button variant="outline" size="sm" onClick={() => openEditUser(u)} title="Editar">
-                  <Edit className="w-3.5 h-3.5 mr-1" /> Editar
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => openChangePassword(u)} title="Alterar Senha">
-                  <KeyRound className="w-3.5 h-3.5 mr-1" /> Senha
-                </Button>
-                <Button
-                  variant={u.banned ? "outline" : "destructive"}
-                  size="sm"
-                  onClick={() => openBlockUser(u)}
-                  title={u.banned ? 'Desbloquear' : 'Bloquear'}
-                >
-                  {u.banned ? <Check className="w-3.5 h-3.5 mr-1" /> : <Ban className="w-3.5 h-3.5 mr-1" />}
-                  {u.banned ? 'Desbloquear' : 'Bloquear'}
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => openPermissions(u)}>
-                  <Shield className="w-3.5 h-3.5 mr-1" /> Permissões
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setDeleteUser(u)}
-                  title="Excluir Conta"
-                >
-                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => openEditUser(u)}>
+                      <Edit className="w-4 h-4 mr-2 text-muted-foreground" /> Editar Usuário
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openChangePassword(u)}>
+                      <KeyRound className="w-4 h-4 mr-2 text-muted-foreground" /> Alterar Senha
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openPermissions(u)}>
+                      <Shield className="w-4 h-4 mr-2 text-muted-foreground" /> Permissões
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => openBlockUser(u)} className={u.banned ? "" : "text-destructive focus:bg-destructive/10 focus:text-destructive"}>
+                      {u.banned ? <Check className="w-4 h-4 mr-2" /> : <Ban className="w-4 h-4 mr-2" />}
+                      {u.banned ? 'Desbloquear' : 'Bloquear'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setDeleteUser(u)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      <Trash2 className="w-4 h-4 mr-2" /> Excluir Conta
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </motion.div>
           ))}
