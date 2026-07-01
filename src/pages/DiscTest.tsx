@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Brain, CheckCircle2, ArrowLeft, Send, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Brain, CheckCircle2, ArrowLeft, Send, AlertTriangle, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import loginBg from '@/assets/login-bg.jpg';
 
 // Helper para embaralhar os blocos e as palavras (Fisher-Yates)
 function shuffleArray<T>(array: T[]): T[] {
@@ -60,6 +62,9 @@ export default function DiscTest() {
   const [answers, setAnswers] = useState<AnswersState>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  
+  const [acceptedGuide, setAcceptedGuide] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
   // Embaralha blocos e palavras (Randomização Dupla)
   const randomizedBlocks = useMemo(() => {
@@ -185,109 +190,362 @@ export default function DiscTest() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 pb-20">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 hover:bg-muted rounded-full transition-colors">
-          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-        </button>
-        <div>
-          <h1 className="text-3xl font-black text-primary tracking-tight">Questionário DISC</h1>
-          <p className="text-muted-foreground">Responda com base no seu comportamento natural.</p>
-        </div>
-      </div>
-
-      <div className="glass-card rounded-xl p-6 border-l-4 border-l-primary">
-        <label className="text-sm font-semibold mb-2 block">Funcionário Avaliado:</label>
-        <select 
-          className="w-full bg-background border border-input rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-primary/50"
-          value={selectedEmpId}
-          onChange={(e) => setSelectedEmpId(e.target.value)}
-          disabled={!!id}
-        >
-          <option value="" disabled>Selecione quem está realizando o teste...</option>
-          {employees.map(e => (
-            <option key={e.id} value={e.id}>{e.nome} - {e.cargo}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 p-4 rounded-xl flex gap-3 text-sm font-medium">
-        <AlertTriangle className="w-5 h-5 shrink-0" />
-        <p>Atenção: Em cada questão, escolha a palavra que <strong>MAIS</strong> te define e a palavra que <strong>MENOS</strong> te define. O teste avançará automaticamente para o próximo bloco após as duas seleções.</p>
-      </div>
-
-      <div className="space-y-8">
-        {randomizedBlocks.map((block, index) => {
-          // Exibir apenas blocos já completados ou o bloco atual (Focus Mode)
-          if (index > currentBlockIndex) return null;
-          
-          const isCurrent = index === currentBlockIndex;
-          const isDone = isBlockComplete(block.id);
-
-          return (
+    <div 
+      className="min-h-screen py-12 px-4 sm:px-6 relative"
+      style={{
+        backgroundImage: `url(${loginBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        colorScheme: 'light'
+      }}
+    >
+      <div className="absolute inset-0 bg-slate-50/90 backdrop-blur-sm"></div>
+      
+      <div className="max-w-4xl mx-auto relative z-10">
+        <AnimatePresence mode="wait">
+          {!acceptedGuide ? (
             <motion.div 
+              key="guide"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              key={block.id} 
-              className={`rounded-2xl overflow-hidden transition-all duration-300 ${isCurrent ? 'shadow-lg border-2 border-primary/50 bg-card' : 'shadow-sm border border-border/50 bg-muted/20 opacity-70'}`}
+              exit={{ opacity: 0, y: -20 }}
+              className="bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-border/50 max-w-3xl mx-auto"
             >
-              <div className="bg-muted/50 p-3 px-6 border-b border-border/50 flex justify-between items-center">
-                <span className="font-bold text-sm text-foreground/70">Questão {index + 1} de 28</span>
-                {isDone && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
-              </div>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-primary mb-6 text-center">ANÁLISE DISC<br/><span className="text-2xl font-bold text-slate-700">Guia de Avaliação</span></h1>
               
-              <div className="p-0">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-muted/30">
-                      <th className="py-3 px-6 text-left font-semibold w-1/2">Característica</th>
-                      <th className="py-3 px-2 text-center font-bold text-primary w-1/4">MAIS</th>
-                      <th className="py-3 px-2 text-center font-bold text-destructive w-1/4">MENOS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {block.words.map((wordObj) => {
-                      const isMais = answers[block.id]?.mais === wordObj.l;
-                      const isMenos = answers[block.id]?.menos === wordObj.l;
+              <div className="prose prose-slate max-w-none space-y-6 text-slate-600 text-sm sm:text-base h-[50vh] overflow-y-auto pr-4 mb-8 custom-scrollbar">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">O que é a Análise DISC?</h3>
+                  <p>A Análise DISC é uma ferramenta de avaliação comportamental utilizada para identificar as tendências naturais de comportamento de cada colaborador no ambiente de trabalho.</p>
+                  <p className="mt-2">Seu principal objetivo é promover o autoconhecimento, melhorar a comunicação entre as equipes, fortalecer o relacionamento interpessoal e apoiar o desenvolvimento profissional.</p>
+                  <p className="mt-2">A metodologia DISC considera que cada pessoa possui características comportamentais predominantes, representadas por quatro fatores:</p>
+                  <ul className="list-disc pl-5 mt-2 space-y-1 font-semibold text-slate-700">
+                    <li><strong className="text-blue-600">D</strong> – Dominância</li>
+                    <li><strong className="text-yellow-500">I</strong> – Influência</li>
+                    <li><strong className="text-green-600">S</strong> – Estabilidade</li>
+                    <li><strong className="text-red-500">C</strong> – Conformidade (ou Cautela)</li>
+                  </ul>
+                  <p className="mt-2 font-medium">É importante destacar que não existe perfil melhor ou pior. Todos possuem pontos fortes e oportunidades de desenvolvimento, sendo cada perfil importante para diferentes atividades e desafios dentro da organização.</p>
+                </div>
 
-                      return (
-                        <tr key={wordObj.w} className="border-t border-border/30 hover:bg-muted/20 transition-colors">
-                          <td className="py-4 px-6 font-medium text-foreground/90">{wordObj.w}</td>
-                          <td className="py-4 px-2 text-center cursor-pointer" onClick={() => handleSelect(block.id, 'mais', wordObj.l)}>
-                            <div className={`w-6 h-6 mx-auto rounded-full border-2 flex items-center justify-center transition-all ${isMais ? 'border-primary bg-primary' : 'border-muted-foreground/30 hover:border-primary/50'}`}>
-                              {isMais && <div className="w-2.5 h-2.5 bg-background rounded-full" />}
-                            </div>
-                          </td>
-                          <td className="py-4 px-2 text-center cursor-pointer" onClick={() => handleSelect(block.id, 'menos', wordObj.l)}>
-                            <div className={`w-6 h-6 mx-auto rounded-full border-2 flex items-center justify-center transition-all ${isMenos ? 'border-destructive bg-destructive' : 'border-muted-foreground/30 hover:border-destructive/50'}`}>
-                              {isMenos && <div className="w-2.5 h-2.5 bg-background rounded-full" />}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Como funciona?</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>A avaliação será aplicada conforme programação da empresa.</li>
+                    <li>O colaborador responderá a um questionário composto por situações e preferências comportamentais.</li>
+                    <li>Ao final, o sistema identificará a predominância dos fatores comportamentais DISC.</li>
+                    <li>O resultado será utilizado exclusivamente para apoiar ações de desenvolvimento, comunicação, liderança e formação de equipes.</li>
+                    <li>A avaliação não possui caráter eliminatório ou punitivo, nem substitui avaliações de desempenho técnico.</li>
+                  </ul>
+                </div>
+
+                <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
+                  <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Os quatro perfis comportamentais</h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-bold text-blue-600">D – Dominância</h4>
+                      <p className="text-sm mb-1">Pessoas com predominância em Dominância costumam ser orientadas para desafios, resultados e tomada de decisão.</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
+                        <div>
+                          <strong className="text-slate-700">Características comuns:</strong>
+                          <ul className="list-disc pl-5 mt-1 text-slate-600">
+                            <li>Objetividade</li>
+                            <li>Rapidez nas decisões</li>
+                            <li>Foco em resultados</li>
+                            <li>Competitividade</li>
+                            <li>Iniciativa</li>
+                            <li>Facilidade para resolver problemas</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <strong className="text-slate-700">Pontos de atenção:</strong>
+                          <ul className="list-disc pl-5 mt-1 text-slate-600">
+                            <li>Pode demonstrar impaciência.</li>
+                            <li>Pode ser excessivamente direto na comunicação.</li>
+                            <li>Pode assumir riscos sem avaliar todos os detalhes.</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200">
+                      <h4 className="font-bold text-yellow-500">I – Influência</h4>
+                      <p className="text-sm mb-1">Pessoas com predominância em Influência possuem facilidade para se comunicar, motivar pessoas e criar relacionamentos.</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
+                        <div>
+                          <strong className="text-slate-700">Características comuns:</strong>
+                          <ul className="list-disc pl-5 mt-1 text-slate-600">
+                            <li>Comunicação</li>
+                            <li>Entusiasmo</li>
+                            <li>Otimismo</li>
+                            <li>Facilidade para trabalhar em equipe</li>
+                            <li>Persuasão</li>
+                            <li>Criatividade</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <strong className="text-slate-700">Pontos de atenção:</strong>
+                          <ul className="list-disc pl-5 mt-1 text-slate-600">
+                            <li>Pode perder o foco em detalhes.</li>
+                            <li>Pode ter dificuldade com atividades muito repetitivas.</li>
+                            <li>Pode agir por impulso em algumas situações.</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200">
+                      <h4 className="font-bold text-green-600">S – Estabilidade</h4>
+                      <p className="text-sm mb-1">Pessoas com predominância em Estabilidade valorizam a cooperação, a organização e a construção de relacionamentos duradouros.</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
+                        <div>
+                          <strong className="text-slate-700">Características comuns:</strong>
+                          <ul className="list-disc pl-5 mt-1 text-slate-600">
+                            <li>Paciência</li>
+                            <li>Colaboração</li>
+                            <li>Comprometimento</li>
+                            <li>Escuta ativa</li>
+                            <li>Constância</li>
+                            <li>Confiabilidade</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <strong className="text-slate-700">Pontos de atenção:</strong>
+                          <ul className="list-disc pl-5 mt-1 text-slate-600">
+                            <li>Pode apresentar resistência a mudanças.</li>
+                            <li>Pode evitar conflitos mesmo quando necessários.</li>
+                            <li>Pode demorar mais para tomar decisões.</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200">
+                      <h4 className="font-bold text-red-500">C – Conformidade</h4>
+                      <p className="text-sm mb-1">Pessoas com predominância em Conformidade tendem a ser analíticas, organizadas e orientadas pela qualidade.</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
+                        <div>
+                          <strong className="text-slate-700">Características comuns:</strong>
+                          <ul className="list-disc pl-5 mt-1 text-slate-600">
+                            <li>Organização</li>
+                            <li>Planejamento</li>
+                            <li>Atenção aos detalhes</li>
+                            <li>Precisão</li>
+                            <li>Cumprimento de normas</li>
+                            <li>Qualidade nas entregas</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <strong className="text-slate-700">Pontos de atenção:</strong>
+                          <ul className="list-disc pl-5 mt-1 text-slate-600">
+                            <li>Pode ser excessivamente crítico.</li>
+                            <li>Pode buscar perfeição antes de concluir atividades.</li>
+                            <li>Pode ter dificuldade com mudanças rápidas ou pouco planejadas.</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Exemplo de Resultado</h3>
+                  <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
+                    <p className="font-bold text-slate-800 mb-2">Perfil predominante: Influência (I)</p>
+                    <p className="font-semibold text-slate-700">O que isso significa?</p>
+                    <p className="text-sm mt-1">Você demonstra facilidade para se comunicar, criar relacionamentos e motivar pessoas. Costuma trabalhar bem em equipe, gosta de ambientes colaborativos e tende a influenciar positivamente aqueles que estão ao seu redor.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                      <div>
+                        <strong className="text-xs uppercase text-slate-500">Seus principais pontos fortes</strong>
+                        <ul className="list-disc pl-5 mt-1 text-sm text-slate-700">
+                          <li>Comunicação clara</li>
+                          <li>Facilidade para trabalhar em equipe</li>
+                          <li>Motivação das pessoas</li>
+                          <li>Otimismo</li>
+                          <li>Boa capacidade de relacionamento</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <strong className="text-xs uppercase text-slate-500">Oportunidades de desenvolvimento</strong>
+                        <ul className="list-disc pl-5 mt-1 text-sm text-slate-700">
+                          <li>Planejar melhor antes de agir.</li>
+                          <li>Manter atenção aos detalhes.</li>
+                          <li>Melhorar a organização das atividades.</li>
+                          <li>Desenvolver maior disciplina no acompanhamento das tarefas.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Como interpretar o resultado?</h3>
+                  <p>O relatório DISC demonstra quais características comportamentais aparecem com maior intensidade no seu perfil.</p>
+                  <p className="mt-2">Isso não significa que você possua apenas um único perfil. Todas as pessoas apresentam características dos quatro fatores (D, I, S e C), porém algumas tendem a ser mais predominantes do que outras.</p>
+                  <p className="mt-2">O objetivo da avaliação é ampliar o autoconhecimento, identificar pontos fortes e apoiar o desenvolvimento profissional.</p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Benefícios da Análise DISC</h3>
+                  <p className="mb-2">A utilização da metodologia DISC permite:</p>
+                  <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 list-disc pl-5 text-slate-700">
+                    <li>Melhor autoconhecimento;</li>
+                    <li>Desenvolvimento profissional;</li>
+                    <li>Comunicação mais eficiente;</li>
+                    <li>Fortalecimento do trabalho em equipe;</li>
+                    <li>Desenvolvimento de lideranças;</li>
+                    <li>Melhor distribuição de atividades conforme o perfil comportamental;</li>
+                    <li>Redução de conflitos interpessoais;</li>
+                    <li>Melhoria do clima organizacional.</li>
+                  </ul>
+                </div>
+
+                <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 text-primary-foreground">
+                  <h3 className="text-lg font-bold text-primary mb-2">Atenção ao responder</h3>
+                  <p className="text-slate-700 font-medium mb-2">Responda ao questionário considerando a forma como você normalmente age, e não como acredita que deveria agir.</p>
+                  <p className="text-slate-700 font-bold mb-2">Não existem respostas certas ou erradas.</p>
+                  <p className="text-slate-700 mb-2">O resultado será mais útil quanto mais sinceras forem suas respostas.</p>
+                  <p className="text-slate-700 font-medium">Lembre-se: o objetivo da Análise DISC é apoiar seu desenvolvimento profissional, fortalecer o trabalho em equipe e contribuir para um ambiente de trabalho cada vez mais colaborativo, produtivo e alinhado aos valores da empresa.</p>
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-6 space-y-6">
+                <div className="flex items-start space-x-3 bg-muted/50 p-4 rounded-lg cursor-pointer transition-colors hover:bg-muted" onClick={() => setAgreed(!agreed)}>
+                  <Checkbox 
+                    id="terms" 
+                    checked={agreed}
+                    onCheckedChange={(c) => setAgreed(c as boolean)}
+                    className="mt-1 h-5 w-5"
+                  />
+                  <div className="grid gap-1.5 leading-none">
+                    <label htmlFor="terms" className="text-sm font-medium leading-tight cursor-pointer">
+                      Li e compreendo as orientações acima
+                    </label>
+                    <p className="text-xs text-muted-foreground">Confirmo que entendi como a avaliação funciona e os critérios que serão analisados.</p>
+                  </div>
+                </div>
+
+                <Button 
+                  size="lg" 
+                  className="w-full h-14 text-lg rounded-xl"
+                  disabled={!agreed}
+                  onClick={() => setAcceptedGuide(true)}
+                >
+                  Prosseguir para o Questionário <ChevronRight className="ml-2 w-5 h-5" />
+                </Button>
               </div>
             </motion.div>
-          );
-        })}
-      </div>
+          ) : (
+            <motion.div 
+              key="form"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="space-y-6 max-w-3xl mx-auto pb-20"
+            >
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-black tracking-tight text-primary bg-white/80 backdrop-blur inline-block px-6 py-2 rounded-full shadow-sm">Avaliação DISC</h1>
+                <p className="text-slate-700 mt-2">Responda com base no seu comportamento natural.</p>
+              </div>
 
-      <div className="glass-card rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between sticky bottom-6 shadow-2xl bg-card/95 backdrop-blur z-10 border-t-4 border-t-primary gap-4">
-        <div className="text-sm font-bold text-foreground">
-          Progresso: <span className="text-primary">{completedCount}</span> de 28
-        </div>
-        <Button 
-          onClick={handleSubmit} 
-          disabled={isSubmitting || completedCount < 28 || !selectedEmpId}
-          size="lg"
-          className="w-full sm:w-auto font-bold px-8 shadow-lg shadow-primary/20"
-        >
-          {isSubmitting ? 'Gerando Laudo Ipsativo...' : (
-            <>Finalizar Avaliação DISC <Send className="w-4 h-4 ml-2" /></>
+              <div className="glass-card rounded-xl p-6 border-l-4 border-l-primary bg-white/90">
+                <label className="text-sm font-semibold mb-2 block">Funcionário Avaliado:</label>
+                <select 
+                  className="w-full bg-background border border-input rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-primary/50"
+                  value={selectedEmpId}
+                  onChange={(e) => setSelectedEmpId(e.target.value)}
+                  disabled={!!id}
+                >
+                  <option value="" disabled>Selecione quem está realizando o teste...</option>
+                  {employees.map(e => (
+                    <option key={e.id} value={e.id}>{e.nome} - {e.cargo}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 p-4 rounded-xl flex gap-3 text-sm font-medium bg-white/90">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <p>Atenção: Em cada questão, escolha a palavra que <strong>MAIS</strong> te define e a palavra que <strong>MENOS</strong> te define. O teste avançará automaticamente para o próximo bloco após as duas seleções.</p>
+              </div>
+
+              <div className="space-y-8">
+                {randomizedBlocks.map((block, index) => {
+                  // Exibir apenas blocos já completados ou o bloco atual (Focus Mode)
+                  if (index > currentBlockIndex) return null;
+                  
+                  const isCurrent = index === currentBlockIndex;
+                  const isDone = isBlockComplete(block.id);
+
+                  return (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      key={block.id} 
+                      className={`rounded-2xl overflow-hidden transition-all duration-300 ${isCurrent ? 'shadow-lg border-2 border-primary/50 bg-card' : 'shadow-sm border border-border/50 bg-muted/20 opacity-70'}`}
+                    >
+                      <div className="bg-muted/50 p-3 px-6 border-b border-border/50 flex justify-between items-center bg-white/50">
+                        <span className="font-bold text-sm text-foreground/70">Questão {index + 1} de 28</span>
+                        {isDone && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
+                      </div>
+                      
+                      <div className="p-0 bg-white/80">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-muted/30">
+                              <th className="py-3 px-6 text-left font-semibold w-1/2">Característica</th>
+                              <th className="py-3 px-2 text-center font-bold text-primary w-1/4">MAIS</th>
+                              <th className="py-3 px-2 text-center font-bold text-destructive w-1/4">MENOS</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {block.words.map((wordObj) => {
+                              const isMais = answers[block.id]?.mais === wordObj.l;
+                              const isMenos = answers[block.id]?.menos === wordObj.l;
+
+                              return (
+                                <tr key={wordObj.w} className="border-t border-border/30 hover:bg-muted/20 transition-colors">
+                                  <td className="py-4 px-6 font-medium text-foreground/90">{wordObj.w}</td>
+                                  <td className="py-4 px-2 text-center cursor-pointer" onClick={() => handleSelect(block.id, 'mais', wordObj.l)}>
+                                    <div className={`w-6 h-6 mx-auto rounded-full border-2 flex items-center justify-center transition-all ${isMais ? 'border-primary bg-primary' : 'border-muted-foreground/30 hover:border-primary/50'}`}>
+                                      {isMais && <div className="w-2.5 h-2.5 bg-background rounded-full" />}
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-2 text-center cursor-pointer" onClick={() => handleSelect(block.id, 'menos', wordObj.l)}>
+                                    <div className={`w-6 h-6 mx-auto rounded-full border-2 flex items-center justify-center transition-all ${isMenos ? 'border-destructive bg-destructive' : 'border-muted-foreground/30 hover:border-destructive/50'}`}>
+                                      {isMenos && <div className="w-2.5 h-2.5 bg-background rounded-full" />}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              <div className="glass-card rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between sticky bottom-6 shadow-2xl bg-white/95 backdrop-blur z-10 border-t-4 border-t-primary gap-4">
+                <div className="text-sm font-bold text-foreground">
+                  Progresso: <span className="text-primary">{completedCount}</span> de 28
+                </div>
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={isSubmitting || completedCount < 28 || !selectedEmpId}
+                  size="lg"
+                  className="w-full sm:w-auto font-bold px-8 shadow-lg shadow-primary/20"
+                >
+                  {isSubmitting ? 'Gerando Laudo Ipsativo...' : (
+                    <>Finalizar Avaliação DISC <Send className="w-4 h-4 ml-2" /></>
+                  )}
+                </Button>
+              </div>
+            </motion.div>
           )}
-        </Button>
+        </AnimatePresence>
       </div>
     </div>
   );
