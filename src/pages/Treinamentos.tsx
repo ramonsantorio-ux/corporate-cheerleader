@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Brain, User, BarChart2, Zap, ClipboardList, Award, Star, Plus, CheckCircle2, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/components/ExecutiveReports';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
