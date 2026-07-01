@@ -76,6 +76,24 @@ export default function Admin() {
     );
   };
 
+  const adminAuthRequest = async (method: string, path: string, body: any) => {
+    const url = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/admin/${path}`;
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
+        'apikey': import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || 'Erro na API de Auth');
+    }
+    return await res.json();
+  };
+
   useEffect(() => {
     if (isAdmin) fetchUsers();
   }, [isAdmin]);
@@ -122,8 +140,7 @@ export default function Admin() {
       const { error: updateErr } = await adminClient.from('profiles').update({ full_name: '__DELETED__', email: deleteUser.email }).eq('id', deleteUser.id);
       if (updateErr) throw new Error(updateErr.message || 'Erro ao marcar perfil');
 
-      const { error: banErr } = await adminClient.auth.admin.updateUserById(deleteUser.id, { ban_duration: '876000h' });
-      if (banErr) throw new Error(banErr.message || 'Erro ao desativar conta');
+      await adminAuthRequest('PUT', `users/${deleteUser.id}`, { ban_duration: '876000h' });
 
       toast.success(`Conta de "${deleteUser.full_name}" excluída com sucesso!`);
       setUsers(prev => prev.filter(u => u.id !== deleteUser.id));
@@ -146,22 +163,18 @@ export default function Admin() {
     setCreating(true);
     
     try {
-      const adminClient = getAdminClient();
-      const res = await adminClient.auth.admin.createUser({
+      const user = await adminAuthRequest('POST', 'users', {
         email: newUser.email,
         password: newUser.password,
         user_metadata: { full_name: newUser.full_name },
         email_confirm: true,
       });
 
-      if (res.error) {
-        toast.error(res.error.message || 'Erro ao criar usuário');
-      } else {
-        toast.success('Usuário criado com sucesso!');
-        setNewUser({ email: '', password: '', full_name: '', profile_id: '' });
-        setDialogOpen(false);
-        const userId = res.data?.user?.id;
-        if (userId) {
+      toast.success('Usuário criado com sucesso!');
+      setNewUser({ email: '', password: '', full_name: '', profile_id: '' });
+      setDialogOpen(false);
+      const userId = user.id;
+      if (userId) {
           const defaultPerms = PAGES.map(p => ({
             user_id: userId,
             page: p.key,
@@ -210,8 +223,7 @@ export default function Admin() {
     setSavingEdit(true);
     try {
       const adminClient = getAdminClient();
-      const { error: authErr } = await adminClient.auth.admin.updateUserById(editUserDialog.id, { email: editEmail, user_metadata: { full_name: editName } });
-      if (authErr) throw authErr;
+      await adminAuthRequest('PUT', `users/${editUserDialog.id}`, { email: editEmail, user_metadata: { full_name: editName } });
       
       const { error: profErr } = await adminClient.from('profiles').update({ full_name: editName, email: editEmail }).eq('id', editUserDialog.id);
       if (profErr) throw profErr;
@@ -234,10 +246,8 @@ export default function Admin() {
     if (!blockUser) return;
     setSavingBlock(true);
     try {
-      const adminClient = getAdminClient();
       const ban_duration = blockAction === 'ban' ? '876000h' : 'none';
-      const { error } = await adminClient.auth.admin.updateUserById(blockUser.id, { ban_duration });
-      if (error) throw error;
+      await adminAuthRequest('PUT', `users/${blockUser.id}`, { ban_duration });
 
       toast.success(blockAction === 'ban' ? 'Usuário bloqueado!' : 'Usuário desbloqueado!');
       setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
@@ -261,9 +271,7 @@ export default function Admin() {
     }
     setSavingPassword(true);
     try {
-      const adminClient = getAdminClient();
-      const { error } = await adminClient.auth.admin.updateUserById(passwordUser.id, { password: newPassword });
-      if (error) throw error;
+      await adminAuthRequest('PUT', `users/${passwordUser.id}`, { password: newPassword });
       toast.success('Senha alterada com sucesso!');
       setPasswordUser(null);
       setNewPassword('');
