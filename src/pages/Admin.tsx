@@ -70,30 +70,21 @@ export default function Admin() {
   const [blockAction, setBlockAction] = useState<'ban' | 'unban'>('ban');
   const [savingBlock, setSavingBlock] = useState(false);
 
-  const getAdminClient = () => {
-    return createClient(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY,
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-  };
 
-  const adminAuthRequest = async (method: string, path: string, body: any) => {
-    const url = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/admin/${path}`;
-    const res = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
-        'apikey': import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-      },
-      body: JSON.stringify(body)
+  const adminAuthRequest = async (action: 'create' | 'manage', payload: any) => {
+    const functionName = action === 'create' ? 'create-user' : 'manage-user';
+    const { data, error } = await supabase.functions.invoke(functionName, {
+      body: payload
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || 'Erro na API de Auth');
+    
+    if (error) {
+       console.error("Function error:", error);
+       throw new Error(error.message || 'Erro na Edge Function');
     }
-    return await res.json();
+    if (data?.error) {
+       throw new Error(data.error);
+    }
+    return data;
   };
 
   useEffect(() => {
@@ -138,18 +129,8 @@ export default function Admin() {
     if (!deleteUser) return;
     setSavingDelete(true);
     try {
-      const profRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${deleteUser.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
-          'apikey': import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-        },
-        body: JSON.stringify({ full_name: '__DELETED__', email: deleteUser.email })
-      });
-      if (!profRes.ok) throw new Error('Erro ao marcar perfil como excluído');
-
-      await adminAuthRequest('PUT', `users/${deleteUser.id}`, { ban_duration: '876000h' });
+      await adminAuthRequest('manage', { action: 'update', user_id: deleteUser.id, full_name: '__DELETED__', email: deleteUser.email });
+      await adminAuthRequest('manage', { action: 'ban', user_id: deleteUser.id });
 
       toast.success(`Conta de "${deleteUser.full_name}" excluída com sucesso!`);
       setUsers(prev => prev.filter(u => u.id !== deleteUser.id));
@@ -172,17 +153,16 @@ export default function Admin() {
     setCreating(true);
     
     try {
-      const user = await adminAuthRequest('POST', 'users', {
+      const user = await adminAuthRequest('create', {
         email: newUser.email,
         password: newUser.password,
-        user_metadata: { full_name: newUser.full_name },
-        email_confirm: true,
+        full_name: newUser.full_name,
       });
 
       toast.success('Usuário criado com sucesso!');
       setNewUser({ email: '', password: '', full_name: '', profile_id: '' });
       setDialogOpen(false);
-      const userId = user.id;
+      const userId = user.user_id;
       if (userId) {
           const defaultPerms = PAGES.map(p => ({
             user_id: userId,
@@ -230,18 +210,7 @@ export default function Admin() {
     if (!editUserDialog) return;
     setSavingEdit(true);
     try {
-      await adminAuthRequest('PUT', `users/${editUserDialog.id}`, { email: editEmail, user_metadata: { full_name: editName } });
-      
-      const profRes = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/profiles?id=eq.${editUserDialog.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY}`,
-          'apikey': import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
-        },
-        body: JSON.stringify({ full_name: editName, email: editEmail })
-      });
-      if (!profRes.ok) throw new Error('Erro ao atualizar perfil');
+      await adminAuthRequest('manage', { action: 'update', user_id: editUserDialog.id, email: editEmail, full_name: editName });
 
       toast.success('Usuário atualizado com sucesso!');
       setEditUserDialog(null);
@@ -261,8 +230,7 @@ export default function Admin() {
     if (!blockUser) return;
     setSavingBlock(true);
     try {
-      const ban_duration = blockAction === 'ban' ? '876000h' : 'none';
-      await adminAuthRequest('PUT', `users/${blockUser.id}`, { ban_duration });
+      await adminAuthRequest('manage', { action: blockAction, user_id: blockUser.id });
 
       toast.success(blockAction === 'ban' ? 'Usuário bloqueado!' : 'Usuário desbloqueado!');
       setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
@@ -286,7 +254,7 @@ export default function Admin() {
     }
     setSavingPassword(true);
     try {
-      await adminAuthRequest('PUT', `users/${passwordUser.id}`, { password: newPassword });
+      await adminAuthRequest('manage', { action: 'change_password', user_id: passwordUser.id, password: newPassword });
       toast.success('Senha alterada com sucesso!');
       setPasswordUser(null);
       setNewPassword('');
