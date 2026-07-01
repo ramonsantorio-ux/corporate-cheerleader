@@ -12,51 +12,51 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 const busatoGlobo = '/logo.png';
 import busatoLogoFull from '@/assets/busato-logo-full.png';
 
-interface NavItem { to: string; icon: any; label: string; badge?: string }
+interface NavItem { to: string; icon: any; label: string; badge?: string; key: string }
 interface NavGroup { label: string; items: NavItem[] }
 
 const navGroups: NavGroup[] = [
   {
     label: 'Visão Geral',
     items: [
-      { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/', icon: LayoutDashboard, label: 'Dashboard', key: 'dashboard' },
     ],
   },
   {
     label: 'Gestão de Pessoas',
     items: [
-      { to: '/colaboradores', icon: Users, label: 'Colaboradores' },
-      { to: '/organograma', icon: GitMerge, label: 'Organograma' },
-      { to: '/ausencias', icon: CalendarDays, label: 'Ponto & Férias' },
+      { to: '/colaboradores', icon: Users, label: 'Colaboradores', key: 'colaboradores' },
+      { to: '/organograma', icon: GitMerge, label: 'Organograma', key: 'organograma' },
+      { to: '/ausencias', icon: CalendarDays, label: 'Ponto & Férias', key: 'ausencias' },
     ],
   },
   {
     label: 'Liderança & Gestão',
     items: [
-      { to: '/desempenho', icon: BrainCircuit, label: 'Painel do Gestor', badge: 'NOVO' },
+      { to: '/desempenho', icon: BrainCircuit, label: 'Painel do Gestor', badge: 'NOVO', key: 'desempenho' },
     ],
   },
   {
     label: 'Talentos & Comportamento',
     items: [
-      { to: '/treinamentos', icon: ClipboardList, label: 'Central de Assessments', badge: 'NOVO' },
-      { to: '/assessment/disc', icon: Brain, label: 'Teste DISC' },
-      { to: '/assessment/mbti', icon: Brain, label: 'MBTI' },
-      { to: '/assessment/bigfive', icon: Brain, label: 'Big Five' },
+      { to: '/treinamentos', icon: ClipboardList, label: 'Central de Assessments', badge: 'NOVO', key: 'treinamentos' },
+      { to: '/assessment/disc', icon: Brain, label: 'Teste DISC', key: 'disc' },
+      { to: '/assessment/mbti', icon: Brain, label: 'MBTI', key: 'mbti' },
+      { to: '/assessment/bigfive', icon: Brain, label: 'Big Five', key: 'bigfive' },
     ],
   },
   {
     label: 'Operações',
     items: [
-      { to: '/eventos', icon: AlertTriangle, label: 'SSMA' },
-      { to: '/evolucao', icon: Briefcase, label: 'Contratos' },
-      { to: '/notificacoes', icon: FileWarning, label: 'Notificações/Multas' },
+      { to: '/eventos', icon: AlertTriangle, label: 'SSMA', key: 'eventos' },
+      { to: '/evolucao', icon: Briefcase, label: 'Contratos', key: 'evolucao' },
+      { to: '/notificacoes', icon: FileWarning, label: 'Notificações/Multas', key: 'notificacoes' },
     ],
   },
   {
     label: 'Sistema',
     items: [
-      { to: '/configuracoes', icon: Settings, label: 'Configurações' },
+      { to: '/configuracoes', icon: Settings, label: 'Configurações', key: 'configuracoes' },
     ],
   },
 ];
@@ -64,20 +64,28 @@ const navGroups: NavGroup[] = [
 export default function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, permissions, signOut } = useAuth();
 
-  const allGroups = isAdmin
+  const baseGroups = isAdmin
     ? [
         ...navGroups.slice(0, -1),
         {
           label: 'Sistema',
           items: [
-            { to: '/configuracoes', icon: Settings, label: 'Configurações' },
-            { to: '/admin', icon: Shield, label: 'Administração' },
+            { to: '/configuracoes', icon: Settings, label: 'Configurações', key: 'configuracoes' },
+            { to: '/admin', icon: Shield, label: 'Administração', key: 'admin' },
           ],
         },
       ]
     : navGroups;
+
+  const allGroups = baseGroups.map(group => ({
+    ...group,
+    items: group.items.filter(item => {
+      if (isAdmin) return true;
+      return permissions[item.key]?.can_view === true;
+    })
+  })).filter(group => group.items.length > 0);
 
   return (
     <motion.aside
