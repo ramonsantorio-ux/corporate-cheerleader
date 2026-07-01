@@ -10,7 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/components/ExecutiveReports';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { Link } from 'lucide-react';
+import { Link, ExternalLink } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const assessments = [
   {
@@ -53,6 +56,10 @@ export default function Treinamentos() {
 
   const [reportModal, setReportModal] = useState<{open: boolean; type: string; data: any; empName: string}>({open: false, type: '', data: null, empName: ''});
   const { toast } = useToast();
+
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [selectedLinkEmployee, setSelectedLinkEmployee] = useState('');
+  const [selectedAssessmentType, setSelectedAssessmentType] = useState('disc');
 
   const copyLink = (type: string, id: string = '') => {
     const url = id ? `${window.location.origin}/assessment/${type}/${id}` : `${window.location.origin}/assessment/${type}`;
@@ -122,19 +129,9 @@ export default function Treinamentos() {
           <p>Mapeamento comportamental e de competências da sua equipe.</p>
         </div>
         
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-medium border-slate-200 shadow-sm">
-              <Link className="w-4 h-4 mr-2" /> Gerar Link Colaborador
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-white w-56">
-            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">Link de Teste (Geral)</div>
-            <DropdownMenuItem className="cursor-pointer font-medium" onClick={() => copyLink('disc')}>Copiar Link DISC</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer font-medium" onClick={() => copyLink('mbti')}>Copiar Link MBTI</DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer font-medium" onClick={() => copyLink('bigfive')}>Copiar Link Big Five</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-medium border-slate-200 shadow-sm" onClick={() => setLinkDialogOpen(true)}>
+          <Link className="w-4 h-4 mr-2" /> Gerar Link Colaborador
+        </Button>
       </div>
       <Tabs defaultValue="assessments" className="w-full mt-6">
         <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
@@ -167,9 +164,6 @@ export default function Treinamentos() {
                 <Button size="sm" className={`flex-1 bg-gradient-to-r ${a.color} text-white border-0 hover:opacity-90`}
                   onClick={() => navigate(`/assessment/${a.id}`)}>
                   Iniciar Teste
-                </Button>
-                <Button size="sm" variant="outline" className={`shrink-0 ${a.border} hover:bg-${a.bg.split(' ')[0]} transition-colors`} onClick={() => copyLink(a.id)} title="Copiar Link para Compartilhar">
-                  <Link className="w-4 h-4 text-muted-foreground" />
                 </Button>
               </div>
             </motion.div>
@@ -273,6 +267,81 @@ export default function Treinamentos() {
           {reportModal.type === 'disc' && reportModal.data && <DiscReport resultScreen={reportModal.data} />}
           {reportModal.type === 'mbti' && reportModal.data && <MbtiReport resultScreen={reportModal.data} />}
           {reportModal.type === 'bigfive' && reportModal.data && <BigFiveReport resultScreen={reportModal.data} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Link Generation Modal ── */}
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Gerar Link de Assessment</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1.5">
+              Selecione o colaborador e o teste para gerar um link personalizado e único para ele responder.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Selecionar Teste</Label>
+              <Select value={selectedAssessmentType} onValueChange={setSelectedAssessmentType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolha o teste..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="disc">DISC</SelectItem>
+                  <SelectItem value="mbti">MBTI (16 Tipos)</SelectItem>
+                  <SelectItem value="bigfive">Big Five (OCEAN)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Selecionar Colaborador</Label>
+              <Select value={selectedLinkEmployee} onValueChange={setSelectedLinkEmployee}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolha quem vai responder..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map(emp => (
+                    <SelectItem key={emp.id} value={emp.id}>{emp.nome} - {emp.cargo}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedLinkEmployee && selectedAssessmentType && (
+              <div className="space-y-2">
+                <Label>Link Personalizado</Label>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    readOnly 
+                    value={`${window.location.origin}/assessment/${selectedAssessmentType}/${selectedLinkEmployee}`}
+                    className="bg-muted/50 font-mono text-xs"
+                  />
+                  <Button 
+                    variant="outline"
+                    title="Abrir em Nova Janela"
+                    onClick={() => {
+                      window.open(`${window.location.origin}/assessment/${selectedAssessmentType}/${selectedLinkEmployee}`, '_blank');
+                    }}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="secondary"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/assessment/${selectedAssessmentType}/${selectedLinkEmployee}`);
+                      toast({ title: 'Link copiado!', description: 'Envie este link para o colaborador.' });
+                      setLinkDialogOpen(false);
+                      setSelectedLinkEmployee('');
+                    }}
+                  >
+                    Copiar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
