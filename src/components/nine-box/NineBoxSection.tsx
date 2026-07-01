@@ -86,11 +86,11 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
       
       <div className="flex flex-col md:flex-row gap-8 items-center md:items-start justify-center">
         {/* Y-Axis Label */}
-        <div className="hidden md:flex flex-col justify-center items-center h-[400px]">
-          <div className="rotate-[-90deg] text-sm font-bold tracking-wider text-muted-foreground whitespace-nowrap mb-8">
+        <div className="hidden md:flex relative w-16 h-[360px]">
+          <div className="absolute top-1/2 left-0 -translate-y-1/2 -rotate-90 text-sm font-bold tracking-wider text-muted-foreground whitespace-nowrap origin-center">
             POTENCIAL (FUTURO)
           </div>
-          <div className="flex flex-col justify-between h-[300px] text-xs text-muted-foreground font-medium uppercase text-right mr-2 mt-4">
+          <div className="absolute top-0 right-2 h-full flex flex-col justify-between text-xs text-muted-foreground font-medium uppercase text-right py-6">
             <span>Alto</span>
             <span>Médio</span>
             <span>Baixo</span>
