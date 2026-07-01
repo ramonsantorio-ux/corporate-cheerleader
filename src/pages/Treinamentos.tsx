@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { useNavigate } from 'react-router-dom';
-import { Brain, User, BarChart2, Zap, ClipboardList, Award, Star, Plus, CheckCircle2, Search } from 'lucide-react';
+import { Brain, User, BarChart2, Zap, ClipboardList, Award, Star, Plus, CheckCircle2, Search, Link, ExternalLink, TrendingUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,10 +10,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/components/ExecutiveReports';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { Link, ExternalLink } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload) return null;
+  return (
+    <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-xs">
+      <p className="font-semibold text-foreground mb-1">{label}</p>
+      {payload.map((entry: any) => (
+        <div key={entry.name} className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="text-muted-foreground">{entry.name}:</span>
+          <span className="font-semibold text-foreground">{entry.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const assessments = [
   {
@@ -51,8 +67,10 @@ const assessments = [
 export default function Treinamentos() {
   const navigate = useNavigate();
   const [employees, setEmployees] = useState<any[]>([]);
+  const [assessmentsData, setAssessmentsData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
+  const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
 
   const [reportModal, setReportModal] = useState<{open: boolean; type: string; data: any; empName: string}>({open: false, type: '', data: null, empName: ''});
   const { toast } = useToast();
@@ -86,26 +104,12 @@ export default function Treinamentos() {
         console.error("Erro ao buscar funcionários:", error);
       }
 
-      const { data: assessments } = await supabase.from('assessment_results').select('user_id, type, result_data').catch(() => ({ data: [] }));
+      const { data: assessments } = await supabase.from('assessment_results').select('user_id, type, result_data, created_at').catch(() => ({ data: [] }));
+      setAssessmentsData(assessments || []);
       
       const enriched = (employeesList || []).map(f => {
-        const userAss = assessments?.filter(a => a.user_id === f.id) || [];
-        
-        let mockDisc = null;
-        let mockMbti = null;
-        let mockBigFive = null;
-        
-        if (f.id === 'mock-1') {
-           mockDisc = { dominant: { letter: 'D' }, D: 85, I: 40, S: 15, C: 60 };
-           mockMbti = { type: 'ENTJ', desc: { title: 'Comandante', traits: ['Decisivo', 'Estratégico', 'Ambicioso'], desc: 'Líderes natos com visão estratégica e alto poder de execução.' } };
-           mockBigFive = { O: 85, C: 75, E: 90, A: 40, N: 30 };
-        }
-
         return {
           ...f,
-          disc: userAss.find(a => a.type === 'disc')?.result_data || tryParse(`disc_${f.id}`) || mockDisc,
-          mbti: userAss.find(a => a.type === 'mbti')?.result_data || tryParse(`mbti_${f.id}`) || mockMbti,
-          bigfive: userAss.find(a => a.type === 'bigfive')?.result_data || tryParse(`bigfive_${f.id}`) || mockBigFive,
         };
       });
       setEmployees(enriched);
@@ -113,30 +117,98 @@ export default function Treinamentos() {
     fetchData();
   }, []);
 
+  const isTestValid = (tests: any[], type: string, empId: string) => {
+    // Para funcionar offline / mock, se for o mock-1
+    if (empId === 'mock-1') return true;
+
+    const test = tests.find(a => a.user_id === empId && a.type === type);
+    if (!test) return false;
+    if (!test.created_at) return true; // Se não tiver data, assumimos válido
+
+    const testDate = new Date(test.created_at);
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    return testDate >= oneYearAgo;
+  };
+
+  const getTestData = (tests: any[], type: string, empId: string) => {
+    if (empId === 'mock-1') {
+      if (type === 'disc') return { dominant: { letter: 'D' }, D: 85, I: 40, S: 15, C: 60 };
+      if (type === 'mbti') return { type: 'ENTJ', desc: { title: 'Comandante', traits: ['Decisivo', 'Estratégico', 'Ambicioso'], desc: 'Líderes natos com visão estratégica e alto poder de execução.' } };
+      if (type === 'bigfive') return { O: 85, C: 75, E: 90, A: 40, N: 30 };
+    }
+    const valid = isTestValid(tests, type, empId);
+    if (!valid) return null; // Só retorna os dados se estiver válido
+    return tests.find(a => a.user_id === empId && a.type === type)?.result_data || tryParse(`${type}_${empId}`);
+  };
+
   function tryParse(key: string) {
     try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : null; } catch { return null; }
   }
 
+  const cargoStats = useMemo(() => {
+    const normalizeCargo = (cargo: string) => {
+      let normalized = (cargo || 'Sem Cargo').replace(/\s+(I{1,3}|IV|V|VI{0,3}|[0-9]+)\s*$/i, '').trim();
+      normalized = normalized.replace(/\bTécnica\b/gi, 'Técnico');
+      return normalized;
+    };
+
+    const cargos: Record<string, { cargo: string; total: number; realizados: number; pendentes: number; pendenteNomes: { id: string; nome: string }[] }> = {};
+    employees.forEach(f => {
+      const cargoKey = normalizeCargo(f.cargo);
+      if (!cargos[cargoKey]) cargos[cargoKey] = { cargo: cargoKey, total: 0, realizados: 0, pendentes: 0, pendenteNomes: [] };
+      cargos[cargoKey].total++;
+      
+      const hasDisc = isTestValid(assessmentsData, 'disc', f.id);
+      const hasMbti = isTestValid(assessmentsData, 'mbti', f.id);
+      const hasBigFive = isTestValid(assessmentsData, 'bigfive', f.id);
+
+      if (hasDisc && hasMbti && hasBigFive) {
+        cargos[cargoKey].realizados++;
+      } else {
+        cargos[cargoKey].pendentes++;
+        cargos[cargoKey].pendenteNomes.push({ id: f.id, nome: f.nome });
+      }
+    });
+    return Object.values(cargos).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
+  }, [employees, assessmentsData]);
+
+  const chartData = cargoStats.map(c => ({
+    cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + '…' : c.cargo,
+    Realizados: c.realizados,
+    Pendentes: c.pendentes,
+  }));
+
+  const totalRealizados = cargoStats.reduce((a, c) => a + c.realizados, 0);
+  const totalPendentes = cargoStats.reduce((a, c) => a + c.pendentes, 0);
+
   const filtered = employees.filter(f => f.nome.toLowerCase().includes(search.toLowerCase()));
 
-  const totalTests = (f: any) => [f.disc, f.mbti, f.bigfive].filter(Boolean).length;
-
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-20">
-      <div className="page-header flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6">
+      {/* Header estilo Painel do Gestor */}
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="flex items-center gap-2"><ClipboardList className="w-6 h-6 text-primary" />Central de Assessments</h1>
-          <p>Mapeamento comportamental e de competências da sua equipe.</p>
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Talentos & Comportamento</p>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <ClipboardList className="w-6 h-6 text-primary" /> Central de Assessments
+          </h1>
         </div>
         
-        <Button variant="outline" className="bg-white hover:bg-slate-50 text-slate-700 font-medium border-slate-200 shadow-sm" onClick={() => setLinkDialogOpen(true)}>
+        <Button variant="outline" onClick={() => setLinkDialogOpen(true)}>
           <Link className="w-4 h-4 mr-2" /> Gerar Link Colaborador
         </Button>
-      </div>
-      <Tabs defaultValue="assessments" className="w-full mt-6">
-        <TabsList className="w-full justify-start h-auto flex-wrap p-1.5 bg-muted/30 rounded-xl mb-6 border border-border">
-          <TabsTrigger value="assessments" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">Assessments Disponíveis</TabsTrigger>
-          <TabsTrigger value="equipe" className="px-5 py-2.5 text-sm font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">Mapeamento da Equipe</TabsTrigger>
+      </motion.div>
+
+      <Tabs defaultValue="assessments" className="w-full mt-4">
+        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap bg-muted/50 p-1 h-auto mb-6">
+          <TabsTrigger value="assessments" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap px-3 py-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
+            Assessments Disponíveis
+          </TabsTrigger>
+          <TabsTrigger value="equipe" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap px-3 py-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
+            Mapeamento da Equipe
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="assessments" className="space-y-6 outline-none">
@@ -173,6 +245,81 @@ export default function Treinamentos() {
       </TabsContent>
 
       <TabsContent value="equipe" className="space-y-6 outline-none">
+        
+        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 p-4 rounded-xl text-sm font-medium">
+          Atenção: Os testes (DISC, MBTI, Big Five) possuem validade de 12 meses. Colaboradores com testes vencidos entrarão como Pendentes.
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-2 gap-4">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="corporate-kpi corporate-kpi-accent">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Realizados (12m)</p>
+            <p className="text-3xl font-bold text-foreground mt-1">{totalRealizados}</p>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-kpi corporate-kpi-danger">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Pendentes / Vencidos</p>
+            <p className="text-3xl font-bold text-foreground mt-1">{totalPendentes}</p>
+          </motion.div>
+        </div>
+
+        {/* Avaliações por Cargo Chart */}
+        {cargoStats.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="corporate-section">
+            <div className="corporate-section-header">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground">Avaliações por Cargo</h2>
+              </div>
+              <span className="text-xs text-muted-foreground">{cargoStats.length} cargos</span>
+            </div>
+            <div className="corporate-section-body">
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={chartData} margin={{ left: 0, right: 10, top: 5, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="cargo" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={{ stroke: 'hsl(var(--border))' }} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '12px' }} />
+                  <Bar dataKey="Realizados" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Pendentes" fill="hsl(var(--destructive))" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+
+              {/* Pendentes expandable list */}
+              {cargoStats.some(c => c.pendentes > 0) && (
+                <div className="mt-6 border-t border-border pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Colaboradores Pendentes</p>
+                  <div className="space-y-1">
+                    {cargoStats.filter(c => c.pendentes > 0).map(c => (
+                      <div key={c.cargo} className="rounded-lg border border-border overflow-hidden">
+                        <button onClick={() => setExpandedCargo(expandedCargo === c.cargo ? null : c.cargo)}
+                          className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                          <span className="text-sm font-medium text-foreground">{c.cargo}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="corporate-badge bg-destructive/10 text-destructive">{c.pendentes}</span>
+                            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCargo === c.cargo ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
+                        {expandedCargo === c.cargo && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                            className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
+                            {c.pendenteNomes.map(emp => (
+                              <button key={emp.id} onClick={() => navigate(`/funcionario/${emp.id}`)}
+                                className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
+                                • {emp.nome}
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
       {/* ── Employee Table ── */}
       <div className="glass-card rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center justify-between flex-wrap gap-3">
@@ -197,7 +344,11 @@ export default function Treinamentos() {
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((f, i) => {
-                const done = totalTests(f);
+                const discData = getTestData(assessmentsData, 'disc', f.id);
+                const mbtiData = getTestData(assessmentsData, 'mbti', f.id);
+                const bigfiveData = getTestData(assessmentsData, 'bigfive', f.id);
+                const done = [discData, mbtiData, bigfiveData].filter(Boolean).length;
+                
                 return (
                   <motion.tr key={f.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                     className="hover:bg-muted/30 transition-colors">
@@ -213,9 +364,9 @@ export default function Treinamentos() {
                       </div>
                     </td>
                     {[
-                      { key: 'disc', val: f.disc?.dominant?.letter, fullData: f.disc },
-                      { key: 'mbti', val: f.mbti?.type, fullData: f.mbti },
-                      { key: 'bigfive', val: f.bigfive ? '✓' : null, fullData: f.bigfive },
+                      { key: 'disc', val: discData?.dominant?.letter, fullData: discData },
+                      { key: 'mbti', val: mbtiData?.type, fullData: mbtiData },
+                      { key: 'bigfive', val: bigfiveData ? '✓' : null, fullData: bigfiveData },
                     ].map(col => (
                       <td key={col.key} className="px-4 py-3 text-center">
                         {col.val
