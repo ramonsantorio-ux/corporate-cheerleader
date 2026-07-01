@@ -30,21 +30,38 @@ import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
 import { InstallPWA } from './components/InstallPWA';
 
-class ErrorBoundary extends React.Component<any, any> {
+class ErrorBoundary extends React.Component<any, { hasError: boolean; errorId: string }> {
   constructor(props: any) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, errorId: '' };
   }
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
+  static getDerivedStateFromError() {
+    const errorId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return { hasError: true, errorId };
+  }
+  componentDidCatch(error: any, info: any) {
+    // Log do erro para debugging — NÃO exposto ao usuário
+    console.error('[ErrorBoundary] Erro capturado:', error, info);
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '50px', background: 'red', color: 'white', zIndex: 9999, position: 'absolute', width: '100%', height: '100%' }}>
-          <h1>RUNTIME ERROR!</h1>
-          <pre>{this.state.error?.toString()}</pre>
-          <pre>{this.state.error?.stack}</pre>
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center space-y-4 max-w-md p-8">
+            <div className="text-6xl">⚠️</div>
+            <h1 className="text-2xl font-bold text-foreground">Algo deu errado</h1>
+            <p className="text-muted-foreground text-sm">
+              Ocorreu um erro inesperado. Por favor, recarregue a página.
+              Se o problema persistir, entre em contato com o suporte.
+            </p>
+            <p className="text-xs text-muted-foreground font-mono">Código: {this.state.errorId}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              Recarregar página
+            </button>
+          </div>
         </div>
       );
     }
@@ -52,7 +69,24 @@ class ErrorBoundary extends React.Component<any, any> {
   }
 }
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5,       // 5 minutos — não refetch desnecessário
+      gcTime: 1000 * 60 * 10,          // 10 minutos de cache
+      refetchOnWindowFocus: false,      // Não refetch ao focar a janela
+      retry: 1,                         // Apenas 1 retry em caso de erro
+    },
+  },
+});
+
+// Protege rotas que exigem perfil de administrador
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { isAdmin, loading } = useAuth();
+  if (loading) return null;
+  if (!isAdmin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
 
 function ProtectedRoutes() {
   const { user, loading } = useAuth();
@@ -93,12 +127,12 @@ function ProtectedRoutes() {
           <Route path="/cadastro-metas" element={<CadastroMetas />} />
           <Route path="/notificacoes" element={<GestaoNotificacoes />} />
           <Route path="/treinamentos" element={<Treinamentos />} />
-          <Route path="/assessments" element={<Treinamentos />} />
+          <Route path="/assessments" element={<AssessmentHub />} />
           {/* Legacy compat */}
           <Route path="/disc" element={<DiscTest />} />
           <Route path="/disc/:id" element={<DiscTest />} />
 
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

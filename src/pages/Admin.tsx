@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
 import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2, Eye, EyeOff, MoreHorizontal } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,11 +27,10 @@ interface UserWithRole {
 }
 
 export default function Admin() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { user } = useAuth();
   const [newUser, setNewUser] = useState({ email: '', password: '', full_name: '', profile_id: '' });
   const [accessProfiles, setAccessProfiles] = useState<{id: string, name: string}[]>([]);
 
@@ -89,32 +87,43 @@ export default function Admin() {
   async function fetchUsers() {
     setLoading(true);
     try {
-      // Usar edge function para obter o status real de ban do Supabase Auth
+      // Usa edge function para obter status real de ban do Supabase Auth
       const response = await adminAuthRequest('manage', { action: 'list_users' });
       const usersData: UserWithRole[] = (response.users || [])
         .filter((u: any) => u.full_name !== '__DELETED__');
       setUsers(usersData);
     } catch {
-      // Fallback: ler da tabela profiles + user_permissions como fonte de verdade local
+      // Fallback: leitura direta do banco sem N+1 queries
       const { data: profiles } = await supabase.from('profiles').select('*');
       if (!profiles) { setLoading(false); return; }
 
-      const { data: bannedRows } = await supabase.from('user_permissions').select('user_id').eq('page', 'banned');
+      // Uma só query para todos os roles (evita N+1)
+      const { data: allRoles } = await supabase
+        .from('user_roles')
+        .select('user_id, role, profile_id')
+        .in('user_id', profiles.map(p => p.id));
+
+      // Uma só query para os usuários banidos localmente
+      const { data: bannedRows } = await supabase
+        .from('user_permissions')
+        .select('user_id')
+        .eq('page', 'banned')
+        .in('user_id', profiles.map(p => p.id));
       const bannedUserIds = new Set(bannedRows?.map((r: any) => r.user_id) || []);
 
-      const usersWithRoles: UserWithRole[] = [];
-      for (const p of profiles) {
-        if (p.full_name === '__DELETED__') continue;
-        const { data: roles } = await supabase.from('user_roles').select('role, profile_id').eq('user_id', p.id);
-        usersWithRoles.push({
-          id: p.id,
-          email: p.email,
-          full_name: p.full_name,
-          role: (roles as any)?.[0]?.role || 'user',
-          banned: bannedUserIds.has(p.id),
-          profile_id: (roles as any)?.[0]?.profile_id || null,
+      const usersWithRoles: UserWithRole[] = profiles
+        .filter(p => p.full_name !== '__DELETED__')
+        .map(p => {
+          const roleRow = allRoles?.find(r => r.user_id === p.id);
+          return {
+            id: p.id,
+            email: p.email,
+            full_name: p.full_name,
+            role: roleRow?.role || 'user',
+            banned: bannedUserIds.has(p.id),
+            profile_id: roleRow?.profile_id || null,
+          };
         });
-      }
       setUsers(usersWithRoles);
     }
     setLoading(false);

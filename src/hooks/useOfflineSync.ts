@@ -9,6 +9,10 @@ export function useOfflineSync() {
     const syncData = async () => {
       if (!navigator.onLine) return;
 
+      // SEGURANÇA: valida a sessão ativa antes de qualquer operação
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const keys = Object.keys(localStorage);
       const assessmentKeys = keys.filter(k => 
         k.startsWith('disc_') || 
@@ -41,19 +45,16 @@ export function useOfflineSync() {
           if (firstUnderscoreIndex === -1) continue;
           
           const type = key.substring(0, firstUnderscoreIndex);
-          const userId = key.substring(firstUnderscoreIndex + 1);
           
-          // Verifica minimamente se parece um ID válido
-          if (!userId || userId.length < 10) continue;
-
-          // Limpa flags locais antes de enviar
+          // SEGURANÇA: usa sempre o user_id da sessão autenticada,
+          // nunca extrai da chave do localStorage (poderia ser manipulado)
           const dataToSync = { ...data };
           delete dataToSync._synced;
 
           attemptedKeys.add(key);
 
           const { error } = await supabase.from('assessment_results').insert({
-            user_id: userId,
+            user_id: user.id,
             type: type,
             result_data: dataToSync
           });
@@ -64,10 +65,10 @@ export function useOfflineSync() {
             localStorage.setItem(key, JSON.stringify(data));
             console.log(`[Sync] ${key} sincronizado com a nuvem com sucesso.`);
           } else {
-            console.warn(`[Sync] Falha ao sincronizar ${key} (ficará apenas local):`, error);
+            console.warn(`[Sync] Falha ao sincronizar ${type}:`, error.message);
           }
         } catch (e) {
-          console.error(`[Sync] Erro inesperado ao tentar sincronizar ${key}:`, e);
+          console.error(`[Sync] Erro inesperado:`, e);
         }
       }
     };
