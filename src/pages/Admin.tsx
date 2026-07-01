@@ -140,27 +140,45 @@ export default function Admin() {
       return;
     }
     setCreating(true);
-    const res = await supabase.functions.invoke('create-user', {
-      body: { email: newUser.email, password: newUser.password, full_name: newUser.full_name },
-    });
-    if (res.error) {
-      toast.error(res.error.message || 'Erro ao criar usuário');
-    } else {
-      toast.success('Usuário criado com sucesso!');
-      setNewUser({ email: '', password: '', full_name: '' });
-      setDialogOpen(false);
-      const userId = res.data?.user_id;
-      if (userId) {
-        const defaultPerms = PAGES.map(p => ({
-          user_id: userId,
-          page: p.key,
-          can_view: true,
-          can_edit: false,
-        }));
-        await supabase.from('user_permissions').insert(defaultPerms);
-        await supabase.from('user_roles').insert({ user_id: userId, role: 'user' });
+    
+    try {
+      // Criar um client secundário para não deslogar o admin atual
+      const { createClient } = await import('@supabase/supabase-js');
+      const secondaryClient = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        { auth: { persistSession: false, autoRefreshToken: false } }
+      );
+
+      const res = await secondaryClient.auth.signUp({
+        email: newUser.email,
+        password: newUser.password,
+        options: {
+          data: { full_name: newUser.full_name }
+        }
+      });
+
+      if (res.error) {
+        toast.error(res.error.message || 'Erro ao criar usuário');
+      } else {
+        toast.success('Usuário criado com sucesso! Ele precisa confirmar o e-mail (se ativado).');
+        setNewUser({ email: '', password: '', full_name: '', profile_id: '' });
+        setDialogOpen(false);
+        const userId = res.data?.user?.id;
+        if (userId) {
+          const defaultPerms = PAGES.map(p => ({
+            user_id: userId,
+            page: p.key,
+            can_view: true,
+            can_edit: false,
+          }));
+          await supabase.from('user_permissions').insert(defaultPerms);
+          await supabase.from('user_roles').insert({ user_id: userId, role: 'user' });
+        }
+        fetchUsers();
       }
-      fetchUsers();
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado');
     }
     setCreating(false);
   }
