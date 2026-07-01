@@ -218,163 +218,99 @@ export default function DiscTest() {
               <div className="prose prose-slate max-w-none space-y-6 text-slate-600 text-sm sm:text-base h-[50vh] overflow-y-auto pr-4 mb-8 custom-scrollbar">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 mb-2">O que é a Análise DISC?</h3>
-                  <p>A Análise DISC é uma ferramenta de avaliação comportamental utilizada para identificar as tendências naturais de comportamento de cada colaborador no ambiente de trabalho.</p>
-                  <p className="mt-2">Seu principal objetivo é promover o autoconhecimento, melhorar a comunicação entre as equipes, fortalecer o relacionamento interpessoal e apoiar o desenvolvimento profissional.</p>
-                  <p className="mt-2">A metodologia DISC considera que cada pessoa possui características comportamentais predominantes, representadas por quatro fatores:</p>
-                  <ul className="list-disc pl-5 mt-2 space-y-1 font-semibold text-slate-700">
-                    <li><strong className="text-blue-600">D</strong> – Dominância</li>
-                    <li><strong className="text-yellow-500">I</strong> – Influência</li>
-                    <li><strong className="text-green-600">S</strong> – Estabilidade</li>
-                    <li><strong className="text-red-500">C</strong> – Conformidade (ou Cautela)</li>
-                  </ul>
-                  <p className="mt-2 font-medium">É importante destacar que não existe perfil melhor ou pior. Todos possuem pontos fortes e oportunidades de desenvolvimento, sendo cada perfil importante para diferentes atividades e desafios dentro da organização.</p>
+                  <p>A Análise DISC é uma ferramenta de avaliação comportamental que tem como objetivo identificar as características predominantes do seu perfil profissional.</p>
+                  <p className="mt-2">Por meio dela, é possível compreender como você tende a agir diante de desafios, se comunicar, tomar decisões, trabalhar em equipe e lidar com diferentes situações do dia a dia.</p>
+                  <p className="mt-2">O resultado da avaliação contribui para o autoconhecimento, fortalece o desenvolvimento profissional e auxilia a empresa na construção de equipes mais integradas, produtivas e alinhadas às necessidades do negócio.</p>
+                  <p className="mt-2 font-medium">É importante destacar que não existem perfis melhores ou piores. Cada pessoa possui características únicas, com pontos fortes e oportunidades de desenvolvimento que agregam valor à equipe.</p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 mb-2">Como funciona?</h3>
                   <ul className="list-disc pl-5 space-y-1">
-                    <li>A avaliação será aplicada conforme programação da empresa.</li>
-                    <li>O colaborador responderá a um questionário composto por situações e preferências comportamentais.</li>
-                    <li>Ao final, o sistema identificará a predominância dos fatores comportamentais DISC.</li>
-                    <li>O resultado será utilizado exclusivamente para apoiar ações de desenvolvimento, comunicação, liderança e formação de equipes.</li>
-                    <li>A avaliação não possui caráter eliminatório ou punitivo, nem substitui avaliações de desempenho técnico.</li>
+                    <li>A Análise DISC será realizada anualmente.</li>
+                    <li>A avaliação será solicitada pelo seu gestor direto e deverá ser respondida individualmente.</li>
+                    <li>O questionário é composto por diversos blocos de palavras que representam diferentes características comportamentais.</li>
+                    <li>
+                      Em cada bloco, você deverá:
+                      <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-500">
+                        <li>Selecionar a palavra que <strong>MAIS</strong> representa a forma como você normalmente age;</li>
+                        <li>Selecionar a palavra que <strong>MENOS</strong> representa o seu comportamento.</li>
+                      </ul>
+                    </li>
+                    <li>Após realizar as duas seleções, o sistema avançará automaticamente para o próximo bloco de perguntas.</li>
+                    <li>Não existe limite de tempo para responder, porém recomenda-se que as escolhas sejam feitas de forma espontânea, refletindo seu comportamento natural.</li>
                   </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">Como responder corretamente?</h3>
+                  <p>Para que o resultado seja realmente útil, responda pensando em como você normalmente age, e não em como acredita que deveria agir.</p>
+                  <p className="mt-2">Evite escolher respostas baseadas no cargo que ocupa, na expectativa da empresa ou naquilo que considera mais adequado.</p>
+                  <p className="mt-2">A Análise DISC busca identificar suas características naturais de comportamento, e não avaliar conhecimentos técnicos, desempenho ou competências profissionais.</p>
+                  <p className="mt-2 font-medium">Quanto mais sinceras forem suas respostas, mais preciso será o resultado.</p>
                 </div>
 
                 <div className="bg-slate-50 p-5 rounded-xl border border-slate-200">
                   <h3 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Os quatro perfis comportamentais</h3>
+                  <p className="text-sm mb-4">A metodologia DISC identifica quatro fatores principais de comportamento:</p>
                   
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-bold text-blue-600">D – Dominância</h4>
-                      <p className="text-sm mb-1">Pessoas com predominância em Dominância costumam ser orientadas para desafios, resultados e tomada de decisão.</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
-                        <div>
-                          <strong className="text-slate-700">Características comuns:</strong>
-                          <ul className="list-disc pl-5 mt-1 text-slate-600">
-                            <li>Objetividade</li>
-                            <li>Rapidez nas decisões</li>
-                            <li>Foco em resultados</li>
-                            <li>Competitividade</li>
-                            <li>Iniciativa</li>
-                            <li>Facilidade para resolver problemas</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <strong className="text-slate-700">Pontos de atenção:</strong>
-                          <ul className="list-disc pl-5 mt-1 text-slate-600">
-                            <li>Pode demonstrar impaciência.</li>
-                            <li>Pode ser excessivamente direto na comunicação.</li>
-                            <li>Pode assumir riscos sem avaliar todos os detalhes.</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-200">
-                      <h4 className="font-bold text-yellow-500">I – Influência</h4>
-                      <p className="text-sm mb-1">Pessoas com predominância em Influência possuem facilidade para se comunicar, motivar pessoas e criar relacionamentos.</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
-                        <div>
-                          <strong className="text-slate-700">Características comuns:</strong>
-                          <ul className="list-disc pl-5 mt-1 text-slate-600">
-                            <li>Comunicação</li>
-                            <li>Entusiasmo</li>
-                            <li>Otimismo</li>
-                            <li>Facilidade para trabalhar em equipe</li>
-                            <li>Persuasão</li>
-                            <li>Criatividade</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <strong className="text-slate-700">Pontos de atenção:</strong>
-                          <ul className="list-disc pl-5 mt-1 text-slate-600">
-                            <li>Pode perder o foco em detalhes.</li>
-                            <li>Pode ter dificuldade com atividades muito repetitivas.</li>
-                            <li>Pode agir por impulso em algumas situações.</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-200">
-                      <h4 className="font-bold text-green-600">S – Estabilidade</h4>
-                      <p className="text-sm mb-1">Pessoas com predominância em Estabilidade valorizam a cooperação, a organização e a construção de relacionamentos duradouros.</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
-                        <div>
-                          <strong className="text-slate-700">Características comuns:</strong>
-                          <ul className="list-disc pl-5 mt-1 text-slate-600">
-                            <li>Paciência</li>
-                            <li>Colaboração</li>
-                            <li>Comprometimento</li>
-                            <li>Escuta ativa</li>
-                            <li>Constância</li>
-                            <li>Confiabilidade</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <strong className="text-slate-700">Pontos de atenção:</strong>
-                          <ul className="list-disc pl-5 mt-1 text-slate-600">
-                            <li>Pode apresentar resistência a mudanças.</li>
-                            <li>Pode evitar conflitos mesmo quando necessários.</li>
-                            <li>Pode demorar mais para tomar decisões.</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 border-t border-slate-200">
-                      <h4 className="font-bold text-red-500">C – Conformidade</h4>
-                      <p className="text-sm mb-1">Pessoas com predominância em Conformidade tendem a ser analíticas, organizadas e orientadas pela qualidade.</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mt-2">
-                        <div>
-                          <strong className="text-slate-700">Características comuns:</strong>
-                          <ul className="list-disc pl-5 mt-1 text-slate-600">
-                            <li>Organização</li>
-                            <li>Planejamento</li>
-                            <li>Atenção aos detalhes</li>
-                            <li>Precisão</li>
-                            <li>Cumprimento de normas</li>
-                            <li>Qualidade nas entregas</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <strong className="text-slate-700">Pontos de atenção:</strong>
-                          <ul className="list-disc pl-5 mt-1 text-slate-600">
-                            <li>Pode ser excessivamente crítico.</li>
-                            <li>Pode buscar perfeição antes de concluir atividades.</li>
-                            <li>Pode ter dificuldade com mudanças rápidas ou pouco planejadas.</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">Exemplo de Resultado</h3>
-                  <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-                    <p className="font-bold text-slate-800 mb-2">Perfil predominante: Influência (I)</p>
-                    <p className="font-semibold text-slate-700">O que isso significa?</p>
-                    <p className="text-sm mt-1">Você demonstra facilidade para se comunicar, criar relacionamentos e motivar pessoas. Costuma trabalhar bem em equipe, gosta de ambientes colaborativos e tende a influenciar positivamente aqueles que estão ao seu redor.</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-                      <div>
-                        <strong className="text-xs uppercase text-slate-500">Seus principais pontos fortes</strong>
-                        <ul className="list-disc pl-5 mt-1 text-sm text-slate-700">
-                          <li>Comunicação clara</li>
-                          <li>Facilidade para trabalhar em equipe</li>
-                          <li>Motivação das pessoas</li>
-                          <li>Otimismo</li>
-                          <li>Boa capacidade de relacionamento</li>
+                      <h4 className="font-bold text-blue-600 text-base mb-1">D – Dominância</h4>
+                      <p className="text-sm">Pessoas com predominância em Dominância costumam ser objetivas, determinadas, focadas em resultados e gostam de desafios.</p>
+                      <div className="text-sm mt-2">
+                        <strong className="text-slate-700">Características comuns:</strong>
+                        <ul className="list-disc pl-5 mt-1 text-slate-600 grid grid-cols-2 gap-x-2">
+                          <li>Proatividade;</li>
+                          <li>Rapidez na tomada de decisão;</li>
+                          <li>Liderança;</li>
+                          <li>Assertividade;</li>
+                          <li>Foco em resultados.</li>
                         </ul>
                       </div>
-                      <div>
-                        <strong className="text-xs uppercase text-slate-500">Oportunidades de desenvolvimento</strong>
-                        <ul className="list-disc pl-5 mt-1 text-sm text-slate-700">
-                          <li>Planejar melhor antes de agir.</li>
-                          <li>Manter atenção aos detalhes.</li>
-                          <li>Melhorar a organização das atividades.</li>
-                          <li>Desenvolver maior disciplina no acompanhamento das tarefas.</li>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200">
+                      <h4 className="font-bold text-yellow-500 text-base mb-1">I – Influência</h4>
+                      <p className="text-sm">Pessoas com predominância em Influência costumam ser comunicativas, otimistas e possuem facilidade para criar relacionamentos.</p>
+                      <div className="text-sm mt-2">
+                        <strong className="text-slate-700">Características comuns:</strong>
+                        <ul className="list-disc pl-5 mt-1 text-slate-600 grid grid-cols-2 gap-x-2">
+                          <li>Boa comunicação;</li>
+                          <li>Facilidade para trabalhar em equipe;</li>
+                          <li>Entusiasmo;</li>
+                          <li>Persuasão;</li>
+                          <li>Sociabilidade.</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200">
+                      <h4 className="font-bold text-green-600 text-base mb-1">S – Estabilidade</h4>
+                      <p className="text-sm">Pessoas com predominância em Estabilidade valorizam a cooperação, a constância e os relacionamentos duradouros.</p>
+                      <div className="text-sm mt-2">
+                        <strong className="text-slate-700">Características comuns:</strong>
+                        <ul className="list-disc pl-5 mt-1 text-slate-600 grid grid-cols-2 gap-x-2">
+                          <li>Paciência;</li>
+                          <li>Colaboração;</li>
+                          <li>Organização;</li>
+                          <li>Confiabilidade;</li>
+                          <li>Equilíbrio emocional.</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-200">
+                      <h4 className="font-bold text-red-500 text-base mb-1">C – Conformidade</h4>
+                      <p className="text-sm">Pessoas com predominância em Conformidade costumam ser analíticas, organizadas e orientadas por normas, qualidade e precisão.</p>
+                      <div className="text-sm mt-2">
+                        <strong className="text-slate-700">Características comuns:</strong>
+                        <ul className="list-disc pl-5 mt-1 text-slate-600 grid grid-cols-2 gap-x-2">
+                          <li>Atenção aos detalhes;</li>
+                          <li>Planejamento;</li>
+                          <li>Organização;</li>
+                          <li>Qualidade;</li>
+                          <li>Disciplina.</li>
                         </ul>
                       </div>
                     </div>
@@ -382,33 +318,34 @@ export default function DiscTest() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-2">Como interpretar o resultado?</h3>
-                  <p>O relatório DISC demonstra quais características comportamentais aparecem com maior intensidade no seu perfil.</p>
-                  <p className="mt-2">Isso não significa que você possua apenas um único perfil. Todas as pessoas apresentam características dos quatro fatores (D, I, S e C), porém algumas tendem a ser mais predominantes do que outras.</p>
-                  <p className="mt-2">O objetivo da avaliação é ampliar o autoconhecimento, identificar pontos fortes e apoiar o desenvolvimento profissional.</p>
+                  <h3 className="text-lg font-bold text-slate-800 mb-2">O que o resultado demonstra?</h3>
+                  <p>Ao final da avaliação, será apresentado o seu perfil comportamental predominante, bem como a intensidade de cada um dos quatro fatores da metodologia DISC.</p>
+                  <p className="mt-2">É importante lembrar que todas as pessoas possuem características dos quatro perfis, porém algumas tendem a ser mais evidentes do que outras.</p>
+                  <p className="mt-2">O objetivo da avaliação é ampliar o autoconhecimento e fornecer informações que auxiliem no desenvolvimento profissional, na melhoria da comunicação e no fortalecimento do trabalho em equipe.</p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 mb-2">Benefícios da Análise DISC</h3>
-                  <p className="mb-2">A utilização da metodologia DISC permite:</p>
+                  <p className="mb-2">A utilização da metodologia DISC proporciona diversos benefícios, entre eles:</p>
                   <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 list-disc pl-5 text-slate-700">
-                    <li>Melhor autoconhecimento;</li>
-                    <li>Desenvolvimento profissional;</li>
-                    <li>Comunicação mais eficiente;</li>
+                    <li>Maior autoconhecimento;</li>
+                    <li>Desenvolvimento de competências comportamentais;</li>
+                    <li>Melhoria da comunicação;</li>
                     <li>Fortalecimento do trabalho em equipe;</li>
                     <li>Desenvolvimento de lideranças;</li>
-                    <li>Melhor distribuição de atividades conforme o perfil comportamental;</li>
+                    <li>Melhor compreensão das diferenças entre as pessoas;</li>
                     <li>Redução de conflitos interpessoais;</li>
-                    <li>Melhoria do clima organizacional.</li>
+                    <li>Maior integração entre colaboradores;</li>
+                    <li>Desenvolvimento contínuo dos profissionais.</li>
                   </ul>
                 </div>
 
                 <div className="bg-primary/5 p-4 rounded-xl border border-primary/20 text-primary-foreground">
                   <h3 className="text-lg font-bold text-primary mb-2">Atenção ao responder</h3>
-                  <p className="text-slate-700 font-medium mb-2">Responda ao questionário considerando a forma como você normalmente age, e não como acredita que deveria agir.</p>
-                  <p className="text-slate-700 font-bold mb-2">Não existem respostas certas ou erradas.</p>
-                  <p className="text-slate-700 mb-2">O resultado será mais útil quanto mais sinceras forem suas respostas.</p>
-                  <p className="text-slate-700 font-medium">Lembre-se: o objetivo da Análise DISC é apoiar seu desenvolvimento profissional, fortalecer o trabalho em equipe e contribuir para um ambiente de trabalho cada vez mais colaborativo, produtivo e alinhado aos valores da empresa.</p>
+                  <p className="text-slate-700 mb-2">A qualidade do resultado depende diretamente da sinceridade das suas respostas.</p>
+                  <p className="text-slate-700 font-medium mb-2">Antes de iniciar a avaliação, reflita sobre a forma como você realmente costuma agir em seu dia a dia, e não sobre como gostaria de agir ou acredita que esperam de você.</p>
+                  <p className="text-slate-700 font-bold mb-2">Lembre-se de que não existem respostas certas ou erradas. A Análise DISC não classifica pessoas como melhores ou piores, nem é utilizada para avaliar desempenho técnico.</p>
+                  <p className="text-slate-700 font-medium">O objetivo é compreender seu perfil comportamental para apoiar seu desenvolvimento profissional, fortalecer a comunicação e contribuir para um ambiente de trabalho cada vez mais colaborativo e eficiente.</p>
                 </div>
               </div>
 
