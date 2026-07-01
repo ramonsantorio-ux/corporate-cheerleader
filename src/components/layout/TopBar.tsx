@@ -36,8 +36,19 @@ export default function TopBar() {
   const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   
-  const userName = user?.user_metadata?.full_name || user?.email || 'Usuário';
-  const initials = userName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+  let userName = 'Usuário';
+  if (user?.user_metadata?.full_name && typeof user.user_metadata.full_name === 'string') {
+    userName = user.user_metadata.full_name;
+  } else if (user?.email && typeof user.email === 'string') {
+    userName = user.email;
+  }
+  
+  let initials = 'US';
+  try {
+    initials = userName.split(' ').map((n: string) => n?.[0]).filter(Boolean).join('').substring(0, 2).toUpperCase();
+  } catch (e) {
+    console.error('Error generating initials:', e);
+  }
 
   useEffect(() => {
     fetchAlerts();
