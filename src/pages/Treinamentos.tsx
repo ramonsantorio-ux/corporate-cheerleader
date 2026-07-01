@@ -454,7 +454,7 @@ export default function Treinamentos() {
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map(emp => (
-                    <SelectItem key={emp.id} value={emp.id}>{emp.nome} - {emp.cargo}</SelectItem>
+                    <SelectItem key={emp.id} value={String(emp.id)}>{emp.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
