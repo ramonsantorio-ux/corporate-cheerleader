@@ -87,28 +87,36 @@ export default function Admin() {
   }, [isAdmin]);
 
   async function fetchUsers() {
-    const { data: profiles } = await supabase.from('profiles').select('*');
-    if (!profiles) { setLoading(false); return; }
+    setLoading(true);
+    try {
+      // Usar edge function para obter o status real de ban do Supabase Auth
+      const response = await adminAuthRequest('manage', { action: 'list_users' });
+      const usersData: UserWithRole[] = (response.users || [])
+        .filter((u: any) => u.full_name !== '__DELETED__');
+      setUsers(usersData);
+    } catch {
+      // Fallback: ler da tabela profiles + user_permissions como fonte de verdade local
+      const { data: profiles } = await supabase.from('profiles').select('*');
+      if (!profiles) { setLoading(false); return; }
 
-    const { data: bannedRows } = await supabase.from('user_permissions').select('user_id').eq('page', 'banned');
-    const bannedUserIds = new Set(bannedRows?.map(r => r.user_id) || []);
+      const { data: bannedRows } = await supabase.from('user_permissions').select('user_id').eq('page', 'banned');
+      const bannedUserIds = new Set(bannedRows?.map((r: any) => r.user_id) || []);
 
-    const usersWithRoles: UserWithRole[] = [];
-    for (const p of profiles) {
-      if (p.full_name === '__DELETED__') continue;
-
-      const { data: roles } = await supabase.from('user_roles').select('role, profile_id').eq('user_id', p.id);
-      
-      usersWithRoles.push({
-        id: p.id,
-        email: p.email,
-        full_name: p.full_name,
-        role: (roles as any)?.[0]?.role || 'user',
-        banned: bannedUserIds.has(p.id),
-        profile_id: (roles as any)?.[0]?.profile_id || null,
-      });
+      const usersWithRoles: UserWithRole[] = [];
+      for (const p of profiles) {
+        if (p.full_name === '__DELETED__') continue;
+        const { data: roles } = await supabase.from('user_roles').select('role, profile_id').eq('user_id', p.id);
+        usersWithRoles.push({
+          id: p.id,
+          email: p.email,
+          full_name: p.full_name,
+          role: (roles as any)?.[0]?.role || 'user',
+          banned: bannedUserIds.has(p.id),
+          profile_id: (roles as any)?.[0]?.profile_id || null,
+        });
+      }
+      setUsers(usersWithRoles);
     }
-    setUsers(usersWithRoles);
     setLoading(false);
   }
 
@@ -231,17 +239,20 @@ export default function Admin() {
     try {
       await adminAuthRequest('manage', { action: blockAction, user_id: blockUser.id });
 
+      // Sincronizar o status local na tabela user_permissions
       if (blockAction === 'ban') {
-        await supabase.from('user_permissions').insert({ user_id: blockUser.id, page: 'banned', can_view: true });
+        await supabase.from('user_permissions')
+          .upsert({ user_id: blockUser.id, page: 'banned', can_view: true }, { onConflict: 'user_id,page' });
       } else {
-        await supabase.from('user_permissions').delete().eq('user_id', blockUser.id).eq('page', 'banned');
+        await supabase.from('user_permissions')
+          .delete().eq('user_id', blockUser.id).eq('page', 'banned');
       }
 
-      toast.success(blockAction === 'ban' ? 'Usuário bloqueado!' : 'Usuário desbloqueado!');
+      toast.success(blockAction === 'ban' ? 'Usuário bloqueado com sucesso!' : 'Usuário desbloqueado com sucesso!');
       setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
       setBlockUser(null);
     } catch(err:any) {
-      toast.error(err.message || 'Erro');
+      toast.error(err.message || 'Erro ao alterar status do usuário');
     }
     setSavingBlock(false);
   }
@@ -358,63 +369,86 @@ export default function Admin() {
           {users.map((u, i) => (
             <motion.div
               key={u.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+              className={`glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-4 border transition-colors ${
+                u.banned ? 'border-destructive/30 bg-destructive/5' : 'border-transparent'
+              }`}
             >
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Users className="w-5 h-5 text-primary" />
+              {/* Avatar */}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold ${
+                u.role === 'admin' ? 'bg-primary/20 text-primary' :
+                u.banned ? 'bg-destructive/20 text-destructive' :
+                'bg-muted text-muted-foreground'
+              }`}>
+                {(u.full_name || 'U').charAt(0).toUpperCase()}
               </div>
+
+              {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">{u.full_name || 'Sem nome'}</p>
-                <p className="text-xs text-muted-foreground">{u.email}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className={`font-semibold text-sm ${ u.banned ? 'text-muted-foreground line-through' : '' }`}>
+                    {u.full_name || 'Sem nome'}
+                  </p>
+                  {u.role === 'admin' && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-primary/10 text-primary">Admin</span>
+                  )}
+                  {u.profile_id && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                      {accessProfiles.find(p => p.id === u.profile_id)?.name || 'Perfil'}
+                    </span>
+                  )}
+                  {u.banned && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-destructive/15 text-destructive flex items-center gap-1">
+                      <Ban className="w-3 h-3" /> Bloqueado
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">{u.email}</p>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                  u.role === 'admin' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                }`}>
-                  {u.role === 'admin' ? 'Admin' : 'Usuário'}
-                </span>
-                {u.profile_id && (
-                  <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                    {accessProfiles.find(p => p.id === u.profile_id)?.name || 'Perfil desconhecido'}
-                  </span>
-                )}
-                {u.banned && (
-                  <span className="text-xs px-2.5 py-1 rounded-full font-medium bg-destructive/10 text-destructive">
-                    Bloqueado
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => openEditUser(u)}>
-                      <Edit className="w-4 h-4 mr-2 text-muted-foreground" /> Editar Usuário
+
+              {/* Actions */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  <DropdownMenuItem onClick={() => openEditUser(u)}>
+                    <Edit className="w-4 h-4 mr-2 text-muted-foreground" /> Editar Usuário
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => openChangePassword(u)}>
+                    <KeyRound className="w-4 h-4 mr-2 text-muted-foreground" /> Alterar Senha
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => openPermissions(u)}>
+                    <Shield className="w-4 h-4 mr-2 text-muted-foreground" /> Permissões
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {u.banned ? (
+                    <DropdownMenuItem
+                      onClick={() => openBlockUser(u)}
+                      className="text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700 dark:text-emerald-400 dark:focus:bg-emerald-950"
+                    >
+                      <Check className="w-4 h-4 mr-2" /> Desbloquear Usuário
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openChangePassword(u)}>
-                      <KeyRound className="w-4 h-4 mr-2 text-muted-foreground" /> Alterar Senha
+                  ) : (
+                    <DropdownMenuItem
+                      onClick={() => openBlockUser(u)}
+                      className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    >
+                      <Ban className="w-4 h-4 mr-2" /> Bloquear Usuário
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => openPermissions(u)}>
-                      <Shield className="w-4 h-4 mr-2 text-muted-foreground" /> Permissões
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => openBlockUser(u)} className={u.banned ? "" : "text-destructive focus:bg-destructive/10 focus:text-destructive"}>
-                      {u.banned ? <Check className="w-4 h-4 mr-2" /> : <Ban className="w-4 h-4 mr-2" />}
-                      {u.banned ? 'Desbloquear' : 'Bloquear'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDeleteUser(u)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2" /> Excluir Conta
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                  )}
+                  <DropdownMenuItem
+                    onClick={() => setDeleteUser(u)}
+                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" /> Excluir Conta
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </motion.div>
           ))}
         </div>
