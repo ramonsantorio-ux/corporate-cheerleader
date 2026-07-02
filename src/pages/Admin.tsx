@@ -188,22 +188,38 @@ export default function Admin() {
     setCreating(false);
   }
 
-  function openPermissions(user: UserWithRole) {
+  async function openPermissions(user: UserWithRole) {
     setEditingUser(user);
+    // Busca permissões individuais do banco (user_permissions)
+    // Nota: permissões de perfil são gerenciadas na aba "Perfis de Acesso"
+    const { data: existingPerms } = await supabase
+      .from('user_permissions')
+      .select('page, can_view, can_edit')
+      .eq('user_id', user.id)
+      .neq('page', 'banned');
+
     const perms = PAGES.map(p => {
-      const existing = user.permissions.find(up => up.page === p.key);
-      return { page: p.key, can_view: existing?.can_view ?? true, can_edit: existing?.can_edit ?? false };
+      const existing = existingPerms?.find(up => up.page === p.key);
+      return {
+        page: p.key,
+        can_view: existing?.can_view ?? true,
+        can_edit: existing?.can_edit ?? false,
+      };
     });
     setEditPerms(perms);
   }
 
   async function savePermissions() {
     if (!editingUser) return;
-    await supabase.from('user_permissions').delete().eq('user_id', editingUser.id);
+    // Remove entradas antigas (preserva o sentinela 'banned' se existir)
+    await supabase.from('user_permissions')
+      .delete()
+      .eq('user_id', editingUser.id)
+      .neq('page', 'banned');
     await supabase.from('user_permissions').insert(
       editPerms.map(p => ({ user_id: editingUser.id, ...p }))
     );
-    toast.success('Permissões atualizadas!');
+    toast.success('Permissões individuais atualizadas!');
     setEditingUser(null);
     fetchUsers();
   }
@@ -468,8 +484,13 @@ export default function Admin() {
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Permissões — {editingUser?.full_name}</DialogTitle>
+            <DialogTitle>Permissões Individuais — {editingUser?.full_name}</DialogTitle>
           </DialogHeader>
+          {editingUser?.profile_id && (
+            <div className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+              ⚠️ Este usuário tem um <strong>Perfil de Acesso</strong> atribuído. As permissões individuais definidas aqui serão aplicadas na próxima vez que ele fizer login, e podem sobrescrever o perfil.
+            </div>
+          )}
           <div className="flex-1 overflow-y-auto space-y-3 pt-2">
             <div className="grid grid-cols-[1fr_80px_80px] gap-4 px-2 mb-2">
               <span className="text-xs font-semibold text-muted-foreground uppercase">Módulo / Página</span>

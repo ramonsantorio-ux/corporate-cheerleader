@@ -63,26 +63,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const permsMap: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }> = {};
 
     if (profileId) {
+      // Sistema moderno: permissões via perfil de acesso
       const { data: permsRes } = await supabase.from('access_profile_permissions')
         .select('page, can_view, can_create, can_edit, can_delete')
         .eq('profile_id', profileId);
-        
+
       permsRes?.forEach((p: any) => {
-        permsMap[p.page] = { 
-          can_view: p.can_view, 
+        permsMap[p.page] = {
+          can_view: p.can_view,
           can_create: p.can_create,
           can_edit: p.can_edit,
-          can_delete: p.can_delete
+          can_delete: p.can_delete,
         };
       });
-    }
+    } else if (roles.includes('admin')) {
+      // Admin sem perfil → acesso total a todas as páginas do sistema
+      const allPages = [
+        'dashboard', 'colaboradores', 'organograma', 'ausencias',
+        'desempenho', 'treinamentos', 'disc', 'mbti', 'bigfive',
+        'eventos', 'evolucao', 'notificacoes', 'configuracoes',
+        'cadastro', 'feedbacks', 'novo_feedback', 'relatorios',
+        'reunioes', 'cco', 'admin',
+      ];
+      allPages.forEach(page => {
+        permsMap[page] = { can_view: true, can_create: true, can_edit: true, can_delete: true };
+      });
+    } else {
+      // Sistema legado: permissões individuais via user_permissions
+      // Fallback para usuários sem perfil atribuído
+      const { data: legacyPerms } = await supabase.from('user_permissions')
+        .select('page, can_view, can_edit')
+        .eq('user_id', userId)
+        .neq('page', 'banned'); // 'banned' é sentinela de bloqueio, não permissão real
 
-    // Fallback permissões baseadas em role antigo se necessário
-    if (!profileId && roles.includes('admin')) {
-       // Se for admin e não tiver perfil, libera tudo
-       ['dashboard', 'cadastro', 'colaboradores', 'feedbacks', 'novo_feedback', 'desempenho', 'relatorios', 'reunioes', 'eventos', 'ausencias', 'cco', 'configuracoes'].forEach(page => {
-         permsMap[page] = { can_view: true, can_create: true, can_edit: true, can_delete: true };
-       });
+      legacyPerms?.forEach((p: any) => {
+        permsMap[p.page] = {
+          can_view: p.can_view,
+          can_create: p.can_edit,   // legado não tem can_create — mapeia de can_edit
+          can_edit: p.can_edit,
+          can_delete: false,         // legado não tem can_delete
+        };
+      });
     }
 
     setPermissions(permsMap);
