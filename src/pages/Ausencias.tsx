@@ -21,7 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LabelList, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
-import * as XLSX from 'xlsx';
+import { readExcelRows } from '@/lib/excel';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
@@ -348,9 +348,7 @@ export default function PontoFerias() {
     if (!file) return;
     try {
       const data = await file.arrayBuffer();
-      const wb = XLSX.read(data);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<any>(ws);
+      const rows = await readExcelRows(data);
 
       const nameToId = Object.fromEntries(funcionarios.map(f => [f.nome.toLowerCase().trim(), f.id]));
       let imported = 0;
@@ -364,11 +362,8 @@ export default function PontoFerias() {
         const obs = row['Observação'] || row['observacao'] || row['Obs'] || '';
 
         if (!date) continue;
-        let dateStr = date;
-        if (typeof date === 'number') {
-          const d = XLSX.SSF.parse_date_code(date);
-          dateStr = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
-        }
+        // ExcelJS já converte datas para string ISO (YYYY-MM-DD) via readExcelRows
+        const dateStr = String(date);
 
         await supabase.from('daily_attendance').insert({
           employee_id: empId, date: dateStr, status, observation: obs,
@@ -388,9 +383,7 @@ export default function PontoFerias() {
     if (!file) return;
     try {
       const data = await file.arrayBuffer();
-      const wb = XLSX.read(data);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<any>(ws);
+      const rows = await readExcelRows(data);
 
       const nameToId = Object.fromEntries(funcionarios.map(f => [f.nome.toLowerCase().trim(), f.id]));
       let imported = 0;
@@ -400,20 +393,13 @@ export default function PontoFerias() {
         const empId = nameToId[nome];
         if (!empId) continue;
 
-        let startDate = row['Início'] || row['inicio'] || row['Start'] || '';
-        let endDate = row['Fim'] || row['fim'] || row['End'] || '';
-        if (typeof startDate === 'number') {
-          const d = XLSX.SSF.parse_date_code(startDate);
-          startDate = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
-        }
-        if (typeof endDate === 'number') {
-          const d = XLSX.SSF.parse_date_code(endDate);
-          endDate = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
-        }
+        // ExcelJS já converte datas Excel para string ISO via readExcelRows
+        const startDate = String(row['Início'] || row['inicio'] || row['Start'] || '');
+        const endDate = String(row['Fim'] || row['fim'] || row['End'] || '');
 
         await supabase.from('vacation_control').upsert({
           employee_id: empId,
-          days_count: parseInt(row['Dias'] || row['dias'] || '30') || 30,
+          days_count: parseInt(String(row['Dias'] || row['dias'] || '30')) || 30,
           scheduled_month: row['Mês'] || row['mes'] || '',
           start_date: startDate || null, end_date: endDate || null,
           observation: row['Observação'] || row['observacao'] || '',
@@ -434,26 +420,23 @@ export default function PontoFerias() {
     if (!file) return;
     try {
       const data = await file.arrayBuffer();
-      const wb = XLSX.read(data);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<any>(ws);
+      const rows = await readExcelRows(data);
       const nameToId = Object.fromEntries(funcionarios.map(f => [f.nome.toLowerCase().trim(), f.id]));
       let imported = 0;
       for (const row of rows) {
         const nome = String(row['Nome'] || row['nome'] || row['Colaborador'] || '').toLowerCase().trim();
         const empId = nameToId[nome];
         if (!empId) continue;
-        let periodStart = row['Início Período'] || row['inicio_periodo'] || '';
-        let periodEnd = row['Fim Período'] || row['fim_periodo'] || '';
-        if (typeof periodStart === 'number') { const d = XLSX.SSF.parse_date_code(periodStart); periodStart = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
-        if (typeof periodEnd === 'number') { const d = XLSX.SSF.parse_date_code(periodEnd); periodEnd = `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`; }
+        // ExcelJS já converte datas para string ISO via readExcelRows
+        const periodStart = String(row['Início Período'] || row['inicio_periodo'] || '');
+        const periodEnd = String(row['Fim Período'] || row['fim_periodo'] || '');
         if (!periodStart || !periodEnd) continue;
         await supabase.from('overtime_control').insert({
           employee_id: empId,
           period_start: periodStart,
           period_end: periodEnd,
-          extras_count: parseInt(row['Extras Realizadas'] || row['extras_count'] || '0') || 0,
-          max_extras: parseInt(row['Máximo Extras'] || row['max_extras'] || '3') || 3,
+          extras_count: parseInt(String(row['Extras Realizadas'] || row['extras_count'] || '0')) || 0,
+          max_extras: parseInt(String(row['Máximo Extras'] || row['max_extras'] || '3')) || 3,
         });
         imported++;
       }

@@ -14,7 +14,7 @@ import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldA
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
-import * as XLSX from 'xlsx';
+
 import { PerformanceMensalTab } from '@/components/PerformanceMensalTab';
 import MetasBusato from '@/components/MetasBusato';
 import MetasPorto from '@/components/MetasPorto';

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Users, Eye, Plus, Edit, Trash2, Loader2, Camera, X, FileUp, FileText, Download, Upload, CheckSquare } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { readExcelRows } from '@/lib/excel';
 import { Input } from '@/components/ui/input';
 import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
@@ -179,9 +179,7 @@ export default function Colaboradores() {
     setImporting(true);
     try {
       const data = await file.arrayBuffer();
-      const wb = XLSX.read(data);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws);
+      const rows = await readExcelRows(data);
       const records = rows.map(row => ({
         nome: String(row['Nome'] || '').trim(), email: String(row['Email'] || '').trim(),
         cargo: String(row['Cargo'] || '').trim(), departamento: String(row['Departamento'] || '').trim(),
