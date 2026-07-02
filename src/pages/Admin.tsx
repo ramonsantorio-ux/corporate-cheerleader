@@ -183,7 +183,9 @@ export default function Admin() {
             user_id: userId,
             page: p.key,
             can_view: true,
+            can_create: false,
             can_edit: false,
+            can_delete: false,
           }));
           await supabase.from('user_permissions').insert(defaultPerms);
           await supabase.from('user_roles').insert({ user_id: userId, role: 'user', profile_id: newUser.profile_id || null });
@@ -207,7 +209,7 @@ export default function Admin() {
     // Nota: permissões de perfil são gerenciadas na aba "Perfis de Acesso"
     const { data: existingPerms } = await supabase
       .from('user_permissions')
-      .select('page, can_view, can_edit')
+      .select('page, can_view, can_create, can_edit, can_delete')
       .eq('user_id', user.id)
       .neq('page', 'banned');
 
@@ -216,7 +218,9 @@ export default function Admin() {
       return {
         page: p.key,
         can_view: existing?.can_view ?? true,
+        can_create: existing?.can_create ?? false,
         can_edit: existing?.can_edit ?? false,
+        can_delete: existing?.can_delete ?? false,
       };
     });
     setEditPerms(perms);
@@ -535,10 +539,12 @@ export default function Admin() {
             </div>
           )}
           <div className="flex-1 overflow-y-auto space-y-3 pt-2">
-            <div className="grid grid-cols-[1fr_80px_80px] gap-4 px-2 mb-2">
+            <div className="grid grid-cols-[1fr_70px_70px_70px_70px] gap-2 px-2 mb-2">
               <span className="text-xs font-semibold text-muted-foreground uppercase">Módulo / Página</span>
               <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Ver</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Criar</span>
               <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Editar</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase text-center">Excluir</span>
             </div>
             
             <div className="space-y-6">
@@ -553,19 +559,33 @@ export default function Admin() {
                       const perm = editPerms[permIdx];
                       if (!perm) return null;
                       return (
-                        <div key={page.key} className="grid grid-cols-[1fr_80px_80px] gap-4 px-2 py-2 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
+                        <div key={page.key} className="grid grid-cols-[1fr_70px_70px_70px_70px] gap-2 px-2 py-2 border-b border-border last:border-0 hover:bg-muted/30 transition-colors rounded-lg">
                           <span className="text-sm font-medium text-muted-foreground">{page.label}</span>
                           <div className="flex justify-center items-center">
                             <Checkbox checked={perm.can_view} onCheckedChange={(c: boolean) => {
                               const upd = [...editPerms];
                               upd[permIdx].can_view = c;
-                              if (!c) upd[permIdx].can_edit = false;
+                              if (!c) {
+                                upd[permIdx].can_create = false;
+                                upd[permIdx].can_edit = false;
+                                upd[permIdx].can_delete = false;
+                              }
                               setEditPerms(upd);
+                            }} />
+                          </div>
+                          <div className="flex justify-center items-center">
+                            <Checkbox checked={perm.can_create} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                              const upd = [...editPerms]; upd[permIdx].can_create = c; setEditPerms(upd);
                             }} />
                           </div>
                           <div className="flex justify-center items-center">
                             <Checkbox checked={perm.can_edit} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
                               const upd = [...editPerms]; upd[permIdx].can_edit = c; setEditPerms(upd);
+                            }} />
+                          </div>
+                          <div className="flex justify-center items-center">
+                            <Checkbox checked={perm.can_delete} disabled={!perm.can_view} onCheckedChange={(c: boolean) => {
+                              const upd = [...editPerms]; upd[permIdx].can_delete = c; setEditPerms(upd);
                             }} />
                           </div>
                         </div>

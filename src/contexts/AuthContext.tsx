@@ -92,16 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Sistema legado: permissões individuais via user_permissions
       // Fallback para usuários sem perfil atribuído
       const { data: legacyPerms } = await supabase.from('user_permissions')
-        .select('page, can_view, can_edit')
+        .select('page, can_view, can_create, can_edit, can_delete')
         .eq('user_id', userId)
         .neq('page', 'banned'); // 'banned' é sentinela de bloqueio, não permissão real
 
       legacyPerms?.forEach((p: any) => {
         permsMap[p.page] = {
           can_view: p.can_view,
-          can_create: p.can_edit,   // legado não tem can_create — mapeia de can_edit
+          can_create: p.can_create,
           can_edit: p.can_edit,
-          can_delete: false,         // legado não tem can_delete
+          can_delete: p.can_delete,
         };
       });
     }
