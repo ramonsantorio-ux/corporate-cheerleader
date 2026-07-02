@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, User, ChevronDown, ChevronRight, Briefcase, Info, RefreshCw, X } from 'lucide-react';
+import { Loader2, User, ChevronDown, ChevronRight, Briefcase, Info, RefreshCw, X, GripHorizontal } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Funcionario {
   id: string;
@@ -26,7 +28,7 @@ export default function Organograma() {
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<Funcionario | null>(null);
-  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const fetchFuncionarios = async () => {
     setLoading(true);
@@ -50,12 +52,10 @@ export default function Organograma() {
     const map = new Map<string, TreeNode>();
     const roots: TreeNode[] = [];
 
-    // Initialize map
     data.forEach(f => {
       map.set(f.id, { ...f, children: [] });
     });
 
-    // Build hierarchy
     data.forEach(f => {
       const node = map.get(f.id)!;
       if (f.encarregado_id && map.has(f.encarregado_id)) {
@@ -72,23 +72,20 @@ export default function Organograma() {
     fetchFuncionarios();
   }, []);
 
-  const handleDragStart = (e: React.DragEvent, id: string) => {
-    e.dataTransfer.setData('nodeId', id);
-    setDraggedNodeId(id);
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault(); // Necessário para permitir o drop
-  };
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveId(null);
+    const { active, over } = event;
 
-  const handleDrop = async (e: React.DragEvent, targetId: string) => {
-    e.preventDefault();
-    const draggedId = e.dataTransfer.getData('nodeId');
-    setDraggedNodeId(null);
+    if (!over || active.id === over.id) return;
 
-    if (!draggedId || draggedId === targetId) return;
+    const draggedId = active.id as string;
+    const targetId = over.id as string;
 
-    // Verificar ciclos (não posso mover alguém para debaixo do próprio subordinado)
+    // Check cycles
     const map = new Map<string, TreeNode>();
     funcionarios.forEach(f => map.set(f.id, { ...f, children: [] }));
     funcionarios.forEach(f => {
@@ -107,7 +104,6 @@ export default function Organograma() {
       return;
     }
 
-    // Update DB
     toast.info('Atualizando hierarquia...', { id: 'update-org' });
     const { error } = await supabase
       .from('funcionarios')
@@ -118,7 +114,6 @@ export default function Organograma() {
       toast.error('Erro ao atualizar gestor.', { id: 'update-org' });
     } else {
       toast.success('Hierarquia atualizada com sucesso!', { id: 'update-org' });
-      // Atualizar estado local
       const newFuncs = funcionarios.map(f => f.id === draggedId ? { ...f, encarregado_id: targetId } : f);
       setFuncionarios(newFuncs);
       buildTree(newFuncs);
@@ -147,7 +142,24 @@ export default function Organograma() {
 
   const OrgNode = ({ node, isRoot = false }: { node: TreeNode, isRoot?: boolean }) => {
     const [expanded, setExpanded] = useState(true);
-    const isDragged = draggedNodeId === node.id;
+    
+    // Draggable
+    const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
+      id: node.id,
+      data: node,
+    });
+    
+    // Droppable
+    const { isOver, setNodeRef: setDropRef } = useDroppable({
+      id: node.id,
+      data: node,
+    });
+
+    const style = {
+      transform: CSS.Translate.toString(transform),
+      opacity: isDragging ? 0.3 : 1,
+      zIndex: isDragging ? 50 : 10,
+    };
 
     return (
       <div className="flex flex-col items-center">
@@ -155,36 +167,49 @@ export default function Organograma() {
           layout
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="z-10"
+          className="relative z-10"
         >
-          <div
-            className={`relative flex items-center gap-3 p-3 rounded-xl border ${isDragged ? 'border-primary/50 bg-primary/5 opacity-50' : 'border-border bg-card shadow-sm hover:shadow-md transition-shadow'} cursor-grab active:cursor-grabbing w-64`}
-            draggable
-            onDragStart={(e: any) => handleDragStart(e, node.id)}
-            onDragOver={handleDragOver}
-            onDrop={(e: any) => handleDrop(e, node.id)}
-            onClick={() => setSelectedNode(node)}
-          >
-          {/* Node Content */}
-          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
-            {node.foto_url ? (
-              <img src={node.foto_url} alt={node.nome} className="h-full w-full object-cover" />
-            ) : (
-              <User className="h-5 w-5 text-muted-foreground" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold truncate text-foreground">{node.nome}</h4>
-            <p className="text-xs text-muted-foreground truncate">{node.cargo}</p>
-          </div>
-          {node.children.length > 0 && (
-            <button 
-              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
-              className="p-1 rounded-full hover:bg-muted text-muted-foreground"
+          {/* O ref do Droppable fica em volta do card */}
+          <div ref={setDropRef}>
+            {/* O ref do Draggable e os estilos de arrastar */}
+            <div
+              ref={setDragRef}
+              style={style}
+              className={`relative flex items-center gap-3 p-3 rounded-xl border ${isOver ? 'border-primary bg-primary/10 scale-105 shadow-md' : 'border-border bg-card shadow-sm hover:shadow-md'} transition-all w-64 cursor-pointer`}
+              onClick={() => setSelectedNode(node)}
             >
-              {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-            </button>
-          )}
+              {/* Drag Handle explicitly separated for clarity */}
+              <div 
+                {...attributes} 
+                {...listeners} 
+                className="absolute -left-3 top-1/2 -translate-y-1/2 p-1.5 bg-muted rounded-full border shadow-sm cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground hover:bg-accent transition-opacity z-20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GripHorizontal className="h-4 w-4" />
+              </div>
+
+              {/* Node Content */}
+              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border ml-2">
+                {node.foto_url ? (
+                  <img src={node.foto_url} alt={node.nome} className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-5 w-5 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-semibold truncate text-foreground">{node.nome}</h4>
+                <p className="text-xs text-muted-foreground truncate">{node.cargo}</p>
+              </div>
+              
+              {node.children.length > 0 && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+                  className="p-1 rounded-full hover:bg-muted text-muted-foreground shrink-0 z-20 relative"
+                >
+                  {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </button>
+              )}
+            </div>
           </div>
         </motion.div>
 
@@ -197,18 +222,13 @@ export default function Organograma() {
               exit={{ opacity: 0, height: 0 }}
               className="flex flex-col items-center overflow-hidden"
             >
-              {/* Vertical line down from parent */}
               <div className="w-px h-6 bg-border"></div>
-              
               <div className="flex gap-4 relative pt-4">
-                {/* Horizontal line connecting children */}
                 {node.children.length > 1 && (
                   <div className="absolute top-0 left-[50%] right-[50%] h-px bg-border w-[calc(100%-4rem)] -translate-x-1/2"></div>
                 )}
-                
-                {node.children.map((child, idx) => (
+                {node.children.map((child) => (
                   <div key={child.id} className="flex flex-col items-center relative">
-                    {/* Vertical line up from child */}
                     <div className="absolute top-0 w-px h-4 bg-border -translate-y-full"></div>
                     <OrgNode node={child} />
                   </div>
@@ -220,6 +240,8 @@ export default function Organograma() {
       </div>
     );
   };
+
+  const activeNodeData = funcionarios.find(f => f.id === activeId);
 
   if (loading) {
     return (
@@ -234,26 +256,46 @@ export default function Organograma() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Organograma Interativo</h1>
-          <p className="text-muted-foreground mt-1">Visualize e edite a hierarquia da empresa. Arraste e solte um funcionário sobre outro para mudar seu gestor.</p>
+          <p className="text-muted-foreground mt-1">Visualize e edite a hierarquia da empresa. Use a alça lateral (6 pontinhos) de um funcionário para arrastá-lo sobre outro gestor.</p>
         </div>
         <Button variant="outline" onClick={fetchFuncionarios}><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
-        {/* Workspace Org Chart */}
         <Card className="flex-1 overflow-auto min-h-[600px] w-full bg-muted/30 border-dashed">
           <CardContent className="p-8">
-            <div className="min-w-max flex justify-center pb-20">
-              {tree.length > 0 ? (
-                <div className="flex gap-12">
-                  {tree.map(root => (
-                    <OrgNode key={root.id} node={root} isRoot />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-muted-foreground mt-20">Nenhum funcionário encontrado.</div>
-              )}
-            </div>
+            <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} collisionDetection={pointerWithin}>
+              <div className="min-w-max flex justify-center pb-20 pt-10">
+                {tree.length > 0 ? (
+                  <div className="flex gap-12">
+                    {tree.map(root => (
+                      <OrgNode key={root.id} node={root} isRoot />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center text-muted-foreground mt-20">Nenhum funcionário encontrado.</div>
+                )}
+              </div>
+              
+              {/* Ghost overlay during drag */}
+              <DragOverlay dropAnimation={null}>
+                {activeNodeData ? (
+                  <div className="flex items-center gap-3 p-3 rounded-xl border border-primary/50 bg-background/80 backdrop-blur-sm shadow-xl w-64 opacity-80 cursor-grabbing ml-3">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
+                      {activeNodeData.foto_url ? (
+                        <img src={activeNodeData.foto_url} alt={activeNodeData.nome} className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-5 w-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold truncate text-foreground">{activeNodeData.nome}</h4>
+                      <p className="text-xs text-muted-foreground truncate">{activeNodeData.cargo}</p>
+                    </div>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           </CardContent>
         </Card>
 
@@ -304,7 +346,7 @@ export default function Organograma() {
 
                   <div className="bg-muted/50 p-3 rounded-lg mt-4 text-xs text-muted-foreground flex items-start gap-2">
                     <Info className="h-4 w-4 shrink-0 mt-0.5" />
-                    <p>Para alterar o gestor, arraste o card desta pessoa no organograma e solte sobre o card do novo gestor.</p>
+                    <p>Para alterar o gestor, use a alça de arrastar (6 pontinhos) ao lado do card desta pessoa no organograma e solte sobre o card do novo gestor.</p>
                   </div>
                 </CardContent>
               </Card>
