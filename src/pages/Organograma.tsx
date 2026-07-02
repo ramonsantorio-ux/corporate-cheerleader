@@ -155,13 +155,16 @@ export default function Organograma() {
           layout
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`relative flex items-center gap-3 p-3 rounded-xl border ${isDragged ? 'border-primary/50 bg-primary/5 opacity-50' : 'border-border bg-card shadow-sm hover:shadow-md transition-shadow'} cursor-pointer z-10 w-64`}
-          draggable
-          onDragStart={(e: any) => handleDragStart(e, node.id)}
-          onDragOver={handleDragOver}
-          onDrop={(e: any) => handleDrop(e, node.id)}
-          onClick={() => setSelectedNode(node)}
+          className="z-10"
         >
+          <div
+            className={`relative flex items-center gap-3 p-3 rounded-xl border ${isDragged ? 'border-primary/50 bg-primary/5 opacity-50' : 'border-border bg-card shadow-sm hover:shadow-md transition-shadow'} cursor-grab active:cursor-grabbing w-64`}
+            draggable
+            onDragStart={(e: any) => handleDragStart(e, node.id)}
+            onDragOver={handleDragOver}
+            onDrop={(e: any) => handleDrop(e, node.id)}
+            onClick={() => setSelectedNode(node)}
+          >
           {/* Node Content */}
           <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
             {node.foto_url ? (
@@ -182,6 +185,7 @@ export default function Organograma() {
               {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
           )}
+          </div>
         </motion.div>
 
         {/* Children */}
