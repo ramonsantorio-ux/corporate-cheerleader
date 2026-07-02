@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Upload, BarChart3, Trash2, Save, FileSpreadsheet, TrendingUp, TrendingDown, DollarSign, Target, AlertTriangle, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import * as XLSX from 'xlsx';
+import { readExcelRows } from '@/lib/excel';
 import { ResponsiveContainer, ComposedChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, LabelList, Line, Legend, ReferenceLine } from 'recharts';
 import { supabase } from '@/lib/supabase';
 
@@ -116,47 +116,40 @@ export function PerformanceMensalTab({ medicoes, setMedicoes, timeRange, chartDa
     setTempDesvios(tempDesvios.filter((_, i) => i !== index));
   };
 
-  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = event.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const json = XLSX.utils.sheet_to_json<any>(worksheet);
+    try {
+      const ab = await file.arrayBuffer();
+      const json = await readExcelRows(ab);
 
-        const importados: DesvioMensal[] = [];
-        json.forEach((row) => {
-          const desvioKey = Object.keys(row).find(k => k.toLowerCase().includes('desvio') || k.toLowerCase().includes('motivo'));
-          const qtdeKey = Object.keys(row).find(k => k.toLowerCase().includes('qtde') || k.toLowerCase().includes('qtd') || k.toLowerCase().includes('ocorr'));
+      const importados: DesvioMensal[] = [];
+      json.forEach((row) => {
+        const desvioKey = Object.keys(row).find(k => k.toLowerCase().includes('desvio') || k.toLowerCase().includes('motivo'));
+        const qtdeKey = Object.keys(row).find(k => k.toLowerCase().includes('qtde') || k.toLowerCase().includes('qtd') || k.toLowerCase().includes('ocorr'));
 
-          if (desvioKey && qtdeKey && row[desvioKey]) {
-            const qtdeNum = parseInt(row[qtdeKey]);
-            if (!isNaN(qtdeNum)) {
-              importados.push({
-                desvio: String(row[desvioKey]).toUpperCase().trim(),
-                qtde: qtdeNum
-              });
-            }
+        if (desvioKey && qtdeKey && row[desvioKey]) {
+          const qtdeNum = parseInt(String(row[qtdeKey]));
+          if (!isNaN(qtdeNum)) {
+            importados.push({
+              desvio: String(row[desvioKey]).toUpperCase().trim(),
+              qtde: qtdeNum
+            });
           }
-        });
-
-        if (importados.length > 0) {
-          setTempDesvios([...tempDesvios, ...importados]);
-          toast({ title: 'Sucesso', description: `${importados.length} desvios importados da planilha.` });
-        } else {
-          toast({ title: 'Aviso', description: 'Nenhum dado válido encontrado na planilha. Verifique se as colunas se chamam "Desvio" e "Qtde".', variant: 'destructive' });
         }
-      } catch (err) {
-        console.error(err);
-        toast({ title: 'Erro', description: 'Falha ao processar o arquivo Excel.', variant: 'destructive' });
+      });
+
+      if (importados.length > 0) {
+        setTempDesvios([...tempDesvios, ...importados]);
+        toast({ title: 'Sucesso', description: `${importados.length} desvios importados da planilha.` });
+      } else {
+        toast({ title: 'Aviso', description: 'Nenhum dado válido encontrado na planilha. Verifique se as colunas se chamam "Desvio" e "Qtde".', variant: 'destructive' });
       }
-    };
-    reader.readAsBinaryString(file);
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Erro', description: 'Falha ao processar o arquivo Excel.', variant: 'destructive' });
+    }
     e.target.value = '';
   };
 

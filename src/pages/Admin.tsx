@@ -16,6 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { PAGES, PAGE_GROUPS } from '@/lib/permissions';
+import { logAudit } from '@/lib/audit';
 
 interface UserWithRole {
   id: string;
@@ -140,6 +141,12 @@ export default function Admin() {
       await adminAuthRequest('manage', { action: 'update', user_id: deleteUser.id, full_name: '__DELETED__', email: deleteUser.email });
       await adminAuthRequest('manage', { action: 'ban', user_id: deleteUser.id });
 
+      await logAudit({
+        action: 'user_deleted',
+        record_id: deleteUser.id,
+        old_data: { email: deleteUser.email, full_name: deleteUser.full_name, role: deleteUser.role },
+      });
+
       toast.success(`Conta de "${deleteUser.full_name}" excluída com sucesso!`);
       setUsers(prev => prev.filter(u => u.id !== deleteUser.id));
     } catch (err: any) {
@@ -180,6 +187,12 @@ export default function Admin() {
           }));
           await supabase.from('user_permissions').insert(defaultPerms);
           await supabase.from('user_roles').insert({ user_id: userId, role: 'user', profile_id: newUser.profile_id || null });
+
+          await logAudit({
+            action: 'user_created',
+            record_id: userId,
+            new_data: { email: newUser.email, full_name: newUser.full_name, profile_id: newUser.profile_id || null },
+          });
         }
         fetchUsers();
     } catch (err: any) {
@@ -219,6 +232,14 @@ export default function Admin() {
     await supabase.from('user_permissions').insert(
       editPerms.map(p => ({ user_id: editingUser.id, ...p }))
     );
+
+    await logAudit({
+      action: 'permissions_updated',
+      table_name: 'user_permissions',
+      record_id: editingUser.id,
+      new_data: { permissions: editPerms, target_user: editingUser.email },
+    });
+
     toast.success('Permissões individuais atualizadas!');
     setEditingUser(null);
     fetchUsers();
@@ -235,6 +256,8 @@ export default function Admin() {
     if (!editUserDialog) return;
     setSavingEdit(true);
     try {
+      const oldData = { email: editUserDialog.email, full_name: editUserDialog.full_name, profile_id: editUserDialog.profile_id };
+
       await adminAuthRequest('manage', { action: 'update', user_id: editUserDialog.id, email: editEmail, full_name: editName });
 
       const { data: roleData } = await supabase.from('user_roles').select('*').eq('user_id', editUserDialog.id).maybeSingle();
@@ -243,6 +266,13 @@ export default function Admin() {
       } else {
          await supabase.from('user_roles').insert({ user_id: editUserDialog.id, role: 'user', profile_id: editProfileId || null });
       }
+
+      await logAudit({
+        action: 'user_updated',
+        record_id: editUserDialog.id,
+        old_data: oldData,
+        new_data: { email: editEmail, full_name: editName, profile_id: editProfileId || null },
+      });
 
       toast.success('Usuário atualizado com sucesso!');
       setEditUserDialog(null);
@@ -273,6 +303,12 @@ export default function Admin() {
           .delete().eq('user_id', blockUser.id).eq('page', 'banned');
       }
 
+      await logAudit({
+        action: blockAction === 'ban' ? 'user_banned' : 'user_unbanned',
+        record_id: blockUser.id,
+        new_data: { target_email: blockUser.email, target_name: blockUser.full_name },
+      });
+
       toast.success(blockAction === 'ban' ? 'Usuário bloqueado com sucesso!' : 'Usuário desbloqueado com sucesso!');
       setBlockUser(null);
       // Re-carrega da fonte de verdade para garantir estado correto após reload
@@ -297,6 +333,13 @@ export default function Admin() {
     setSavingPassword(true);
     try {
       await adminAuthRequest('manage', { action: 'change_password', user_id: passwordUser.id, password: newPassword });
+
+      await logAudit({
+        action: 'password_changed',
+        record_id: passwordUser.id,
+        new_data: { target_email: passwordUser.email, target_name: passwordUser.full_name },
+      });
+
       toast.success('Senha alterada com sucesso!');
       setPasswordUser(null);
       setNewPassword('');

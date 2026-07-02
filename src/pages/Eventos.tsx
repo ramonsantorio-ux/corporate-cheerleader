@@ -19,7 +19,7 @@ import PeriodFilter, { getMonthPeriod } from '@/components/filters/PeriodFilter'
 import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import { toast } from 'sonner';
 import {  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, Legend , ScatterChart, Scatter, ZAxis, RadialBarChart, RadialBar, LabelList, ComposedChart } from 'recharts';
-import * as XLSX from 'xlsx';
+import { readExcelRows, writeExcelFile } from '@/lib/excel';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { TreinamentosSSMA } from '@/components/TreinamentosSSMA';
 import N3Dashboard from '@/components/N3Dashboard';
@@ -244,21 +244,17 @@ export default function Eventos() {
     const file = e.target.files?.[0];
     if (!file) return;
     const ab = await file.arrayBuffer();
-    const wb = XLSX.read(ab, { cellDates: true });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    // readExcelRows converte datas Excel automaticamente para strings ISO YYYY-MM-DD
+    const rows = await readExcelRows(ab);
     
     const mapped = rows.map(r => {
-      let dateVal = r['DATA'] || r['data'] || '';
-      if (dateVal instanceof Date) {
-        dateVal = dateVal.toISOString().slice(0, 10);
-      } else if (typeof dateVal === 'string') {
-        const parts = dateVal.match(/(\d+)\/(\d+)\/(\d+)/);
-        if (parts) {
-          let yr = parseInt(parts[3]);
-          if (yr < 100) yr += 2000;
-          dateVal = `${yr}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
-        }
+      let dateVal = String(r['DATA'] || r['data'] || '');
+      // Suporte a formato DD/MM/YYYY (caso venha como string)
+      const parts = dateVal.match(/(\d+)\/(\d+)\/(\d+)/);
+      if (parts) {
+        let yr = parseInt(parts[3]);
+        if (yr < 100) yr += 2000;
+        dateVal = `${yr}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
       }
       const extraData = {
         cid: String(r['CID'] || r['cid'] || ''),
@@ -296,7 +292,7 @@ export default function Eventos() {
     e.target.value = '';
   }
 
-  function handleExport() {
+  async function handleExport() {
     const exportData = filtered.map(ev => ({
       'DATA': ev.event_date,
       'HORÁRIO': ev.event_time,
@@ -314,10 +310,7 @@ export default function Eventos() {
       'AFASTAMENTO': ev.afastamento ? 'Sim' : 'Não',
       'DANOS MATERIAIS': ev.danos_materiais ? 'Sim' : 'Não',
     }));
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Eventos');
-    XLSX.writeFile(wb, 'Eventos_Porto.xlsx');
+    await writeExcelFile(exportData as Record<string, unknown>[], 'Eventos_Porto.xlsx', 'Eventos');
   }
 
   // Unique equipment types for filter

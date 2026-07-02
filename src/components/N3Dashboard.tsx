@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { readExcelRows, writeExcelFile } from '@/lib/excel';
 import ExpandableChart from './ExpandableChart';
 import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend, LabelList } from 'recharts';
 
@@ -185,45 +185,38 @@ export default function N3Dashboard() {
     setSaving(false);
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        const rawData = XLSX.utils.sheet_to_json(ws);
+    try {
+      const ab = await file.arrayBuffer();
+      const rawData = await readExcelRows(ab);
 
-        const importedData: N3Data[] = rawData.map((row: any) => ({
-          nome_email: row['NOME-EMAIL'] || row['Nome'] || '',
-          letra: row['LETRA'] || row['Letra'] || '',
-          periodo: periodo,
-          total_verificacoes: Number(row['TOTAL VERIFICAÇÕES'] || row['Total Verificações'] || 0),
-          total_treinamentos: Number(row['TOTAL TREINAMENTOS'] || row['Total Treinamentos'] || 0),
-          total_assistencia: Number(row['TOTAL ASSISTÊNCIA'] || row['Total Assistência'] || 0),
-          verificacoes_nc: Number(row['VERIFICAÇÕES NÃO CONFORMES'] || row['Verificações NC'] || 0),
-          perguntas_nc: Number(row['PERGUNTAS COM NÃO CONFORMIDADES'] || row['Perguntas NC'] || 0),
-        }));
+      const importedData: N3Data[] = rawData.map((row: any) => ({
+        nome_email: row['NOME-EMAIL'] || row['Nome'] || '',
+        letra: row['LETRA'] || row['Letra'] || '',
+        periodo: periodo,
+        total_verificacoes: Number(row['TOTAL VERIFICAÇÕES'] || row['Total Verificações'] || 0),
+        total_treinamentos: Number(row['TOTAL TREINAMENTOS'] || row['Total Treinamentos'] || 0),
+        total_assistencia: Number(row['TOTAL ASSISTÊNCIA'] || row['Total Assistência'] || 0),
+        verificacoes_nc: Number(row['VERIFICAÇÕES NÃO CONFORMES'] || row['Verificações NC'] || 0),
+        perguntas_nc: Number(row['PERGUNTAS COM NÃO CONFORMIDADES'] || row['Perguntas NC'] || 0),
+      }));
 
-        if (importedData.length > 0) {
-          setData(importedData);
-          toast.success('Planilha importada! Clique em Salvar na Nuvem para persistir.');
-        } else {
-          toast.error('Planilha vazia ou formato inválido.');
-        }
-      } catch (err) {
-        toast.error('Erro ao ler a planilha.');
+      if (importedData.length > 0) {
+        setData(importedData);
+        toast.success('Planilha importada! Clique em Salvar na Nuvem para persistir.');
+      } else {
+        toast.error('Planilha vazia ou formato inválido.');
       }
-    };
-    reader.readAsBinaryString(file);
+    } catch (err) {
+      toast.error('Erro ao ler a planilha.');
+    }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleDownloadTemplate = () => {
+  const handleDownloadTemplate = async () => {
     const templateData = [
       {
         'NOME-EMAIL': 'CRISTALLY NETTO',
@@ -235,10 +228,7 @@ export default function N3Dashboard() {
         'PERGUNTAS COM NÃO CONFORMIDADES': 1
       }
     ];
-    const ws = XLSX.utils.json_to_sheet(templateData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'N3_Template');
-    XLSX.writeFile(wb, 'Modelo_Importacao_N3.xlsx');
+    await writeExcelFile(templateData as Record<string, unknown>[], 'Modelo_Importacao_N3.xlsx', 'N3_Template');
   };
 
   const kpis = useMemo(() => {

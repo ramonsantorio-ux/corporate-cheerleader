@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Target, Upload, Pencil, Trash2, ShieldAlert } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip, Legend } from 'recharts';
-import * as XLSX from 'xlsx';
+import { readExcelRaw } from '@/lib/excel';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -88,9 +88,8 @@ export function TreinamentosSSMA() {
     if (!file) return;
     setLoading(true);
     const ab = await file.arrayBuffer();
-    const wb = XLSX.read(ab, { cellDates: true });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows: any[] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+    // readExcelRaw retorna arrays brutos (equivalente a sheet_to_json com header:1)
+    const rows = await readExcelRaw(ab);
     
     const headers1 = rows[0] || [];
     const headers2 = rows[1] || [];

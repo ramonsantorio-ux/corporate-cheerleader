@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import * as XLSX from 'xlsx';
+import { readExcelRaw, readExcelRows } from '@/lib/excel';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -145,122 +145,109 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
   };
   const removeEquipamento = (index: number) => setEquipamentosList(equipamentosList.filter((_, i) => i !== index));
 
-  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as any[][];
-        
-        const newEquipamentos = [...equipamentosList];
-        const allTags = LISTA_EQUIPAMENTOS.flatMap(g => g.itens);
-        let importedCount = 0;
+    try {
+      const data = await file.arrayBuffer();
+      // readExcelRaw retorna arrays brutos (equivalente a sheet_to_json com header:1)
+      const rows = await readExcelRaw(data);
+      
+      const newEquipamentos = [...equipamentosList];
+      const allTags = LISTA_EQUIPAMENTOS.flatMap(g => g.itens);
+      let importedCount = 0;
 
-        rows.forEach(row => {
-          if (Array.isArray(row)) {
-            let tagIndex = -1;
-            let tagMatch = '';
-            for (let i = 0; i < row.length; i++) {
-              if (typeof row[i] === 'string' && allTags.includes(row[i].trim())) {
-                tagIndex = i;
-                tagMatch = row[i].trim();
-                break;
-              }
-            }
-            if (tagIndex !== -1 && tagIndex + 1 < row.length) {
-              let val = row[tagIndex + 1];
-              let aderenciaStr = '';
-              if (typeof val === 'number') {
-                aderenciaStr = (val * 100).toFixed(2);
-              } else if (typeof val === 'string') {
-                aderenciaStr = val.replace('%', '').trim();
-              }
-              if (!newEquipamentos.find(eq => eq.motivo === tagMatch)) {
-                newEquipamentos.push({ motivo: tagMatch, aderencia: aderenciaStr.replace('.', ',') });
-                importedCount++;
-              }
+      rows.forEach(row => {
+        if (Array.isArray(row)) {
+          let tagIndex = -1;
+          let tagMatch = '';
+          for (let i = 0; i < row.length; i++) {
+            if (typeof row[i] === 'string' && allTags.includes(row[i].trim())) {
+              tagIndex = i;
+              tagMatch = row[i].trim();
+              break;
             }
           }
-        });
-        
-        setEquipamentosList(newEquipamentos);
-        toast({ title: 'Sucesso', description: `${importedCount} equipamentos importados da planilha.`, variant: 'default' });
-      } catch (err) {
-        toast({ title: 'Erro na Importação', description: 'Não foi possível ler a planilha selecionada.', variant: 'destructive' });
-      }
-    };
-    reader.readAsArrayBuffer(file);
+          if (tagIndex !== -1 && tagIndex + 1 < row.length) {
+            let val = row[tagIndex + 1];
+            let aderenciaStr = '';
+            if (typeof val === 'number') {
+              aderenciaStr = (val * 100).toFixed(2);
+            } else if (typeof val === 'string') {
+              aderenciaStr = val.replace('%', '').trim();
+            }
+            if (!newEquipamentos.find(eq => eq.motivo === tagMatch)) {
+              newEquipamentos.push({ motivo: tagMatch, aderencia: aderenciaStr.replace('.', ',') });
+              importedCount++;
+            }
+          }
+        }
+      });
+      
+      setEquipamentosList(newEquipamentos);
+      toast({ title: 'Sucesso', description: `${importedCount} equipamentos importados da planilha.`, variant: 'default' });
+    } catch (err) {
+      toast({ title: 'Erro na Importação', description: 'Não foi possível ler a planilha selecionada.', variant: 'destructive' });
+    }
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleImportExcelDiario = (e: React.ChangeEvent<HTMLInputElement>, setState: (data: { dia: string; aderencia: number }[]) => void) => {
+  const handleImportExcelDiario = async (e: React.ChangeEvent<HTMLInputElement>, setState: (data: { dia: string; aderencia: number }[]) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = event.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const json = XLSX.utils.sheet_to_json<any>(worksheet);
+    try {
+      const ab = await file.arrayBuffer();
+      const json = await readExcelRows(ab);
 
-        const importados: { dia: string; aderencia: number }[] = [];
-        
-        json.forEach((row) => {
-          const diaKey = Object.keys(row).find(k => k.toLowerCase().includes('data - d') || k.toLowerCase().includes('dia'));
-          const mesKey = Object.keys(row).find(k => k.toLowerCase().includes('data - m') || k.toLowerCase().includes('mês') || k.toLowerCase().includes('mes'));
-          const aderenciaKey = Object.keys(row).find(k => k.toLowerCase().includes('% df') || k.toLowerCase().includes('aderencia') || k.toLowerCase().includes('aderência'));
+      const importados: { dia: string; aderencia: number }[] = [];
+      
+      json.forEach((row) => {
+        const diaKey = Object.keys(row).find(k => k.toLowerCase().includes('data - d') || k.toLowerCase().includes('dia'));
+        const mesKey = Object.keys(row).find(k => k.toLowerCase().includes('data - m') || k.toLowerCase().includes('mês') || k.toLowerCase().includes('mes'));
+        const aderenciaKey = Object.keys(row).find(k => k.toLowerCase().includes('% df') || k.toLowerCase().includes('aderencia') || k.toLowerCase().includes('aderência'));
 
-          if (diaKey && aderenciaKey) {
-            let diaFormatado = String(row[diaKey]);
-            if (mesKey && row[mesKey]) {
-               const mesStr = String(row[mesKey]).substring(0, 3).toLowerCase();
-               diaFormatado = `${diaFormatado.padStart(2, '0')}/${mesStr}`;
-            }
+        if (diaKey && aderenciaKey) {
+          let diaFormatado = String(row[diaKey]);
+          if (mesKey && row[mesKey]) {
+             const mesStr = String(row[mesKey]).substring(0, 3).toLowerCase();
+             diaFormatado = `${diaFormatado.padStart(2, '0')}/${mesStr}`;
+          }
 
-            let aderenciaValor = row[aderenciaKey];
-            let aderenciaNum = 0;
-            
-            if (typeof aderenciaValor === 'string') {
-              aderenciaValor = aderenciaValor.replace('%', '').replace(',', '.');
-              aderenciaNum = parseFloat(aderenciaValor);
-            } else if (typeof aderenciaValor === 'number') {
-              if (aderenciaValor <= 1) {
-                aderenciaNum = aderenciaValor * 100;
-              } else {
-                aderenciaNum = aderenciaValor;
-              }
-            }
-
-            if (!isNaN(aderenciaNum)) {
-              importados.push({
-                dia: diaFormatado,
-                aderencia: Number(aderenciaNum.toFixed(2))
-              });
+          let aderenciaValor = row[aderenciaKey];
+          let aderenciaNum = 0;
+          
+          if (typeof aderenciaValor === 'string') {
+            aderenciaValor = aderenciaValor.replace('%', '').replace(',', '.');
+            aderenciaNum = parseFloat(aderenciaValor);
+          } else if (typeof aderenciaValor === 'number') {
+            if (aderenciaValor <= 1) {
+              aderenciaNum = aderenciaValor * 100;
+            } else {
+              aderenciaNum = aderenciaValor;
             }
           }
-        });
 
-        if (importados.length > 0) {
-          setState(importados);
-          toast({ title: 'Sucesso', description: `${importados.length} dias importados da planilha.` });
-        } else {
-          toast({ title: 'Erro de Formatação no Excel', description: 'Nenhuma linha válida foi importada. Verifique se as colunas "Dia" (ou Data - D) e "Aderência" (ou % DF) existem na sua planilha.', variant: 'destructive', duration: 8000 });
+          if (!isNaN(aderenciaNum)) {
+            importados.push({
+              dia: diaFormatado,
+              aderencia: Number(aderenciaNum.toFixed(2))
+            });
+          }
         }
-      } catch (err) {
-        console.error(err);
-        toast({ title: 'Erro', description: 'Falha ao processar o arquivo Excel.', variant: 'destructive' });
+      });
+
+      if (importados.length > 0) {
+        setState(importados);
+        toast({ title: 'Sucesso', description: `${importados.length} dias importados da planilha.` });
+      } else {
+        toast({ title: 'Erro de Formatação no Excel', description: 'Nenhuma linha válida foi importada. Verifique se as colunas "Dia" (ou Data - D) e "Aderência" (ou % DF) existem na sua planilha.', variant: 'destructive', duration: 8000 });
       }
-    };
-    reader.readAsBinaryString(file);
-    e.target.value = ''; // reset
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Erro', description: 'Falha ao processar o arquivo Excel.', variant: 'destructive' });
+    }
+    e.target.value = '';
   };
 
   const handleSaveMedicao = (e: React.FormEvent) => {

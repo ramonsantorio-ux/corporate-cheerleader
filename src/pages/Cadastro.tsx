@@ -1,6 +1,6 @@
-﻿import { motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X, Eye, FileUp, FileText, Download, Upload } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import { readExcelRows } from '@/lib/excel';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -122,9 +122,7 @@ export default function Cadastro() {
 
     try {
       const data = await file.arrayBuffer();
-      const wb = XLSX.read(data);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, any>>(ws);
+      const rows = await readExcelRows(data);
 
       if (rows.length === 0) {
         toast.error('Planilha vazia');
