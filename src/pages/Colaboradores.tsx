@@ -45,6 +45,9 @@ export default function Colaboradores() {
   const [deptFilter, setDeptFilter] = useState('todos');
   const [turnoFilter, setTurnoFilter] = useState('todos');
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+
+  // Reset página ao mudar filtros
+  useEffect(() => { setCurrentPage(1); }, [search, deptFilter, turnoFilter]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -54,6 +57,10 @@ export default function Colaboradores() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // Paginação
+  const PAGE_SIZE = 20;
+  const [currentPage, setCurrentPage] = useState(1);
 
   const emptyForm = { nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: 'none' };
   const [newData, setNewData] = useState(emptyForm);
@@ -87,6 +94,11 @@ export default function Colaboradores() {
     const matchTurno = turnoFilter === 'todos' || f.turno === turnoFilter;
     return matchSearch && matchDept && matchTurno;
   });
+
+  // Paginação: recalcula sempre que filtros mudam
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const allFilteredSelected = filtered.length > 0 && filtered.every(f => selectedIds.has(f.id));
 
@@ -377,7 +389,7 @@ export default function Colaboradores() {
             )}
           </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {filtered.map((f, i) => {
+          {paginated.map((f, i) => {
             const turnoLabel = TURNOS.find(t => t.value === f.turno)?.label;
             return (
               <motion.div key={f.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
@@ -422,6 +434,56 @@ export default function Colaboradores() {
             );
           })}
         </div>
+
+        {/* Paginação */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6 px-1">
+            <p className="text-sm text-muted-foreground">
+              Mostrando <span className="font-medium text-foreground">{(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)}</span> de <span className="font-medium text-foreground">{filtered.length}</span> colaboradores
+            </p>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline" size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="h-8 px-3 text-xs"
+              >
+                ← Anterior
+              </Button>
+              {Array.from({ length: totalPages }, (_, idx) => idx + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+                .reduce<(number | 'ellipsis')[]>((acc, p, i, arr) => {
+                  if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('ellipsis');
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, idx) =>
+                  p === 'ellipsis' ? (
+                    <span key={`e-${idx}`} className="px-1 text-muted-foreground text-xs">…</span>
+                  ) : (
+                    <Button
+                      key={p}
+                      variant={safePage === p ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setCurrentPage(p as number)}
+                      className="h-8 w-8 p-0 text-xs"
+                    >
+                      {p}
+                    </Button>
+                  )
+                )
+              }
+              <Button
+                variant="outline" size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="h-8 px-3 text-xs"
+              >
+                Próximo →
+              </Button>
+            </div>
+          </div>
+        )}
         </>
       )}
       </TabsContent>

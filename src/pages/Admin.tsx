@@ -248,7 +248,7 @@ export default function Admin() {
     try {
       await adminAuthRequest('manage', { action: blockAction, user_id: blockUser.id });
 
-      // Sincronizar o status local na tabela user_permissions
+      // Sincronizar o status local na tabela user_permissions (para o fallback)
       if (blockAction === 'ban') {
         await supabase.from('user_permissions')
           .upsert({ user_id: blockUser.id, page: 'banned', can_view: true }, { onConflict: 'user_id,page' });
@@ -258,8 +258,9 @@ export default function Admin() {
       }
 
       toast.success(blockAction === 'ban' ? 'Usuário bloqueado com sucesso!' : 'Usuário desbloqueado com sucesso!');
-      setUsers(prev => prev.map(u => u.id === blockUser.id ? { ...u, banned: blockAction === 'ban' } : u));
       setBlockUser(null);
+      // Re-carrega da fonte de verdade para garantir estado correto após reload
+      await fetchUsers();
     } catch(err:any) {
       toast.error(err.message || 'Erro ao alterar status do usuário');
     }

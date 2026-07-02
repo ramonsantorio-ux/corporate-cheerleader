@@ -1,7 +1,6 @@
 -- ============================================================
--- CORREÇÃO CRÍTICA DE SEGURANÇA: Políticas RLS Abertas
--- Substitui todas as políticas "Allow all" por políticas
--- que verificam autenticação antes de permitir acesso.
+-- CORREÇÃO CRÍTICA DE SEGURANÇA: Políticas RLS Abertas v2
+-- Versão segura: usa blocos DO para ignorar tabelas inexistentes
 -- ============================================================
 
 -- ---- evaluation_cycles ----
@@ -79,30 +78,36 @@ CREATE POLICY "Users can insert own assessment results" ON public.assessment_res
 CREATE POLICY "Users can update own assessment results" ON public.assessment_results
   FOR UPDATE USING (auth.uid() = user_id);
 
--- ---- treinamentos ----
-DROP POLICY IF EXISTS "Allow all access to treinamentos" ON public.treinamentos;
-CREATE POLICY "Authenticated users can read treinamentos" ON public.treinamentos
-  FOR SELECT USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Authenticated users can insert treinamentos" ON public.treinamentos
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "Authenticated users can update treinamentos" ON public.treinamentos
-  FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Authenticated users can delete treinamentos" ON public.treinamentos
-  FOR DELETE USING (auth.uid() IS NOT NULL);
+-- ---- treinamentos (só aplica se a tabela existir) ----
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'treinamentos') THEN
+    DROP POLICY IF EXISTS "Allow all access to treinamentos" ON public.treinamentos;
+    EXECUTE 'CREATE POLICY "Authenticated users can read treinamentos" ON public.treinamentos FOR SELECT USING (auth.uid() IS NOT NULL)';
+    EXECUTE 'CREATE POLICY "Authenticated users can insert treinamentos" ON public.treinamentos FOR INSERT WITH CHECK (auth.uid() IS NOT NULL)';
+    EXECUTE 'CREATE POLICY "Authenticated users can update treinamentos" ON public.treinamentos FOR UPDATE USING (auth.uid() IS NOT NULL)';
+    EXECUTE 'CREATE POLICY "Authenticated users can delete treinamentos" ON public.treinamentos FOR DELETE USING (auth.uid() IS NOT NULL)';
+  END IF;
+END $$;
 
--- ---- ssma_n3 ----
-DROP POLICY IF EXISTS "Allow all access to ssma_n3" ON public.ssma_n3;
-CREATE POLICY "Authenticated users can read ssma_n3" ON public.ssma_n3
-  FOR SELECT USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Authenticated users can insert ssma_n3" ON public.ssma_n3
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-CREATE POLICY "Authenticated users can update ssma_n3" ON public.ssma_n3
-  FOR UPDATE USING (auth.uid() IS NOT NULL);
-CREATE POLICY "Authenticated users can delete ssma_n3" ON public.ssma_n3
-  FOR DELETE USING (auth.uid() IS NOT NULL);
+-- ---- ssma_n3 (só aplica se a tabela existir) ----
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ssma_n3') THEN
+    DROP POLICY IF EXISTS "Allow all access to ssma_n3" ON public.ssma_n3;
+    EXECUTE 'CREATE POLICY "Authenticated users can read ssma_n3" ON public.ssma_n3 FOR SELECT USING (auth.uid() IS NOT NULL)';
+    EXECUTE 'CREATE POLICY "Authenticated users can insert ssma_n3" ON public.ssma_n3 FOR INSERT WITH CHECK (auth.uid() IS NOT NULL)';
+    EXECUTE 'CREATE POLICY "Authenticated users can update ssma_n3" ON public.ssma_n3 FOR UPDATE USING (auth.uid() IS NOT NULL)';
+    EXECUTE 'CREATE POLICY "Authenticated users can delete ssma_n3" ON public.ssma_n3 FOR DELETE USING (auth.uid() IS NOT NULL)';
+  END IF;
+END $$;
 
 -- ---- nine_box_historico ----
 DROP POLICY IF EXISTS "Allow all access to nine_box_historico" ON public.nine_box_historico;
+DROP POLICY IF EXISTS "Enable insert for all users" ON public.nine_box_historico;
+DROP POLICY IF EXISTS "Enable select for all users" ON public.nine_box_historico;
+DROP POLICY IF EXISTS "Enable update for all users" ON public.nine_box_historico;
+DROP POLICY IF EXISTS "Enable delete for all users" ON public.nine_box_historico;
 CREATE POLICY "Authenticated users can read nine_box_historico" ON public.nine_box_historico
   FOR SELECT USING (auth.uid() IS NOT NULL);
 CREATE POLICY "Authenticated users can insert nine_box_historico" ON public.nine_box_historico
@@ -112,7 +117,7 @@ CREATE POLICY "Authenticated users can update nine_box_historico" ON public.nine
 CREATE POLICY "Authenticated users can delete nine_box_historico" ON public.nine_box_historico
   FOR DELETE USING (auth.uid() IS NOT NULL);
 
--- ---- funcionarios (tabela principal) ----
+-- ---- funcionarios ----
 DROP POLICY IF EXISTS "Allow all access to funcionarios" ON public.funcionarios;
 CREATE POLICY "Authenticated users can read funcionarios" ON public.funcionarios
   FOR SELECT USING (auth.uid() IS NOT NULL);
@@ -124,7 +129,7 @@ CREATE POLICY "Authenticated users can delete funcionarios" ON public.funcionari
   FOR DELETE USING (auth.uid() IS NOT NULL);
 
 -- ============================================================
--- TABELA DE AUDIT LOG: Registra ações administrativas críticas
+-- TABELA DE AUDIT LOG
 -- ============================================================
 CREATE TABLE IF NOT EXISTS public.audit_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -138,7 +143,7 @@ CREATE TABLE IF NOT EXISTS public.audit_log (
 
 ALTER TABLE public.audit_log ENABLE ROW LEVEL SECURITY;
 
--- Apenas admins podem ler o log
+DROP POLICY IF EXISTS "Admins can read audit log" ON public.audit_log;
 CREATE POLICY "Admins can read audit log" ON public.audit_log
   FOR SELECT USING (
     EXISTS (
@@ -147,6 +152,6 @@ CREATE POLICY "Admins can read audit log" ON public.audit_log
     )
   );
 
--- Sistema pode inserir via service role (edge functions)
+DROP POLICY IF EXISTS "Service role can insert audit log" ON public.audit_log;
 CREATE POLICY "Service role can insert audit log" ON public.audit_log
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
