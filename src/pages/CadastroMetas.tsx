@@ -163,6 +163,22 @@ export default function CadastroMetas() {
 
             </div>
 
+            {/* Live Calculation Preview */}
+            {(referencia && alcancado && parseFloat(referencia.replace(',', '.')) > 0) ? (
+              <div className="p-4 mt-4 bg-muted/30 rounded-lg border border-border flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Pré-visualização do Cálculo</p>
+                  <p className="text-xs text-muted-foreground">Isso é como o indicador aparecerá no Dashboard</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-primary">
+                    {((parseFloat(alcancado.replace(',', '.')) / parseFloat(referencia.replace(',', '.'))) * 100).toFixed(1)}%
+                  </div>
+                  <p className="text-xs text-muted-foreground">de Atingimento</p>
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex justify-end pt-6">
               <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto">
                 <Save className="w-4 h-4 mr-2" />
