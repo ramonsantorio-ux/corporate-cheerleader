@@ -1,254 +1,312 @@
 import { useState, useEffect } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { UserCircle2, Loader2, Settings2, Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, User, ChevronDown, ChevronRight, Briefcase, Info, RefreshCw, X } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 
 interface Funcionario {
   id: string;
   nome: string;
   cargo: string;
+  departamento: string;
+  encarregado_id: string | null;
+  foto_url: string | null;
 }
 
-interface OrgNode {
-  id: string;
-  name: string;
-  role: string;
-  children?: OrgNode[];
-}
-
-interface HierarchyLevel {
-  id: string;
-  title: string;
-  keywords: string;
-}
-
-const DEFAULT_HIERARCHY: HierarchyLevel[] = [
-  { id: '1', title: 'Gerente de Contratos', keywords: 'gerente' },
-  { id: '2', title: 'Coordenador', keywords: 'coordenador' },
-  { id: '3', title: 'Supervisor de Campo', keywords: 'supervisor' },
-  { id: '4', title: 'Encarregados e Téc. Segurança', keywords: 'encarregado, tecnico, técnico' }
-];
-
-function OrgCard({ node }: { node: OrgNode }) {
-  return (
-    <div className="flex flex-col items-center">
-      <Card className="w-48 mb-6 shadow-md border-primary/20 bg-card z-10">
-        <CardContent className="p-4 flex flex-col items-center gap-2">
-          <UserCircle2 className="w-10 h-10 text-muted-foreground" />
-          <div className="text-center">
-            <p className="font-semibold text-sm leading-tight">{node.name}</p>
-            <p className="text-xs text-muted-foreground mt-1">{node.role}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {node.children && node.children.length > 0 && (
-        <div className="relative flex justify-center mt-2">
-          {/* Vertical line connecting parent to horizontal line */}
-          <div className="absolute -top-8 left-1/2 w-px h-8 bg-border" />
-          
-          {/* Horizontal line connecting children */}
-          {node.children.length > 1 && (
-            <div className="absolute -top-4 left-[10%] right-[10%] h-px bg-border" />
-          )}
-
-          <div className="flex gap-4 pt-4">
-            {node.children.map((child, idx) => (
-              <div key={idx} className="relative flex flex-col items-center">
-                {/* Vertical line connecting horizontal line to child */}
-                <div className="absolute -top-4 left-1/2 w-px h-4 bg-border" />
-                <OrgCard node={child} />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+interface TreeNode extends Funcionario {
+  children: TreeNode[];
 }
 
 export default function Organograma() {
-  const [roots, setRoots] = useState<OrgNode[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [levels, setLevels] = useState<HierarchyLevel[]>([]);
-  const [funcs, setFuncs] = useState<Funcionario[]>([]);
+  const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+  const [tree, setTree] = useState<TreeNode[]>([]);
+  const [selectedNode, setSelectedNode] = useState<Funcionario | null>(null);
+  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
 
-  // Carregar ou inicializar níveis
-  useEffect(() => {
-    const saved = localStorage.getItem('organograma_hierarchy');
-    if (saved) {
-      setLevels(JSON.parse(saved));
-    } else {
-      setLevels(DEFAULT_HIERARCHY);
-    }
-  }, []);
+  const fetchFuncionarios = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('funcionarios')
+      .select('id, nome, cargo, departamento, encarregado_id, foto_url')
+      .order('nome');
 
-  // Buscar dados
-  useEffect(() => {
-    async function fetchData() {
-      const { data, error } = await supabase.from('funcionarios').select('id, nome, cargo');
-      if (error || !data) {
-        setLoading(false);
-        return;
-      }
-      setFuncs(data as Funcionario[]);
+    if (error) {
+      toast.error('Erro ao buscar funcionários');
       setLoading(false);
+      return;
     }
-    fetchData();
+
+    setFuncionarios(data || []);
+    buildTree(data || []);
+    setLoading(false);
+  };
+
+  const buildTree = (data: Funcionario[]) => {
+    const map = new Map<string, TreeNode>();
+    const roots: TreeNode[] = [];
+
+    // Initialize map
+    data.forEach(f => {
+      map.set(f.id, { ...f, children: [] });
+    });
+
+    // Build hierarchy
+    data.forEach(f => {
+      const node = map.get(f.id)!;
+      if (f.encarregado_id && map.has(f.encarregado_id)) {
+        map.get(f.encarregado_id)!.children.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    setTree(roots);
+  };
+
+  useEffect(() => {
+    fetchFuncionarios();
   }, []);
 
-  // Construir a árvore toda vez que funcs ou levels mudarem
-  useEffect(() => {
-    if (funcs.length === 0 || levels.length === 0) return;
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    e.dataTransfer.setData('nodeId', id);
+    setDraggedNodeId(id);
+  };
 
-    let currentChildrenNodes: OrgNode[] = [];
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Necessário para permitir o drop
+  };
 
-    // Iterar de baixo para cima na hierarquia
-    for (let i = levels.length - 1; i >= 0; i--) {
-      const level = levels[i];
-      const keys = level.keywords.split(',').map(k => k.trim().toLowerCase()).filter(k => k);
-      
-      const employeesInLevel = funcs.filter(f => keys.some(k => f.cargo.toLowerCase().includes(k)));
-      
-      let nodesForLevel: OrgNode[] = [];
-      
-      if (employeesInLevel.length > 0) {
-        nodesForLevel = employeesInLevel.map(e => ({
-          id: e.id,
-          name: e.nome,
-          role: e.cargo,
-          children: currentChildrenNodes
-        }));
-      } else {
-        nodesForLevel = [{
-          id: `vaga-${level.id}`,
-          name: 'Vaga em Aberto',
-          role: level.title,
-          children: currentChildrenNodes
-        }];
-      }
-      
-      currentChildrenNodes = nodesForLevel;
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    const draggedId = e.dataTransfer.getData('nodeId');
+    setDraggedNodeId(null);
+
+    if (!draggedId || draggedId === targetId) return;
+
+    // Verificar ciclos (não posso mover alguém para debaixo do próprio subordinado)
+    const map = new Map<string, TreeNode>();
+    funcionarios.forEach(f => map.set(f.id, { ...f, children: [] }));
+    funcionarios.forEach(f => {
+      if (f.encarregado_id && map.has(f.encarregado_id)) map.get(f.encarregado_id)!.children.push(map.get(f.id)!);
+    });
+
+    const checkCycle = (nodeId: string, searchId: string): boolean => {
+      if (nodeId === searchId) return true;
+      const node = map.get(nodeId);
+      if (!node) return false;
+      return node.children.some(child => checkCycle(child.id, searchId));
+    };
+
+    if (checkCycle(draggedId, targetId)) {
+      toast.error('Movimento inválido: cria um ciclo hierárquico.');
+      return;
     }
 
-    setRoots(currentChildrenNodes);
-  }, [funcs, levels]);
+    // Update DB
+    toast.info('Atualizando hierarquia...', { id: 'update-org' });
+    const { error } = await supabase
+      .from('funcionarios')
+      .update({ encarregado_id: targetId })
+      .eq('id', draggedId);
 
-  // Edição
-  const moveLevel = (index: number, direction: -1 | 1) => {
-    const newLevels = [...levels];
-    if (index + direction < 0 || index + direction >= newLevels.length) return;
-    const temp = newLevels[index];
-    newLevels[index] = newLevels[index + direction];
-    newLevels[index + direction] = temp;
-    setLevels(newLevels);
+    if (error) {
+      toast.error('Erro ao atualizar gestor.', { id: 'update-org' });
+    } else {
+      toast.success('Hierarquia atualizada com sucesso!', { id: 'update-org' });
+      // Atualizar estado local
+      const newFuncs = funcionarios.map(f => f.id === draggedId ? { ...f, encarregado_id: targetId } : f);
+      setFuncionarios(newFuncs);
+      buildTree(newFuncs);
+    }
   };
 
-  const addLevel = () => {
-    setLevels([...levels, { id: Date.now().toString(), title: 'Novo Nível', keywords: '' }]);
+  const handleRemoveGestor = async (id: string) => {
+    toast.info('Removendo gestor...', { id: 'remove-gestor' });
+    const { error } = await supabase
+      .from('funcionarios')
+      .update({ encarregado_id: null })
+      .eq('id', id);
+
+    if (error) {
+      toast.error('Erro ao atualizar.', { id: 'remove-gestor' });
+    } else {
+      toast.success('Gestor removido.', { id: 'remove-gestor' });
+      const newFuncs = funcionarios.map(f => f.id === id ? { ...f, encarregado_id: null } : f);
+      setFuncionarios(newFuncs);
+      buildTree(newFuncs);
+      if (selectedNode?.id === id) {
+        setSelectedNode({ ...selectedNode, encarregado_id: null });
+      }
+    }
   };
 
-  const removeLevel = (index: number) => {
-    setLevels(levels.filter((_, i) => i !== index));
-  };
+  const OrgNode = ({ node, isRoot = false }: { node: TreeNode, isRoot?: boolean }) => {
+    const [expanded, setExpanded] = useState(true);
+    const isDragged = draggedNodeId === node.id;
 
-  const updateLevel = (index: number, field: keyof HierarchyLevel, value: string) => {
-    const newLevels = [...levels];
-    newLevels[index] = { ...newLevels[index], [field]: value };
-    setLevels(newLevels);
-  };
+    return (
+      <div className="flex flex-col items-center">
+        <motion.div 
+          layout
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className={`relative flex items-center gap-3 p-3 rounded-xl border ${isDragged ? 'border-primary/50 bg-primary/5 opacity-50' : 'border-border bg-card shadow-sm hover:shadow-md transition-shadow'} cursor-pointer z-10 w-64`}
+          draggable
+          onDragStart={(e: any) => handleDragStart(e, node.id)}
+          onDragOver={handleDragOver}
+          onDrop={(e: any) => handleDrop(e, node.id)}
+          onClick={() => setSelectedNode(node)}
+        >
+          {/* Node Content */}
+          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
+            {node.foto_url ? (
+              <img src={node.foto_url} alt={node.nome} className="h-full w-full object-cover" />
+            ) : (
+              <User className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-semibold truncate text-foreground">{node.nome}</h4>
+            <p className="text-xs text-muted-foreground truncate">{node.cargo}</p>
+          </div>
+          {node.children.length > 0 && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+              className="p-1 rounded-full hover:bg-muted text-muted-foreground"
+            >
+              {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </button>
+          )}
+        </motion.div>
 
-  const saveLevels = () => {
-    localStorage.setItem('organograma_hierarchy', JSON.stringify(levels));
-    setIsDialogOpen(false);
-  };
-
-  return (
-    <div className="p-6 md:p-8 max-w-[1200px] mx-auto space-y-8 animate-fade-in">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Organograma</h1>
-          <p className="text-muted-foreground mt-2">
-            Estrutura hierárquica baseada nos cargos cadastrados.
-          </p>
-        </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Settings2 className="w-4 h-4" />
-              Editar Estrutura
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Editar Estrutura do Organograma</DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-muted-foreground">
-              Defina os níveis da hierarquia (do cargo mais alto ao mais baixo). O sistema agrupará os funcionários cujos cargos contenham as palavras-chave informadas.
-            </p>
-            
-            <ScrollArea className="flex-1 -mx-6 px-6 overflow-y-auto">
-              <div className="space-y-4 py-4">
-                {levels.map((level, i) => (
-                  <div key={level.id} className="flex flex-col sm:flex-row gap-3 p-4 bg-muted/30 rounded-xl border border-border items-start sm:items-end">
-                    <div className="flex-1 space-y-1 w-full">
-                      <Label className="text-xs">Título do Nível (ex: Coordenador)</Label>
-                      <Input value={level.title} onChange={e => updateLevel(i, 'title', e.target.value)} placeholder="Título..." />
-                    </div>
-                    <div className="flex-1 space-y-1 w-full">
-                      <Label className="text-xs">Palavras-chave do Cargo (separadas por vírgula)</Label>
-                      <Input value={level.keywords} onChange={e => updateLevel(i, 'keywords', e.target.value)} placeholder="ex: encarregado, tecnico..." />
-                    </div>
-                    <div className="flex gap-1 mt-2 sm:mt-0 w-full sm:w-auto justify-end">
-                      <Button variant="ghost" size="icon" onClick={() => moveLevel(i, -1)} disabled={i === 0}>
-                        <ArrowUp className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => moveLevel(i, 1)} disabled={i === levels.length - 1}>
-                        <ArrowDown className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => removeLevel(i)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+        {/* Children */}
+        <AnimatePresence>
+          {expanded && node.children.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="flex flex-col items-center overflow-hidden"
+            >
+              {/* Vertical line down from parent */}
+              <div className="w-px h-6 bg-border"></div>
+              
+              <div className="flex gap-4 relative pt-4">
+                {/* Horizontal line connecting children */}
+                {node.children.length > 1 && (
+                  <div className="absolute top-0 left-[50%] right-[50%] h-px bg-border w-[calc(100%-4rem)] -translate-x-1/2"></div>
+                )}
+                
+                {node.children.map((child, idx) => (
+                  <div key={child.id} className="flex flex-col items-center relative">
+                    {/* Vertical line up from child */}
+                    <div className="absolute top-0 w-px h-4 bg-border -translate-y-full"></div>
+                    <OrgNode node={child} />
                   </div>
                 ))}
               </div>
-            </ScrollArea>
-            
-            <div className="flex items-center justify-between pt-4 border-t mt-auto">
-              <Button variant="secondary" onClick={addLevel} className="gap-2">
-                <Plus className="w-4 h-4" /> Adicionar Nível
-              </Button>
-              <Button onClick={saveLevels}>Salvar Estrutura</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Organograma Interativo</h1>
+          <p className="text-muted-foreground mt-1">Visualize e edite a hierarquia da empresa. Arraste e solte um funcionário sobre outro para mudar seu gestor.</p>
+        </div>
+        <Button variant="outline" onClick={fetchFuncionarios}><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
       </div>
 
-      <div className="w-full overflow-x-auto pb-10 flex justify-center bg-muted/30 p-8 rounded-xl border border-border min-h-[400px]">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center text-muted-foreground">
-            <Loader2 className="w-8 h-8 animate-spin mb-4" />
-            Carregando estrutura...
-          </div>
-        ) : roots.length > 0 ? (
-          <div className="min-w-max pt-4 flex gap-12">
-            {roots.map((root, idx) => (
-              <div key={idx} className="relative flex flex-col items-center">
-                <OrgCard node={root} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground">Nenhum dado encontrado.</p>
-        )}
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Workspace Org Chart */}
+        <Card className="flex-1 overflow-auto min-h-[600px] w-full bg-muted/30 border-dashed">
+          <CardContent className="p-8">
+            <div className="min-w-max flex justify-center pb-20">
+              {tree.length > 0 ? (
+                <div className="flex gap-12">
+                  {tree.map(root => (
+                    <OrgNode key={root.id} node={root} isRoot />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-muted-foreground mt-20">Nenhum funcionário encontrado.</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Side Panel Details */}
+        <AnimatePresence>
+          {selectedNode && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="w-full lg:w-80 shrink-0"
+            >
+              <Card className="sticky top-6">
+                <CardHeader className="pb-4 relative">
+                  <button 
+                    onClick={() => setSelectedNode(null)}
+                    className="absolute top-4 right-4 p-1 hover:bg-muted rounded-full"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center overflow-hidden mx-auto border-2 border-border mb-4">
+                    {selectedNode.foto_url ? (
+                      <img src={selectedNode.foto_url} alt={selectedNode.nome} className="h-full w-full object-cover" />
+                    ) : (
+                      <User className="h-8 w-8 text-muted-foreground" />
+                    )}
+                  </div>
+                  <CardTitle className="text-center">{selectedNode.nome}</CardTitle>
+                  <div className="flex justify-center mt-2"><Badge variant="secondary">{selectedNode.cargo}</Badge></div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1 mb-1"><Briefcase className="h-3 w-3"/> Departamento</Label>
+                    <p className="text-sm font-medium">{selectedNode.departamento || 'Não informado'}</p>
+                  </div>
+                  
+                  {selectedNode.encarregado_id && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground uppercase flex items-center gap-1 mb-1"><User className="h-3 w-3"/> Responde a</Label>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-primary">
+                          {funcionarios.find(f => f.id === selectedNode.encarregado_id)?.nome || 'Desconhecido'}
+                        </p>
+                        <Button variant="ghost" size="sm" onClick={() => handleRemoveGestor(selectedNode.id)} className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10">Remover</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-muted/50 p-3 rounded-lg mt-4 text-xs text-muted-foreground flex items-start gap-2">
+                    <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                    <p>Para alterar o gestor, arraste o card desta pessoa no organograma e solte sobre o card do novo gestor.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
