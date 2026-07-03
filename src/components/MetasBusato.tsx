@@ -11,6 +11,9 @@ import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import html2canvas from 'html2canvas';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
+import { Input } from '@/components/ui/input';
+import { Edit2, Save, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 
 const MESES = [
@@ -70,25 +73,56 @@ export default function MetasBusato() {
 
   const [dbData, setDbData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editRef, setEditRef] = useState<string>('');
+  const [editAlc, setEditAlc] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    async function fetchMetas() {
-      try {
-        const { data, error } = await supabase
-          .from('indicadores_metas')
-          .select('*')
-          .eq('setor', 'Busato');
-          
-        if (error) throw error;
-        setDbData(data || []);
-      } catch (err) {
-        console.error('Erro ao buscar metas:', err);
-      } finally {
-        setIsLoading(false);
-      }
+  async function fetchMetas() {
+    try {
+      const { data, error } = await supabase
+        .from('indicadores_metas')
+        .select('*')
+        .eq('setor', 'Busato');
+        
+      if (error) throw error;
+      setDbData(data || []);
+    } catch (err) {
+      console.error('Erro ao buscar metas:', err);
+    } finally {
+      setIsLoading(false);
     }
-    fetchMetas();
-  }, []);
+  }
+
+  const handleEdit = (m: any) => {
+    setEditingId(m.id);
+    setEditRef(m.ref.toString());
+    setEditAlc(m.alc.toString());
+  };
+
+  const handleSaveEdit = async (id: number) => {
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('indicadores_metas')
+        .update({
+          referencia: parseFloat(editRef.replace(',', '.')),
+          alcancado: parseFloat(editAlc.replace(',', '.'))
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      toast.success('Meta atualizada!');
+      setEditingId(null);
+      await fetchMetas();
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => { fetchMetas(); }, []);
 
   const METAS_DATA = useMemo(() => {
     const result: any = {};
@@ -368,37 +402,56 @@ export default function MetasBusato() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
-                        className={`transition-colors border-b border-border last:border-0 ${getRowColor(m.status)}`}
+                        className={`transition-colors border-b border-border last:border-0 group ${getRowColor(m.status)}`}
                       >
                         <TableCell>
                           <p className="font-semibold text-sm">{m.meta}</p>
                           <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
                         </TableCell>
-                        <TableCell className="text-center font-medium text-muted-foreground">
-                          {m.ref.toFixed(2)}%
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="font-bold">{m.alc.toFixed(2)}%</span>
-                              {isOver && <span className="text-[10px] text-primary font-bold">+{((m.alc/m.ref)*100 - 100).toFixed(0)}%</span>}
-                            </div>
-                            <div className="w-full bg-secondary h-2 rounded-full overflow-hidden relative">
-                              <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: `${fillPercentage}%` }}
-                                transition={{ duration: 0.8, delay: 0.2 + (idx * 0.1) }}
-                                className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`}
-                              />
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right pr-6">
-                          <Badge className={`shadow-sm border ${getStatusColor(m.status)}`}>
-                            {getStatusIcon(m.status)}
-                            {m.status}
-                          </Badge>
-                        </TableCell>
+                        {editingId === m.id ? (
+                          <>
+                            <TableCell className="text-center">
+                              <Input type="number" step="0.01" className="w-20 mx-auto text-center h-8 text-xs" value={editRef} onChange={e => setEditRef(e.target.value)} />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editAlc} onChange={e => setEditAlc(e.target.value)} />
+                            </TableCell>
+                            <TableCell className="text-right pr-6">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button size="sm" variant="ghost" className="h-8 px-2 text-emerald-600" onClick={() => handleSaveEdit(m.id)} disabled={isSaving}><Save className="w-4 h-4" /></Button>
+                                <Button size="sm" variant="ghost" className="h-8 px-2 text-rose-600" onClick={() => setEditingId(null)} disabled={isSaving}><X className="w-4 h-4" /></Button>
+                              </div>
+                            </TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell className="text-center font-medium text-muted-foreground">
+                              {m.ref.toFixed(2)}%
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1.5">
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className="font-bold">{m.alc.toFixed(2)}%</span>
+                                  {isOver && <span className="text-[10px] text-primary font-bold">+{((m.alc/m.ref)*100 - 100).toFixed(0)}%</span>}
+                                </div>
+                                <div className="w-full bg-secondary h-2 rounded-full overflow-hidden relative">
+                                  <motion.div initial={{ width: 0 }} animate={{ width: `${fillPercentage}%` }} transition={{ duration: 0.8, delay: 0.2 + (idx * 0.1) }} className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`} />
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right pr-6 relative group">
+                              <div className="flex items-center justify-end gap-2">
+                                <Badge className={`shadow-sm border ${getStatusColor(m.status)}`}>
+                                  {getStatusIcon(m.status)}
+                                  {m.status}
+                                </Badge>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity absolute -right-2" onClick={() => handleEdit(m)}>
+                                  <Edit2 className="w-4 h-4 text-muted-foreground" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </>
+                        )}
                       </motion.tr>
                     );
                   })}
