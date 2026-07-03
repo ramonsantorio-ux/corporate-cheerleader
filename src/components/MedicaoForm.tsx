@@ -169,7 +169,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
             }
           }
           if (tagIndex !== -1 && tagIndex + 1 < row.length) {
-            let val = row[tagIndex + 1];
+            const val = row[tagIndex + 1];
             let aderenciaStr = '';
             if (typeof val === 'number') {
               aderenciaStr = (val * 100).toFixed(2);

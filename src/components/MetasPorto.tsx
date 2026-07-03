@@ -105,7 +105,7 @@ export default function MetasPorto() {
     Object.keys(grouped).forEach(m => {
       const metasMes = grouped[m];
       let somaAtingido = 0;
-      let counts = { acima: 0, aceitavel: 0, abaixo: 0 };
+      const counts = { acima: 0, aceitavel: 0, abaixo: 0 };
       
       const metasFormatadas = metasMes.map((row: any) => {
         let fillPercentage = row.referencia === 0 ? 100 : Math.min((row.alcancado / row.referencia) * 100, 150);
