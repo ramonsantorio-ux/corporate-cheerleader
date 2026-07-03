@@ -481,16 +481,16 @@ export default function MetasBusato() {
                   <TableHead className="w-[180px] text-center font-bold">Alcançado</TableHead>
                   <TableHead className="text-right pr-6 font-bold">
                   {!isEditing ? (
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={handleAddMetric} disabled={isSaving} className="h-8 text-primary border-primary hover:bg-primary/10">
-                        <Plus className="w-4 h-4 mr-1" /> Adicionar Métrica
-                      </Button>
+                    <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm" onClick={handleEditAll} className="h-8">
                         <Edit2 className="w-4 h-4 mr-2" /> Lançar
                       </Button>
                     </div>
                   ) : (
                     <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={handleAddMetric} disabled={isSaving} className="h-8 text-primary border-primary hover:bg-primary/10">
+                        <Plus className="w-4 h-4 mr-1" /> Adicionar Métrica
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving} className="text-rose-600 h-8">
                         <X className="w-4 h-4 mr-1" /> Cancelar
                       </Button>
