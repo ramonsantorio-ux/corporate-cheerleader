@@ -164,7 +164,7 @@ export default function MetasBusato() {
         somaAtingido += Math.min(pct, 100);
 
         return {
-          setor: row.setor,
+          id: row.id, setor: row.setor,
           meta: row.indicador,
           ref: row.referencia,
           alc: row.alcancado,
