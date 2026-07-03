@@ -82,7 +82,8 @@ export default function MetasBusato() {
       const { data, error } = await supabase
         .from('indicadores_metas')
         .select('*')
-        .eq('setor', 'Busato');
+        .eq('setor', 'Busato')
+        .order('indicador', { ascending: true });
         
       if (error) throw error;
       setDbData(data || []);

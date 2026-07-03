@@ -81,7 +81,8 @@ export default function MetasPorto() {
       const { data, error } = await supabase
         .from('indicadores_metas')
         .select('*')
-        .eq('setor', 'Porto');
+        .eq('setor', 'Porto')
+        .order('indicador', { ascending: true });
         
       if (error) throw error;
       setDbData(data || []);
