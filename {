@@ -1,1 +1,0 @@
-const arr = [{mes: 'Mai/2026', fatLocacao: 1000, aderenciaDiaria: []}, {mes: 'Mai/2026', fatLocacao: 0, aderenciaDiaria: [{dia: '01', aderencia: 100}]}]; const merged = arr.reduce((acc, curr) = const existing = acc.find(m = === curr.mes); if (existing) { Object.keys(curr).forEach(key = if (Array.isArray(curr[key]) 
