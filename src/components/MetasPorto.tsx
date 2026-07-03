@@ -75,6 +75,7 @@ export default function MetasPorto() {
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, {ref: string, alc: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   async function fetchMetas() {
     try {
@@ -82,6 +83,7 @@ export default function MetasPorto() {
         .from('indicadores_metas')
         .select('*')
         .eq('setor', 'Porto')
+        .eq('ano', selectedYear)
         .order('indicador', { ascending: true });
         
       if (error) throw error;
@@ -126,7 +128,7 @@ export default function MetasPorto() {
     }
   };
 
-  useEffect(() => { fetchMetas(); }, []);
+  useEffect(() => { fetchMetas(); }, [selectedYear]);
 
   const METAS_DATA = useMemo(() => {
     const result: any = {};

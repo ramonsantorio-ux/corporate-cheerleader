@@ -76,6 +76,7 @@ export default function MetasBusato() {
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, {ref: string, alc: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   async function fetchMetas() {
     try {
@@ -83,6 +84,7 @@ export default function MetasBusato() {
         .from('indicadores_metas')
         .select('*')
         .eq('setor', 'Busato')
+        .eq('ano', selectedYear)
         .order('indicador', { ascending: true });
         
       if (error) throw error;
@@ -118,6 +120,7 @@ export default function MetasBusato() {
         indicador: nome,
         setor: 'Busato',
         mes: selectedMonth,
+        ano: selectedYear,
         referencia: 0,
         alcancado: 0
       });
@@ -164,7 +167,7 @@ export default function MetasBusato() {
     }
   };
 
-  useEffect(() => { fetchMetas(); }, []);
+  useEffect(() => { fetchMetas(); }, [selectedYear]);
 
   const METAS_DATA = useMemo(() => {
     const result: any = {};
@@ -351,7 +354,19 @@ export default function MetasBusato() {
         <div className="flex items-center gap-3">
           <Target className="w-5 h-5 text-primary" />
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-wider">Evolução 2026</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wider flex items-center gap-2">
+                Evolução
+                <Select value={selectedYear.toString()} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+                  <SelectTrigger className="w-[80px] h-6 text-xs font-bold bg-transparent border-primary/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2024, 2025, 2026, 2027, 2028, 2029, 2030].map(y => (
+                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </h2>
             <p className="text-xs text-muted-foreground">Desempenho Geral por Mês</p>
           </div>
         </div>
