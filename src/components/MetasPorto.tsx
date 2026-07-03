@@ -8,7 +8,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend, Cell, ReferenceLine, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, LabelList } from 'recharts';
 import { Target, TrendingUp, AlertTriangle, CheckCircle2, TrendingDown, ArrowUpRight, ArrowDownRight, Trophy, AlertOctagon, CalendarCheck, CalendarX, Download } from 'lucide-react';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
-import html2canvas from 'html2canvas';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
@@ -73,9 +72,8 @@ export default function MetasPorto() {
 
   const [dbData, setDbData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editRef, setEditRef] = useState<string>('');
-  const [editAlc, setEditAlc] = useState<string>('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValues, setEditValues] = useState<Record<string, {ref: string, alc: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   async function fetchMetas() {
@@ -94,26 +92,31 @@ export default function MetasPorto() {
     }
   }
 
-  const handleEdit = (m: any) => {
-    setEditingId(m.id);
-    setEditRef(m.ref.toString());
-    setEditAlc(m.alc.toString());
+  const handleEditAll = () => {
+    const values: Record<string, {ref: string, alc: string}> = {};
+    data.metas.forEach((m: any) => {
+      values[m.id] = { ref: m.ref.toString(), alc: m.alc.toString() };
+    });
+    setEditValues(values);
+    setIsEditing(true);
   };
 
-  const handleSaveEdit = async (id: number) => {
+  const handleSaveAll = async () => {
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('indicadores_metas')
-        .update({
-          referencia: parseFloat(editRef.replace(',', '.')),
-          alcancado: parseFloat(editAlc.replace(',', '.'))
-        })
-        .eq('id', id);
+      const updates = Object.keys(editValues).map(id => ({
+        id,
+        referencia: parseFloat(editValues[id].ref.replace(',', '.')),
+        alcancado: parseFloat(editValues[id].alc.replace(',', '.'))
+      }));
+      
+      await Promise.all(updates.map(u => supabase.from('indicadores_metas').update({
+        referencia: u.referencia,
+        alcancado: u.alcancado
+      }).eq('id', u.id)));
 
-      if (error) throw error;
-      toast.success('Meta atualizada!');
-      setEditingId(null);
+      toast.success('Metas atualizadas!');
+      setIsEditing(false);
       await fetchMetas();
     } catch (err: any) {
       toast.error('Erro ao salvar: ' + err.message);
@@ -189,30 +192,8 @@ export default function MetasPorto() {
   const meses = MESES;
 
   const [selectedMonth, setSelectedMonth] = useState<string>('Maio');
-  const [isExporting, setIsExporting] = useState(false);
-  const dashboardRef = useRef<HTMLDivElement>(null);
+    const dashboardRef = useRef<HTMLDivElement>(null);
 
-  const handleExport = async () => {
-    if (!dashboardRef.current) return;
-    setIsExporting(true);
-    try {
-      const canvas = await html2canvas(dashboardRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff'
-      });
-      const image = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = image;
-      link.download = `Metas_Porto_${selectedMonth}.png`;
-      link.click();
-    } catch (err) {
-      console.error("Failed to export image", err);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-  
   const data = METAS_DATA[selectedMonth as keyof typeof METAS_DATA];
   const batidas = data.counts.acima + data.counts.aceitavel;
   const perdidas = data.counts.abaixo;
@@ -299,10 +280,7 @@ export default function MetasPorto() {
               );
             })}
           </div>
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting} data-html2canvas-ignore className="hidden sm:flex shadow-sm">
-            <Download className="w-4 h-4 mr-2" />
-            {isExporting ? 'Exportando...' : 'Exportar PNG'}
-          </Button>
+          
         </div>
       </div>
 
@@ -389,7 +367,22 @@ export default function MetasPorto() {
                   <TableHead className="font-bold">Métrica</TableHead>
                   <TableHead className="text-center font-bold">Ref.</TableHead>
                   <TableHead className="w-[180px] text-center font-bold">Alcançado</TableHead>
-                  <TableHead className="text-right pr-6 font-bold">Diagnóstico</TableHead>
+                  <TableHead className="text-right pr-6 font-bold">
+                  {!isEditing ? (
+                    <Button variant="ghost" size="sm" onClick={handleEditAll} className="h-8">
+                      <Edit2 className="w-4 h-4 mr-2" /> Editar Lançamentos
+                    </Button>
+                  ) : (
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving} className="text-rose-600 h-8">
+                        <X className="w-4 h-4 mr-1" /> Cancelar
+                      </Button>
+                      <Button variant="default" size="sm" onClick={handleSaveAll} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 h-8">
+                        <Save className="w-4 h-4 mr-1" /> Salvar
+                      </Button>
+                    </div>
+                  )}
+                </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -412,18 +405,20 @@ export default function MetasPorto() {
                           <p className="font-semibold text-sm">{m.meta}</p>
                           <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
                         </TableCell>
-                        {editingId === m.id ? (
+                        {isEditing && editValues[m.id] ? (
                           <>
                             <TableCell className="text-center">
-                              <Input type="number" step="0.01" className="w-20 mx-auto text-center h-8 text-xs" value={editRef} onChange={e => setEditRef(e.target.value)} />
+                              <Input type="number" step="0.01" className="w-20 mx-auto text-center h-8 text-xs" value={editValues[m.id].ref} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], ref: e.target.value}})} />
                             </TableCell>
                             <TableCell className="text-center">
-                              <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editAlc} onChange={e => setEditAlc(e.target.value)} />
+                              <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alc} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alc: e.target.value}})} />
                             </TableCell>
                             <TableCell className="text-right pr-6">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button size="sm" variant="ghost" className="h-8 px-2 text-emerald-600" onClick={() => handleSaveEdit(m.id)} disabled={isSaving}><Save className="w-4 h-4" /></Button>
-                                <Button size="sm" variant="ghost" className="h-8 px-2 text-rose-600" onClick={() => setEditingId(null)} disabled={isSaving}><X className="w-4 h-4" /></Button>
+                              <div className="flex justify-end">
+                                <Badge className={`shadow-sm border ${getStatusColor(m.status)}`}>
+                                  {getStatusIcon(m.status)}
+                                  {m.status}
+                                </Badge>
                               </div>
                             </TableCell>
                           </>
@@ -449,9 +444,7 @@ export default function MetasPorto() {
                                   {getStatusIcon(m.status)}
                                   {m.status}
                                 </Badge>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity absolute -right-2" onClick={() => handleEdit(m)}>
-                                  <Edit2 className="w-4 h-4 text-muted-foreground" />
-                                </Button>
+                                
                               </div>
                             </TableCell>
                           </>
