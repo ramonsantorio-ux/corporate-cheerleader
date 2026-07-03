@@ -74,7 +74,7 @@ export default function MetasBusato() {
   const [dbData, setDbData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editValues, setEditValues] = useState<Record<string, {ref: string, alc: string}>>({});
+  const [editValues, setEditValues] = useState<Record<string, {meta: string, ref: string, alc: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
@@ -135,9 +135,9 @@ export default function MetasBusato() {
   };
 
   const handleEditAll = () => {
-    const values: Record<string, {ref: string, alc: string}> = {};
-    data.metas.forEach((m: any) => {
-      values[m.id] = { ref: m.ref.toString(), alc: m.alc.toString() };
+    const values: Record<string, {meta: string, ref: string, alc: string}> = {};
+    data.metas.forEach(m => {
+      values[m.id] = { meta: m.meta, ref: m.ref.toString(), alc: m.alc.toString() };
     });
     setEditValues(values);
     setIsEditing(true);
@@ -148,11 +148,13 @@ export default function MetasBusato() {
     try {
       const updates = Object.keys(editValues).map(id => ({
         id,
+        indicador: editValues[id].meta,
         referencia: parseFloat(editValues[id].ref.replace(',', '.')),
         alcancado: parseFloat(editValues[id].alc.replace(',', '.'))
       }));
       
       await Promise.all(updates.map(u => supabase.from('indicadores_metas').update({
+        indicador: u.indicador,
         referencia: u.referencia,
         alcancado: u.alcancado
       }).eq('id', u.id)));
@@ -183,104 +185,59 @@ export default function MetasBusato() {
 
     Object.keys(grouped).forEach(m => {
       const metasMes = grouped[m];
-      let somaAtingido = 0;
       const counts = { acima: 0, aceitavel: 0, abaixo: 0 };
       
       let totalWeight = 0;
       let weightedSum = 0;
 
       const metasFormatadas = metasMes.map((row: any) => {
-        const indicadorNome = row.indicador || '';
-        const ind = indicadorNome.toLowerCase();
-        const val = row.alcancado;
+        const ind = (row.indicador || '').toLowerCase();
+        const ref = row.referencia || 1;
+        const alc = row.alcancado || 0;
         
         let status = '';
-        let fillPercentage = 0;
-        let weight = 0;
+        let score = 0;
+        let weight = 10;
 
-        if (ind.includes('aderência')) {
-            weight = 40;
-            if (val >= 99) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
-            else if (val >= 97) { status = 'Acima do Esperado'; fillPercentage = 110; }
-            else if (val >= 95) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
-            else if (val >= 93) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
-            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
-        } else if (ind.includes('eventos')) {
-            weight = 10;
-            if (val === 0) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
-            else if (val === 1) { status = 'Acima do Esperado'; fillPercentage = 110; }
-            else if (val === 2) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
-            else if (val === 3) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
-            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
-        } else if (ind.includes('custo')) {
-            weight = 10;
-            if (val < 390914.24) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
-            else if (val < 412631.70) { status = 'Acima do Esperado'; fillPercentage = 110; }
-            else if (val < 434349.15) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
-            else if (val <= 456066.61) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
-            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
-        } else if (ind.includes('eventuais')) {
-            weight = 25;
-            if (val >= 99) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
-            else if (val >= 97) { status = 'Acima do Esperado'; fillPercentage = 110; }
-            else if (val >= 95) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
-            else if (val >= 93) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
-            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
-        } else if (ind.includes('preventivas')) {
-            weight = 10;
-            if (val >= 99) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
-            else if (val >= 97) { status = 'Acima do Esperado'; fillPercentage = 110; }
-            else if (val >= 95) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
-            else if (val >= 93) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
-            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
-        } else if (ind.includes('turnover')) {
-            weight = 5;
-            const reducao = row.referencia > 0 ? ((row.referencia - val) / row.referencia) * 100 : 0;
-            if (reducao >= 20) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
-            else if (reducao >= 15) { status = 'Acima do Esperado'; fillPercentage = 110; }
-            else if (reducao >= 10) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
-            else if (reducao >= 5) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
-            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
+        const isLessIsBetter = ind.includes('interdições') || ind.includes('multas') || ind.includes('notificações') || ind.includes('afastamento') || ind.includes('perda') || ind.includes('custo') || ind.includes('turnover') || ind.includes('eventos');
+        
+        if (ind.includes('aderência')) weight = 40;
+        else if (ind.includes('eventuais')) weight = 25;
+        else if (ind.includes('preventivas')) weight = 10;
+        else if (ind.includes('turnover')) weight = 5;
+
+        if (isLessIsBetter) {
+            score = ref !== 0 ? (ref / Math.max(alc, 0.001)) * 100 : 100;
         } else {
-            weight = 10; // Fallback
-            const isLessIsBetter = ind.includes('interdições') || ind.includes('multas') || ind.includes('notificações') || ind.includes('afastamento') || ind.includes('perda');
-            if (isLessIsBetter) {
-                if (val === 0) fillPercentage = 120;
-                else if (row.referencia === 0) fillPercentage = val === 0 ? 120 : 50;
-                else fillPercentage = (row.referencia / val) * 100;
-            } else {
-                if (row.referencia === 0) fillPercentage = val > 0 ? 120 : 100;
-                else fillPercentage = (val / row.referencia) * 100;
-            }
-            if (fillPercentage >= 110) status = 'Muito Acima do Esperado';
-            else if (fillPercentage >= 100) status = 'Acima do Esperado';
-            else if (fillPercentage >= 90) status = 'Dentro Esperado (Aceitável)';
-            else if (fillPercentage >= 70) status = 'Abaixo do Esperado';
-            else status = 'Muito Abaixo do Esperado';
+            score = ref !== 0 ? (alc / ref) * 100 : 100;
         }
+
+        if (score >= 110) status = 'Muito Acima do Esperado';
+        else if (score >= 100) status = 'Acima do Esperado';
+        else if (score >= 90) status = 'Dentro Esperado (Aceitável)';
+        else if (score >= 70) status = 'Abaixo do Esperado';
+        else status = 'Muito Abaixo do Esperado';
 
         if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
         else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
         else counts.abaixo++;
 
         totalWeight += weight;
-        weightedSum += Math.min(fillPercentage, 100) * weight;
+        weightedSum += Math.min(score, 100) * weight;
 
         return {
           id: row.id, setor: row.setor,
           meta: row.indicador,
-          ref: row.referencia,
-          alc: row.alcancado,
+          ref: ref,
+          alc: alc,
           status: status,
-          score: fillPercentage
+          score: score
         };
       });
 
-      const atingidoMedio = totalWeight > 0 ? weightedSum / totalWeight : 0;
-      
       result[m] = {
-        atingido: atingidoMedio,
-        gap: 100 - atingidoMedio,
+        atingido: totalWeight > 0 ? weightedSum / totalWeight : 0,
+        gap: totalWeight > 0 ? 100 - (weightedSum / totalWeight) : 100,
         counts: counts,
         metas: metasFormatadas
       };
@@ -290,41 +247,26 @@ export default function MetasBusato() {
   }, [dbData]);
 
   const meses = MESES;
-
-  const [selectedMonth, setSelectedMonth] = useState<string>('Maio');
-  const [isExporting, setIsExporting] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
-
   const data = METAS_DATA[selectedMonth as keyof typeof METAS_DATA];
   const batidas = data.counts.acima + data.counts.aceitavel;
   const perdidas = data.counts.abaixo;
   const totalMetas = batidas + perdidas;
 
-  // Radar Data: Normalizamos Alcançado vs Referência (Ref = 100%)
   const radarData = useMemo(() => {
-    return data.metas.map(m => {
-      const reachedPct = Math.min((m.alc / m.ref) * 100, 150); // cap at 150% for visualization
-      return {
-        subject: m.meta.replace(/ \(\%\)/g, '').substring(0, 15) + '...',
-        fullSubject: m.meta,
-        Atingido: reachedPct,
-        Referencia: 100,
-        originalAlc: m.alc,
-        originalRef: m.ref
-      };
-    });
+    return data.metas.map(m => ({
+      subject: m.meta.replace(/ \(\%\)/g, '').substring(0, 15) + '...',
+      fullSubject: m.meta,
+      Atingido: Math.min(m.score, 150),
+      Referencia: 100,
+      originalAlc: m.alc,
+      originalRef: m.ref
+    }));
   }, [data]);
 
-  // Ofensores/Impulsionadores Data
   const varianceData = useMemo(() => {
     return data.metas.map(m => {
-      let variance = 0;
-      if (m.meta.includes('Interdições')) {
-        variance = m.alc - m.ref;
-      } else {
-        variance = m.alc - m.ref; 
-      }
-      
+      const variance = m.alc - m.ref;
       return {
         name: m.meta.replace(/ \(\%\)/g, '').substring(0, 12) + '...',
         fullName: m.meta,
@@ -334,7 +276,6 @@ export default function MetasBusato() {
     }).sort((a, b) => b.variance - a.variance);
   }, [data]);
 
-  // Evolution Data for AreaChart
   const evolutionData = useMemo(() => {
     return meses.map(m => ({
       month: m.substring(0, 3),
@@ -349,7 +290,6 @@ export default function MetasBusato() {
   
   return (
     <div className="space-y-6 bg-background rounded-xl" ref={dashboardRef}>
-      {/* 1. Timeline Semafórica do Ano */}
       <div className="bg-card border border-border rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Target className="w-5 h-5 text-primary" />
@@ -375,7 +315,7 @@ export default function MetasBusato() {
           <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
             {meses.map(m => {
               const atingido = METAS_DATA[m as keyof typeof METAS_DATA].atingido;
-              const isGood = atingido >= 60; // Arbitrary threshold for visual
+              const isGood = atingido >= 60;
               const isSelected = selectedMonth === m;
               return (
                 <button 
@@ -392,14 +332,10 @@ export default function MetasBusato() {
               );
             })}
           </div>
-          
         </div>
       </div>
 
-      {/* 2. Placares Gigantes de Win/Loss e Resumo Global */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        
-        {/* Painel Global */}
         <Card className="md:col-span-4 border-none bg-gradient-to-br from-primary/10 to-primary/5 shadow-sm relative overflow-hidden flex flex-col justify-center">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
           <CardContent className="p-6">
@@ -424,7 +360,6 @@ export default function MetasBusato() {
           </CardContent>
         </Card>
 
-        {/* Win Card */}
         <Card className="md:col-span-4 border-none bg-emerald-50 dark:bg-emerald-950/20 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
           <div className="absolute -right-6 -top-6 text-emerald-500/10">
             <Trophy className="w-32 h-32" />
@@ -444,7 +379,6 @@ export default function MetasBusato() {
           </CardContent>
         </Card>
 
-        {/* Loss Card */}
         <Card className="md:col-span-4 border-none bg-rose-50 dark:bg-rose-950/20 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
           <div className="absolute -right-6 -top-6 text-rose-500/10">
             <AlertOctagon className="w-32 h-32" />
@@ -463,13 +397,9 @@ export default function MetasBusato() {
             </p>
           </CardContent>
         </Card>
-
       </div>
 
-      {/* 3. Tabela de Metas vs Radar Chart */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
-        {/* Tabela */}
         <Card className="xl:col-span-2 shadow-sm border-border flex flex-col">
           <ExpandableChart title={`Detalhamento de ${selectedMonth}`}>
             <div className="p-0 flex-1 overflow-auto rounded-md bg-card">
@@ -489,7 +419,7 @@ export default function MetasBusato() {
                   ) : (
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" size="sm" onClick={handleAddMetric} disabled={isSaving} className="h-8 text-primary border-primary hover:bg-primary/10">
-                        <Plus className="w-4 h-4 mr-1" /> Adicionar Métrica
+                        <Plus className="w-4 h-4 mr-1" /> Adicionar
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving} className="text-rose-600 h-8">
                         <X className="w-4 h-4 mr-1" /> Cancelar
@@ -506,22 +436,22 @@ export default function MetasBusato() {
                 <AnimatePresence mode="popLayout">
                   {data.metas.map((m, idx) => {
                     const fillPercentage = Math.min(m.score, 100) || 0;
-                    const isOver = m.alc > m.ref;
+                    const isOver = m.score >= 100;
                     
                     return (
                       <motion.tr 
-                        key={m.meta + selectedMonth}
+                        key={m.id + selectedMonth}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         className={`transition-colors border-b border-border last:border-0 group ${getRowColor(m.status)}`}
                       >
-                        <TableCell>
-                          <p className="font-semibold text-sm">{m.meta}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
-                        </TableCell>
                         {isEditing && editValues[m.id] ? (
                           <>
+                            <TableCell>
+                              <Input type="text" className="w-full text-sm font-semibold h-8" value={editValues[m.id].meta} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], meta: e.target.value}})} />
+                              <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
+                            </TableCell>
                             <TableCell className="text-center">
                               <Input type="number" step="0.01" className="w-20 mx-auto text-center h-8 text-xs" value={editValues[m.id].ref} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], ref: e.target.value}})} />
                             </TableCell>
@@ -530,7 +460,7 @@ export default function MetasBusato() {
                             </TableCell>
                             <TableCell className="text-right pr-6">
                               <div className="flex justify-end gap-2 items-center">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600" onClick={() => handleDeleteMetric(m.id)} title="Excluir Métrica">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600" onClick={() => handleDeleteMetric(m.id)}>
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
                                 <Badge className={`shadow-sm border ${getStatusColor(m.status)}`}>
@@ -542,28 +472,28 @@ export default function MetasBusato() {
                           </>
                         ) : (
                           <>
+                            <TableCell>
+                              <p className="font-semibold text-sm">{m.meta}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
+                            </TableCell>
                             <TableCell className="text-center font-medium text-muted-foreground">
-                              {m.ref.toFixed(2)}%
+                              {m.ref.toFixed(2)}
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1.5">
                                 <div className="flex justify-between items-center text-xs">
-                                  <span className="font-bold">{m.alc.toFixed(2)}%</span>
-                                  {isOver && <span className="text-[10px] text-primary font-bold">+{((m.alc/m.ref)*100 - 100).toFixed(0)}%</span>}
+                                  <span className="font-bold">{m.alc.toFixed(2)}</span>
                                 </div>
                                 <div className="w-full bg-secondary h-2 rounded-full overflow-hidden relative">
-                                  <motion.div initial={{ width: 0 }} animate={{ width: `${fillPercentage}%` }} transition={{ duration: 0.8, delay: 0.2 + (idx * 0.1) }} className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`} />
+                                  <motion.div initial={{ width: 0 }} animate={{ width: `${fillPercentage}%` }} transition={{ duration: 0.8 }} className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`} />
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="text-right pr-6 relative group">
-                              <div className="flex items-center justify-end gap-2">
-                                <Badge className={`shadow-sm border ${getStatusColor(m.status)}`}>
-                                  {getStatusIcon(m.status)}
-                                  {m.status}
-                                </Badge>
-                                
-                              </div>
+                            <TableCell className="text-right pr-6">
+                              <Badge className={`shadow-sm border ${getStatusColor(m.status)}`}>
+                                {getStatusIcon(m.status)}
+                                {m.status}
+                              </Badge>
                             </TableCell>
                           </>
                         )}

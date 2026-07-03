@@ -73,9 +73,47 @@ export default function MetasPorto() {
   const [dbData, setDbData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editValues, setEditValues] = useState<Record<string, {ref: string, alc: string}>>({});
+  const [editValues, setEditValues] = useState<Record<string, {meta: string, ref: string, alc: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+
+  const handleAddMetric = async () => {
+    const nome = window.prompt('Nome da nova métrica (ex: ISO 9001):');
+    if (!nome) return;
+    try {
+      setIsSaving(true);
+      const { error } = await supabase.from('indicadores_metas').insert({
+        indicador: nome,
+        setor: 'Porto',
+        mes: selectedMonth,
+        ano: selectedYear,
+        referencia: 0,
+        alcancado: 0
+      });
+      if (error) throw error;
+      toast.success('Métrica adicionada com sucesso!');
+      fetchMetas();
+    } catch (err: any) {
+      toast.error('Erro ao adicionar métrica: ' + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteMetric = async (id: string) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta métrica?')) return;
+    try {
+      setIsSaving(true);
+      const { error } = await supabase.from('indicadores_metas').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Métrica excluída!');
+      fetchMetas();
+    } catch (err: any) {
+      toast.error('Erro ao excluir: ' + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   async function fetchMetas() {
     try {
@@ -96,9 +134,9 @@ export default function MetasPorto() {
   }
 
   const handleEditAll = () => {
-    const values: Record<string, {ref: string, alc: string}> = {};
+    const values: Record<string, {meta: string, ref: string, alc: string}> = {};
     data.metas.forEach((m: any) => {
-      values[m.id] = { ref: m.ref.toString(), alc: m.alc.toString() };
+      values[m.id] = { meta: m.meta, ref: m.ref.toString(), alc: m.alc.toString() };
     });
     setEditValues(values);
     setIsEditing(true);
@@ -109,11 +147,13 @@ export default function MetasPorto() {
     try {
       const updates = Object.keys(editValues).map(id => ({
         id,
+        indicador: editValues[id].meta,
         referencia: parseFloat(editValues[id].ref.replace(',', '.')),
         alcancado: parseFloat(editValues[id].alc.replace(',', '.'))
       }));
       
       await Promise.all(updates.map(u => supabase.from('indicadores_metas').update({
+        indicador: u.indicador,
         referencia: u.referencia,
         alcancado: u.alcancado
       }).eq('id', u.id)));
@@ -148,11 +188,12 @@ export default function MetasPorto() {
       const counts = { acima: 0, aceitavel: 0, abaixo: 0 };
       
       const metasFormatadas = metasMes.map((row: any) => {
-        let fillPercentage = 0;
-        let status = '';
+        let score = 0;
+        let weight = 10;
         
-        const indicadorNome = row.indicador || '';
-        const ind = indicadorNome.toLowerCase();
+        const ind = (row.indicador || '').toLowerCase();
+        const ref = row.referencia || 1;
+        const alc = row.alcancado || 0;
         
         // Métricas onde "quanto menor melhor"
         const isLessIsBetter = ind.includes('turnover') || 
@@ -165,48 +206,39 @@ export default function MetasPorto() {
                                ind.includes('afastamento') ||
                                ind.includes('perda');
         
+        if (ind.includes('aderência')) weight = 40;
+        else if (ind.includes('eventuais')) weight = 25;
+        else if (ind.includes('preventivas')) weight = 10;
+        else if (ind.includes('turnover')) weight = 5;
+
         if (isLessIsBetter) {
-            if (row.alcancado === 0) {
-                fillPercentage = 150;
-            } else if (row.referencia === 0) {
-                fillPercentage = row.alcancado === 0 ? 150 : 0;
-            } else {
-                fillPercentage = (row.referencia / row.alcancado) * 100;
-            }
+            score = ref !== 0 ? (ref / Math.max(alc, 0.001)) * 100 : 100;
         } else {
-            if (row.referencia === 0) {
-                fillPercentage = row.alcancado > 0 ? 150 : 100;
-            } else {
-                fillPercentage = (row.alcancado / row.referencia) * 100;
-            }
+            score = ref !== 0 ? (alc / ref) * 100 : 100;
         }
         
-        fillPercentage = Math.min(fillPercentage, 150);
-
-        const pct = fillPercentage;
-        if (pct >= 110) { status = 'Muito Acima do Esperado'; counts.acima++; }
-        else if (pct >= 100) { status = 'Acima do Esperado'; counts.acima++; }
-        else if (pct >= 90) { status = 'Dentro Esperado (Aceitável)'; counts.aceitavel++; }
-        else if (pct >= 70) { status = 'Abaixo do Esperado'; counts.abaixo++; }
+        if (score >= 110) { status = 'Muito Acima do Esperado'; counts.acima++; }
+        else if (score >= 100) { status = 'Acima do Esperado'; counts.acima++; }
+        else if (score >= 90) { status = 'Dentro Esperado (Aceitável)'; counts.aceitavel++; }
+        else if (score >= 70) { status = 'Abaixo do Esperado'; counts.abaixo++; }
         else { status = 'Muito Abaixo do Esperado'; counts.abaixo++; }
 
-        somaAtingido += Math.min(pct, 100);
+        totalWeight += weight;
+        weightedSum += Math.min(score, 100) * weight;
 
         return {
-          id: row.id,
           id: row.id, setor: row.setor,
           meta: row.indicador,
-          ref: row.referencia,
-          alc: row.alcancado,
-          status: status
+          ref: ref,
+          alc: alc,
+          status: status,
+          score: score
         };
       });
 
-      const atingidoMedio = metasFormatadas.length ? somaAtingido / metasFormatadas.length : 0;
-      
       result[m] = {
-        atingido: atingidoMedio,
-        gap: 100 - atingidoMedio,
+        atingido: totalWeight > 0 ? weightedSum / totalWeight : 0,
+        gap: totalWeight > 0 ? 100 - (weightedSum / totalWeight) : 100,
         counts: counts,
         metas: metasFormatadas
       };
@@ -391,15 +423,20 @@ export default function MetasPorto() {
               <TableHeader className="bg-muted/10">
                 <TableRow>
                   <TableHead className="font-bold">Métrica</TableHead>
-                  <TableHead className="text-center font-bold">Ref.</TableHead>
+                  <TableHead className="text-center font-bold">Referência</TableHead>
                   <TableHead className="w-[180px] text-center font-bold">Alcançado</TableHead>
                   <TableHead className="text-right pr-6 font-bold">
                   {!isEditing ? (
-                    <Button variant="ghost" size="sm" onClick={handleEditAll} className="h-8">
-                      <Edit2 className="w-4 h-4 mr-2" /> Lançar
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm" onClick={handleEditAll} className="h-8">
+                        <Edit2 className="w-4 h-4 mr-2" /> Lançar
+                      </Button>
+                    </div>
                   ) : (
                     <div className="flex justify-end gap-2">
+                      <Button variant="outline" size="sm" onClick={handleAddMetric} disabled={isSaving} className="h-8 text-primary border-primary hover:bg-primary/10">
+                        <Plus className="w-4 h-4 mr-1" /> Adicionar
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={isSaving} className="text-rose-600 h-8">
                         <X className="w-4 h-4 mr-1" /> Cancelar
                       </Button>
@@ -408,31 +445,27 @@ export default function MetasPorto() {
                       </Button>
                     </div>
                   )}
-                </TableHead>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 <AnimatePresence mode="popLayout">
                   {data.metas.map((m, idx) => {
-                    // Safe logic so that raw numbers like N3 145/160 don't cause UI breaks
-                    const isPercentageMeta = m.meta.includes('(%)') || m.meta === 'Aderência';
                     const fillPercentage = m.ref === 0 ? 0 : Math.min((m.alc / m.ref) * 100, 100) || 0;
-                    const isOver = m.alc > m.ref;
-                    
                     return (
                       <motion.tr 
-                        key={m.meta + selectedMonth}
+                        key={m.id + selectedMonth}
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         className={`transition-colors border-b border-border last:border-0 group ${getRowColor(m.status)}`}
                       >
-                        <TableCell>
-                          <p className="font-semibold text-sm">{m.meta}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
-                        </TableCell>
                         {isEditing && editValues[m.id] ? (
                           <>
+                            <TableCell>
+                              <Input type="text" className="w-full text-sm font-semibold h-8" value={editValues[m.id].meta} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], meta: e.target.value}})} />
+                              <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
+                            </TableCell>
                             <TableCell className="text-center">
                               <Input type="number" step="0.01" className="w-20 mx-auto text-center h-8 text-xs" value={editValues[m.id].ref} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], ref: e.target.value}})} />
                             </TableCell>
@@ -440,7 +473,10 @@ export default function MetasPorto() {
                               <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alc} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alc: e.target.value}})} />
                             </TableCell>
                             <TableCell className="text-right pr-6">
-                              <div className="flex justify-end">
+                              <div className="flex justify-end gap-2 items-center">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600" onClick={() => handleDeleteMetric(m.id)}>
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
                                 <Badge className={`shadow-sm border ${getStatusColor(m.status)}`}>
                                   {getStatusIcon(m.status)}
                                   {m.status}
@@ -450,17 +486,20 @@ export default function MetasPorto() {
                           </>
                         ) : (
                           <>
+                            <TableCell>
+                              <p className="font-semibold text-sm">{m.meta}</p>
+                              <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
+                            </TableCell>
                             <TableCell className="text-center font-medium text-muted-foreground">
-                              {m.ref.toFixed(2)}%
+                              {m.ref.toFixed(2)}
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1.5">
                                 <div className="flex justify-between items-center text-xs">
-                                  <span className="font-bold">{m.alc.toFixed(2)}%</span>
-                                  {isOver && <span className="text-[10px] text-primary font-bold">+{((m.alc/m.ref)*100 - 100).toFixed(0)}%</span>}
+                                  <span className="font-bold">{m.alc.toFixed(2)}</span>
                                 </div>
                                 <div className="w-full bg-secondary h-2 rounded-full overflow-hidden relative">
-                                  <motion.div initial={{ width: 0 }} animate={{ width: `${fillPercentage}%` }} transition={{ duration: 0.8, delay: 0.2 + (idx * 0.1) }} className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`} />
+                                  <motion.div initial={{ width: 0 }} animate={{ width: `${fillPercentage}%` }} transition={{ duration: 0.8 }} className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`} />
                                 </div>
                               </div>
                             </TableCell>
@@ -470,16 +509,6 @@ export default function MetasPorto() {
                                   {getStatusIcon(m.status)}
                                   {m.status}
                                 </Badge>
-                                
-                              </div>
-                            </TableCell>
-                          </>
-                        )}
-                      </motion.tr>
-                    );
-                  })}
-                </AnimatePresence>
-              </TableBody>
               </Table>
             </div>
           </ExpandableChart>
