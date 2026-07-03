@@ -146,61 +146,97 @@ export default function MetasBusato() {
       let somaAtingido = 0;
       const counts = { acima: 0, aceitavel: 0, abaixo: 0 };
       
+      let totalWeight = 0;
+      let weightedSum = 0;
+
       const metasFormatadas = metasMes.map((row: any) => {
-        let fillPercentage = 0;
-        let status = '';
-        
         const indicadorNome = row.indicador || '';
         const ind = indicadorNome.toLowerCase();
+        const val = row.alcancado;
         
-        // Métricas onde "quanto menor melhor"
-        const isLessIsBetter = ind.includes('turnover') || 
-                               ind.includes('eventos') || 
-                               ind.includes('custo') || 
-                               ind.includes('interdições') ||
-                               ind.includes('eventuais') ||
-                               ind.includes('multas') ||
-                               ind.includes('notificações') ||
-                               ind.includes('afastamento') ||
-                               ind.includes('perda');
-        
-        if (isLessIsBetter) {
-            if (row.alcancado === 0) {
-                fillPercentage = 150;
-            } else if (row.referencia === 0) {
-                fillPercentage = row.alcancado === 0 ? 150 : 0;
-            } else {
-                fillPercentage = (row.referencia / row.alcancado) * 100;
-            }
+        let status = '';
+        let fillPercentage = 0;
+        let weight = 0;
+
+        if (ind.includes('aderência')) {
+            weight = 40;
+            if (val >= 99) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
+            else if (val >= 97) { status = 'Acima do Esperado'; fillPercentage = 110; }
+            else if (val >= 95) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
+            else if (val >= 93) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
+            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
+        } else if (ind.includes('eventos')) {
+            weight = 10;
+            if (val === 0) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
+            else if (val === 1) { status = 'Acima do Esperado'; fillPercentage = 110; }
+            else if (val === 2) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
+            else if (val === 3) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
+            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
+        } else if (ind.includes('custo')) {
+            weight = 10;
+            if (val < 390914.24) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
+            else if (val < 412631.70) { status = 'Acima do Esperado'; fillPercentage = 110; }
+            else if (val < 434349.15) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
+            else if (val <= 456066.61) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
+            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
+        } else if (ind.includes('eventuais')) {
+            weight = 25;
+            if (val >= 99) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
+            else if (val >= 97) { status = 'Acima do Esperado'; fillPercentage = 110; }
+            else if (val >= 95) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
+            else if (val >= 93) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
+            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
+        } else if (ind.includes('preventivas')) {
+            weight = 10;
+            if (val >= 99) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
+            else if (val >= 97) { status = 'Acima do Esperado'; fillPercentage = 110; }
+            else if (val >= 95) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
+            else if (val >= 93) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
+            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
+        } else if (ind.includes('turnover')) {
+            weight = 5;
+            const reducao = row.referencia > 0 ? ((row.referencia - val) / row.referencia) * 100 : 0;
+            if (reducao >= 20) { status = 'Muito Acima do Esperado'; fillPercentage = 120; }
+            else if (reducao >= 15) { status = 'Acima do Esperado'; fillPercentage = 110; }
+            else if (reducao >= 10) { status = 'Dentro Esperado (Aceitável)'; fillPercentage = 100; }
+            else if (reducao >= 5) { status = 'Abaixo do Esperado'; fillPercentage = 80; }
+            else { status = 'Muito Abaixo do Esperado'; fillPercentage = 50; }
         } else {
-            if (row.referencia === 0) {
-                fillPercentage = row.alcancado > 0 ? 150 : 100;
+            weight = 10; // Fallback
+            const isLessIsBetter = ind.includes('interdições') || ind.includes('multas') || ind.includes('notificações') || ind.includes('afastamento') || ind.includes('perda');
+            if (isLessIsBetter) {
+                if (val === 0) fillPercentage = 120;
+                else if (row.referencia === 0) fillPercentage = val === 0 ? 120 : 50;
+                else fillPercentage = (row.referencia / val) * 100;
             } else {
-                fillPercentage = (row.alcancado / row.referencia) * 100;
+                if (row.referencia === 0) fillPercentage = val > 0 ? 120 : 100;
+                else fillPercentage = (val / row.referencia) * 100;
             }
+            if (fillPercentage >= 110) status = 'Muito Acima do Esperado';
+            else if (fillPercentage >= 100) status = 'Acima do Esperado';
+            else if (fillPercentage >= 90) status = 'Dentro Esperado (Aceitável)';
+            else if (fillPercentage >= 70) status = 'Abaixo do Esperado';
+            else status = 'Muito Abaixo do Esperado';
         }
-        
-        fillPercentage = Math.min(fillPercentage, 150);
 
-        const pct = fillPercentage;
-        if (pct >= 110) { status = 'Muito Acima do Esperado'; counts.acima++; }
-        else if (pct >= 100) { status = 'Acima do Esperado'; counts.acima++; }
-        else if (pct >= 90) { status = 'Dentro Esperado (Aceitável)'; counts.aceitavel++; }
-        else if (pct >= 70) { status = 'Abaixo do Esperado'; counts.abaixo++; }
-        else { status = 'Muito Abaixo do Esperado'; counts.abaixo++; }
+        if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
+        else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
+        else counts.abaixo++;
 
-        somaAtingido += Math.min(pct, 100);
+        totalWeight += weight;
+        weightedSum += Math.min(fillPercentage, 100) * weight;
 
         return {
           id: row.id, setor: row.setor,
           meta: row.indicador,
           ref: row.referencia,
           alc: row.alcancado,
-          status: status
+          status: status,
+          score: fillPercentage
         };
       });
 
-      const atingidoMedio = metasFormatadas.length ? somaAtingido / metasFormatadas.length : 0;
+      const atingidoMedio = totalWeight > 0 ? weightedSum / totalWeight : 0;
       
       result[m] = {
         atingido: atingidoMedio,
@@ -412,7 +448,7 @@ export default function MetasBusato() {
               <TableBody>
                 <AnimatePresence mode="popLayout">
                   {data.metas.map((m, idx) => {
-                    const fillPercentage = Math.min((m.alc / m.ref) * 100, 100) || 0;
+                    const fillPercentage = Math.min(m.score, 100) || 0;
                     const isOver = m.alc > m.ref;
                     
                     return (
