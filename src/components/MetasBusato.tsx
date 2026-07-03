@@ -486,7 +486,7 @@ export default function MetasBusato() {
                         <Plus className="w-4 h-4 mr-1" /> Adicionar Métrica
                       </Button>
                       <Button variant="ghost" size="sm" onClick={handleEditAll} className="h-8">
-                        <Edit2 className="w-4 h-4 mr-2" /> Editar Lançamentos
+                        <Edit2 className="w-4 h-4 mr-2" /> Lançar
                       </Button>
                     </div>
                   ) : (

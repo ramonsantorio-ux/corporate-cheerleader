@@ -396,7 +396,7 @@ export default function MetasPorto() {
                   <TableHead className="text-right pr-6 font-bold">
                   {!isEditing ? (
                     <Button variant="ghost" size="sm" onClick={handleEditAll} className="h-8">
-                      <Edit2 className="w-4 h-4 mr-2" /> Editar Lançamentos
+                      <Edit2 className="w-4 h-4 mr-2" /> Lançar
                     </Button>
                   ) : (
                     <div className="flex justify-end gap-2">
