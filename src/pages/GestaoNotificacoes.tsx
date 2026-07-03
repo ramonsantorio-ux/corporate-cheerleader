@@ -11,6 +11,8 @@ import { FileWarning, Plus, Trash2, Pencil, Calendar, MapPin, Target, AlertTrian
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import PeriodFilter, { getMonthPeriod } from '@/components/filters/PeriodFilter';
+import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import ExpandableChart from '@/components/ExpandableChart';
 
 export interface NotificacaoGlobal {
@@ -74,6 +76,7 @@ const GestaoNotificacoes = () => {
   const [filterType, setFilterType] = useState<string>('all'); // all, notificacao, multa
   const [filterAction, setFilterAction] = useState<string>('all'); // all, pendente, ok
   const [searchQuery, setSearchQuery] = useState('');
+  const [period, setPeriod] = useState<PeriodRange>(getMonthPeriod(0));
 
   const [formData, setFormData] = useState<Partial<NotificacaoGlobal>>({
     dataStr: '', local: '', motivo: '', solicitante: '', tipo: 'Notificação', planoDeAcao: 'Pendente', valorOriginal: 0
@@ -131,9 +134,15 @@ const GestaoNotificacoes = () => {
       const matchType = filterType === 'all' ? true : filterType === 'multa' ? n.tipo === 'Multa' : n.tipo === 'Notificação';
       const matchAction = filterAction === 'all' ? true : filterAction === 'pendente' ? n.planoDeAcao === 'Pendente' : n.planoDeAcao === 'OK';
       const matchSearch = n.motivo.toLowerCase().includes(searchQuery.toLowerCase()) || n.local.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchType && matchAction && matchSearch;
+      const parts = n.dataStr.split('/');
+      let matchDate = true;
+      if (parts.length === 3) {
+        const nDate = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+        matchDate = nDate >= period.start && nDate <= period.end;
+      }
+      return matchType && matchAction && matchSearch && matchDate;
     });
-  }, [notificacoes, filterType, filterAction, searchQuery]);
+  }, [notificacoes, filterType, filterAction, searchQuery, period]);
 
   const kpis = React.useMemo(() => {
     const totalExposicao = filteredData.filter(n => n.tipo === 'Multa').reduce((acc, curr) => acc + (curr.valorOriginal || 0), 0);
@@ -188,6 +197,7 @@ const GestaoNotificacoes = () => {
 
       {/* Control Bar Inovadora */}
       <div className="flex flex-col sm:flex-row gap-3 bg-card border border-border p-3 rounded-xl shadow-sm">
+        <PeriodFilter value={period} onChange={setPeriod} className="sm:w-auto shrink-0" />
         <div className="flex-1 flex items-center gap-2 px-3 py-2 bg-muted/30 rounded-lg border border-border/50">
           <Search className="w-4 h-4 text-muted-foreground" />
           <input type="text" placeholder="Buscar por motivo ou local..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none outline-none text-sm w-full" />

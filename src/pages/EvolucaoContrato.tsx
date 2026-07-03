@@ -957,7 +957,8 @@ export default function EvolucaoContrato() {
               <TabsTrigger value="metas_busato" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Busato</TabsTrigger>
               <TabsTrigger value="metas_porto" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Porto</TabsTrigger>
             </TabsList>
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            {!(activeTab === 'metas_busato' || activeTab === 'metas_porto') && (
+<div className="flex items-center gap-2 w-full sm:w-auto">
               <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
               <Select value={timeRange} onValueChange={setTimeRange}>
                 <SelectTrigger className="w-full sm:w-[180px] bg-background border-border/50 shadow-sm rounded-xl h-10">
@@ -971,6 +972,7 @@ export default function EvolucaoContrato() {
                 </SelectContent>
               </Select>
             </div>
+)}
           </div>
 
           <TabsContent value="visao_executiva" className="space-y-6 mt-4">
