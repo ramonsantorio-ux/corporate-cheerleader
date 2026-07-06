@@ -509,6 +509,15 @@ export default function MetasPorto() {
                                   {getStatusIcon(m.status)}
                                   {m.status}
                                 </Badge>
+                              </div>
+                            </TableCell>
+                          </>
+                        )}
+                      </motion.tr>
+                    );
+                  })}
+                </AnimatePresence>
+              </TableBody>
               </Table>
             </div>
           </ExpandableChart>
