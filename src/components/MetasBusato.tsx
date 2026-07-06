@@ -74,7 +74,7 @@ export default function MetasBusato() {
   const [dbData, setDbData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editValues, setEditValues] = useState<Record<string, {meta: string, ref: string, alc: string}>>({});
+  const [editValues, setEditValues] = useState<Record<string, {meta: string, ref: string, alc: string, status: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
@@ -135,9 +135,9 @@ export default function MetasBusato() {
   };
 
   const handleEditAll = () => {
-    const values: Record<string, {meta: string, ref: string, alc: string}> = {};
+    const values: Record<string, {meta: string, ref: string, alc: string, status: string}> = {};
     data.metas.forEach(m => {
-      values[m.id] = { meta: m.meta, ref: m.ref.toString(), alc: m.alc.toString() };
+      values[m.id] = { meta: m.meta, ref: m.ref.toString(), alc: m.alc.toString(), status: m.status };
     });
     setEditValues(values);
     setIsEditing(true);
@@ -148,7 +148,7 @@ export default function MetasBusato() {
     try {
       const updates = Object.keys(editValues).map(id => ({
         id,
-        indicador: editValues[id].meta,
+        indicador: `${editValues[id].meta}|${editValues[id].status}`,
         referencia: parseFloat(editValues[id].ref.replace(',', '.')),
         alcancado: parseFloat(editValues[id].alc.replace(',', '.'))
       }));
@@ -191,75 +191,33 @@ export default function MetasBusato() {
       let weightedSum = 0;
 
       const metasFormatadas = metasMes.map((row: any) => {
-        const ind = (row.indicador || '').toLowerCase();
-        const ref = row.referencia || 1;
-        const alc = row.alcancado || 0;
+        const rawInd = row.indicador || '';
+        const parts = rawInd.split('|');
+        const metaName = parts[0].trim();
+        const ind = metaName.toLowerCase();
+        const dbStatus = parts[1] ? parts[1].trim() : 'Dentro Esperado (Aceitável)';
         
-        let status = '';
+        const alc = row.alcancado || 0;
+        const ref = row.referencia || 1;
+        
+        let status = dbStatus;
         let score = 0;
         let weight = 10; // Default
 
-        if (ind.includes('aderência')) {
-            weight = 40;
-            if (alc >= 99) { status = 'Muito Acima do Esperado'; score = 130; }
-            else if (alc >= 97) { status = 'Acima do Esperado'; score = 110; }
-            else if (alc >= 95) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
-            else if (alc >= 93) { status = 'Abaixo do Esperado'; score = 70; }
-            else { status = 'Muito Abaixo do Esperado'; score = 50; }
-        } 
-        else if (ind.includes('eventuais')) {
-            weight = 25;
-            if (alc >= 99) { status = 'Muito Acima do Esperado'; score = 130; }
-            else if (alc >= 97) { status = 'Acima do Esperado'; score = 110; }
-            else if (alc >= 95) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
-            else if (alc >= 93) { status = 'Abaixo do Esperado'; score = 70; }
-            else { status = 'Muito Abaixo do Esperado'; score = 50; }
-        } 
-        else if (ind.includes('preventivas')) {
-            weight = 10;
-            if (alc >= 99) { status = 'Muito Acima do Esperado'; score = 130; }
-            else if (alc >= 97) { status = 'Acima do Esperado'; score = 110; }
-            else if (alc >= 95) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
-            else if (alc >= 93) { status = 'Abaixo do Esperado'; score = 70; }
-            else { status = 'Muito Abaixo do Esperado'; score = 50; }
-        } 
-        else if (ind.includes('eventos')) {
-            weight = 10;
-            if (alc <= 0) { status = 'Muito Acima do Esperado'; score = 130; }
-            else if (alc <= 1) { status = 'Acima do Esperado'; score = 110; }
-            else if (alc <= 2) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
-            else if (alc <= 3) { status = 'Abaixo do Esperado'; score = 70; }
-            else { status = 'Muito Abaixo do Esperado'; score = 50; }
-        } 
-        else if (ind.includes('custo')) {
-            weight = 10;
-            if (alc < 390914.24) { status = 'Muito Acima do Esperado'; score = 130; }
-            else if (alc < 412631.70) { status = 'Acima do Esperado'; score = 110; }
-            else if (alc < 434349.15) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
-            else if (alc < 456066.61) { status = 'Abaixo do Esperado'; score = 70; }
-            else { status = 'Muito Abaixo do Esperado'; score = 50; }
-        } 
-        else if (ind.includes('turnover')) {
-            weight = 5;
-            if (alc >= 20) { status = 'Muito Acima do Esperado'; score = 130; }
-            else if (alc >= 15) { status = 'Acima do Esperado'; score = 110; }
-            else if (alc >= 10) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
-            else if (alc >= 5) { status = 'Abaixo do Esperado'; score = 70; }
-            else { status = 'Muito Abaixo do Esperado'; score = 50; }
-        } 
-        else {
-            const isLessIsBetter = ind.includes('interdições') || ind.includes('multas') || ind.includes('notificações') || ind.includes('afastamento') || ind.includes('perda');
-            if (isLessIsBetter) {
-                score = ref !== 0 ? (ref / Math.max(alc, 0.001)) * 100 : 100;
-            } else {
-                score = ref !== 0 ? (alc / ref) * 100 : 100;
-            }
-            if (score >= 110) status = 'Muito Acima do Esperado';
-            else if (score >= 100) status = 'Acima do Esperado';
-            else if (score >= 90) status = 'Dentro Esperado (Aceitável)';
-            else if (score >= 70) status = 'Abaixo do Esperado';
-            else status = 'Muito Abaixo do Esperado';
-        }
+        if (ind.includes('aderência')) weight = 40;
+        else if (ind.includes('eventuais')) weight = 25;
+        else if (ind.includes('preventivas')) weight = 10;
+        else if (ind.includes('eventos')) weight = 10;
+        else if (ind.includes('custo')) weight = 10;
+        else if (ind.includes('turnover')) weight = 5;
+
+        // Map status to score for the radar chart
+        if (status === 'Muito Acima do Esperado') score = 130;
+        else if (status === 'Acima do Esperado') score = 110;
+        else if (status === 'Dentro Esperado (Aceitável)') score = 90;
+        else if (status === 'Abaixo do Esperado') score = 70;
+        else if (status === 'Muito Abaixo do Esperado') score = 50;
+        else score = 90; // fallback
 
         if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
         else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
@@ -270,7 +228,7 @@ export default function MetasBusato() {
 
         return {
           id: row.id, setor: row.setor,
-          meta: row.indicador || '',
+          meta: metaName,
           ref: ref,
           alc: alc,
           status: status,
@@ -509,10 +467,18 @@ export default function MetasBusato() {
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600" onClick={() => handleDeleteMetric(m.id)}>
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
-                                <Badge className={`shadow-sm border ${getStatusColor(m.status)}`}>
-                                  {getStatusIcon(m.status)}
-                                  {m.status}
-                                </Badge>
+                                <Select value={editValues[m.id].status} onValueChange={(val) => setEditValues({...editValues, [m.id]: {...editValues[m.id], status: val}})}>
+                                  <SelectTrigger className={`h-8 w-[240px] border shadow-sm ${getStatusColor(editValues[m.id].status)}`}>
+                                    <SelectValue placeholder="Selecione o Status..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Muito Acima do Esperado">Muito Acima do Esperado</SelectItem>
+                                    <SelectItem value="Acima do Esperado">Acima do Esperado</SelectItem>
+                                    <SelectItem value="Dentro Esperado (Aceitável)">Dentro Esperado (Aceitável)</SelectItem>
+                                    <SelectItem value="Abaixo do Esperado">Abaixo do Esperado</SelectItem>
+                                    <SelectItem value="Muito Abaixo do Esperado">Muito Abaixo do Esperado</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               </div>
                             </TableCell>
                           </>
