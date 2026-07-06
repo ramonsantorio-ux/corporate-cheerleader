@@ -73,9 +73,12 @@ export default function MetasPorto() {
   const [dbData, setDbData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editValues, setEditValues] = useState<Record<string, {meta: string, ref: string, alc: string, status: string, score: string}>>({});
+  const [editValues, setEditValues] = useState<Record<string, {meta: string, ref: string, alc: string, status: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [isEditingGlobal, setIsEditingGlobal] = useState(false);
+  const [editGlobalScore, setEditGlobalScore] = useState("");
+  const [isSavingGlobal, setIsSavingGlobal] = useState(false);
 
   const handleAddMetric = async () => {
     const nome = window.prompt('Nome da nova métrica (ex: ISO 9001):');
@@ -134,9 +137,9 @@ export default function MetasPorto() {
   }
 
   const handleEditAll = () => {
-    const values: Record<string, {meta: string, ref: string, alc: string, status: string, score: string}> = {};
+    const values: Record<string, {meta: string, ref: string, alc: string, status: string}> = {};
     data.metas.forEach((m: any) => {
-      values[m.id] = { meta: m.meta, ref: m.ref.toString(), alc: m.alc.toString(), status: m.status, score: m.score.toString() };
+      values[m.id] = { meta: m.meta, ref: m.ref.toString(), alc: m.alc.toString(), status: m.status };
     });
     setEditValues(values);
     setIsEditing(true);
@@ -147,7 +150,7 @@ export default function MetasPorto() {
     try {
       const updates = Object.keys(editValues).map(id => ({
         id,
-        indicador: `${editValues[id].meta}|${editValues[id].status}|${editValues[id].score}`,
+        indicador: `${editValues[id].meta}|${editValues[id].status}`,
         referencia: parseFloat(editValues[id].ref.replace(',', '.')),
         alcancado: parseFloat(editValues[id].alc.replace(',', '.'))
       }));
@@ -168,11 +171,38 @@ export default function MetasPorto() {
     }
   };
 
+  const handleSaveGlobalScore = async () => {
+    setIsSavingGlobal(true);
+    const scoreVal = parseFloat(editGlobalScore.replace(',', '.'));
+    
+    try {
+      if (data.globalId) {
+        await supabase.from('indicadores_metas').update({ alcancado: scoreVal }).eq('id', data.globalId);
+      } else {
+        await supabase.from('indicadores_metas').insert({
+          indicador: '__ATINGIMENTO_GLOBAL__',
+          setor: 'Porto',
+          mes: selectedMonth,
+          ano: selectedYear,
+          referencia: 100,
+          alcancado: scoreVal
+        });
+      }
+      toast.success('Atingimento Global atualizado!');
+      setIsEditingGlobal(false);
+      await fetchMetas();
+    } catch (err: any) {
+      toast.error('Erro ao salvar: ' + err.message);
+    } finally {
+      setIsSavingGlobal(false);
+    }
+  };
+
   useEffect(() => { fetchMetas(); }, [selectedYear]);
 
   const METAS_DATA = useMemo(() => {
     const result: any = {};
-    MESES.forEach(m => { result[m] = { atingido: 0, gap: 100, counts: { acima: 0, aceitavel: 0, abaixo: 0 }, metas: [] }; });
+    MESES.forEach(m => { result[m] = { atingido: 0, globalId: null, gap: 100, counts: { acima: 0, aceitavel: 0, abaixo: 0 }, metas: [] }; });
     
     if (!dbData || dbData.length === 0) return result;
 
@@ -184,62 +214,46 @@ export default function MetasPorto() {
 
     Object.keys(grouped).forEach(m => {
       const metasMes = grouped[m];
-      let totalWeight = 0;
-      let weightedSum = 0;
       const counts = { acima: 0, aceitavel: 0, abaixo: 0 };
       
-      const metasFormatadas = metasMes.map((row: any) => {
+      let globalScore = 0;
+      let globalId = null;
+
+      const metasFormatadas = metasMes.filter((row: any) => {
+        if (row.indicador === '__ATINGIMENTO_GLOBAL__') {
+          globalScore = row.alcancado || 0;
+          globalId = row.id;
+          return false;
+        }
+        return true;
+      }).map((row: any) => {
         const rawInd = row.indicador || '';
         const parts = rawInd.split('|');
         const metaName = parts[0].trim();
-        const ind = metaName.toLowerCase();
         const dbStatus = parts[1] ? parts[1].trim() : 'Dentro Esperado (Aceitável)';
-        const dbScore = parts[2] ? parseFloat(parts[2]) : null;
 
         const alc = row.alcancado || 0;
         const ref = row.referencia || 1;
         
         let status = dbStatus;
-        let score = dbScore !== null ? dbScore : 0;
-        let weight = 10;
-
-        if (ind.includes('aderência')) weight = 40;
-        else if (ind.includes('eventuais')) weight = 25;
-        else if (ind.includes('preventivas')) weight = 10;
-        else if (ind.includes('eventos')) weight = 10;
-        else if (ind.includes('custo')) weight = 10;
-        else if (ind.includes('turnover')) weight = 5;
-
-        // Fallback for legacy data without score
-        if (dbScore === null) {
-          if (status === 'Muito Acima do Esperado') score = 130;
-          else if (status === 'Acima do Esperado') score = 110;
-          else if (status === 'Dentro Esperado (Aceitável)') score = 90;
-          else if (status === 'Abaixo do Esperado') score = 70;
-          else if (status === 'Muito Abaixo do Esperado') score = 50;
-          else score = 90;
-        }
         
         if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
         else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
         else counts.abaixo++;
-
-        totalWeight += weight;
-        weightedSum += Math.min(score, 100) * weight;
 
         return {
           id: row.id, setor: row.setor,
           meta: metaName,
           ref: ref,
           alc: alc,
-          status: status,
-          score: score
+          status: status
         };
       });
 
       result[m] = {
-        atingido: totalWeight > 0 ? weightedSum / totalWeight : 0,
-        gap: totalWeight > 0 ? 100 - (weightedSum / totalWeight) : 100,
+        atingido: globalScore,
+        globalId: globalId,
+        gap: 100 - globalScore,
         counts: counts,
         metas: metasFormatadas
       };
@@ -350,10 +364,32 @@ export default function MetasPorto() {
         <Card className="md:col-span-4 border-none bg-gradient-to-br from-primary/10 to-primary/5 shadow-sm relative overflow-hidden flex flex-col justify-center">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
           <CardContent className="p-6">
-            <p className="text-sm font-semibold text-primary/80 uppercase tracking-wider mb-2">Atingimento Global ({selectedMonth})</p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-6xl font-black text-primary">{data.atingido.toFixed(1).replace('.', ',')}%</p>
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-sm font-semibold text-primary/80 uppercase tracking-wider">Atingimento Global ({selectedMonth})</p>
+              {!isEditingGlobal ? (
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-primary hover:bg-primary/10 -mt-1 -mr-1" onClick={() => { setEditGlobalScore(data.atingido.toString()); setIsEditingGlobal(true); }}>
+                  <Edit2 className="w-3.5 h-3.5" />
+                </Button>
+              ) : null}
             </div>
+            
+            {!isEditingGlobal ? (
+              <div className="flex items-baseline gap-2">
+                <p className="text-6xl font-black text-primary">{data.atingido.toFixed(1).replace('.', ',')}%</p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mt-2">
+                <Input type="number" step="0.1" className="w-20 h-10 text-xl font-bold px-2" value={editGlobalScore} onChange={e => setEditGlobalScore(e.target.value)} autoFocus />
+                <span className="text-xl font-bold text-primary">%</span>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 ml-2" onClick={() => setIsEditingGlobal(false)} disabled={isSavingGlobal}>
+                  <X className="w-4 h-4" />
+                </Button>
+                <Button variant="default" size="icon" className="h-8 w-8 bg-emerald-600 hover:bg-emerald-700" onClick={handleSaveGlobalScore} disabled={isSavingGlobal}>
+                  <Save className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+
             <div className="w-full bg-primary/20 h-2.5 mt-6 rounded-full overflow-hidden">
               <motion.div 
                 key={selectedMonth}
@@ -426,7 +462,6 @@ export default function MetasPorto() {
                   <TableHead className="font-bold">Métrica</TableHead>
                   <TableHead className="text-center font-bold">Referência</TableHead>
                   <TableHead className="w-[180px] text-center font-bold">Alcançado</TableHead>
-                  <TableHead className="text-center font-bold">Atingido (%)</TableHead>
                   <TableHead className="text-right pr-6 font-bold">
                   {!isEditing ? (
                     <div className="flex justify-end gap-2">
@@ -474,9 +509,6 @@ export default function MetasPorto() {
                             <TableCell className="text-center">
                               <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alc} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alc: e.target.value}})} />
                             </TableCell>
-                            <TableCell className="text-center">
-                              <Input type="number" step="1" className="w-20 mx-auto text-center h-8 text-xs" value={editValues[m.id].score} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], score: e.target.value}})} />
-                            </TableCell>
                             <TableCell className="text-right pr-6">
                               <div className="flex justify-end gap-2 items-center">
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600" onClick={() => handleDeleteMetric(m.id)}>
@@ -515,9 +547,6 @@ export default function MetasPorto() {
                                   <motion.div initial={{ width: 0 }} animate={{ width: `${fillPercentage}%` }} transition={{ duration: 0.8 }} className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`} />
                                 </div>
                               </div>
-                            </TableCell>
-                            <TableCell className="text-center font-bold text-primary">
-                              {m.score.toFixed(1)}%
                             </TableCell>
                             <TableCell className="text-right pr-6 relative group">
                               <div className="flex items-center justify-end gap-2">
