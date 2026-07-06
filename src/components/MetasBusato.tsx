@@ -247,6 +247,9 @@ export default function MetasBusato() {
   }, [dbData]);
 
   const meses = MESES;
+
+  const [selectedMonth, setSelectedMonth] = useState<string>('Maio');
+  const [isExporting, setIsExporting] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const data = METAS_DATA[selectedMonth as keyof typeof METAS_DATA];
   const batidas = data.counts.acima + data.counts.aceitavel;

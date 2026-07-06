@@ -184,12 +184,14 @@ export default function MetasPorto() {
 
     Object.keys(grouped).forEach(m => {
       const metasMes = grouped[m];
-      let somaAtingido = 0;
+      let totalWeight = 0;
+      let weightedSum = 0;
       const counts = { acima: 0, aceitavel: 0, abaixo: 0 };
       
       const metasFormatadas = metasMes.map((row: any) => {
         let score = 0;
         let weight = 10;
+        let status = '';
         
         const ind = (row.indicador || '').toLowerCase();
         const ref = row.referencia || 1;
