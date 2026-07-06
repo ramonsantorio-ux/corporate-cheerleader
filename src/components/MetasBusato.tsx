@@ -254,18 +254,24 @@ export default function MetasBusato() {
         const ref = row.referencia || 1;
         
         let status = dbStatus;
+        let score = 90;
+
+        if (status === 'Muito Acima do Esperado') score = 130;
+        else if (status === 'Acima do Esperado') score = 110;
+        else if (status === 'Dentro Esperado (Aceitável)') score = 90;
+        else if (status === 'Abaixo do Esperado') score = 70;
+        else if (status === 'Muito Abaixo do Esperado') score = 50;
 
         if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
         else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
         else counts.abaixo++;
 
-        totalWeight += weight;
-        weightedSum += Math.min(score, 100) * weight;
-
         return {
           id: row.id, setor: row.setor,
           meta: metaName,
+          categoria: guessedCategoria,
           ref: ref,
+          alcBruto: dbAlcBruto,
           alc: alc,
           status: status,
           score: score
