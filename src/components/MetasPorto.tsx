@@ -230,7 +230,7 @@ export default function MetasPorto() {
 
         return {
           id: row.id, setor: row.setor,
-          meta: row.indicador,
+          meta: row.indicador || '',
           ref: ref,
           alc: alc,
           status: status,
