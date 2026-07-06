@@ -278,6 +278,25 @@ export default function MetasBusato() {
         };
       });
 
+      const METAS_ORDER = [
+        'Aderência à Programação',
+        'Eventos c/ ou s/ perda',
+        'Custo Manutenção',
+        'Atendimento Eventuais (%)',
+        'Atendimento Programação Preventivas (%)',
+        'Redução do Turnover'
+      ];
+
+      metasFormatadas.sort((a: any, b: any) => {
+        const indexA = METAS_ORDER.findIndex(m => m.toLowerCase() === a.meta.toLowerCase());
+        const indexB = METAS_ORDER.findIndex(m => m.toLowerCase() === b.meta.toLowerCase());
+        
+        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        return a.meta.localeCompare(b.meta);
+      });
+
       result[m] = {
         atingido: globalScore,
         globalId: globalId,
