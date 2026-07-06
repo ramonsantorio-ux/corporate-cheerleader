@@ -74,7 +74,7 @@ export default function MetasBusato() {
   const [dbData, setDbData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editValues, setEditValues] = useState<Record<string, {meta: string, ref: string, alc: string, status: string}>>({});
+  const [editValues, setEditValues] = useState<Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [isEditingGlobal, setIsEditingGlobal] = useState(false);
@@ -138,9 +138,9 @@ export default function MetasBusato() {
   };
 
   const handleEditAll = () => {
-    const values: Record<string, {meta: string, ref: string, alc: string, status: string}> = {};
+    const values: Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}> = {};
     data.metas.forEach(m => {
-      values[m.id] = { meta: m.meta, ref: m.ref.toString(), alc: m.alc.toString(), status: m.status };
+      values[m.id] = { meta: m.meta, categoria: m.categoria, ref: m.ref.toString(), alcBruto: m.alcBruto, alcPeso: m.alc.toString(), status: m.status };
     });
     setEditValues(values);
     setIsEditing(true);
@@ -151,9 +151,9 @@ export default function MetasBusato() {
     try {
       const updates = Object.keys(editValues).map(id => ({
         id,
-        indicador: `${editValues[id].meta}|${editValues[id].status}`,
+        indicador: `${editValues[id].meta}|${editValues[id].status}|${editValues[id].categoria}|${editValues[id].alcBruto}`,
         referencia: parseFloat(editValues[id].ref.replace(',', '.')),
-        alcancado: parseFloat(editValues[id].alc.replace(',', '.'))
+        alcancado: parseFloat(editValues[id].alcPeso.replace(',', '.'))
       }));
       
       await Promise.all(updates.map(u => supabase.from('indicadores_metas').update({
@@ -236,31 +236,24 @@ export default function MetasBusato() {
         const metaName = parts[0].trim();
         const ind = metaName.toLowerCase();
         const dbStatus = parts[1] ? parts[1].trim() : 'Dentro Esperado (Aceitável)';
-        const dbScore = parts[2] ? parseFloat(parts[2]) : null;
+        
+        const rawCat = parts[2] ? parts[2].trim() : '';
+        let guessedCategoria = (rawCat && isNaN(Number(rawCat))) ? rawCat : '';
+        if (!guessedCategoria) {
+          if (ind.includes('aderência')) guessedCategoria = 'Aderência';
+          else if (ind.includes('eventuais')) guessedCategoria = 'Outros';
+          else if (ind.includes('preventivas')) guessedCategoria = 'Manutenção';
+          else if (ind.includes('eventos')) guessedCategoria = 'Segurança';
+          else if (ind.includes('custo')) guessedCategoria = 'Custo';
+          else if (ind.includes('turnover')) guessedCategoria = 'RH';
+        }
+
+        const dbAlcBruto = parts[3] ? parts[3].trim() : '';
         
         const alc = row.alcancado || 0;
         const ref = row.referencia || 1;
         
         let status = dbStatus;
-        let score = dbScore !== null ? dbScore : 0;
-        let weight = 10; // Default
-
-        if (ind.includes('aderência')) weight = 40;
-        else if (ind.includes('eventuais')) weight = 25;
-        else if (ind.includes('preventivas')) weight = 10;
-        else if (ind.includes('eventos')) weight = 10;
-        else if (ind.includes('custo')) weight = 10;
-        else if (ind.includes('turnover')) weight = 5;
-
-        // Fallback for legacy data without score
-        if (dbScore === null) {
-          if (status === 'Muito Acima do Esperado') score = 130;
-          else if (status === 'Acima do Esperado') score = 110;
-          else if (status === 'Dentro Esperado (Aceitável)') score = 90;
-          else if (status === 'Abaixo do Esperado') score = 70;
-          else if (status === 'Muito Abaixo do Esperado') score = 50;
-          else score = 90;
-        }
 
         if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
         else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
@@ -476,9 +469,11 @@ export default function MetasBusato() {
               <Table>
               <TableHeader className="bg-muted/10">
                 <TableRow>
-                  <TableHead className="font-bold">Métrica</TableHead>
-                  <TableHead className="text-center font-bold">Ref.</TableHead>
-                  <TableHead className="w-[180px] text-center font-bold">Alcançado</TableHead>
+                  <TableHead className="font-bold">META</TableHead>
+                  <TableHead className="text-center font-bold">CATEGORIA</TableHead>
+                  <TableHead className="text-center font-bold">REFERÊNCIA</TableHead>
+                  <TableHead className="text-center font-bold">ALCANÇADO</TableHead>
+                  <TableHead className="w-[180px] text-center font-bold">ALCANÇADO EM PESO</TableHead>
                   <TableHead className="text-right pr-6 font-bold">
                   {!isEditing ? (
                     <div className="flex justify-end gap-2">
@@ -523,10 +518,16 @@ export default function MetasBusato() {
                               <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
                             </TableCell>
                             <TableCell className="text-center">
+                              <Input type="text" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].categoria} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], categoria: e.target.value}})} placeholder="Ex: RH" />
+                            </TableCell>
+                            <TableCell className="text-center">
                               <Input type="number" step="0.01" className="w-20 mx-auto text-center h-8 text-xs" value={editValues[m.id].ref} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], ref: e.target.value}})} />
                             </TableCell>
                             <TableCell className="text-center">
-                              <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alc} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alc: e.target.value}})} />
+                              <Input type="text" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alcBruto} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcBruto: e.target.value}})} placeholder="Ex: 96% ou 2" />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alcPeso} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcPeso: e.target.value}})} />
                             </TableCell>
                             <TableCell className="text-right pr-6">
                               <div className="flex justify-end gap-2 items-center">
@@ -555,12 +556,18 @@ export default function MetasBusato() {
                               <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
                             </TableCell>
                             <TableCell className="text-center font-medium text-muted-foreground">
-                              {m.ref.toFixed(2)}
+                              {m.categoria}
+                            </TableCell>
+                            <TableCell className="text-center font-medium text-muted-foreground">
+                              {m.ref.toFixed(2)}%
+                            </TableCell>
+                            <TableCell className="text-center font-bold">
+                              {m.alcBruto || '-'}
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1.5">
                                 <div className="flex justify-between items-center text-xs">
-                                  <span className="font-bold">{m.alc.toFixed(2)}</span>
+                                  <span className="font-bold">{m.alc.toFixed(2)}%</span>
                                 </div>
                                 <div className="w-full bg-secondary h-2 rounded-full overflow-hidden relative">
                                   <motion.div initial={{ width: 0 }} animate={{ width: `${fillPercentage}%` }} transition={{ duration: 0.8 }} className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`} />

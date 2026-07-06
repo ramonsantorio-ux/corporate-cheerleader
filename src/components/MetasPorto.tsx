@@ -73,7 +73,7 @@ export default function MetasPorto() {
   const [dbData, setDbData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [editValues, setEditValues] = useState<Record<string, {meta: string, ref: string, alc: string, status: string}>>({});
+  const [editValues, setEditValues] = useState<Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [isEditingGlobal, setIsEditingGlobal] = useState(false);
@@ -137,9 +137,9 @@ export default function MetasPorto() {
   }
 
   const handleEditAll = () => {
-    const values: Record<string, {meta: string, ref: string, alc: string, status: string}> = {};
+    const values: Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}> = {};
     data.metas.forEach((m: any) => {
-      values[m.id] = { meta: m.meta, ref: m.ref.toString(), alc: m.alc.toString(), status: m.status };
+      values[m.id] = { meta: m.meta, categoria: m.categoria, ref: m.ref.toString(), alcBruto: m.alcBruto, alcPeso: m.alc.toString(), status: m.status };
     });
     setEditValues(values);
     setIsEditing(true);
@@ -150,9 +150,9 @@ export default function MetasPorto() {
     try {
       const updates = Object.keys(editValues).map(id => ({
         id,
-        indicador: `${editValues[id].meta}|${editValues[id].status}`,
+        indicador: `${editValues[id].meta}|${editValues[id].status}|${editValues[id].categoria}|${editValues[id].alcBruto}`,
         referencia: parseFloat(editValues[id].ref.replace(',', '.')),
-        alcancado: parseFloat(editValues[id].alc.replace(',', '.'))
+        alcancado: parseFloat(editValues[id].alcPeso.replace(',', '.'))
       }));
       
       await Promise.all(updates.map(u => supabase.from('indicadores_metas').update({
@@ -230,7 +230,21 @@ export default function MetasPorto() {
         const rawInd = row.indicador || '';
         const parts = rawInd.split('|');
         const metaName = parts[0].trim();
+        const ind = metaName.toLowerCase();
         const dbStatus = parts[1] ? parts[1].trim() : 'Dentro Esperado (Aceitável)';
+
+        const rawCat = parts[2] ? parts[2].trim() : '';
+        let guessedCategoria = (rawCat && isNaN(Number(rawCat))) ? rawCat : '';
+        if (!guessedCategoria) {
+          if (ind.includes('aderência')) guessedCategoria = 'Aderência';
+          else if (ind.includes('eventuais')) guessedCategoria = 'Outros';
+          else if (ind.includes('preventivas')) guessedCategoria = 'Manutenção';
+          else if (ind.includes('eventos')) guessedCategoria = 'Segurança';
+          else if (ind.includes('custo')) guessedCategoria = 'Custo';
+          else if (ind.includes('turnover')) guessedCategoria = 'RH';
+        }
+
+        const dbAlcBruto = parts[3] ? parts[3].trim() : '';
 
         const alc = row.alcancado || 0;
         const ref = row.referencia || 1;
@@ -244,7 +258,9 @@ export default function MetasPorto() {
         return {
           id: row.id, setor: row.setor,
           meta: metaName,
+          categoria: guessedCategoria,
           ref: ref,
+          alcBruto: dbAlcBruto,
           alc: alc,
           status: status
         };
@@ -459,9 +475,11 @@ export default function MetasPorto() {
               <Table>
               <TableHeader className="bg-muted/10">
                 <TableRow>
-                  <TableHead className="font-bold">Métrica</TableHead>
-                  <TableHead className="text-center font-bold">Referência</TableHead>
-                  <TableHead className="w-[180px] text-center font-bold">Alcançado</TableHead>
+                  <TableHead className="font-bold">META</TableHead>
+                  <TableHead className="text-center font-bold">CATEGORIA</TableHead>
+                  <TableHead className="text-center font-bold">REFERÊNCIA</TableHead>
+                  <TableHead className="text-center font-bold">ALCANÇADO</TableHead>
+                  <TableHead className="w-[180px] text-center font-bold">ALCANÇADO EM PESO</TableHead>
                   <TableHead className="text-right pr-6 font-bold">
                   {!isEditing ? (
                     <div className="flex justify-end gap-2">
@@ -504,10 +522,16 @@ export default function MetasPorto() {
                               <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
                             </TableCell>
                             <TableCell className="text-center">
+                              <Input type="text" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].categoria} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], categoria: e.target.value}})} placeholder="Ex: RH" />
+                            </TableCell>
+                            <TableCell className="text-center">
                               <Input type="number" step="0.01" className="w-20 mx-auto text-center h-8 text-xs" value={editValues[m.id].ref} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], ref: e.target.value}})} />
                             </TableCell>
                             <TableCell className="text-center">
-                              <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alc} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alc: e.target.value}})} />
+                              <Input type="text" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alcBruto} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcBruto: e.target.value}})} placeholder="Ex: 96% ou 2" />
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alcPeso} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcPeso: e.target.value}})} />
                             </TableCell>
                             <TableCell className="text-right pr-6">
                               <div className="flex justify-end gap-2 items-center">
@@ -536,12 +560,18 @@ export default function MetasPorto() {
                               <p className="text-[10px] text-muted-foreground uppercase">{m.setor}</p>
                             </TableCell>
                             <TableCell className="text-center font-medium text-muted-foreground">
-                              {m.ref.toFixed(2)}
+                              {m.categoria}
+                            </TableCell>
+                            <TableCell className="text-center font-medium text-muted-foreground">
+                              {m.ref.toFixed(2)}%
+                            </TableCell>
+                            <TableCell className="text-center font-bold">
+                              {m.alcBruto || '-'}
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1.5">
                                 <div className="flex justify-between items-center text-xs">
-                                  <span className="font-bold">{m.alc.toFixed(2)}</span>
+                                  <span className="font-bold">{m.alc.toFixed(2)}%</span>
                                 </div>
                                 <div className="w-full bg-secondary h-2 rounded-full overflow-hidden relative">
                                   <motion.div initial={{ width: 0 }} animate={{ width: `${fillPercentage}%` }} transition={{ duration: 0.8 }} className={`h-full rounded-full ${m.status.includes('Abaixo') ? 'bg-destructive' : 'bg-primary'}`} />
