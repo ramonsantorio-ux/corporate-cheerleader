@@ -194,36 +194,74 @@ export default function MetasPorto() {
         let status = '';
         
         const ind = (row.indicador || '').toLowerCase();
-        const ref = row.referencia || 1;
         const alc = row.alcancado || 0;
-        
-        // Métricas onde "quanto menor melhor"
-        const isLessIsBetter = ind.includes('turnover') || 
-                               ind.includes('eventos') || 
-                               ind.includes('custo') || 
-                               ind.includes('interdições') ||
-                               ind.includes('eventuais') ||
-                               ind.includes('multas') ||
-                               ind.includes('notificações') ||
-                               ind.includes('afastamento') ||
-                               ind.includes('perda');
-        
-        if (ind.includes('aderência')) weight = 40;
-        else if (ind.includes('eventuais')) weight = 25;
-        else if (ind.includes('preventivas')) weight = 10;
-        else if (ind.includes('turnover')) weight = 5;
+        const ref = row.referencia || 1;
 
-        if (isLessIsBetter) {
-            score = ref !== 0 ? (ref / Math.max(alc, 0.001)) * 100 : 100;
-        } else {
-            score = ref !== 0 ? (alc / ref) * 100 : 100;
+        if (ind.includes('aderência')) {
+            weight = 40;
+            if (alc >= 99) { status = 'Muito Acima do Esperado'; score = 130; }
+            else if (alc >= 97) { status = 'Acima do Esperado'; score = 110; }
+            else if (alc >= 95) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
+            else if (alc >= 93) { status = 'Abaixo do Esperado'; score = 70; }
+            else { status = 'Muito Abaixo do Esperado'; score = 50; }
+        } 
+        else if (ind.includes('eventuais')) {
+            weight = 25;
+            if (alc >= 99) { status = 'Muito Acima do Esperado'; score = 130; }
+            else if (alc >= 97) { status = 'Acima do Esperado'; score = 110; }
+            else if (alc >= 95) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
+            else if (alc >= 93) { status = 'Abaixo do Esperado'; score = 70; }
+            else { status = 'Muito Abaixo do Esperado'; score = 50; }
+        } 
+        else if (ind.includes('preventivas')) {
+            weight = 10;
+            if (alc >= 99) { status = 'Muito Acima do Esperado'; score = 130; }
+            else if (alc >= 97) { status = 'Acima do Esperado'; score = 110; }
+            else if (alc >= 95) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
+            else if (alc >= 93) { status = 'Abaixo do Esperado'; score = 70; }
+            else { status = 'Muito Abaixo do Esperado'; score = 50; }
+        } 
+        else if (ind.includes('eventos')) {
+            weight = 10;
+            if (alc <= 0) { status = 'Muito Acima do Esperado'; score = 130; }
+            else if (alc <= 1) { status = 'Acima do Esperado'; score = 110; }
+            else if (alc <= 2) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
+            else if (alc <= 3) { status = 'Abaixo do Esperado'; score = 70; }
+            else { status = 'Muito Abaixo do Esperado'; score = 50; }
+        } 
+        else if (ind.includes('custo')) {
+            weight = 10;
+            if (alc < 390914.24) { status = 'Muito Acima do Esperado'; score = 130; }
+            else if (alc < 412631.70) { status = 'Acima do Esperado'; score = 110; }
+            else if (alc < 434349.15) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
+            else if (alc < 456066.61) { status = 'Abaixo do Esperado'; score = 70; }
+            else { status = 'Muito Abaixo do Esperado'; score = 50; }
+        } 
+        else if (ind.includes('turnover')) {
+            weight = 5;
+            if (alc >= 20) { status = 'Muito Acima do Esperado'; score = 130; }
+            else if (alc >= 15) { status = 'Acima do Esperado'; score = 110; }
+            else if (alc >= 10) { status = 'Dentro Esperado (Aceitável)'; score = 90; }
+            else if (alc >= 5) { status = 'Abaixo do Esperado'; score = 70; }
+            else { status = 'Muito Abaixo do Esperado'; score = 50; }
+        } 
+        else {
+            const isLessIsBetter = ind.includes('turnover') || ind.includes('eventos') || ind.includes('custo') || ind.includes('interdições') || ind.includes('eventuais') || ind.includes('multas') || ind.includes('notificações') || ind.includes('afastamento') || ind.includes('perda');
+            if (isLessIsBetter) {
+                score = ref !== 0 ? (ref / Math.max(alc, 0.001)) * 100 : 100;
+            } else {
+                score = ref !== 0 ? (alc / ref) * 100 : 100;
+            }
+            if (score >= 110) status = 'Muito Acima do Esperado';
+            else if (score >= 100) status = 'Acima do Esperado';
+            else if (score >= 90) status = 'Dentro Esperado (Aceitável)';
+            else if (score >= 70) status = 'Abaixo do Esperado';
+            else status = 'Muito Abaixo do Esperado';
         }
         
-        if (score >= 110) { status = 'Muito Acima do Esperado'; counts.acima++; }
-        else if (score >= 100) { status = 'Acima do Esperado'; counts.acima++; }
-        else if (score >= 90) { status = 'Dentro Esperado (Aceitável)'; counts.aceitavel++; }
-        else if (score >= 70) { status = 'Abaixo do Esperado'; counts.abaixo++; }
-        else { status = 'Muito Abaixo do Esperado'; counts.abaixo++; }
+        if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
+        else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
+        else counts.abaixo++;
 
         totalWeight += weight;
         weightedSum += Math.min(score, 100) * weight;
