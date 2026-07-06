@@ -12,7 +12,7 @@ import html2canvas from 'html2canvas';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Edit2, Save, X, Trash2, Plus } from 'lucide-react';
+import { Edit2, Save, X, Trash2, Plus, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 
@@ -75,6 +75,7 @@ export default function MetasBusato() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}>>({});
+  const [editOrder, setEditOrder] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [isEditingGlobal, setIsEditingGlobal] = useState(false);
@@ -139,19 +140,36 @@ export default function MetasBusato() {
 
   const handleEditAll = () => {
     const values: Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}> = {};
+    const order: string[] = [];
     data.metas.forEach(m => {
       values[m.id] = { meta: m.meta, categoria: m.categoria, ref: m.ref.toString(), alcBruto: m.alcBruto, alcPeso: m.alc.toString(), status: m.status };
+      order.push(m.id);
     });
     setEditValues(values);
+    setEditOrder(order);
     setIsEditing(true);
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index === 0) return;
+    const newOrder = [...editOrder];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    setEditOrder(newOrder);
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index === editOrder.length - 1) return;
+    const newOrder = [...editOrder];
+    [newOrder[index + 1], newOrder[index]] = [newOrder[index], newOrder[index + 1]];
+    setEditOrder(newOrder);
   };
 
   const handleSaveAll = async () => {
     setIsSaving(true);
     try {
-      const updates = Object.keys(editValues).map(id => ({
+      const updates = editOrder.map((id, index) => ({
         id,
-        indicador: `${editValues[id].meta}|${editValues[id].status}|${editValues[id].categoria}|${editValues[id].alcBruto}`,
+        indicador: `${editValues[id].meta}|${editValues[id].status}|${editValues[id].categoria}|${editValues[id].alcBruto}|${index}`,
         referencia: parseFloat(editValues[id].ref.replace(',', '.')),
         alcancado: parseFloat(editValues[id].alcPeso.replace(',', '.'))
       }));
@@ -249,6 +267,7 @@ export default function MetasBusato() {
         }
 
         const dbAlcBruto = parts[3] ? parts[3].trim() : '';
+        const dbOrdem = parts[4] ? parseInt(parts[4].trim(), 10) : 999;
         
         const alc = row.alcancado || 0;
         const ref = row.referencia || 1;
@@ -274,7 +293,8 @@ export default function MetasBusato() {
           alcBruto: dbAlcBruto,
           alc: alc,
           status: status,
-          score: score
+          score: score,
+          ordem: isNaN(dbOrdem) ? 999 : dbOrdem
         };
       });
 
@@ -288,12 +308,14 @@ export default function MetasBusato() {
       ];
 
       metasFormatadas.sort((a: any, b: any) => {
+        if (a.ordem !== b.ordem && a.ordem !== 999 && b.ordem !== 999) return a.ordem - b.ordem;
         const indexA = METAS_ORDER.findIndex(m => m.toLowerCase() === a.meta.toLowerCase());
         const indexB = METAS_ORDER.findIndex(m => m.toLowerCase() === b.meta.toLowerCase());
         
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
         if (indexA !== -1) return -1;
         if (indexB !== -1) return 1;
+        if (a.ordem !== b.ordem) return a.ordem - b.ordem;
         return a.meta.localeCompare(b.meta);
       });
 
@@ -524,7 +546,7 @@ export default function MetasBusato() {
               </TableHeader>
               <TableBody>
                 <AnimatePresence mode="popLayout">
-                  {data.metas.map((m, idx) => {
+                  {(isEditing ? editOrder.map(id => data.metas.find(m => m.id === id)).filter(Boolean) : data.metas).map((m: any, idx) => {
                     const fillPercentage = Math.min(m.score, 100) || 0;
                     const isOver = m.score >= 100;
                     
@@ -556,6 +578,12 @@ export default function MetasBusato() {
                             </TableCell>
                             <TableCell className="text-right pr-6">
                               <div className="flex justify-end gap-2 items-center">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-muted" onClick={() => handleMoveUp(idx)} disabled={idx === 0}>
+                                  <ChevronUp className="w-4 h-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-muted" onClick={() => handleMoveDown(idx)} disabled={idx === editOrder.length - 1}>
+                                  <ChevronDown className="w-4 h-4" />
+                                </Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-rose-500 hover:bg-rose-500/10 hover:text-rose-600" onClick={() => handleDeleteMetric(m.id)}>
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
