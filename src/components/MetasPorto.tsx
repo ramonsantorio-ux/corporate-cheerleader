@@ -166,18 +166,30 @@ export default function MetasPorto() {
   const handleSaveAll = async () => {
     setIsSaving(true);
     try {
-      const updates = editOrder.map((id, index) => ({
+      const updates = editOrder.filter(id => !id.startsWith('default-')).map((id, index) => ({
         id,
         indicador: `${editValues[id].meta}|${editValues[id].status}|${editValues[id].categoria}|${editValues[id].alcBruto}|${index}`,
         referencia: parseFloat(editValues[id].ref.replace(',', '.')),
         alcancado: parseFloat(editValues[id].alcPeso.replace(',', '.'))
       }));
       
-      await Promise.all(updates.map(u => supabase.from('indicadores_metas').update({
-        indicador: u.indicador,
-        referencia: u.referencia,
-        alcancado: u.alcancado
-      }).eq('id', u.id)));
+      const inserts = editOrder.filter(id => id.startsWith('default-')).map((id, index) => ({
+        indicador: `${editValues[id].meta}|${editValues[id].status}|${editValues[id].categoria}|${editValues[id].alcBruto}|${index}`,
+        setor: 'Porto',
+        mes: selectedMonth,
+        ano: selectedYear,
+        referencia: parseFloat(editValues[id].ref.replace(',', '.')),
+        alcancado: parseFloat(editValues[id].alcPeso.replace(',', '.'))
+      }));
+
+      await Promise.all([
+        ...updates.map(u => supabase.from('indicadores_metas').update({
+          indicador: u.indicador,
+          referencia: u.referencia,
+          alcancado: u.alcancado
+        }).eq('id', u.id)),
+        ...(inserts.length > 0 ? [supabase.from('indicadores_metas').insert(inserts)] : [])
+      ]);
 
       toast.success('Metas atualizadas!');
       setIsEditing(false);
@@ -219,8 +231,23 @@ export default function MetasPorto() {
   useEffect(() => { fetchMetas(); }, [selectedYear]);
 
   const METAS_DATA = useMemo(() => {
+    const defaultMetasTemplate = [
+      { meta: 'Aderência à Programação', categoria: 'Aderência', ref: 30, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
+      { meta: 'Eventos c/ ou s/ perda', categoria: 'Segurança', ref: 10, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
+      { meta: 'Custo Manutenção', categoria: 'Custo', ref: 10, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
+      { meta: 'Atendimento Eventuais (%)', categoria: 'Programação', ref: 20, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
+      { meta: 'Atendimento Programação Preventivas (%)', categoria: 'Manutenção', ref: 5, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
+      { meta: 'ISO 9001', categoria: 'Qualidade', ref: 20, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
+      { meta: 'Turnover', categoria: 'RH', ref: 5, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 }
+    ];
+
     const result: any = {};
-    MESES.forEach(m => { result[m] = { atingido: 0, globalId: null, gap: 100, counts: { acima: 0, aceitavel: 0, abaixo: 0 }, metas: [] }; });
+    MESES.forEach(m => { 
+      result[m] = { 
+        atingido: 0, globalId: null, gap: 100, counts: { acima: 0, aceitavel: 0, abaixo: 0 }, 
+        metas: defaultMetasTemplate.map((dm, idx) => ({ ...dm, id: `default-${m}-${idx}`, setor: 'Porto', ordem: idx })) 
+      }; 
+    });
     
     if (!dbData || dbData.length === 0) return result;
 
