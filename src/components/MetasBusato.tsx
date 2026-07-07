@@ -509,8 +509,9 @@ export default function MetasBusato() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <Card className="xl:col-span-2 shadow-sm border-border flex flex-col">
+      {/* 3. Tabela de Metas */}
+      <div className="grid grid-cols-1 gap-6 mb-6">
+        <Card className="shadow-sm border-border flex flex-col">
           <ExpandableChart title={`Detalhamento de ${selectedMonth}`}>
             <div className="p-0 flex-1 overflow-auto rounded-md bg-card">
               <Table>
@@ -644,37 +645,10 @@ export default function MetasBusato() {
             </div>
           </ExpandableChart>
         </Card>
-
-        {/* Radar Chart (Ideia A) */}
-        <Card className="xl:col-span-1 shadow-sm border-border flex flex-col">
-          <ExpandableChart title="Radar de Equilíbrio">
-            <div className="flex-1 flex flex-col items-center justify-center p-4 bg-card rounded-md">
-              <div className="w-full h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                  <PolarGrid stroke="hsl(var(--border))" />
-                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--foreground))', fontSize: 10, fontWeight: 600 }} />
-                  <PolarRadiusAxis angle={30} domain={[0, 150]} tick={false} axisLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Radar name="Alcançado (%)" dataKey="Atingido" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.4} />
-                  <Radar name="Referência (100%)" dataKey="Referencia" stroke="hsl(var(--destructive))" fill="none" strokeDasharray="3 3" strokeWidth={2} />
-                  <Legend wrapperStyle={{ fontSize: '11px', marginTop: '10px' }} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-[11px] text-center text-muted-foreground mt-4 leading-relaxed">
-              O polígono verde (Alcançado) deve idealmente cobrir a linha tracejada vermelha (Referência 100%). O que encolhe para dentro é gap.
-            </p>
-            </div>
-          </ExpandableChart>
-        </Card>
-
       </div>
 
-      {/* 4. Gráficos Analíticos de Base */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Gráfico 1: Atingimento Global Timeline */}
+      {/* 4. Evolução */}
+      <div className="grid grid-cols-1 gap-6 mb-6">
         <Card className="shadow-sm border-border">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -708,9 +682,37 @@ export default function MetasBusato() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* 5. Radar e Ofensores */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Radar Chart (Ideia A) */}
+        <Card className="shadow-sm border-border flex flex-col">
+          <ExpandableChart title="Radar de Equilíbrio">
+            <div className="flex-1 flex flex-col items-center justify-center p-4 bg-card rounded-md">
+              <div className="w-full h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                  <PolarGrid stroke="hsl(var(--border))" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'hsl(var(--foreground))', fontSize: 10, fontWeight: 600 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 150]} tick={false} axisLine={false} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Radar name="Alcançado (%)" dataKey="Atingido" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.4} />
+                  <Radar name="Referência (100%)" dataKey="Referencia" stroke="hsl(var(--destructive))" fill="none" strokeDasharray="3 3" strokeWidth={2} />
+                  <Legend wrapperStyle={{ fontSize: '11px', marginTop: '10px' }} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <p className="text-[11px] text-center text-muted-foreground mt-4 leading-relaxed">
+              O polígono verde (Alcançado) deve idealmente cobrir a linha tracejada vermelha (Referência 100%). O que encolhe para dentro é gap.
+            </p>
+            </div>
+          </ExpandableChart>
+        </Card>
 
         {/* Gráfico 2: Impulsionadores vs Ofensores (Variância) */}
-        <Card className="shadow-sm border-border">
+        <Card className="shadow-sm border-border flex flex-col">
           <CardHeader className="pb-2">
             <div className="flex justify-between items-center">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
