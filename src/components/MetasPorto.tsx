@@ -287,18 +287,20 @@ export default function MetasPorto() {
       });
 
       const METAS_ORDER = [
-        'Aderência à Programação',
-        'Eventos c/ ou s/ perda',
-        'Custo Manutenção',
-        'Atendimento Eventuais (%)',
-        'Atendimento Programação Preventivas (%)',
-        'Redução do Turnover'
+        'aderência',
+        'eventos',
+        'custo',
+        'eventuais',
+        'iso 9001',
+        'preventiva',
+        'turnover'
       ];
 
       metasFormatadas.sort((a: any, b: any) => {
         if (a.ordem !== b.ordem && a.ordem !== 999 && b.ordem !== 999) return a.ordem - b.ordem;
-        const indexA = METAS_ORDER.findIndex(m => m.toLowerCase() === a.meta.toLowerCase());
-        const indexB = METAS_ORDER.findIndex(m => m.toLowerCase() === b.meta.toLowerCase());
+        
+        const indexA = METAS_ORDER.findIndex(m => a.meta.toLowerCase().includes(m));
+        const indexB = METAS_ORDER.findIndex(m => b.meta.toLowerCase().includes(m));
         
         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
         if (indexA !== -1) return -1;
