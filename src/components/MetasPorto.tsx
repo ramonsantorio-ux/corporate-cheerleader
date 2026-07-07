@@ -545,7 +545,8 @@ export default function MetasPorto() {
               <TableBody>
                 <AnimatePresence mode="popLayout">
                   {(isEditing ? editOrder.map(id => data.metas.find(m => m.id === id)).filter(Boolean) : data.metas).map((m: any, idx) => {
-                    const fillPercentage = m.ref === 0 ? 0 : Math.min((m.alc / m.ref) * 100, 100) || 0;
+                    const fillPercentage = Math.min(m.score, 100) || 0;
+                    const isCusto = m.meta?.toLowerCase().includes('custo');
                     return (
                       <motion.tr 
                         key={m.id + selectedMonth}
@@ -564,13 +565,29 @@ export default function MetasPorto() {
                               <Input type="text" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].categoria} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], categoria: e.target.value}})} placeholder="Ex: RH" />
                             </TableCell>
                             <TableCell className="text-center">
-                              <Input type="number" step="0.01" className="w-20 mx-auto text-center h-8 text-xs" value={editValues[m.id].ref} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], ref: e.target.value}})} />
+                              <div className="relative w-24 mx-auto">
+                                <Input type="number" step="0.01" className="w-full text-center h-8 text-xs pr-5" value={editValues[m.id].ref} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], ref: e.target.value}})} />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium">%</span>
+                              </div>
                             </TableCell>
                             <TableCell className="text-center">
-                              <Input type="text" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alcBruto} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcBruto: e.target.value}})} placeholder="Ex: 96% ou 2" />
+                              {isCusto ? (
+                                <div className="relative w-28 mx-auto">
+                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium">R$</span>
+                                  <Input type="text" className="w-full text-center h-8 text-xs pl-6" value={editValues[m.id].alcBruto} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcBruto: e.target.value}})} placeholder="0,00" />
+                                </div>
+                              ) : (
+                                <div className="relative w-24 mx-auto">
+                                  <Input type="text" className="w-full text-center h-8 text-xs pr-5" value={editValues[m.id].alcBruto} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcBruto: e.target.value}})} placeholder="Ex: 96" />
+                                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium">%</span>
+                                </div>
+                              )}
                             </TableCell>
                             <TableCell className="text-center">
-                              <Input type="number" step="0.01" className="w-24 mx-auto text-center h-8 text-xs" value={editValues[m.id].alcPeso} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcPeso: e.target.value}})} />
+                              <div className="relative w-24 mx-auto">
+                                <Input type="number" step="0.01" className="w-full text-center h-8 text-xs pr-5" value={editValues[m.id].alcPeso} onChange={e => setEditValues({...editValues, [m.id]: {...editValues[m.id], alcPeso: e.target.value}})} />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground font-medium">%</span>
+                              </div>
                             </TableCell>
                             <TableCell className="text-right pr-6">
                               <div className="flex justify-end gap-2 items-center">
@@ -611,7 +628,13 @@ export default function MetasPorto() {
                               {m.ref.toFixed(2)}%
                             </TableCell>
                             <TableCell className="text-center font-bold">
-                              {m.alcBruto || '-'}
+                              {m.alcBruto ? (
+                                isCusto ? (
+                                  m.alcBruto.toString().includes('R$') ? m.alcBruto : `R$ ${m.alcBruto}`
+                                ) : (
+                                  m.alcBruto.toString().includes('%') ? m.alcBruto : `${m.alcBruto}%`
+                                )
+                              ) : '-'}
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-1.5">
