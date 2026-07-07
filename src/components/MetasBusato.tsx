@@ -303,14 +303,12 @@ export default function MetasBusato() {
         'eventos',
         'custo',
         'eventuais',
-        'iso 9001',
         'preventiva',
+        'iso 9001',
         'turnover'
       ];
 
       metasFormatadas.sort((a: any, b: any) => {
-        if (a.ordem !== b.ordem && a.ordem !== 999 && b.ordem !== 999) return a.ordem - b.ordem;
-        
         const indexA = METAS_ORDER.findIndex(m => a.meta.toLowerCase().includes(m));
         const indexB = METAS_ORDER.findIndex(m => b.meta.toLowerCase().includes(m));
         
