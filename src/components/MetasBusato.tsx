@@ -541,15 +541,15 @@ export default function MetasBusato() {
         <Card className="shadow-sm border-border flex flex-col">
           <ExpandableChart title={`Detalhamento de ${selectedMonth}`}>
             <div className="p-0 flex-1 overflow-auto rounded-md bg-card">
-              <Table>
+              <Table className="min-w-[1100px]">
               <TableHeader className="bg-muted/10">
                 <TableRow>
-                  <TableHead className="font-bold">META</TableHead>
-                  <TableHead className="text-center font-bold">CATEGORIA</TableHead>
-                  <TableHead className="text-center font-bold">REFERÊNCIA</TableHead>
-                  <TableHead className="text-center font-bold">ALCANÇADO</TableHead>
-                  <TableHead className="w-[180px] text-center font-bold">ALCANÇADO EM PESO</TableHead>
-                  <TableHead className="text-right pr-6 font-bold">
+                  <TableHead className="w-[300px] font-bold">META</TableHead>
+                  <TableHead className="w-[120px] text-center font-bold">CATEGORIA</TableHead>
+                  <TableHead className="w-[120px] text-center font-bold">REFERÊNCIA</TableHead>
+                  <TableHead className="w-[120px] text-center font-bold">ALCANÇADO</TableHead>
+                  <TableHead className="w-[200px] text-center font-bold">ALCANÇADO EM PESO</TableHead>
+                  <TableHead className="w-[240px] text-right pr-6 font-bold">
                   {!isEditing ? (
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm" onClick={handleEditAll} className="h-8">

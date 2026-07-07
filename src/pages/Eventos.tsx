@@ -76,6 +76,8 @@ export default function Eventos() {
   const [events, setEvents] = useState<EventRow[]>([]);
   const [funcionarios, setFuncionarios] = useState<{ id: string; nome: string; cargo: string; departamento: string; foto_url: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [search, setSearch] = useState('');
   const [equipmentFilter, setEquipmentFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
@@ -243,62 +245,62 @@ export default function Eventos() {
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const ab = await file.arrayBuffer();
-    // readExcelRows converte datas Excel automaticamente para strings ISO YYYY-MM-DD
-    const rows = await readExcelRows(ab);
-    
-    const mapped = rows.map(r => {
-      let dateVal = String(r['DATA'] || r['data'] || '');
-      // Suporte a formato DD/MM/YYYY (caso venha como string)
-      const parts = dateVal.match(/(\d+)\/(\d+)\/(\d+)/);
-      if (parts) {
-        let yr = parseInt(parts[3]);
-        if (yr < 100) yr += 2000;
-        dateVal = `${yr}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+    setIsImporting(true);
+    try {
+      const ab = await file.arrayBuffer();
+      const rows = await readExcelRows(ab);
+      
+      const mapped = rows.map(r => {
+        let dateVal = String(r['DATA'] || r['data'] || '');
+        const parts = dateVal.match(/(\d+)\/(\d+)\/(\d+)/);
+        if (parts) {
+          let yr = parseInt(parts[3]);
+          if (yr < 100) yr += 2000;
+          dateVal = `${yr}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+        }
+        const extraData = {
+          cid: String(r['CID'] || r['cid'] || ''),
+          atestado: String(r['ATESTADO'] || r['atestado'] || '').trim().toLowerCase() === 'sim',
+          afastamento: String(r['AFASTAMENTO'] || r['afastamento'] || '').trim().toLowerCase() === 'sim',
+          danos_materiais: String(r['DANOS MATERIAIS'] || r['danos_materiais'] || r['danos materiais'] || '').trim().toLowerCase() === 'sim',
+        };
+        const cleanDesc = String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || '').split('||EXTRA||')[0].trim();
+
+        return {
+          event_date: dateVal,
+          event_time: String(r['HORÁRIO'] || r['horario'] || ''),
+          day_of_week: String(r['DIA DA SEMANA'] || r['dia_da_semana'] || ''),
+          description: cleanDesc + " ||EXTRA||" + JSON.stringify(extraData),
+          location: String(r['LOCAL'] || r['local'] || ''),
+          contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
+          equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
+          plate_tag: String(r['PLACA/TAG'] || r['placa_tag'] || ''),
+          shift: String(r['TURNO'] || r['turno'] || ''),
+          supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
+          involved_name: String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || '')
+        };
+      }).filter(r => r.event_date && (r.description.replace('||EXTRA||', '').trim()));
+
+      if (!mapped.length) { toast.error('Nenhum dado válido encontrado'); return; }
+
+      for (let i = 0; i < mapped.length; i += 50) {
+        const batch = mapped.slice(i, i + 50);
+        const { error } = await supabase.from('events').insert(batch);
+        if (error) throw error;
       }
-      const extraData = {
-        cid: String(r['CID'] || r['cid'] || ''),
-        atestado: String(r['ATESTADO'] || r['atestado'] || '').trim().toLowerCase() === 'sim',
-        afastamento: String(r['AFASTAMENTO'] || r['afastamento'] || '').trim().toLowerCase() === 'sim',
-        danos_materiais: String(r['DANOS MATERIAIS'] || r['danos_materiais'] || r['danos materiais'] || '').trim().toLowerCase() === 'sim',
-      };
-      const cleanDesc = String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || '').split('||EXTRA||')[0].trim();
-
-      return {
-        event_date: dateVal,
-        event_time: String(r['HORÁRIO'] || r['horario'] || ''),
-        day_of_week: String(r['DIA DA SEMANA'] || r['dia_da_semana'] || ''),
-        description: cleanDesc + " ||EXTRA||" + JSON.stringify(extraData),
-        location: String(r['LOCAL'] || r['local'] || ''),
-        contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
-        equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
-        plate_tag: String(r['PLACA/TAG'] || r['placa_tag'] || ''),
-        shift: String(r['TURNO'] || r['turno'] || ''),
-        supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
-        involved_name: String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || '')
-      };
-    }).filter(r => r.event_date && (r.description.replace('||EXTRA||', '').trim()));
-
-    if (!mapped.length) { toast.error('Nenhum dado válido encontrado'); return; }
-
-    // Insert in batches of 50
-    for (let i = 0; i < mapped.length; i += 50) {
-      const batch = mapped.slice(i, i + 50);
-      const { error } = await supabase.from('events').insert(batch);
-      if (error) { toast.error(`Erro no lote ${i}: ${error.message}`); return; }
+      toast.success(`${mapped.length} eventos importados com sucesso!`);
+      fetchEvents();
+    } catch (err: any) {
+      toast.error('Erro ao importar: ' + err.message);
+    } finally {
+      setIsImporting(false);
+      if (e.target) e.target.value = '';
     }
-    toast.success(`${mapped.length} eventos importados!`);
-    fetchEvents();
-    e.target.value = '';
   }
 
   async function handleExport() {
-    const exportData = filtered.map(ev => ({
-      'DATA': ev.event_date,
-      'HORÁRIO': ev.event_time,
-      'DIA DA SEMANA': ev.day_of_week,
-      'DESCRIÇÃO DO EVENTO': ev.description,
-      'LOCAL': ev.location,
+    const exportData = events.map(ev => ({
+      'DATA DO EVENTO': ev.event_date ? new Date(ev.event_date).toLocaleDateString('pt-BR') : '',
       'CONTRATO': ev.contract,
       'EQUIPAMENTO': ev.equipment,
       'PLACA/TAG': ev.plate_tag,
@@ -527,11 +529,19 @@ export default function Eventos() {
           <p className="text-muted-foreground text-sm mt-1">Registro e análise de ocorrências operacionais</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <label className="cursor-pointer">
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
-            <Button variant="outline" size="sm" asChild><span><Upload className="w-4 h-4 mr-1" /> Importar</span></Button>
+          <label className={isImporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}>
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={isImporting} />
+            <Button variant="outline" size="sm" asChild disabled={isImporting}>
+              <span>
+                {isImporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />} 
+                {isImporting ? 'Importando...' : 'Importar'}
+              </span>
+            </Button>
           </label>
-          <Button variant="outline" size="sm" onClick={handleExport}><Download className="w-4 h-4 mr-1" /> Exportar</Button>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
+            {isExporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />} 
+            {isExporting ? 'Exportando...' : 'Exportar'}
+          </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => {
