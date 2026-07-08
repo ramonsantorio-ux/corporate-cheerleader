@@ -70,12 +70,14 @@ export default function Competencias() {
   const [evalForm, setEvalForm] = useState({ employee_id: '', cycle_id: '' });
   const [evalScores, setEvalScores] = useState<Record<string, number>>({});
   const [filterCycle, setFilterCycle] = useState('all');
+  const [fitCulturalAnswers, setFitCulturalAnswers] = useState<{employee_id: string, stage: string}[]>([]);
   
   // States para a avaliação inline de 4 etapas
   const [selectedEvalEmployee, setSelectedEvalEmployee] = useState<string | null>(null);
   const [selectedEvalCycle, setSelectedEvalCycle] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', description: '', cycle_id: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
+  const [expandedCargoRealizados, setExpandedCargoRealizados] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -91,6 +93,7 @@ export default function Competencias() {
       supabase.from('funcionarios').select('id, nome, cargo').then(({ data }) => { if (data) setFuncionarios(data as Funcionario[]); }),
       supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at').then(({ data }) => { if (data) setEvaluations(data as Evaluation[]); }),
       supabase.from('evaluation_cycles').select('id, end_date').then(({ data }) => { if (data) setEvalCycles(data as EvaluationCycle[]); }),
+      supabase.from('fit_cultural').select('employee_id, stage').then(({ data }) => { if (data) setFitCulturalAnswers(data as any[]); }),
     ]);
   }, []);
 
@@ -112,32 +115,25 @@ export default function Competencias() {
       return normalized;
     };
 
-    const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: { id: string; nome: string }[] }> = {};
+    const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: { id: string; nome: string }[]; realizadoNomes: { id: string; nome: string }[] }> = {};
     funcionarios.forEach(f => {
       const cargoKey = normalizeCargo(f.cargo);
-      if (!cargos[cargoKey]) cargos[cargoKey] = { cargo: cargoKey, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [] };
+      if (!cargos[cargoKey]) cargos[cargoKey] = { cargo: cargoKey, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [], realizadoNomes: [] };
       cargos[cargoKey].total++;
-      const empEvals = evaluations.filter(e => e.evaluated_name.toLowerCase() === f.nome.toLowerCase());
-      if (empEvals.length === 0) {
+      
+      const hasFit = fitCulturalAnswers.some(fc => fc.employee_id === f.id && (filterCycle === 'all' || fc.stage === filterCycle));
+      
+      if (!hasFit) {
         cargos[cargoKey].pendentes++;
         cargos[cargoKey].pendenteNomes.push({ id: f.id, nome: f.nome });
       } else {
-        const completed = empEvals.filter(e => e.status === 'completed');
-        if (completed.length > 0) {
-          cargos[cargoKey].realizados++;
-          const latestCompleted = completed[completed.length - 1];
-          const cycle = evalCycles.find(c => c.id === latestCompleted.cycle_id);
-          if (cycle && latestCompleted.completed_at && new Date(latestCompleted.completed_at) <= new Date(cycle.end_date)) {
-            cargos[cargoKey].noPrazo++;
-          }
-        } else {
-          cargos[cargoKey].pendentes++;
-          cargos[cargoKey].pendenteNomes.push({ id: f.id, nome: f.nome });
-        }
+        cargos[cargoKey].realizados++;
+        cargos[cargoKey].realizadoNomes.push({ id: f.id, nome: f.nome });
+        cargos[cargoKey].noPrazo++; 
       }
     });
     return Object.values(cargos).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
-  }, [funcionarios, evaluations, evalCycles]);
+  }, [funcionarios, fitCulturalAnswers, filterCycle]);
 
   const chartData = cargoStats.map(c => ({
     cargo: c.cargo.length > 18 ? c.cargo.slice(0, 16) + '…' : c.cargo,
@@ -169,6 +165,21 @@ export default function Competencias() {
   async function deleteCompetency(id: string) {
     await supabase.from('competencies').delete().eq('id', id);
     fetchCompetencies();
+  }
+
+  async function deleteFitCulturalEmployee(employeeId: string) {
+    if (filterCycle === 'all') {
+      return toast({ title: 'Atenção', description: 'Por favor, selecione um ciclo específico no filtro (ex: 1º Semestre) para excluir a avaliação do colaborador.', variant: 'destructive' });
+    }
+    const { error } = await supabase.from('fit_cultural').delete().eq('employee_id', employeeId).eq('stage', filterCycle);
+    if (error) {
+      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Avaliação excluída com sucesso!' });
+      // Recalcular no banco poderia ser feito via trigger, mas podemos só recarregar aqui
+      const { data } = await supabase.from('fit_cultural').select('employee_id, stage');
+      if (data) setFitCulturalAnswers(data as any[]);
+    }
   }
 
   async function submitEvaluation() {
@@ -458,9 +469,50 @@ export default function Competencias() {
                 </div>
               </div>
             )}
-          </div>
-        </motion.div>
-      )}
+
+              {/* Realizados expandable list */}
+              {cargoStats.some(c => c.realizados > 0) && (
+                <div className="mt-6 border-t border-border pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Colaboradores Avaliados</p>
+                  <div className="space-y-1">
+                    {cargoStats.filter(c => c.realizados > 0).map(c => (
+                      <div key={`realizados-${c.cargo}`} className="rounded-lg border border-border overflow-hidden">
+                        <button onClick={() => setExpandedCargoRealizados(expandedCargoRealizados === c.cargo ? null : c.cargo)}
+                          className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-muted/30 transition-colors">
+                          <span className="text-sm font-medium text-foreground">{c.cargo}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="corporate-badge bg-emerald-500/10 text-emerald-600">{c.realizados}</span>
+                            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCargoRealizados === c.cargo ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
+                        {expandedCargoRealizados === c.cargo && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                            className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
+                            {c.realizadoNomes.map(emp => (
+                              <div key={emp.id} className="flex items-center justify-between py-1 hover:bg-muted/30 px-2 -mx-2 rounded-md transition-colors">
+                                <button onClick={() => navigate(`/funcionario/${emp.id}?tab=fit-cultural`)}
+                                  className="text-sm text-primary hover:underline cursor-pointer text-left flex-1">
+                                  • {emp.nome}
+                                </button>
+                                <button 
+                                  onClick={() => deleteFitCulturalEmployee(emp.id)}
+                                  className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                                  title="Excluir Avaliação deste Colaborador neste Ciclo"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </motion.div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
 
       <div className="flex items-center gap-3">
         <Label className="text-sm text-muted-foreground">Filtrar por ciclo:</Label>
