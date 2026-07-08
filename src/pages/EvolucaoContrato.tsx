@@ -808,6 +808,34 @@ export default function EvolucaoContrato() {
     return { icon: Minus, color: 'text-muted-foreground' };
   };
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
+          <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>
+          <div className="space-y-2">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-center justify-between gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
+                  <span className="text-muted-foreground font-medium">{entry.name}</span>
+                </div>
+                <span className="font-bold text-foreground">
+                  {entry.name.includes('Margem') || entry.name.includes('Aderência') || entry.name.includes('Meta') 
+                    ? `${entry.value}%` 
+                    : entry.name.includes('Notificações') 
+                      ? entry.value 
+                      : typeof entry.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.value) : entry.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   const handleChartClick = (data: any) => {
     if (data && data.activePayload && data.activePayload.length > 0) {
       const monthData = data.activePayload[0].payload;
