@@ -86,6 +86,10 @@ export default function FuncionarioProfile() {
   const [goalForm, setGoalForm] = useState(emptyGoalForm);
   const cargoSemMeta = func ? CARGOS_SEM_META.includes(func.cargo) : false;
 
+  const [discResult, setDiscResult] = useState<any>(null);
+  const [mbtiResult, setMbtiResult] = useState<any>(null);
+  const [bigFiveResult, setBigFiveResult] = useState<any>(null);
+
   const refreshFunc = async () => {
     if (!id) return;
     const { data } = await supabase.from('funcionarios').select('*').eq('id', id).single();
@@ -100,7 +104,8 @@ export default function FuncionarioProfile() {
       supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, email, data_admissao'),
       supabase.from('meetings').select('*').eq('employee_id', id).order('meeting_date', { ascending: false }),
       supabase.from('employee_documents').select('*').eq('employee_id', id).order('created_at', { ascending: false }),
-    ]).then(([funcRes, fbRes, allRes, meetRes, docRes]) => {
+      supabase.from('employee_assessments').select('*').eq('employee_id', id)
+    ]).then(([funcRes, fbRes, allRes, meetRes, docRes, assessRes]) => {
       if (funcRes.data) {
         const f = funcRes.data as unknown as Funcionario;
         setFunc(f);
@@ -114,6 +119,15 @@ export default function FuncionarioProfile() {
       if (allRes.data) setAllFuncionarios(allRes.data as Funcionario[]);
       if (meetRes.data) setMeetings(meetRes.data as MeetingItem[]);
       if (docRes.data) setDocuments(docRes.data as unknown as EmployeeDocument[]);
+      if (assessRes.data) {
+        const arr = assessRes.data as any[];
+        const disc = arr.find(a => a.assessment_type === 'disc');
+        const mbti = arr.find(a => a.assessment_type === 'mbti');
+        const bigfive = arr.find(a => a.assessment_type === 'bigfive');
+        if (disc) setDiscResult(disc.result_data);
+        if (mbti) setMbtiResult(mbti.result_data);
+        if (bigfive) setBigFiveResult(bigfive.result_data);
+      }
       setLoading(false);
     });
   }, [id]);
