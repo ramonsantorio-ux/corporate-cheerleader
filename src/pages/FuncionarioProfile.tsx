@@ -79,7 +79,6 @@ export default function FuncionarioProfile() {
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
-  const [encarregadoNome, setEncarregadoNome] = useState('');
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
   const [editGoal, setEditGoal] = useState<Goal | null>(null);
   const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
@@ -109,11 +108,6 @@ export default function FuncionarioProfile() {
       if (funcRes.data) {
         const f = funcRes.data as unknown as Funcionario;
         setFunc(f);
-        if (f.encarregado_id) {
-          supabase.from('funcionarios').select('nome').eq('id', f.encarregado_id).single().then(({ data }) => {
-            if (data) setEncarregadoNome((data as any).nome);
-          });
-        }
       }
       if (fbRes.data) setFeedbacks(fbRes.data as FeedbackItem[]);
       if (allRes.data) setAllFuncionarios(allRes.data as Funcionario[]);
@@ -577,7 +571,6 @@ export default function FuncionarioProfile() {
               <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><Calendar className="w-3.5 h-3.5" />Admissão: {new Date(func.data_admissao).toLocaleDateString('pt-BR')}</span>
               {func.escolaridade && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-muted text-muted-foreground"><GraduationCap className="w-3.5 h-3.5" />{func.escolaridade}</span>}
               {turnoDisplay && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-chart-3/10 text-chart-3"><Briefcase className="w-3.5 h-3.5" />{turnoDisplay}</span>}
-              {encarregadoNome && <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md bg-chart-4/10 text-chart-4"><Users className="w-3.5 h-3.5" />Líder: {encarregadoNome}</span>}
             </div>
           </div>
           
