@@ -82,6 +82,7 @@ export default function Competencias() {
   // Link generation
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [selectedLinkEmployee, setSelectedLinkEmployee] = useState('');
+  const [selectedLinkCycle, setSelectedLinkCycle] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -344,21 +345,38 @@ export default function Competencias() {
                 </div>
 
                 {selectedLinkEmployee && (
-                  <div className="space-y-2">
+                  <div className="space-y-2 mt-4">
+                    <Label>Ciclo de Avaliação</Label>
+                    <Select value={selectedLinkCycle} onValueChange={setSelectedLinkCycle}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o ciclo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cycles.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {selectedLinkEmployee && selectedLinkCycle && (
+                  <div className="space-y-2 mt-4">
                     <Label>Link Personalizado</Label>
                     <div className="flex items-center gap-2">
                       <Input 
                         readOnly 
-                        value={`${window.location.origin}/autoavaliacao-fit-cultural?uid=${selectedLinkEmployee}`}
+                        value={`${window.location.origin}/autoavaliacao-fit-cultural?uid=${selectedLinkEmployee}&cycle=${selectedLinkCycle}`}
                         className="bg-muted/50 font-mono text-xs"
                       />
                       <Button 
                         variant="secondary"
                         onClick={() => {
-                          navigator.clipboard.writeText(`${window.location.origin}/autoavaliacao-fit-cultural?uid=${selectedLinkEmployee}`);
+                          navigator.clipboard.writeText(`${window.location.origin}/autoavaliacao-fit-cultural?uid=${selectedLinkEmployee}&cycle=${selectedLinkCycle}`);
                           toast({ title: 'Link copiado!', description: 'Envie este link para o colaborador.' });
                           setLinkDialogOpen(false);
                           setSelectedLinkEmployee('');
+                          setSelectedLinkCycle('');
                         }}
                       >
                         Copiar
