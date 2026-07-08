@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, User, ChevronDown, ChevronRight, Briefcase, Info, RefreshCw, X, GripHorizontal } from 'lucide-react';
@@ -30,25 +30,7 @@ export default function Organograma() {
   const [selectedNode, setSelectedNode] = useState<Funcionario | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const fetchFuncionarios = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('funcionarios')
-      .select('id, nome, cargo, departamento, encarregado_id, foto_url')
-      .order('nome');
-
-    if (error) {
-      toast.error('Erro ao buscar funcionários');
-      setLoading(false);
-      return;
-    }
-
-    setFuncionarios(data || []);
-    buildTree(data || []);
-    setLoading(false);
-  };
-
-  const buildTree = (data: Funcionario[]) => {
+  const buildTree = useCallback((data: Funcionario[]) => {
     const map = new Map<string, TreeNode>();
     const roots: TreeNode[] = [];
 
@@ -66,11 +48,29 @@ export default function Organograma() {
     });
 
     setTree(roots);
-  };
+  }, []);
+
+  const fetchFuncionarios = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('funcionarios')
+      .select('id, nome, cargo, departamento, encarregado_id, foto_url')
+      .order('nome');
+
+    if (error) {
+      toast.error('Erro ao buscar funcionários');
+      setLoading(false);
+      return;
+    }
+
+    setFuncionarios(data || []);
+    buildTree(data || []);
+    setLoading(false);
+  }, [buildTree]);
 
   useEffect(() => {
     fetchFuncionarios();
-  }, []);
+  }, [fetchFuncionarios]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);

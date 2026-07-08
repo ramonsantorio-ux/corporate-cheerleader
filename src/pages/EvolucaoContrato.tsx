@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -624,16 +624,16 @@ export default function EvolucaoContrato() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     if (confirm('Tem certeza que deseja excluir este fechamento mensal?')) {
       const existing = medicoes.find(m => m.id === id);
       if (existing && existing._supabaseId) {
         await supabase.from('medicoes').delete().eq('id', existing._supabaseId);
       }
-      setMedicoes(medicoes.filter(m => m.id !== id));
+      setMedicoes(prev => prev.filter(m => m.id !== id));
       toast({ title: 'Sucesso', description: 'Fechamento excluído com sucesso!' });
     }
-  };
+  }, [medicoes, toast]);
 
   const handleSaveFromComponent = async (novaMedicao: Medicao) => {
     // Validação anti-duplicação: se não for uma edição (editingId vazio) 
@@ -774,7 +774,7 @@ export default function EvolucaoContrato() {
     // O gráfico diário tem dados de apenas 1 mês, então ele sempre será exibido integralmente 
     // para filtros de 3, 6 ou 12 meses.
     return dataAderenciaDia;
-  }, [timeRange]);
+  }, []);
 
   const lastMonth = [...chartData].reverse().find(m => m.receitaTotal > 0) || chartData[chartData.length - 1];
   const lastMonthIndex = chartData.findIndex(m => m === lastMonth);
@@ -801,34 +801,6 @@ export default function EvolucaoContrato() {
     if (current > prev) return { icon: ArrowUpRight, color: inverseGood ? 'text-destructive' : 'text-success' };
     if (current < prev) return { icon: ArrowDownRight, color: inverseGood ? 'text-success' : 'text-destructive' };
     return { icon: Minus, color: 'text-muted-foreground' };
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
-          <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>
-          <div className="space-y-2">
-            {payload.map((entry: any, index: number) => (
-              <div key={index} className="flex items-center justify-between gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
-                  <span className="text-muted-foreground font-medium">{entry.name}</span>
-                </div>
-                <span className="font-bold text-foreground">
-                  {entry.name.includes('Margem') || entry.name.includes('Aderência') || entry.name.includes('Meta') 
-                    ? `${entry.value}%` 
-                    : entry.name.includes('Notificações') 
-                      ? entry.value 
-                      : formatCurrency(entry.value)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    return null;
   };
 
   const handleChartClick = (data: any) => {
@@ -1715,7 +1687,7 @@ export default function EvolucaoContrato() {
         </SheetContent>
       </Sheet>
     </>
-  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth, activeTab, timeRange, selectedMonthDRE, ofensoresData, filteredChartData]);
+  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth, activeTab, timeRange, selectedMonthDRE, ofensoresData, filteredChartData, handleDelete]);
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-8 animate-fade-in pb-20">

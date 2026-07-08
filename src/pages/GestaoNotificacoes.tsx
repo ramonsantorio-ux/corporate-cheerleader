@@ -26,7 +26,7 @@ export interface NotificacaoGlobal {
   valorOriginal?: number;
 }
 
-export const seedNotificacoes: NotificacaoGlobal[] = [
+const seedNotificacoes: NotificacaoGlobal[] = [
   { id: '1', dataStr: '20/08/2025', local: 'Minério', motivo: 'Notificação não atendimento serviços', solicitante: '', tipo: 'Notificação', planoDeAcao: 'OK' },
   { id: '2', dataStr: '20/08/2025', local: 'Minério', motivo: 'Notificação irreguladirade no uso de terceiros', solicitante: '', tipo: 'Notificação', planoDeAcao: 'OK' },
   { id: '3', dataStr: '10/09/2025', local: 'Minério', motivo: 'Descumprimento de procedimento', solicitante: '', tipo: 'Notificação', planoDeAcao: 'OK' },
@@ -47,7 +47,7 @@ export const seedNotificacoes: NotificacaoGlobal[] = [
   { id: '18', dataStr: '18/05/2026', local: 'Minério', motivo: 'Notificação Local Proibido', solicitante: '', tipo: 'Notificação', planoDeAcao: 'OK' },
 ];
 
-export const getMonthForNotification = (dataStr?: string) => {
+const getMonthForNotification = (dataStr?: string) => {
   if (!dataStr) return null;
   const parts = dataStr.split('/');
   if (parts.length !== 3) return null;
@@ -332,7 +332,7 @@ const GestaoNotificacoes = () => {
             Histórico Global
           </CardTitle>
           <CardDescription>
-            Todas as ocorrências registradas. Elas serão vinculadas automaticamente Ã s medições do mês correspondente (ciclo 21 a 20).
+            Todas as ocorrências registradas. Elas serão vinculadas automaticamente às medições do mês correspondente (ciclo 21 a 20).
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">

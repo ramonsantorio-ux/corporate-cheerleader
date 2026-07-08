@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays, ShieldAlert, Award, Crown, ShieldCheck, Lightbulb, Wrench, Brain, Zap, BarChart2, CheckCircle2, User } from 'lucide-react';
@@ -124,7 +124,7 @@ export default function FuncionarioProfile() {
       return;
     }
     fetchGoals();
-  }, [func, cargoSemMeta]);
+  }, [func, cargoSemMeta, fetchGoals]);
 
   // Fetch attendance + vacation + warnings data for this employee
   useEffect(() => {
@@ -144,11 +144,11 @@ export default function FuncionarioProfile() {
     });
   }, [id, func]);
 
-  async function fetchGoals() {
+  const fetchGoals = useCallback(async () => {
     if (!func) return;
     const { data } = await supabase.from('goals').select('*').eq('cargo', func.cargo).order('peso', { ascending: false });
     if (data) setGoals(data as Goal[]);
-  }
+  }, [func]);
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -1027,7 +1027,7 @@ export default function FuncionarioProfile() {
 
           <div className="rounded-lg p-4 border border-orange-500/20 bg-orange-500/5">
             <p className="text-xs text-orange-700 font-medium">
-              âš ï¸ <strong>Nota:</strong> Faltas Injustificadas NÃƒO contemplam banco de horas. Este relatório é anexado Ã  ficha do colaborador para envio ao RH no momento do desligamento.
+              ⚠️ <strong>Nota:</strong> Faltas Injustificadas NÃO contemplam banco de horas. Este relatório é anexado à ficha do colaborador para envio ao RH no momento do desligamento.
             </p>
           </div>
           
