@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
-import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain, Activity, AlertTriangle } from 'lucide-react';
+import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain, Activity, AlertTriangle, Trash2 } from 'lucide-react';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -87,6 +87,25 @@ export default function Desempenho() {
     const { error } = await supabase.from('evaluation_cycles').insert([{ name: newCycle.name, start_date: newCycle.start_date, end_date: newCycle.end_date }]);
     if (error) { toast({ title: 'Erro ao criar ciclo', description: error.message, variant: 'destructive' }); }
     else { toast({ title: 'Ciclo criado com sucesso!' }); setNewCycle({ name: '', start_date: '', end_date: '' }); setDialogOpen(false);
+      const { data } = await supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false });
+      if (data) setCycles(data as EvaluationCycle[]);
+    }
+  }
+
+  async function deleteCycle(cycleId: string) {
+    if (!confirm('Tem certeza que deseja excluir este ciclo? Todas as avaliações de Fit Cultural, Succession 9Box e PDIs vinculadas a ele serão apagadas permanentemente.')) return;
+    
+    await supabase.from('fit_cultural').delete().eq('stage', cycleId);
+    await supabase.from('nine_box_historico').delete().eq('cycle', cycleId);
+    await supabase.from('evaluations').delete().eq('cycle_id', cycleId);
+    await supabase.from('pdis').delete().eq('cycle_id', cycleId);
+
+    const { error } = await supabase.from('evaluation_cycles').delete().eq('id', cycleId);
+    
+    if (error) {
+      toast({ title: 'Erro ao excluir ciclo', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Ciclo excluído com sucesso!' });
       const { data } = await supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false });
       if (data) setCycles(data as EvaluationCycle[]);
     }
@@ -316,9 +335,18 @@ export default function Desempenho() {
                         {cycle.start_date ? new Date(cycle.start_date).toLocaleDateString('pt-BR') : 'N/A'} → {cycle.end_date ? new Date(cycle.end_date).toLocaleDateString('pt-BR') : 'N/A'}
                       </p>
                     </div>
-                    <span className={`corporate-badge ${statusColor[cycle.status] || 'bg-muted text-muted-foreground'}`}>
-                      {statusLabel[cycle.status] || cycle.status}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className={`corporate-badge ${statusColor[cycle.status] || 'bg-muted text-muted-foreground'}`}>
+                        {statusLabel[cycle.status] || cycle.status}
+                      </span>
+                      <button 
+                        onClick={() => deleteCycle(cycle.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                        title="Excluir Ciclo"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </motion.div>
                 ))
               )}
