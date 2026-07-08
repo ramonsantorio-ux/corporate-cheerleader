@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw } from 'lucide-react';
+import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -330,9 +330,26 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
 
       <div className="grid grid-cols-1 gap-6">
         {isClosed && (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 p-4 rounded-xl flex items-center justify-center gap-2">
-            <Shield className="w-5 h-5" />
-            <p className="font-semibold text-sm">Esta avaliação foi encerrada e não pode mais ser alterada.</p>
+          <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 shrink-0" />
+              <p className="font-semibold text-sm">Esta avaliação foi encerrada e não pode mais ser alterada.</p>
+            </div>
+            
+            {(() => {
+              const currentCycleIndex = cycles.findIndex(c => c.id === activeCycleId);
+              const nextCycle = currentCycleIndex !== -1 && currentCycleIndex < cycles.length - 1 ? cycles[currentCycleIndex + 1] : null;
+              if (!nextCycle) return null;
+              return (
+                <Button 
+                  variant="outline" 
+                  className="bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-700 shrink-0 w-full sm:w-auto"
+                  onClick={() => setActiveCycleId(nextCycle.id)}
+                >
+                  Avaliar {nextCycle.name} <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              );
+            })()}
           </div>
         )}
 
