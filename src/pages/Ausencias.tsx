@@ -21,7 +21,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LabelList, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
-import { readExcelRows } from '@/lib/excel';
+import { readExcelRows, parseExcelDate } from '@/lib/excel';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
@@ -362,8 +362,9 @@ export default function PontoFerias() {
         const obs = row['Observação'] || row['observacao'] || row['Obs'] || '';
 
         if (!date) continue;
-        // ExcelJS já converte datas para string ISO (YYYY-MM-DD) via readExcelRows
-        const dateStr = String(date);
+        // ExcelJS e parseExcelDate convertem a data
+        const parsed = parseExcelDate(date);
+        const dateStr = parsed || String(date);
 
         await supabase.from('daily_attendance').insert({
           employee_id: empId, date: dateStr, status, observation: obs,
@@ -393,9 +394,9 @@ export default function PontoFerias() {
         const empId = nameToId[nome];
         if (!empId) continue;
 
-        // ExcelJS já converte datas Excel para string ISO via readExcelRows
-        const startDate = String(row['Início'] || row['inicio'] || row['Start'] || '');
-        const endDate = String(row['Fim'] || row['fim'] || row['End'] || '');
+        // ExcelJS e parseExcelDate convertem a data
+        const startDate = parseExcelDate(row['Início'] || row['inicio'] || row['Start']) || '';
+        const endDate = parseExcelDate(row['Fim'] || row['fim'] || row['End']) || '';
 
         await supabase.from('vacation_control').upsert({
           employee_id: empId,
@@ -428,8 +429,8 @@ export default function PontoFerias() {
         const empId = nameToId[nome];
         if (!empId) continue;
         // ExcelJS já converte datas para string ISO via readExcelRows
-        const periodStart = String(row['Início Período'] || row['inicio_periodo'] || '');
-        const periodEnd = String(row['Fim Período'] || row['fim_periodo'] || '');
+        const periodStart = parseExcelDate(row['Início Período'] || row['inicio_periodo']) || '';
+        const periodEnd = parseExcelDate(row['Fim Período'] || row['fim_periodo']) || '';
         if (!periodStart || !periodEnd) continue;
         await supabase.from('overtime_control').insert({
           employee_id: empId,

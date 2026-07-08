@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Users, Eye, Plus, Edit, Trash2, Loader2, Camera, X, FileUp, FileText, Download, Upload, CheckSquare } from 'lucide-react';
-import { readExcelRows } from '@/lib/excel';
+import { readExcelRows, parseExcelDate } from '@/lib/excel';
 import { Input } from '@/components/ui/input';
 import { FastInput } from '@/components/ui/fast-input';
 import { Button } from '@/components/ui/button';
@@ -183,7 +183,7 @@ export default function Colaboradores() {
       const records = rows.map(row => ({
         nome: String(row['Nome'] || '').trim(), email: String(row['Email'] || '').trim(),
         cargo: String(row['Cargo'] || '').trim(), departamento: String(row['Departamento'] || '').trim(),
-        data_admissao: String(row['Data Admissão'] || row['Data Admissao'] || '').trim() || undefined,
+        data_admissao: parseExcelDate(row['Data Admissão'] || row['Data Admissao']) || undefined,
         escolaridade: String(row['Escolaridade'] || '').trim(), graduacao: String(row['Graduação'] || row['Graduacao'] || '').trim(),
         pos_graduacao: String(row['Pós-Graduação'] || '').toLowerCase() === 'sim',
         pos_graduacao_tipo: String(row['Tipo Pós-Graduação'] || '').trim(),

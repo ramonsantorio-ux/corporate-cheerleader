@@ -19,7 +19,7 @@ import PeriodFilter, { getMonthPeriod } from '@/components/filters/PeriodFilter'
 import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import { toast } from 'sonner';
 import {  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, Legend , ScatterChart, Scatter, ZAxis, RadialBarChart, RadialBar, LabelList, ComposedChart } from 'recharts';
-import { readExcelRows, writeExcelFile } from '@/lib/excel';
+import { readExcelRows, writeExcelFile, parseExcelDate } from '@/lib/excel';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { TreinamentosSSMA } from '@/components/TreinamentosSSMA';
 import N3Dashboard from '@/components/N3Dashboard';

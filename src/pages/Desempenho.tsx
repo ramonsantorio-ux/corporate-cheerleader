@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
-import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain, Activity, HeartPulse, AlertTriangle } from 'lucide-react';
+import { Target, Users, Plus, Calendar, TrendingUp, List, ClipboardList, Brain, Activity, AlertTriangle } from 'lucide-react';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import Competencias from './Competencias';
 import Feedbacks from './Feedbacks';
 import PDIPage from './PDI';
 import Sucessao from './Sucessao';
-import { ENPSDashboard } from '@/components/ENPSDashboard';
+
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 
 interface EvaluationCycle {
@@ -132,7 +132,6 @@ export default function Desempenho() {
     { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
     { value: 'pdi', label: 'PDI', icon: ClipboardList },
-    { value: 'clima', label: 'Clima (eNPS)', icon: HeartPulse },
     { value: 'sucessao', label: 'Sucessão & 9Box', icon: TrendingUp },
   ];
 
@@ -345,11 +344,6 @@ export default function Desempenho() {
         {/* ═══ PDI ═══ */}
         <TabsContent value="pdi" className="mt-4">
           <PDIPage />
-        </TabsContent>
-
-        {/* ═══ CLIMA ═══ */}
-        <TabsContent value="clima" className="mt-4">
-          <ENPSDashboard />
         </TabsContent>
       </Tabs>
     </div>

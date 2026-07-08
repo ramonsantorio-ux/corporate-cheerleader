@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Plus, Search, Users, Edit, Trash2, Loader2, Camera, X, Eye, FileUp, FileText, Download, Upload } from 'lucide-react';
-import { readExcelRows } from '@/lib/excel';
+import { readExcelRows, parseExcelDate } from '@/lib/excel';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -135,7 +135,7 @@ export default function Cadastro() {
         email: String(row['Email'] || '').trim(),
         cargo: String(row['Cargo'] || '').trim(),
         departamento: String(row['Departamento'] || '').trim(),
-        data_admissao: String(row['Data Admissão'] || row['Data Admissao'] || '').trim() || undefined,
+        data_admissao: parseExcelDate(row['Data Admissão'] || row['Data Admissao']) || undefined,
         escolaridade: String(row['Escolaridade'] || '').trim(),
         graduacao: String(row['Graduação'] || row['Graduacao'] || '').trim(),
         pos_graduacao: String(row['Pós-Graduação'] || row['Pos-Graduacao'] || '').toLowerCase() === 'sim',

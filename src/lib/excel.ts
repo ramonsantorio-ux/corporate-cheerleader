@@ -5,6 +5,65 @@ export interface ExcelRow {
 }
 
 /**
+ * Converte de forma robusta valores de data vindos do Excel (nativos, numéricos ou strings)
+ * para o formato ISO YYYY-MM-DD aceito pelo banco de dados.
+ */
+export function parseExcelDate(val: any): string | null {
+  if (!val) return null;
+
+  // 1. Já é um objeto Date (caso cellDates: true tenha funcionado)
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return null;
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  
+  // 2. É um número serial de data do Excel (ex: 45500)
+  if (typeof val === 'number') {
+    // Excel date epoch is 1900-01-01 (1 is 1900-01-01)
+    const d = new Date(Math.round((val - 25569) * 864e5));
+    if (isNaN(d.getTime())) return null;
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  // 3. É uma string (ex: '15/08/2024' ou '2024-08-15')
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    
+    // Verifica formato YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) {
+      return trimmed.substring(0, 10);
+    }
+    
+    // Verifica formato brasileiro comum: DD/MM/YYYY ou D/M/YY
+    const parts = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if (parts) {
+      const d = parts[1].padStart(2, '0');
+      const m = parts[2].padStart(2, '0');
+      let y = parseInt(parts[3], 10);
+      if (y < 100) y += 2000;
+      return `${y}-${m}-${d}`;
+    }
+    
+    // Tenta parse via Date() como fallback final
+    const parsed = new Date(trimmed);
+    if (!isNaN(parsed.getTime())) {
+      const y = parsed.getFullYear();
+      const m = String(parsed.getMonth() + 1).padStart(2, '0');
+      const d = String(parsed.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Lê um ArrayBuffer de arquivo .xlsx e retorna as linhas como objetos.
  * A primeira linha é usada como cabeçalho (chaves dos objetos).
  * Datas Excel são retornadas como strings "YYYY-MM-DD".

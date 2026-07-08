@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Target, Upload, Pencil, Trash2, ShieldAlert } from 'lucide-react';
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip, Legend } from 'recharts';
-import { readExcelRaw } from '@/lib/excel';
+import { readExcelRaw, parseExcelDate } from '@/lib/excel';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
@@ -148,11 +148,7 @@ export function TreinamentosSSMA() {
     e.target.value = '';
   }
 
-  function formatDate(val: any) {
-    if (!val) return '';
-    if (val instanceof Date) return val.toISOString().slice(0, 10);
-    return String(val);
-  }
+  function formatDate(val: any) { return parseExcelDate(val) || ''; }
 
   async function handleDelete(id: string) {
     if (!confirm('Deseja excluir este registro?')) return;
