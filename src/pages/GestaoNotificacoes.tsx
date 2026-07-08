@@ -26,7 +26,7 @@ export interface NotificacaoGlobal {
   valorOriginal?: number;
 }
 
-const seedNotificacoes: NotificacaoGlobal[] = [
+export const seedNotificacoes: NotificacaoGlobal[] = [
   { id: '1', dataStr: '20/08/2025', local: 'Minério', motivo: 'Notificação não atendimento serviços', solicitante: '', tipo: 'Notificação', planoDeAcao: 'OK' },
   { id: '2', dataStr: '20/08/2025', local: 'Minério', motivo: 'Notificação irreguladirade no uso de terceiros', solicitante: '', tipo: 'Notificação', planoDeAcao: 'OK' },
   { id: '3', dataStr: '10/09/2025', local: 'Minério', motivo: 'Descumprimento de procedimento', solicitante: '', tipo: 'Notificação', planoDeAcao: 'OK' },
