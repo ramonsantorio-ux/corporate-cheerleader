@@ -40,9 +40,6 @@ const navGroups: NavGroup[] = [
     label: 'Talentos & Comportamento',
     items: [
       { to: '/treinamentos', icon: ClipboardList, label: 'Central de Assessments', badge: 'NOVO', key: 'treinamentos' },
-      { to: '/assessment/disc', icon: Brain, label: 'Teste DISC', key: 'disc' },
-      { to: '/assessment/mbti', icon: Brain, label: 'MBTI', key: 'mbti' },
-      { to: '/assessment/bigfive', icon: Brain, label: 'Big Five', key: 'bigfive' },
     ],
   },
   {
