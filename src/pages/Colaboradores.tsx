@@ -77,8 +77,6 @@ export default function Colaboradores() {
   const editDocFileRef = useRef<HTMLInputElement>(null);
   const importFileRef = useRef<HTMLInputElement>(null);
 
-  const encarregados = funcionarios.filter(f => f.cargo.toLowerCase().includes('encarregado'));
-
   useEffect(() => { fetchFuncionarios(); }, []);
 
   async function fetchFuncionarios(silent = false) {
@@ -284,12 +282,6 @@ export default function Colaboradores() {
           <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v, letra: letraFromTurno(v) })}><SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger><SelectContent>{TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
           
         </div>
-        {encarregados.length > 0 && (
-          <div className="space-y-2">
-            <Label>Encarregado (Supervisor)</Label>
-            <Select value={data.encarregado_id} onValueChange={v => setData({ ...data, encarregado_id: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent><SelectItem value="none">Nenhum</SelectItem>{encarregados.map(enc => <SelectItem key={enc.id} value={enc.id}>{enc.nome}</SelectItem>)}</SelectContent></Select>
-          </div>
-        )}
         {cargoNeedsDocs(data.cargo) && (
           <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
             <Label className="flex items-center gap-2"><FileUp className="w-4 h-4 text-primary" />Documentos</Label>
