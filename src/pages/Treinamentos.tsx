@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/components/ExecutiveReports';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -105,7 +105,7 @@ export default function Treinamentos() {
           console.error("Erro ao buscar funcionários:", error);
         }
 
-        const { data: assessments } = await supabase.from('assessment_results').select('user_id, type, result_data, created_at');
+        const { data: assessments } = await supabase.from('assessment_results').select('id, user_id, type, result_data, created_at');
         setAssessmentsData(assessments || []);
         
         const enriched = (employeesList || []).map(f => {
@@ -146,6 +146,22 @@ export default function Treinamentos() {
     if (!valid) return null; // Só retorna os dados se estiver válido
     return tests.find(a => a.user_id === empId && a.type === type)?.result_data || tryParse(`${type}_${empId}`);
   };
+
+  const getTestId = (tests: any[], type: string, empId: string) => {
+    const test = tests.find(a => a.user_id === empId && a.type === type);
+    return test?.id || null;
+  };
+
+  async function deleteAssessment(id: string) {
+    if (!confirm('Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.')) return;
+    const { error } = await supabase.from('assessment_results').delete().eq('id', id);
+    if (error) {
+      toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Avaliação excluída com sucesso!' });
+      setAssessmentsData(prev => prev.filter(a => a.id !== id));
+    }
+  }
 
   function tryParse(key: string) {
     try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : null; } catch { return null; }
@@ -353,6 +369,10 @@ export default function Treinamentos() {
                 const bigfiveData = getTestData(assessmentsData, 'bigfive', f.id);
                 const done = [discData, mbtiData, bigfiveData].filter(Boolean).length;
                 
+                const discId = getTestId(assessmentsData, 'disc', f.id);
+                const mbtiId = getTestId(assessmentsData, 'mbti', f.id);
+                const bigfiveId = getTestId(assessmentsData, 'bigfive', f.id);
+                
                 return (
                   <motion.tr key={f.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.03 }}
                     className="hover:bg-muted/30 transition-colors">
@@ -399,6 +419,10 @@ export default function Treinamentos() {
                             <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('disc', f.id)}>Copiar Link DISC</DropdownMenuItem>
                             <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('mbti', f.id)}>Copiar Link MBTI</DropdownMenuItem>
                             <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('bigfive', f.id)}>Copiar Link Big Five</DropdownMenuItem>
+                            {(discId || mbtiId || bigfiveId) && <DropdownMenuSeparator />}
+                            {discId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(discId)}>Excluir DISC</DropdownMenuItem>}
+                            {mbtiId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(mbtiId)}>Excluir MBTI</DropdownMenuItem>}
+                            {bigfiveId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(bigfiveId)}>Excluir Big Five</DropdownMenuItem>}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
