@@ -308,15 +308,25 @@ export default function PontoFerias() {
   }
 
   async function deleteAttendance(id: string) {
-    await supabase.from('daily_attendance').delete().eq('id', id);
-    toast.success('Registro removido');
-    fetchAll();
+    try {
+      const { error } = await supabase.from('daily_attendance').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Registro removido');
+      fetchAll();
+    } catch (err: any) {
+      toast.error('Erro ao remover: ' + err.message);
+    }
   }
 
   async function deleteVacation(id: string) {
-    await supabase.from('vacation_control').delete().eq('id', id);
-    toast.success('Registro removido');
-    fetchAll();
+    try {
+      const { error } = await supabase.from('vacation_control').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Registro removido');
+      fetchAll();
+    } catch (err: any) {
+      toast.error('Erro ao remover: ' + err.message);
+    }
   }
 
   // ─── Warning handlers ─────────────────────────────────────────────────
@@ -337,9 +347,14 @@ export default function PontoFerias() {
   }
 
   async function deleteWarning(id: string) {
-    await supabase.from('employee_warnings').delete().eq('id', id);
-    toast.success('Advertência removida');
-    fetchAll();
+    try {
+      const { error } = await supabase.from('employee_warnings').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Advertência removida');
+      fetchAll();
+    } catch (err: any) {
+      toast.error('Erro ao remover: ' + err.message);
+    }
   }
 
   // ─── Import handlers ──────────────────────────────────────────────────

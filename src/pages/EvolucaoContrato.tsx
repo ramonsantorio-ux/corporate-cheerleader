@@ -626,12 +626,17 @@ export default function EvolucaoContrato() {
 
   const handleDelete = useCallback(async (id: number) => {
     if (confirm('Tem certeza que deseja excluir este fechamento mensal?')) {
-      const existing = medicoes.find(m => m.id === id);
-      if (existing && existing._supabaseId) {
-        await supabase.from('medicoes').delete().eq('id', existing._supabaseId);
+      try {
+        const existing = medicoes.find(m => m.id === id);
+        if (existing && existing._supabaseId) {
+          const { error } = await supabase.from('medicoes').delete().eq('id', existing._supabaseId);
+          if (error) throw error;
+        }
+        setMedicoes(prev => prev.filter(m => m.id !== id));
+        toast({ title: 'Sucesso', description: 'Fechamento excluído com sucesso!' });
+      } catch (err: any) {
+        toast({ title: 'Erro', description: err.message, variant: 'destructive' });
       }
-      setMedicoes(prev => prev.filter(m => m.id !== id));
-      toast({ title: 'Sucesso', description: 'Fechamento excluído com sucesso!' });
     }
   }, [medicoes, toast]);
 

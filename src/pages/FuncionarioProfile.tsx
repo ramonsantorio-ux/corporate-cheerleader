@@ -191,8 +191,13 @@ export default function FuncionarioProfile() {
 
   async function confirmDeleteGoal() {
     if (!deleteGoalId) return;
-    await supabase.from('goals').delete().eq('id', deleteGoalId);
-    setDeleteGoalId(null); toast({ title: 'Meta excluída' }); fetchGoals();
+    try {
+      const { error } = await supabase.from('goals').delete().eq('id', deleteGoalId);
+      if (error) throw error;
+      setDeleteGoalId(null); toast({ title: 'Meta excluída' }); fetchGoals();
+    } catch (err: any) {
+      toast({ title: 'Erro ao excluir meta', description: err.message, variant: 'destructive' });
+    }
   }
 
   const employeeFeedbacks = useMemo(() => {
