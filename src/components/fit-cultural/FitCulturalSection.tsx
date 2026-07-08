@@ -74,9 +74,10 @@ interface Props {
   employeeId: string;
   employeeName: string;
   cycleId?: string;
+  onCloseTab?: () => void;
 }
 
-export default function FitCulturalSection({ employeeId, employeeName, cycleId: initialCycleId }: Props) {
+export default function FitCulturalSection({ employeeId, employeeName, cycleId: initialCycleId, onCloseTab }: Props) {
   const { isAdmin, permissions, user } = useAuth();
   
   // States
@@ -212,6 +213,9 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     } else {
       toast({ title: 'Avaliação encerrada com sucesso!' });
       setIsClosed(true);
+      if (onCloseTab) {
+        onCloseTab();
+      }
     }
     setClosing(false);
   }

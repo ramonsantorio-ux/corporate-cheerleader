@@ -62,8 +62,19 @@ const attendanceStatusColors: Record<string, string> = {
 export default function FuncionarioProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'desempenho';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'visao-geral';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    setActiveTab(searchParams.get('tab') || 'visao-geral');
+  }, [searchParams]);
+
+  const handleTabChange = (val: string) => {
+    setActiveTab(val);
+    setSearchParams({ tab: val }, { replace: true });
+  };
+  
   const { toast } = useToast();
   const [func, setFunc] = useState<Funcionario | null>(null);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
@@ -583,7 +594,7 @@ export default function FuncionarioProfile() {
         </div>
       </motion.div>
 
-      <Tabs defaultValue={initialTab || 'visao-geral'} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
           <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
           <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Feedbacks</TabsTrigger>
@@ -741,16 +752,15 @@ export default function FuncionarioProfile() {
           </div>
 
 
-        </TabsContent>
-
-        {/* ——— FIT CULTURAL ——— */}
-        <TabsContent value="fit-cultural" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
-          <div className="glass-card rounded-xl p-6 shadow-sm border-t-4 border-t-chart-2">
-            <FitCulturalSection employeeId={func.id} employeeName={func.nome} />
           </div>
         </TabsContent>
 
-        {/* ——— NINE BOX ——— */}
+        <TabsContent value="fit-cultural" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="glass-card rounded-xl p-6 shadow-sm border-t-4 border-t-chart-2">
+              <FitCulturalSection employeeId={func.id} employeeName={func.nome} onCloseTab={() => handleTabChange('nine-box')} />
+          </div>
+        </TabsContent>
+
         <TabsContent value="nine-box" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
           <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
             <NineBoxSection 
