@@ -77,12 +77,16 @@ export default function AutoAvaliacaoFit() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const uidParam = searchParams.get('uid');
+  const cycleParam = searchParams.get('cycle');
 
   useEffect(() => {
     if (uidParam) {
       setSelectedFunc(uidParam);
     }
-  }, [uidParam]);
+    if (cycleParam) {
+      setSelectedCycle(cycleParam);
+    }
+  }, [uidParam, cycleParam]);
 
   useEffect(() => {
     Promise.all([
@@ -316,15 +320,17 @@ export default function AutoAvaliacaoFit() {
           </div>
         )}
           
-          <div>
-            <Label className="text-base font-semibold">Qual ciclo você está avaliando?</Label>
-            <Select value={selectedCycle} onValueChange={setSelectedCycle}>
-              <SelectTrigger className="mt-1.5 h-12 bg-white text-slate-900 border-slate-200"><SelectValue placeholder="Selecione o semestre/ciclo..." /></SelectTrigger>
-              <SelectContent className="bg-white text-slate-900 border-slate-200">
-                {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          {!cycleParam && (
+            <div>
+              <Label className="text-base font-semibold">Qual ciclo você está avaliando?</Label>
+              <Select value={selectedCycle} onValueChange={setSelectedCycle}>
+                <SelectTrigger className="mt-1.5 h-12 bg-white text-slate-900 border-slate-200"><SelectValue placeholder="Selecione o semestre/ciclo..." /></SelectTrigger>
+                <SelectContent className="bg-white text-slate-900 border-slate-200">
+                  {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         {selectedFunc && selectedCycle && (
