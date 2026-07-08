@@ -750,9 +750,6 @@ export default function FuncionarioProfile() {
             </div>
 
           </div>
-
-
-          </div>
         </TabsContent>
 
         <TabsContent value="fit-cultural" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
