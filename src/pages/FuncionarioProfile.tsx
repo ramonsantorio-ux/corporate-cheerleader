@@ -118,6 +118,12 @@ export default function FuncionarioProfile() {
     });
   }, [id]);
 
+  const fetchGoals = useCallback(async () => {
+    if (!func) return;
+    const { data } = await supabase.from('goals').select('*').eq('cargo', func.cargo).order('peso', { ascending: false });
+    if (data) setGoals(data as Goal[]);
+  }, [func]);
+
   useEffect(() => {
     if (!func || cargoSemMeta) {
       setGoals([]);
@@ -143,12 +149,6 @@ export default function FuncionarioProfile() {
       if (eventsRes.data) setEmployeeEvents(eventsRes.data as unknown as EventRecord[]);
     });
   }, [id, func]);
-
-  const fetchGoals = useCallback(async () => {
-    if (!func) return;
-    const { data } = await supabase.from('goals').select('*').eq('cargo', func.cargo).order('peso', { ascending: false });
-    if (data) setGoals(data as Goal[]);
-  }, [func]);
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
