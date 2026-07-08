@@ -202,7 +202,8 @@ export default function FuncionarioProfile() {
 
   const employeeFeedbacks = useMemo(() => {
     if (!func) return [];
-    return feedbacks.filter(f => f.autor?.toLowerCase() === func.nome.toLowerCase() || f.titulo?.toLowerCase().includes(func.nome.toLowerCase()));
+    const nome = func.nome?.toLowerCase() || '';
+    return feedbacks.filter(f => f.autor?.toLowerCase() === nome || f.titulo?.toLowerCase().includes(nome));
   }, [feedbacks, func]);
 
   const [badgesCounts, setBadgesCounts] = useState<Record<string, number>>({});
@@ -247,7 +248,11 @@ export default function FuncionarioProfile() {
     if (!id) return;
     const saved = localStorage.getItem(`badges_${id}`);
     if (saved) {
-      setBadgesCounts(JSON.parse(saved));
+      try {
+        setBadgesCounts(JSON.parse(saved) || {});
+      } catch (e) {
+        setBadgesCounts({});
+      }
     } else {
       setBadgesCounts({});
     }
@@ -322,8 +327,8 @@ export default function FuncionarioProfile() {
   }, [func, meetings, attendanceRecords, employeeWarnings, employeeEvents]);
 
   const fixEncoding = (str: string) => str.replace(/Ã£/g, 'ã').replace(/Ã§/g, 'ç').replace(/Ãµ/g, 'õ').replace(/Ã¡/g, 'á').replace(/Ã©/g, 'é').replace(/Ã³/g, 'ó').replace(/Ãº/g, 'ú').replace(/Ã­/g, 'í').replace(/Ãª/g, 'ê').replace(/Ã´/g, 'ô').replace(/Ã‡/g, 'Ç').replace(/Ãƒ/g, 'Ã').replace(/Ã‰/g, 'É').replace(/Ã“/g, 'Ó').replace(/Ãš/g, 'Ú').replace(/Ã‚/g, 'Â').replace(/ÃŠ/g, 'Ê').replace(/ Eventuãis/g, ' Eventuais').replace(/Ã /g, 'à');
-  const pieData = goals.map(g => ({ name: fixEncoding(g.descricao), value: g.peso }));
-  const barData = goals.map(g => ({ name: fixEncoding(g.descricao).length > 20 ? fixEncoding(g.descricao).slice(0, 18) + '...' : fixEncoding(g.descricao), Peso: g.peso }));
+  const pieData = goals.map(g => ({ name: fixEncoding(g.descricao || ''), value: g.peso }));
+  const barData = goals.map(g => ({ name: fixEncoding(g.descricao || '').length > 20 ? fixEncoding(g.descricao || '').slice(0, 18) + '...' : fixEncoding(g.descricao || ''), Peso: g.peso }));
 
   const attendanceStats = useMemo(() => {
     const counts: Record<string, number> = {};
