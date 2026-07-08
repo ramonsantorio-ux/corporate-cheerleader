@@ -206,76 +206,7 @@ export default function FuncionarioProfile() {
     return feedbacks.filter(f => f.autor?.toLowerCase() === nome || f.titulo?.toLowerCase().includes(nome));
   }, [feedbacks, func]);
 
-  const [badgesCounts, setBadgesCounts] = useState<Record<string, number>>({});
-  const [discResult, setDiscResult] = useState<any>(null);
-  const [mbtiResult, setMbtiResult] = useState<any>(null);
-  const [bigFiveResult, setBigFiveResult] = useState<any>(null);
 
-  useEffect(() => {
-    if (func?.id) {
-      const parse = (k: string) => { try { const s = localStorage.getItem(k); return s ? JSON.parse(s) : null; } catch { return null; } };
-      
-      const fetchAssessments = async () => {
-        try {
-          const { data, error } = await supabase.from('assessment_results').select('*').eq('user_id', func.id);
-          
-          if (!error && data && data.length > 0) {
-            const disc = data.find(d => d.type === 'disc');
-            const mbti = data.find(d => d.type === 'mbti');
-            const bigfive = data.find(d => d.type === 'bigfive');
-            
-            setDiscResult(disc ? disc.result_data : parse(`disc_${func.id}`));
-            setMbtiResult(mbti ? mbti.result_data : parse(`mbti_${func.id}`));
-            setBigFiveResult(bigfive ? bigfive.result_data : parse(`bigfive_${func.id}`));
-          } else {
-            // Fallback
-            setDiscResult(parse(`disc_${func.id}`));
-            setMbtiResult(parse(`mbti_${func.id}`));
-            setBigFiveResult(parse(`bigfive_${func.id}`));
-          }
-        } catch (err) {
-          setDiscResult(parse(`disc_${func.id}`));
-          setMbtiResult(parse(`mbti_${func.id}`));
-          setBigFiveResult(parse(`bigfive_${func.id}`));
-        }
-      };
-      
-      fetchAssessments();
-    }
-  }, [func?.id]);
-
-  useEffect(() => {
-    if (!id) return;
-    const saved = localStorage.getItem(`badges_${id}`);
-    if (saved) {
-      try {
-        setBadgesCounts(JSON.parse(saved) || {});
-      } catch (e) {
-        setBadgesCounts({});
-      }
-    } else {
-      setBadgesCounts({});
-    }
-  }, [id]);
-
-  const handleAddBadge = (badgeId: string) => {
-    if (!id) return;
-    const newCounts = { ...badgesCounts, [badgeId]: (badgesCounts[badgeId] || 0) + 1 };
-    setBadgesCounts(newCounts);
-    localStorage.setItem(`badges_${id}`, JSON.stringify(newCounts));
-    toast({ title: 'Badge concedido!' });
-  };
-
-  const handleRemoveBadge = (e: React.MouseEvent, badgeId: string) => {
-    e.preventDefault();
-    if (!id || !badgesCounts[badgeId]) return;
-    const newCounts = { ...badgesCounts, [badgeId]: badgesCounts[badgeId] - 1 };
-    if (newCounts[badgeId] === 0) delete newCounts[badgeId];
-    setBadgesCounts(newCounts);
-    localStorage.setItem(`badges_${id}`, JSON.stringify(newCounts));
-  };
-
-  const totalBadges = useMemo(() => Object.values(badgesCounts).reduce((sum, val) => sum + val, 0), [badgesCounts]);
 
   const [fitScores, setFitScores] = useState<{ criteria: string; stage: string; score: number | null }[]>([]);
   useEffect(() => {
@@ -707,13 +638,7 @@ export default function FuncionarioProfile() {
                   <p className="text-xl font-bold">{func.feedbacks_recebidos}</p>
                 </div>
               </div>
-              <div className="kpi-card p-4 rounded-xl flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-chart-2/10 flex items-center justify-center shrink-0"><Award className="w-5 h-5 text-chart-2" /></div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Total de Badges</p>
-                  <p className="text-xl font-bold">{totalBadges}</p>
-                </div>
-              </div>
+
               <div className="kpi-card p-4 rounded-xl flex items-center gap-4 col-span-2 lg:col-span-1">
                 <div className="w-10 h-10 rounded-full bg-chart-4/10 flex items-center justify-center shrink-0"><Calendar className="w-5 h-5 text-chart-4" /></div>
                 <div>
@@ -808,46 +733,7 @@ export default function FuncionarioProfile() {
 
           </div>
 
-          {/* ——— GAMIFICAÇÃO ——— */}
-          <div className="glass-card rounded-xl p-6 border-t-4 border-t-yellow-500 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold flex items-center gap-2"><Award className="w-5 h-5 text-yellow-500" />Conquistas e Badges</h3>
-              <span className="text-xs font-semibold bg-yellow-500/10 text-yellow-600 px-3 py-1 rounded-full">{totalBadges} distribuídos</span>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">Reconheça os talentos clicando em um badge. Botão direito para remover.</p>
-            <div className="flex flex-wrap gap-4">
-               {[
-                 { id: 'batedor_metas', name: 'Batedor de Metas', icon: Award, color: 'yellow' },
-                 { id: 'ajudante_equipe', name: 'Ajudante da Equipe', icon: Star, color: 'blue' },
-                 { id: 'presenca_100', name: '100% de Presença', icon: Target, color: 'green' },
-                 { id: 'lider_nato', name: 'Líder Nato', icon: Crown, color: 'purple' },
-                 { id: 'zero_acidentes', name: 'Zero Acidentes', icon: ShieldCheck, color: 'red' },
-                 { id: 'ideia_brilhante', name: 'Ideia Brilhante', icon: Lightbulb, color: 'orange' },
-                 { id: 'mao_na_massa', name: 'Mão na Massa', icon: Wrench, color: 'slate' }
-               ].map(badge => {
-                 const count = badgesCounts[badge.id] || 0;
-                 return (
-                   <div 
-                     key={badge.id}
-                     onClick={() => handleAddBadge(badge.id)}
-                     onContextMenu={(e) => handleRemoveBadge(e, badge.id)}
-                     className={`relative flex flex-col items-center justify-center p-3 bg-${badge.color}-500/10 border border-${badge.color}-500/20 rounded-xl w-28 h-28 text-center hover:scale-105 transition-transform cursor-pointer group shadow-sm`}
-                   >
-                     {count > 0 && (
-                       <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-in zoom-in">
-                         {count}
-                       </div>
-                     )}
-                     <badge.icon className={`w-8 h-8 text-${badge.color}-500 mb-2 transition-transform group-hover:scale-110`} />
-                     <span className="text-[10px] font-bold leading-tight">{badge.name}</span>
-                     <div className="absolute inset-0 bg-black/5 rounded-xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                       <span className="text-2xl text-foreground/50 font-light drop-shadow-md">+</span>
-                     </div>
-                   </div>
-                 );
-               })}
-            </div>
-          </div>
+
         </TabsContent>
 
         {/* ——— FIT CULTURAL ——— */}
