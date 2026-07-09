@@ -657,8 +657,21 @@ export default function Eventos() {
                   <FastInput value={newEvent.plate_tag} onValueChange={v => setNewEvent(p => ({ ...p, plate_tag: v }))} placeholder="Ex: QRD0980" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Turno</Label>
-                  <FastInput value={newEvent.shift} onValueChange={v => setNewEvent(p => ({ ...p, shift: v }))} />
+                  <Label>Turno / Letra</Label>
+                  <Select value={newEvent.shift} onValueChange={v => setNewEvent(p => ({ ...p, shift: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A - Dia">A - Dia</SelectItem>
+                      <SelectItem value="A - Noite">A - Noite</SelectItem>
+                      <SelectItem value="B - Dia">B - Dia</SelectItem>
+                      <SelectItem value="B - Noite">B - Noite</SelectItem>
+                      <SelectItem value="C - Dia">C - Dia</SelectItem>
+                      <SelectItem value="C - Noite">C - Noite</SelectItem>
+                      <SelectItem value="D - Dia">D - Dia</SelectItem>
+                      <SelectItem value="D - Noite">D - Noite</SelectItem>
+                      <SelectItem value="ADM">ADM</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Encarregado</Label>
