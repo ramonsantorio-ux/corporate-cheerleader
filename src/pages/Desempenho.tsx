@@ -56,10 +56,15 @@ export default function Desempenho() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newCycle, setNewCycle] = useState({ name: '', start_date: '', end_date: '', eligible_roles: 'Analista, Supervisor, Coordenador, Gerente' });
+  const [newCycle, setNewCycle] = useState<{name: string, start_date: string, end_date: string, eligible_roles: string[]}>({ name: '', start_date: '', end_date: '', eligible_roles: [] });
   const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const uniqueRoles = useMemo(() => {
+    const roles = funcionarios.map(f => f.cargo?.trim()).filter(Boolean);
+    return Array.from(new Set(roles)).sort();
+  }, [funcionarios]);
 
   const activeTab = searchParams.get('tab') || 'visao-geral';
 
@@ -84,15 +89,14 @@ export default function Desempenho() {
     if (!newCycle.name || !newCycle.start_date || !newCycle.end_date) {
       toast({ title: 'Preencha todos os campos', variant: 'destructive' }); return;
     }
-    const rolesArray = newCycle.eligible_roles ? newCycle.eligible_roles.split(',').map(r => r.trim()).filter(Boolean) : null;
     const { error } = await supabase.from('evaluation_cycles').insert([{ 
       name: newCycle.name, 
       start_date: newCycle.start_date, 
       end_date: newCycle.end_date,
-      eligible_roles: rolesArray
+      eligible_roles: newCycle.eligible_roles
     }]);
     if (error) { toast({ title: 'Erro ao criar ciclo', description: error.message, variant: 'destructive' }); }
-    else { toast({ title: 'Ciclo criado com sucesso!' }); setNewCycle({ name: '', start_date: '', end_date: '', eligible_roles: 'Analista, Supervisor, Coordenador, Gerente' }); setDialogOpen(false);
+    else { toast({ title: 'Ciclo criado com sucesso!' }); setNewCycle({ name: '', start_date: '', end_date: '', eligible_roles: [] }); setDialogOpen(false);
       const { data } = await supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false });
       if (data) setCycles(data as EvaluationCycle[]);
     }
@@ -180,13 +184,35 @@ export default function Desempenho() {
                   <div><Label>Fim</Label><Input type="date" value={newCycle.end_date} onChange={e => setNewCycle({ ...newCycle, end_date: e.target.value })} /></div>
                 </div>
                 <div>
-                  <Label>Cargos Elegíveis para 9-Box</Label>
-                  <FastInput 
-                    value={newCycle.eligible_roles} 
-                    onValueChange={v => setNewCycle({ ...newCycle, eligible_roles: v })} 
-                    placeholder="Ex: Analista, Gerente, Programador" 
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-1">Separe os cargos por vírgula. Apenas esses cargos poderão realizar o 9-Box neste ciclo.</p>
+                  <Label className="mb-3 block">Cargos Elegíveis para 9-Box</Label>
+                  <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto p-1">
+                    {uniqueRoles.length > 0 ? uniqueRoles.map(role => {
+                      const isSelected = newCycle.eligible_roles.includes(role);
+                      return (
+                        <button
+                          key={role}
+                          onClick={() => {
+                            setNewCycle(prev => ({
+                              ...prev,
+                              eligible_roles: isSelected
+                                ? prev.eligible_roles.filter(r => r !== role)
+                                : [...prev.eligible_roles, role]
+                            }));
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                            isSelected 
+                              ? 'bg-primary text-primary-foreground border-primary' 
+                              : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                          }`}
+                        >
+                          {role}
+                        </button>
+                      );
+                    }) : (
+                      <p className="text-xs text-muted-foreground">Nenhum cargo encontrado na base de colaboradores.</p>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground mt-2">Clique nos cargos para selecionar quais participarão do 9-Box neste ciclo.</p>
                 </div>
                 <p className="text-xs text-muted-foreground">Tipos: Trimestral (2x ao semestre) e Anual</p>
                 <Button onClick={createCycle} className="w-full">Criar Ciclo</Button>
