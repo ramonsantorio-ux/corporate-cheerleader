@@ -227,7 +227,7 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
         <TabsList className="mb-4">
           <TabsTrigger value="tradicional">Nine Box (Tradicional)</TabsTrigger>
           <TabsTrigger value="trust" className="flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4" /> Matriz SEAL (Trust)
+            <ShieldAlert className="w-4 h-4" /> Nine Box (Trust)
           </TabsTrigger>
         </TabsList>
 
