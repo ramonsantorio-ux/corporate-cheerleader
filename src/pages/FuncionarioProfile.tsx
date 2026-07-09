@@ -537,8 +537,8 @@ export default function FuncionarioProfile() {
       if (i > 1) drawHeader();
     }
 
-    doc.save(`Desvios_${func.nome.replace(/\s+/g, '_')}.pdf`);
-    toast({ title: 'Relatório de desvios exportado!' });
+    doc.save(`Dossie_Completo_${func.nome.replace(/\s+/g, '_')}.pdf`);
+    toast({ title: 'Dossiê completo exportado com sucesso!' });
   }
 
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { useNavigate } from 'react-router-dom';
-import { Brain, User, BarChart2, Zap, ClipboardList, Award, Star, Plus, CheckCircle2, Search, Link, ExternalLink, TrendingUp, ChevronDown } from 'lucide-react';
+import { Users, FileText, CheckCircle2, Search, Link, Brain, BarChart2, Shield, User, ChevronRight, GraduationCap, ClipboardList, TrendingUp, Award, Star, Plus, ExternalLink, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -61,6 +61,16 @@ const assessments = [
     questions: 25,
     desc: 'Modelo mais validado cientificamente — Abertura, Conscienciosidade, Extroversão, Amabilidade e Neuroticismo.',
     tags: ['Científico', '25 questões', 'Escala 1–5'],
+  },
+  {
+    id: 'integrity', label: 'Integridade & Confiança', icon: Shield,
+    color: 'from-amber-600 to-orange-600',
+    bg: 'bg-amber-50 dark:bg-amber-950/30',
+    border: 'border-amber-200 dark:border-amber-800',
+    text: 'text-amber-700 dark:text-amber-400',
+    questions: 15,
+    desc: 'Teste psicométrico focado em bússola moral, confiabilidade e tendências a violações de integridade.',
+    tags: ['Navy SEALs', '15 questões'],
   }
 ];
 

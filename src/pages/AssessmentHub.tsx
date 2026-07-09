@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import DiscTest from './DiscTest';
 import MbtiTest from './MbtiTest';
+import IntegrityTest from './IntegrityTest';
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  DISC – 30 perguntas
@@ -191,6 +192,9 @@ export default function AssessmentHub() {
     return <MbtiTest />;
   }
 
+  if (testType === 'integrity') {
+    return <IntegrityTest />;
+  }
 
   // â”€â”€ DISC helpers â”€â”€
   const calcDisc = () => {
