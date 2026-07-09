@@ -937,7 +937,7 @@ export default function Eventos() {
                     <p className="text-4xl font-black text-foreground mt-2">
                       {analytics.monthTrend.length ? (analytics.total / analytics.monthTrend.length).toFixed(1) : 0}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 font-medium"><LineChart className="w-3.5 h-3.5"/> eventos/mês</p>
+                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5 font-medium"><LucideLineChart className="w-3.5 h-3.5"/> eventos/mês</p>
                   </div>
                   <div className="p-3 bg-[hsl(var(--success))]/10 rounded-xl text-[hsl(var(--success))]">
                     <Zap className="w-6 h-6" />
