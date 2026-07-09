@@ -47,6 +47,7 @@ interface EventRow {
   afastamento?: boolean;
   danos_materiais?: boolean;
   atendimento_medico?: boolean;
+  tecnico_seguranca?: string;
   created_at: string;
 }
 
@@ -103,7 +104,7 @@ export default function Eventos() {
     event_date: '', event_time: '', day_of_week: '', description: '',
     location: '', contract: 'PORTO', equipment: '', plate_tag: '',
     shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
-    cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false,
+    cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '',
   });
 
   // Employee filter
@@ -204,7 +205,8 @@ export default function Eventos() {
       agente_lesao: eventToSave.agente_lesao,
       parte_corpo: eventToSave.parte_corpo,
       genero_envolvido: eventToSave.genero_envolvido,
-      custo: eventToSave.custo
+      custo: eventToSave.custo,
+      tecnico_seguranca: eventToSave.tecnico_seguranca
     };
     delete eventToSave.cid;
     delete eventToSave.atestado;
@@ -216,6 +218,7 @@ export default function Eventos() {
     delete eventToSave.parte_corpo;
     delete eventToSave.genero_envolvido;
     delete eventToSave.custo;
+    delete eventToSave.tecnico_seguranca;
 
     const cleanDesc = (eventToSave.description || '').split('||EXTRA||')[0].trim();
     eventToSave.description = cleanDesc + " ||EXTRA||" + JSON.stringify(extraData);
@@ -232,7 +235,7 @@ export default function Eventos() {
     if (error) { toast.error(`Erro ao salvar evento: ${error.message}`); return; }
     toast.success('Evento registrado!');
     setDialogOpen(false);
-    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false });
+    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '' });
     fetchEvents();
   }
 
@@ -614,7 +617,7 @@ export default function Eventos() {
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => {
                 setEditingEvent(null);
-                setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false });
+                setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '' });
               }}>
                 <Plus className="w-4 h-4 mr-1" /> Novo Evento
               </Button>
@@ -660,6 +663,10 @@ export default function Eventos() {
                 <div className="space-y-2">
                   <Label>Encarregado</Label>
                   <FastInput value={newEvent.supervisor} onValueChange={v => setNewEvent(p => ({ ...p, supervisor: v }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Técnico de Segurança</Label>
+                  <FastInput value={newEvent.tecnico_seguranca || ''} onValueChange={v => setNewEvent(p => ({ ...p, tecnico_seguranca: v }))} placeholder="Nome do técnico" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label>Nome do Envolvido *</Label>
@@ -1479,7 +1486,7 @@ export default function Eventos() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDetailEvent(ev); }}>
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false }); setDialogOpen(true); }}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false, tecnico_seguranca: ev.tecnico_seguranca || '' }); setDialogOpen(true); }}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteEvent(ev); }}>
@@ -1498,6 +1505,7 @@ export default function Eventos() {
                                 <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
                                   {ev.day_of_week && <span>📅 {ev.day_of_week}</span>}
                                   {ev.supervisor && <span>👤 Enc.: {ev.supervisor}</span>}
+                                  {ev.tecnico_seguranca && <span>🛡️ Tec. Seg.: {ev.tecnico_seguranca}</span>}
                                   {ev.shift && <span>🔄 Turno: {ev.shift}</span>}
                                   {ev.contract && <span>📋 Contrato: {ev.contract}</span>}
                                 </div>
@@ -1538,6 +1546,7 @@ export default function Eventos() {
                 <div><Label className="text-muted-foreground">Gênero</Label><p className="font-medium">{detailEvent.genero_envolvido || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Turno</Label><p className="font-medium">{detailEvent.shift || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Encarregado</Label><p className="font-medium">{detailEvent.supervisor || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Técnico de Segurança</Label><p className="font-medium">{detailEvent.tecnico_seguranca || '—'}</p></div>
               </div>
               <div>
                 <Label className="text-muted-foreground">Descrição</Label>
