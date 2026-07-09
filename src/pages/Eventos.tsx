@@ -251,18 +251,32 @@ export default function Eventos() {
       const rows = await readExcelRows(ab);
       
       const mapped = rows.map((r: any) => {
-          let dateVal = String(r['DATA'] || r['data'] || r['DATA DO EVENTO'] || '');
-          
-          if (!dateVal) {
-            dateVal = new Date().toISOString().split('T')[0]; // fallback
-          } else {
-            const parts = dateVal.match(/(\d+)\/(\d+)\/(\d+)/);
-            if (parts) {
-              let yr = parseInt(parts[3]);
-              if (yr < 100) yr += 2000;
-              dateVal = `${yr}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+          let dateVal = '';
+          const rawDate = r['DATA'] || r['data'] || r['DATA DO EVENTO'];
+          if (rawDate) {
+            if (rawDate instanceof Date) {
+               dateVal = rawDate.toISOString().split('T')[0];
+            } else if (typeof rawDate === 'number') {
+               const parsed = parseExcelDate(rawDate);
+               dateVal = parsed ? parsed.toISOString().split('T')[0] : '';
+            } else {
+               const str = String(rawDate).trim();
+               const parts = str.match(/(\d+)\/(\d+)\/(\d+)/);
+               if (parts) {
+                 let d = parseInt(parts[1]);
+                 let m = parseInt(parts[2]);
+                 let y = parseInt(parts[3]);
+                 if (y < 100) y += 2000;
+                 if (m > 12 && d <= 12) {
+                   const temp = d; d = m; m = temp;
+                 }
+                 dateVal = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+               } else {
+                 dateVal = str;
+               }
             }
           }
+          if (!dateVal) dateVal = new Date().toISOString().split('T')[0];
 
           const extraData = {
             cid: String(r['CID'] || r['cid'] || ''),
@@ -272,27 +286,38 @@ export default function Eventos() {
             tecnico_seguranca: String(r['TÉCNICO DE SEGURANÇA'] || r['tecnico seguranca'] || ''),
             data_admissao: String(r['DATA ADMISSÃO'] || r['data admissao'] || ''),
           };
-          const cleanDesc = String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || '').split('||EXTRA||')[0].trim();
-  
+          
+          const rawDesc = String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || '').trim();
+          const cleanDesc = rawDesc.split('||EXTRA||')[0].trim();
+          const involved = String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || '').trim();
+          const loc = String(r['LOCAL'] || r['local'] || '').trim();
+          
+          // Attach a flag to identify truly empty rows
+          const isEmptyRow = !rawDesc && !involved && !loc && !r['EQUIPAMENTO'] && !r['CONTRATO'];
+
           return {
+            isEmptyRow,
             event_date: dateVal,
             event_time: String(r['HORÁRIO'] || r['horario'] || ''),
             day_of_week: String(r['DIA DA SEMANA'] || r['dia_da_semana'] || ''),
             description: cleanDesc + " ||EXTRA||" + JSON.stringify(extraData),
-            location: String(r['LOCAL'] || r['local'] || ''),
+            location: loc,
             contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
             equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
             plate_tag: String(r['PLACA OU TAG'] || r['PLACA/TAG'] || r['placa_tag'] || ''),
             shift: String(r['LETRA/TURNO'] || r['TURNO'] || r['turno'] || ''),
             supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
-            involved_name: String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || '')
+            involved_name: involved
           };
-      }).filter(r => r.event_date && (r.description.replace('||EXTRA||', '').trim()));
+      }).filter(r => !r.isEmptyRow && r.event_date);
 
       if (!mapped.length) { toast.error('Nenhum dado válido encontrado'); return; }
 
-      for (let i = 0; i < mapped.length; i += 50) {
-        const batch = mapped.slice(i, i + 50);
+      // Remove the isEmptyRow flag before inserting
+      const toInsert = mapped.map(({ isEmptyRow, ...rest }) => rest);
+
+      for (let i = 0; i < toInsert.length; i += 50) {
+        const batch = toInsert.slice(i, i + 50);
         const { error } = await supabase.from('events').insert(batch);
         if (error) throw error;
       }
