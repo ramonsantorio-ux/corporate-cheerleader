@@ -33,13 +33,13 @@ const navGroups: NavGroup[] = [
   {
     label: 'Liderança & Gestão',
     items: [
-      { to: '/desempenho', icon: BrainCircuit, label: 'Painel do Gestor', badge: 'NOVO', key: 'desempenho' },
+      { to: '/desempenho', icon: BrainCircuit, label: 'Painel do Gestor', key: 'desempenho' },
     ],
   },
   {
     label: 'Talentos & Comportamento',
     items: [
-      { to: '/treinamentos', icon: ClipboardList, label: 'Central de Assessments', badge: 'NOVO', key: 'treinamentos' },
+      { to: '/treinamentos', icon: ClipboardList, label: 'Central de Assessments', key: 'treinamentos' },
     ],
   },
   {
