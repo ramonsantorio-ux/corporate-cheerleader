@@ -30,14 +30,14 @@ import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
 import { InstallPWA } from './components/InstallPWA';
 
-class ErrorBoundary extends React.Component<any, { hasError: boolean; errorId: string }> {
+class ErrorBoundary extends React.Component<any, { hasError: boolean; errorId: string; errorMessage: string; errorStack: string }> {
   constructor(props: any) {
     super(props);
-    this.state = { hasError: false, errorId: '' };
+    this.state = { hasError: false, errorId: '', errorMessage: '', errorStack: '' };
   }
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(error: any) {
     const errorId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return { hasError: true, errorId };
+    return { hasError: true, errorId, errorMessage: error?.message || String(error), errorStack: error?.stack || '' };
   }
   componentDidCatch(error: any, info: any) {
     // Log do erro para debugging — NÃO exposto ao usuário
@@ -47,13 +47,16 @@ class ErrorBoundary extends React.Component<any, { hasError: boolean; errorId: s
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="text-center space-y-4 max-w-md p-8">
+          <div className="text-center space-y-4 max-w-2xl p-8">
             <div className="text-6xl">⚠️</div>
             <h1 className="text-2xl font-bold text-foreground">Algo deu errado</h1>
             <p className="text-muted-foreground text-sm">
-              Ocorreu um erro inesperado. Por favor, recarregue a página.
-              Se o problema persistir, entre em contato com o suporte.
+              Ocorreu um erro inesperado. Por favor, tire um print dessa tela e envie para o suporte.
             </p>
+            <div className="bg-destructive/10 text-destructive text-left p-4 rounded-md overflow-auto max-h-48 text-xs font-mono">
+              <p className="font-bold mb-1">Error: {this.state.errorMessage}</p>
+              <pre className="whitespace-pre-wrap">{this.state.errorStack}</pre>
+            </div>
             <p className="text-xs text-muted-foreground font-mono">Código: {this.state.errorId}</p>
             <button
               onClick={() => window.location.reload()}
