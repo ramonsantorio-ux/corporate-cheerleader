@@ -310,7 +310,7 @@ export default function Eventos() {
             contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
             equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
             plate_tag: String(r['PLACA OU TAG'] || r['PLACA/TAG'] || r['placa_tag'] || ''),
-            shift: String(r['LETRA/TURNO'] || r['TURNO'] || r['turno'] || ''),
+            shift: String(r['LETRA/TURNO'] || r['TURNO'] || r['turno'] || '').trim().replace(/\s*-\s*/g, ' - ').toUpperCase(),
             supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
             involved_name: involved
           };
@@ -393,7 +393,7 @@ export default function Eventos() {
   const involvedTypes = useMemo(() => Array.from(new Set(events.map(e => e.involved_name).filter(Boolean))).sort(), [events]);
   const plateTypes = useMemo(() => Array.from(new Set(events.map(e => e.plate_tag).filter(Boolean).filter(e => e !== 'NA'))).sort(), [events]);
   const locationTypes = useMemo(() => Array.from(new Set(events.map(e => e.location).filter(Boolean))).sort(), [events]);
-  const shiftTypes = useMemo(() => Array.from(new Set(events.map(e => e.shift?.trim().toUpperCase()).filter(Boolean))).sort(), [events]);
+  const shiftTypes = useMemo(() => Array.from(new Set(events.map(e => e.shift?.trim().replace(/\s*-\s*/g, ' - ').toUpperCase()).filter(Boolean))).sort(), [events]);
 
   // Filtered events
   const filtered = useMemo(() => {
@@ -414,7 +414,7 @@ export default function Eventos() {
       const matchInvolved = involvedFilter === 'all' || ev.involved_name === involvedFilter;
       const matchPlate = plateFilter === 'all' || ev.plate_tag === plateFilter;
       const matchLocation = locationFilter === 'all' || ev.location === locationFilter;
-      const matchShift = shiftFilter === 'all' || (ev.shift && ev.shift.trim().toUpperCase() === shiftFilter.toUpperCase());
+      const matchShift = shiftFilter === 'all' || (ev.shift && ev.shift.trim().replace(/\s*-\s*/g, ' - ').toUpperCase() === shiftFilter.toUpperCase());
       return matchSearch && matchEquip && matchEmployee && matchDate && matchTime && matchInvolved && matchPlate && matchLocation && matchType && matchShift;
     });
   }, [events, search, equipmentFilter, selectedEmployee, dateFilter, timeFilter, involvedFilter, plateFilter, locationFilter, typeFilter, shiftFilter]);
@@ -487,7 +487,7 @@ export default function Eventos() {
       }
 
       if (ev.shift) {
-        const shift = ev.shift.trim().toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
+        const shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
         byLetra[shift] = (byLetra[shift] || 0) + 1;
       }
 
