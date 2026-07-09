@@ -82,9 +82,15 @@ export async function readExcelRows(buffer: ArrayBuffer): Promise<ExcelRow[]> {
       let val = row[key];
       if (val instanceof Date) {
         const y = val.getFullYear();
-        const m = String(val.getMonth() + 1).padStart(2, '0');
-        const d = String(val.getDate()).padStart(2, '0');
-        val = `${y}-${m}-${d}`;
+        if (y === 1899) {
+          const h = String(val.getHours()).padStart(2, '0');
+          const m = String(val.getMinutes()).padStart(2, '0');
+          val = `${h}:${m}`;
+        } else {
+          const m = String(val.getMonth() + 1).padStart(2, '0');
+          const d = String(val.getDate()).padStart(2, '0');
+          val = `${y}-${m}-${d}`;
+        }
       }
       newRow[key] = val;
     }
@@ -110,9 +116,15 @@ export async function readExcelRaw(buffer: ArrayBuffer): Promise<any[][]> {
     return row.map(val => {
       if (val instanceof Date) {
         const y = val.getFullYear();
-        const m = String(val.getMonth() + 1).padStart(2, '0');
-        const d = String(val.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
+        if (y === 1899) {
+          const h = String(val.getHours()).padStart(2, '0');
+          const m = String(val.getMinutes()).padStart(2, '0');
+          return `${h}:${m}`;
+        } else {
+          const m = String(val.getMonth() + 1).padStart(2, '0');
+          const d = String(val.getDate()).padStart(2, '0');
+          return `${y}-${m}-${d}`;
+        }
       }
       return val ?? '';
     });

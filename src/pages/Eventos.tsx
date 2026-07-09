@@ -96,6 +96,8 @@ export default function Eventos() {
   const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
   const [detailEvent, setDetailEvent] = useState<EventRow | null>(null);
   const [deleteEvent, setDeleteEvent] = useState<EventRow | null>(null);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [newEvent, setNewEvent] = useState({
     event_date: '', event_time: '', day_of_week: '', description: '',
@@ -328,6 +330,26 @@ export default function Eventos() {
     } finally {
       setIsImporting(false);
       if (e.target) e.target.value = '';
+    }
+  }
+
+  async function handleDeleteAll() {
+    if (!events.length) return;
+    setIsDeletingAll(true);
+    try {
+      const ids = events.map(e => e.id);
+      for (let i = 0; i < ids.length; i += 100) {
+        const batch = ids.slice(i, i + 100);
+        const { error } = await supabase.from('events').delete().in('id', batch);
+        if (error) throw error;
+      }
+      toast.success('Todos os eventos foram excluídos.');
+      fetchEvents();
+      setDeleteAllConfirm(false);
+    } catch (err: any) {
+      toast.error('Erro ao excluir eventos: ' + err.message);
+    } finally {
+      setIsDeletingAll(false);
     }
   }
 
@@ -583,6 +605,10 @@ export default function Eventos() {
           <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
             {isExporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />} 
             {isExporting ? 'Exportando...' : 'Exportar'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setDeleteAllConfirm(true)} className="text-destructive hover:bg-destructive hover:text-destructive-foreground">
+            <Trash2 className="w-4 h-4 mr-1" />
+            Excluir Todos
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -1534,6 +1560,24 @@ export default function Eventos() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteAllConfirm} onOpenChange={setDeleteAllConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Todos os Eventos</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir TODOS os {events.length} eventos registrados? Esta ação não pode ser desfeita e removerá todos os dados do painel.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingAll}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAll} disabled={isDeletingAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {isDeletingAll ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Sim, Excluir Todos
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
