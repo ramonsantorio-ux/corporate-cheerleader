@@ -250,35 +250,43 @@ export default function Eventos() {
       const ab = await file.arrayBuffer();
       const rows = await readExcelRows(ab);
       
-      const mapped = rows.map(r => {
-        let dateVal = String(r['DATA'] || r['data'] || '');
-        const parts = dateVal.match(/(\d+)\/(\d+)\/(\d+)/);
-        if (parts) {
-          let yr = parseInt(parts[3]);
-          if (yr < 100) yr += 2000;
-          dateVal = `${yr}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
-        }
-        const extraData = {
-          cid: String(r['CID'] || r['cid'] || ''),
-          atestado: String(r['ATESTADO'] || r['atestado'] || '').trim().toLowerCase() === 'sim',
-          afastamento: String(r['AFASTAMENTO'] || r['afastamento'] || '').trim().toLowerCase() === 'sim',
-          danos_materiais: String(r['DANOS MATERIAIS'] || r['danos_materiais'] || r['danos materiais'] || '').trim().toLowerCase() === 'sim',
-        };
-        const cleanDesc = String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || '').split('||EXTRA||')[0].trim();
+      const mapped = rows.map((r: any) => {
+          let dateVal = String(r['DATA'] || r['data'] || r['DATA DO EVENTO'] || '');
+          
+          if (!dateVal) {
+            dateVal = new Date().toISOString().split('T')[0]; // fallback
+          } else {
+            const parts = dateVal.match(/(\d+)\/(\d+)\/(\d+)/);
+            if (parts) {
+              let yr = parseInt(parts[3]);
+              if (yr < 100) yr += 2000;
+              dateVal = `${yr}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+            }
+          }
 
-        return {
-          event_date: dateVal,
-          event_time: String(r['HORÁRIO'] || r['horario'] || ''),
-          day_of_week: String(r['DIA DA SEMANA'] || r['dia_da_semana'] || ''),
-          description: cleanDesc + " ||EXTRA||" + JSON.stringify(extraData),
-          location: String(r['LOCAL'] || r['local'] || ''),
-          contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
-          equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
-          plate_tag: String(r['PLACA/TAG'] || r['placa_tag'] || ''),
-          shift: String(r['TURNO'] || r['turno'] || ''),
-          supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
-          involved_name: String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || '')
-        };
+          const extraData = {
+            cid: String(r['CID'] || r['cid'] || ''),
+            atestado: String(r['ATESTADO'] || r['atestado'] || '').trim().toLowerCase() === 'sim',
+            afastamento: String(r['AFASTAMENTO'] || r['afastamento'] || '').trim().toLowerCase() === 'sim',
+            danos_materiais: String(r['DANOS MATERIAIS'] || r['danos_materiais'] || r['danos materiais'] || '').trim().toLowerCase() === 'sim',
+            tecnico_seguranca: String(r['TÉCNICO DE SEGURANÇA'] || r['tecnico seguranca'] || ''),
+            data_admissao: String(r['DATA ADMISSÃO'] || r['data admissao'] || ''),
+          };
+          const cleanDesc = String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || '').split('||EXTRA||')[0].trim();
+  
+          return {
+            event_date: dateVal,
+            event_time: String(r['HORÁRIO'] || r['horario'] || ''),
+            day_of_week: String(r['DIA DA SEMANA'] || r['dia_da_semana'] || ''),
+            description: cleanDesc + " ||EXTRA||" + JSON.stringify(extraData),
+            location: String(r['LOCAL'] || r['local'] || ''),
+            contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
+            equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
+            plate_tag: String(r['PLACA OU TAG'] || r['PLACA/TAG'] || r['placa_tag'] || ''),
+            shift: String(r['LETRA/TURNO'] || r['TURNO'] || r['turno'] || ''),
+            supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
+            involved_name: String(r['NOME DO ENVOLVIDO'] || r['nome_envolvido'] || '')
+          };
       }).filter(r => r.event_date && (r.description.replace('||EXTRA||', '').trim()));
 
       if (!mapped.length) { toast.error('Nenhum dado válido encontrado'); return; }
@@ -299,19 +307,28 @@ export default function Eventos() {
   }
 
   async function handleExport() {
-    const exportData = events.map(ev => ({
-      'DATA DO EVENTO': ev.event_date ? new Date(ev.event_date).toLocaleDateString('pt-BR') : '',
-      'CONTRATO': ev.contract,
-      'EQUIPAMENTO': ev.equipment,
-      'PLACA/TAG': ev.plate_tag,
-      'TURNO': ev.shift,
-      'ENCARREGADO': ev.supervisor,
-      'NOME DO ENVOLVIDO': ev.involved_name,
-      'CID': ev.cid || '',
-      'ATESTADO': ev.atestado ? 'Sim' : 'Não',
-      'AFASTAMENTO': ev.afastamento ? 'Sim' : 'Não',
-      'DANOS MATERIAIS': ev.danos_materiais ? 'Sim' : 'Não',
-    }));
+    const exportData = events.map(ev => {
+      let extra: any = {};
+      if (ev.description?.includes('||EXTRA||')) {
+         try { extra = JSON.parse(ev.description.split('||EXTRA||')[1]); } catch(e){}
+      }
+
+      return {
+        'DATA': ev.event_date ? new Date(ev.event_date).toLocaleDateString('pt-BR') : '',
+        'HORÁRIO': ev.event_time || '',
+        'DIA DA SEMANA': ev.day_of_week || '',
+        'DESCRIÇÃO DO EVENTO': ev.description?.split('||EXTRA||')[0].trim() || '',
+        'LOCAL': ev.location || '',
+        'CONTRATO': ev.contract || '',
+        'EQUIPAMENTO': ev.equipment || '',
+        'PLACA OU TAG': ev.plate_tag || '',
+        'NOME DO ENVOLVIDO': ev.involved_name || '',
+        'LETRA/TURNO': ev.shift || '',
+        'ENCARREGADO': ev.supervisor || '',
+        'TÉCNICO DE SEGURANÇA': extra.tecnico_seguranca || '',
+        'DATA ADMISSÃO': extra.data_admissao || '',
+      };
+    });
     await writeExcelFile(exportData as Record<string, unknown>[], 'Eventos_Porto.xlsx', 'Eventos');
   }
 
