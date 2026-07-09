@@ -56,7 +56,7 @@ export default function Desempenho() {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newCycle, setNewCycle] = useState({ name: '', start_date: '', end_date: '' });
+  const [newCycle, setNewCycle] = useState({ name: '', start_date: '', end_date: '', eligible_roles: 'Analista, Supervisor, Coordenador, Gerente' });
   const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -84,9 +84,15 @@ export default function Desempenho() {
     if (!newCycle.name || !newCycle.start_date || !newCycle.end_date) {
       toast({ title: 'Preencha todos os campos', variant: 'destructive' }); return;
     }
-    const { error } = await supabase.from('evaluation_cycles').insert([{ name: newCycle.name, start_date: newCycle.start_date, end_date: newCycle.end_date }]);
+    const rolesArray = newCycle.eligible_roles ? newCycle.eligible_roles.split(',').map(r => r.trim()).filter(Boolean) : null;
+    const { error } = await supabase.from('evaluation_cycles').insert([{ 
+      name: newCycle.name, 
+      start_date: newCycle.start_date, 
+      end_date: newCycle.end_date,
+      eligible_roles: rolesArray
+    }]);
     if (error) { toast({ title: 'Erro ao criar ciclo', description: error.message, variant: 'destructive' }); }
-    else { toast({ title: 'Ciclo criado com sucesso!' }); setNewCycle({ name: '', start_date: '', end_date: '' }); setDialogOpen(false);
+    else { toast({ title: 'Ciclo criado com sucesso!' }); setNewCycle({ name: '', start_date: '', end_date: '', eligible_roles: 'Analista, Supervisor, Coordenador, Gerente' }); setDialogOpen(false);
       const { data } = await supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false });
       if (data) setCycles(data as EvaluationCycle[]);
     }
@@ -172,6 +178,15 @@ export default function Desempenho() {
                 <div className="grid grid-cols-2 gap-3">
                   <div><Label>Início</Label><Input type="date" value={newCycle.start_date} onChange={e => setNewCycle({ ...newCycle, start_date: e.target.value })} /></div>
                   <div><Label>Fim</Label><Input type="date" value={newCycle.end_date} onChange={e => setNewCycle({ ...newCycle, end_date: e.target.value })} /></div>
+                </div>
+                <div>
+                  <Label>Cargos Elegíveis para 9-Box</Label>
+                  <FastInput 
+                    value={newCycle.eligible_roles} 
+                    onValueChange={v => setNewCycle({ ...newCycle, eligible_roles: v })} 
+                    placeholder="Ex: Analista, Gerente, Programador" 
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">Separe os cargos por vírgula. Apenas esses cargos poderão realizar o 9-Box neste ciclo.</p>
                 </div>
                 <p className="text-xs text-muted-foreground">Tipos: Trimestral (2x ao semestre) e Anual</p>
                 <Button onClick={createCycle} className="w-full">Criar Ciclo</Button>

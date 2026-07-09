@@ -32,32 +32,49 @@ const matrixBoxes = [
   { pot: 'Baixo', des: 'Alto', label: 'Especializado', desc: 'Excelente na função.', color: 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30', activeColor: 'bg-blue-500/30 border-blue-500 ring-2 ring-blue-500' },
 ];
 
-function generateCycles() {
-  const currentYear = new Date().getFullYear();
-  return [
-    `S1 ${currentYear}`,
-    `S2 ${currentYear}`,
-    `S1 ${currentYear + 1}`,
-    `S2 ${currentYear + 1}`,
-  ];
-}
+// function generateCycles() {
+//   const currentYear = new Date().getFullYear();
+//   return [
+//     `S1 ${currentYear}`,
+//     `S2 ${currentYear}`,
+//     `S1 ${currentYear + 1}`,
+//     `S2 ${currentYear + 1}`,
+//   ];
+// }
 
 export default function NineBoxSection({ employeeId, initialDesempenho, initialPotencial, cargo, onUpdate }: Props) {
   const { toast } = useToast();
   const [desempenho, setDesempenho] = useState<string>('');
   const [potencial, setPotencial] = useState<string>('');
   const [observacao, setObservacao] = useState('');
-  const [cycle, setCycle] = useState<string>(generateCycles()[0]);
+  const [cycle, setCycle] = useState<string>('');
+  const [dbCycles, setDbCycles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  
   const [historico, setHistorico] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'nova' | 'historico'>('nova');
 
-  const isElegivel = ['analista', 'supervisor', 'coordenador', 'gerente'].some(c => cargo.toLowerCase().includes(c));
-
   useEffect(() => {
+    fetchCycles();
     fetchHistorico();
   }, [employeeId]);
+
+  async function fetchCycles() {
+    const { data } = await supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false });
+    if (data && data.length > 0) {
+      setDbCycles(data);
+      setCycle(data[0].name);
+    } else {
+      setCycle('Ciclo Padrão');
+    }
+  }
+
+  // Lógica de elegibilidade dinâmica baseada no ciclo selecionado
+  const selectedDbCycle = dbCycles.find(c => c.name === cycle);
+  const eligibleRolesArray = selectedDbCycle?.eligible_roles || [];
+  
+  const isElegivel = eligibleRolesArray.length > 0 
+    ? eligibleRolesArray.some((c: string) => cargo.toLowerCase().includes(c.toLowerCase()))
+    : ['analista', 'supervisor', 'coordenador', 'gerente'].some(c => cargo.toLowerCase().includes(c));
 
   async function fetchHistorico() {
     const { data, error } = await supabase
@@ -122,11 +139,14 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
   }
 
   if (!isElegivel) {
+    const defaultRolesText = "Analistas, Supervisores, Coordenadores e Gerentes";
+    const allowedRolesText = eligibleRolesArray.length > 0 ? eligibleRolesArray.join(', ') : defaultRolesText;
+    
     return (
       <div className="flex flex-col items-center justify-center py-6 text-center h-full bg-muted/10 rounded-xl border border-dashed border-border/50">
         <Target className="w-8 h-8 text-muted-foreground/30 mb-2" />
         <p className="text-sm text-muted-foreground">O cargo <strong>{cargo}</strong> não é elegível para avaliação 9-Box neste ciclo.</p>
-        <p className="text-xs text-muted-foreground mt-1">(Apenas Analistas, Supervisores, Coordenadores e Gerentes)</p>
+        <p className="text-xs text-muted-foreground mt-1">(Apenas {allowedRolesText})</p>
       </div>
     );
   }
@@ -203,14 +223,18 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
           <div className="flex gap-6 items-end">
             <div className="space-y-2 w-48">
               <Label>Ciclo de Avaliação</Label>
-              <Select value={cycle} onValueChange={setCycle}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {generateCycles().map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <Select value={cycle} onValueChange={setCycle}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {dbCycles.length > 0 ? (
+                      dbCycles.map(c => (
+                        <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="Ciclo Padrão">Ciclo Padrão</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
             </div>
             <div className="flex-1 space-y-2">
               <Label>Observações / Justificativas</Label>

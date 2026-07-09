@@ -434,6 +434,7 @@ export type Database = {
           name: string
           start_date: string
           status: string
+          eligible_roles: string[] | null
         }
         Insert: {
           created_at?: string
@@ -442,6 +443,7 @@ export type Database = {
           name: string
           start_date: string
           status?: string
+          eligible_roles?: string[] | null
         }
         Update: {
           created_at?: string
@@ -450,6 +452,7 @@ export type Database = {
           name?: string
           start_date?: string
           status?: string
+          eligible_roles?: string[] | null
         }
         Relationships: []
       }

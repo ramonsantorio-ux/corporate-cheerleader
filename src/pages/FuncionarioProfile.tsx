@@ -585,7 +585,7 @@ export default function FuncionarioProfile() {
             </div>
           </div>
           
-          <div className="flex flex-col gap-3 shrink-0 w-full lg:w-48">
+          <div className="flex flex-col gap-3 shrink-0 w-full lg:w-auto">
             <Button className="w-full justify-start shadow-sm" onClick={() => navigate('/desempenho?tab=feedbacks')}><MessageSquare className="w-4 h-4 mr-2" /> Dar Feedback</Button>
             <Button variant="outline" className="w-full justify-start border-primary/30 text-primary hover:bg-primary/10 shadow-sm" onClick={exportFullProfileReport}>
               <FileText className="w-4 h-4 mr-2" /> Exportar Dossiê Completo
