@@ -1731,8 +1731,6 @@ export default function EvolucaoContrato() {
                 </Accordion>
               </div>
 
-              </div>
-
             </div>
           )}
         </SheetContent>
