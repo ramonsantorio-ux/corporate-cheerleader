@@ -488,8 +488,13 @@ export default function Eventos() {
       const yr = ev.event_date.slice(0, 4);
       byYear[yr] = (byYear[yr] || 0) + 1;
 
-      const equip = ev.equipment && ev.equipment !== 'NA' ? ev.equipment : 'N/A';
-      byEquipment[equip] = (byEquipment[equip] || 0) + 1;
+      const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
+      const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
+
+      if (cat !== 'Médico') {
+        const equip = ev.equipment && ev.equipment !== 'NA' ? ev.equipment : 'N/A';
+        byEquipment[equip] = (byEquipment[equip] || 0) + 1;
+      }
 
       if (ev.location) {
         const loc = ev.location.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location.toUpperCase().includes('PROBLEMA PARTICULAR')
@@ -497,8 +502,6 @@ export default function Eventos() {
         byLocation[loc] = (byLocation[loc] || 0) + 1;
       }
 
-      const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
-      const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
       
       if (cat === 'Médico') {
         medicoCount++;
