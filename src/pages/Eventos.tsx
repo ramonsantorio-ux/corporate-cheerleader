@@ -496,7 +496,7 @@ export default function Eventos() {
         byEquipment[equip] = (byEquipment[equip] || 0) + 1;
       }
 
-      if (ev.location) {
+      if (cat !== 'Médico' && ev.location) {
         const loc = ev.location.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location.toUpperCase().includes('PROBLEMA PARTICULAR')
           ? 'ATENDIMENTO MÉDICO / PESSOAL' : ev.location.length > 30 ? ev.location.slice(0, 30) + '...' : ev.location;
         byLocation[loc] = (byLocation[loc] || 0) + 1;
@@ -515,12 +515,12 @@ export default function Eventos() {
         byPerson[ev.involved_name] = (byPerson[ev.involved_name] || 0) + 1;
       }
 
-      if (ev.day_of_week) {
+      if (cat !== 'Médico' && ev.day_of_week) {
         const dow = ev.day_of_week.toLowerCase();
         byDayOfWeek[dow] = (byDayOfWeek[dow] || 0) + 1;
       }
 
-      if (ev.shift) {
+      if (cat !== 'Médico' && ev.shift) {
         const shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
         byLetra[shift] = (byLetra[shift] || 0) + 1;
       }
@@ -534,7 +534,7 @@ export default function Eventos() {
       if (ev.agente_lesao) byAgenteLesao[ev.agente_lesao] = (byAgenteLesao[ev.agente_lesao] || 0) + 1;
       if (ev.parte_corpo) byParteCorpo[ev.parte_corpo] = (byParteCorpo[ev.parte_corpo] || 0) + 1;
 
-      if (ev.event_time) {
+      if (cat !== 'Médico' && ev.event_time) {
         const timeMatch = ev.event_time.match(/\b(\d{2}):(\d{2})(?::\d{2})?\b/);
         if (timeMatch) {
           const h = parseInt(timeMatch[1]);
