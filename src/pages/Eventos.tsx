@@ -568,7 +568,6 @@ export default function Eventos() {
     const topAgentes = Object.entries(byAgenteLesao).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
     const topPartes = Object.entries(byParteCorpo).sort(([,a], [,b]) => b - a).slice(0, 6).map(([name, value]) => ({ name, value }));
 
-    const operationalCount = filtered.length - medicalCount;
     const turnoData = Object.entries(byTurno || {}).sort(([, a], [, b]) => b - a).map(([name, value]) => ({ name, value }));
 
     const hourlyData = Object.entries(hourlyGrid).map(([hour, count]) => ({ hour: `${hour}h`, count }));
