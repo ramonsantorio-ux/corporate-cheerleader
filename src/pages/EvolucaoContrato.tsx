@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
-import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw, Download, Upload, BarChart3 } from "lucide-react";
+import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw, Download, Upload, BarChart3, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
@@ -18,6 +18,7 @@ import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianG
 import { PerformanceMensalTab } from '@/components/PerformanceMensalTab';
 import MetasBusato from '@/components/MetasBusato';
 import MetasPorto from '@/components/MetasPorto';
+import { FrotaHabitual } from '@/components/FrotaHabitual';
 
 interface OfensorFinanceiro {
   motivo: string;
@@ -579,6 +580,7 @@ export default function EvolucaoContrato() {
     fetchMedicoes();
   }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFrotaModalOpen, setIsFrotaModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   
   // Privacy mode state
@@ -961,6 +963,7 @@ export default function EvolucaoContrato() {
               <TabsTrigger value="performance_mensal" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><BarChart3 className="w-4 h-4 mr-2" />Performance Mensal</TabsTrigger>
               <TabsTrigger value="metas_busato" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Busato</TabsTrigger>
               <TabsTrigger value="metas_porto" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Porto</TabsTrigger>
+              <TabsTrigger value="frota" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Truck className="w-4 h-4 mr-2" />Frota (Opção A)</TabsTrigger>
             </TabsList>
             {!(activeTab === 'metas_busato' || activeTab === 'metas_porto') && (
 <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -1366,6 +1369,14 @@ export default function EvolucaoContrato() {
         </Card>
       )}
 
+                {/* OPÇÃO B: DENTRO DE VISÃO EXECUTIVA */}
+                <div className="mt-8 border-t border-border/50 pt-8 col-span-full w-full">
+                  <h3 className="text-xl font-bold mb-4 text-primary">Opção B: Embutido na Visão Executiva</h3>
+                  <div className="h-[600px]">
+                    <FrotaHabitual />
+                  </div>
+                </div>
+
                 </TabsContent>
 
 
@@ -1382,6 +1393,11 @@ export default function EvolucaoContrato() {
           </TabsContent>
           <TabsContent value="metas_porto" className="space-y-6 mt-4">
             <MetasPorto />
+          </TabsContent>
+
+          {/* OPÇÃO A: ABA DEDICADA */}
+          <TabsContent value="frota" className="space-y-6 mt-4 h-[700px] xl:h-[800px]">
+            <FrotaHabitual />
           </TabsContent>
         </Tabs>
       ) : (
@@ -1715,6 +1731,8 @@ export default function EvolucaoContrato() {
                 </Accordion>
               </div>
 
+              </div>
+
             </div>
           )}
         </SheetContent>
@@ -1747,6 +1765,19 @@ export default function EvolucaoContrato() {
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Exportar Backup</span>
           </Button>
+
+          {/* OPÇÃO C: MODAL FLUTUANTE */}
+          <Dialog open={isFrotaModalOpen} onOpenChange={setIsFrotaModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2 border-primary/50 text-primary">
+                <Truck className="w-4 h-4" />
+                <span className="hidden sm:inline">Frota Habitual (Opção C)</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-5xl h-[80vh] flex flex-col">
+              <FrotaHabitual />
+            </DialogContent>
+          </Dialog>
 
           <Button onClick={() => { localStorage.removeItem('corporate_cheerleader_medicoes'); window.location.reload(); }} variant="outline" className="gap-2 border-primary/50 text-primary">
             <RefreshCcw className="w-4 h-4" />
