@@ -132,6 +132,9 @@ export default function Eventos() {
     
     const evtData = evtRes.data || [];
     const parsedEvents = evtData.map((ev: any) => {
+      if (ev.shift) {
+        ev.shift = ev.shift.toUpperCase().replace(/\s*-\s*/g, ' ').replace('A DIA', 'A Dia').replace('A NOITE', 'A Noite').replace('B DIA', 'B Dia').replace('B NOITE', 'B Noite').trim();
+      }
       if (ev.description && ev.description.includes('||EXTRA||')) {
         const parts = ev.description.split('||EXTRA||');
         ev.description = parts[0].trim();
@@ -322,7 +325,7 @@ export default function Eventos() {
             contract: String(r['CONTRATO'] || r['contrato'] || 'PORTO'),
             equipment: String(r['EQUIPAMENTO'] || r['equipamento'] || ''),
             plate_tag: String(r['PLACA OU TAG'] || r['PLACA/TAG'] || r['placa_tag'] || ''),
-            shift: String(r['LETRA/TURNO'] || r['TURNO'] || r['turno'] || '').trim().replace(/\s*-\s*/g, ' - ').toUpperCase(),
+            shift: String(r['LETRA/TURNO'] || r['TURNO'] || r['turno'] || '').toUpperCase().replace(/\s*-\s*/g, ' ').replace('A DIA', 'A Dia').replace('A NOITE', 'A Noite').replace('B DIA', 'B Dia').replace('B NOITE', 'B Noite').trim(),
             supervisor: String(r['ENCARREGADO'] || r['encarregado'] || ''),
             involved_name: involved
           };
@@ -434,7 +437,7 @@ export default function Eventos() {
       const matchInvolved = involvedFilter === 'all' || ev.involved_name === involvedFilter;
       const matchPlate = plateFilter === 'all' || ev.plate_tag === plateFilter;
       const matchLocation = locationFilter === 'all' || ev.location === locationFilter;
-      const matchShift = shiftFilter === 'all' || (ev.shift && ev.shift.trim().replace(/\s*-\s*/g, ' - ').toUpperCase() === shiftFilter.toUpperCase());
+      const matchShift = shiftFilter === 'all' || ev.shift === shiftFilter;
       return matchSearch && matchEquip && matchEmployee && matchDate && matchTime && matchInvolved && matchPlate && matchLocation && matchType && matchShift;
     });
   }, [events, search, equipmentFilter, selectedEmployee, dateFilter, timeFilter, involvedFilter, plateFilter, locationFilter, typeFilter, shiftFilter]);
@@ -1510,7 +1513,11 @@ export default function Eventos() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">Todas</SelectItem>
-                            {shiftTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                            <SelectItem value="A Dia">A Dia</SelectItem>
+                            <SelectItem value="A Noite">A Noite</SelectItem>
+                            <SelectItem value="B Dia">B Dia</SelectItem>
+                            <SelectItem value="B Noite">B Noite</SelectItem>
+                            <SelectItem value="ADM">ADM</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1580,7 +1587,9 @@ export default function Eventos() {
                       <TableRow key={ev.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(expandedRow === ev.id ? null : ev.id)}>
                         <TableCell className="text-xs font-medium">{new Date(ev.event_date + 'T12:00').toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell className="text-xs">{formatTime(ev.event_time)}</TableCell>
-                        <TableCell className="text-xs text-center font-bold text-muted-foreground">{ev.shift ? ev.shift.toUpperCase() : '—'}</TableCell>
+                        <TableCell className="text-xs text-center font-bold text-muted-foreground">
+                          {ev.shift || '—'}
+                        </TableCell>
                         <TableCell className="text-xs font-medium">{ev.involved_name}</TableCell>
                         <TableCell className="text-xs hidden md:table-cell">
                           {ev.equipment && ev.equipment !== 'NA' ? (
@@ -1594,7 +1603,7 @@ export default function Eventos() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDetailEvent(ev); }}>
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false, tecnico_seguranca: ev.tecnico_seguranca || '', categoria_evento: (ev as any).categoria_evento || 'Material', encaminhamento_medico: (ev as any).encaminhamento_medico || '' }); setDialogOpen(true); }}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift || '', supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false, tecnico_seguranca: ev.tecnico_seguranca || '', categoria_evento: (ev as any).categoria_evento || 'Material', encaminhamento_medico: (ev as any).encaminhamento_medico || '' }); setDialogOpen(true); }}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteEvent(ev); }}>
