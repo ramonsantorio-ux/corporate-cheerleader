@@ -105,6 +105,7 @@ export default function Eventos() {
     location: '', contract: 'PORTO', equipment: '', plate_tag: '',
     shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
     cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '',
+    categoria_evento: 'Material', encaminhamento_medico: ''
   });
 
   // Employee filter
@@ -206,7 +207,9 @@ export default function Eventos() {
       parte_corpo: eventToSave.parte_corpo,
       genero_envolvido: eventToSave.genero_envolvido,
       custo: eventToSave.custo,
-      tecnico_seguranca: eventToSave.tecnico_seguranca
+      tecnico_seguranca: eventToSave.tecnico_seguranca,
+      categoria_evento: eventToSave.categoria_evento,
+      encaminhamento_medico: eventToSave.encaminhamento_medico
     };
     delete eventToSave.cid;
     delete eventToSave.atestado;
@@ -219,6 +222,8 @@ export default function Eventos() {
     delete eventToSave.genero_envolvido;
     delete eventToSave.custo;
     delete eventToSave.tecnico_seguranca;
+    delete (eventToSave as any).categoria_evento;
+    delete (eventToSave as any).encaminhamento_medico;
 
     const cleanDesc = (eventToSave.description || '').split('||EXTRA||')[0].trim();
     eventToSave.description = cleanDesc + " ||EXTRA||" + JSON.stringify(extraData);
@@ -235,7 +240,7 @@ export default function Eventos() {
     if (error) { toast.error(`Erro ao salvar evento: ${error.message}`); return; }
     toast.success('Evento registrado!');
     setDialogOpen(false);
-    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '' });
+    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '', categoria_evento: 'Material', encaminhamento_medico: '' });
     fetchEvents();
   }
 
@@ -290,7 +295,14 @@ export default function Eventos() {
             danos_materiais: String(r['DANOS MATERIAIS'] || r['danos_materiais'] || r['danos materiais'] || '').trim().toLowerCase() === 'sim',
             tecnico_seguranca: String(r['TÉCNICO DE SEGURANÇA'] || r['tecnico seguranca'] || ''),
             data_admissao: String(r['DATA ADMISSÃO'] || r['data admissao'] || ''),
+            categoria_evento: String(r['CATEGORIA DO EVENTO'] || r['categoria evento'] || r['categoria_evento'] || ''),
+            encaminhamento_medico: String(r['ENCAMINHAMENTO MÉDICO'] || r['encaminhamento medico'] || ''),
           };
+          
+          if (!extraData.categoria_evento) {
+             const isMedical = String(r['LOCAL'] || '').toUpperCase().includes('ATENDIMENTO MÉDICO') || extraData.atestado || extraData.afastamento || !!extraData.cid;
+             extraData.categoria_evento = isMedical ? 'Médico' : 'Material';
+          }
           
           const rawDesc = String(r['DESCRIÇÃO DO EVENTO'] || r['descricao'] || '').trim();
           const cleanDesc = rawDesc.split('||EXTRA||')[0].trim();
@@ -367,6 +379,7 @@ export default function Eventos() {
         'DATA': ev.event_date ? new Date(ev.event_date).toLocaleDateString('pt-BR') : '',
         'HORÁRIO': ev.event_time || '',
         'DIA DA SEMANA': ev.day_of_week || '',
+        'CATEGORIA DO EVENTO': extra.categoria_evento || (ev as any).categoria_evento || 'Material',
         'DESCRIÇÃO DO EVENTO': ev.description?.split('||EXTRA||')[0].trim() || '',
         'LOCAL': ev.location || '',
         'CONTRATO': ev.contract || '',
@@ -377,6 +390,11 @@ export default function Eventos() {
         'ENCARREGADO': ev.supervisor || '',
         'TÉCNICO DE SEGURANÇA': extra.tecnico_seguranca || '',
         'DATA ADMISSÃO': extra.data_admissao || '',
+        'ENCAMINHAMENTO MÉDICO': extra.encaminhamento_medico || (ev as any).encaminhamento_medico || '',
+        'CID': extra.cid || (ev as any).cid || '',
+        'ATESTADO': (extra.atestado || (ev as any).atestado) ? 'SIM' : 'NÃO',
+        'AFASTAMENTO': (extra.afastamento || (ev as any).afastamento) ? 'SIM' : 'NÃO',
+        'DANOS MATERIAIS': (extra.danos_materiais || (ev as any).danos_materiais) ? 'SIM' : 'NÃO',
       };
     });
     await writeExcelFile(exportData as Record<string, unknown>[], 'Eventos_Porto.xlsx', 'Eventos');
@@ -406,8 +424,10 @@ export default function Eventos() {
         ev.plate_tag.toLowerCase().includes(q);
       const matchEquip = equipmentFilter === 'all' || ev.equipment === equipmentFilter;
       const matchEmployee = !selectedEmployee || ev.involved_name.trim().toLowerCase() === selectedEmployee.nome.trim().toLowerCase();
-      const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid;
-      const matchType = typeFilter === 'all' || (typeFilter === 'medico' && isMedical) || (typeFilter === 'operacional' && !isMedical);
+      
+      const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
+      const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
+      const matchType = typeFilter === 'all' || typeFilter === cat;
 
       const matchDate = dateFilter === 'all' || ev.event_date === dateFilter;
       const matchTime = timeFilter === 'all' || ev.event_time === timeFilter;
@@ -439,7 +459,9 @@ export default function Eventos() {
     let afastamentoSem = 0;
     let danosCom = 0;
     let danosSem = 0;
-    let medicalCount = 0;
+    let materialCount = 0;
+    let meioAmbienteCount = 0;
+    let medicoCount = 0;
 
     let daysWithoutAccident: number | 'N/A' = 'N/A';
     const validPastDates = filtered
@@ -472,9 +494,15 @@ export default function Eventos() {
         byLocation[loc] = (byLocation[loc] || 0) + 1;
       }
 
-      const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid;
-      if (isMedical) {
-        medicalCount++;
+      const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
+      const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
+      
+      if (cat === 'Médico') {
+        medicoCount++;
+      } else if (cat === 'Meio Ambiente') {
+        meioAmbienteCount++;
+      } else {
+        materialCount++;
       }
 
       if (ev.involved_name) {
@@ -571,7 +599,7 @@ export default function Eventos() {
 
     return { 
       monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
-      medicalCount, operationalCount, total: filtered.length,
+      materialCount, meioAmbienteCount, medicoCount, total: filtered.length,
       topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
       byLetra, letraData, hourlyData, daysWithoutAccident,
       topCids, topAtestados, afastamentoData, danosData
@@ -617,14 +645,43 @@ export default function Eventos() {
             <DialogTrigger asChild>
               <Button size="sm" onClick={() => {
                 setEditingEvent(null);
-                setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '' });
+                setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '', categoria_evento: 'Material', encaminhamento_medico: '' });
               }}>
                 <Plus className="w-4 h-4 mr-1" /> Novo Evento
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{editingEvent ? "Editar Evento" : "Registrar Novo Evento"}</DialogTitle></DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              
+              {/* Category Selector */}
+              <div className="pt-4 pb-2 border-b border-border">
+                <Label className="text-sm font-bold text-primary mb-3 block">Categoria do Evento *</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div 
+                    onClick={() => setNewEvent(p => ({ ...p, categoria_evento: 'Material' }))}
+                    className={`cursor-pointer rounded-lg border-2 p-3 flex flex-col items-center justify-center gap-2 transition-all ${newEvent.categoria_evento === 'Material' ? 'border-primary bg-primary/5 text-primary shadow-sm' : 'border-transparent bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'}`}
+                  >
+                    <Wrench className="w-5 h-5" />
+                    <span className="text-xs font-semibold text-center leading-tight">Evento<br/>Material</span>
+                  </div>
+                  <div 
+                    onClick={() => setNewEvent(p => ({ ...p, categoria_evento: 'Meio Ambiente' }))}
+                    className={`cursor-pointer rounded-lg border-2 p-3 flex flex-col items-center justify-center gap-2 transition-all ${newEvent.categoria_evento === 'Meio Ambiente' ? 'border-emerald-500 bg-emerald-500/5 text-emerald-600 shadow-sm' : 'border-transparent bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'}`}
+                  >
+                    <MapPin className="w-5 h-5" />
+                    <span className="text-xs font-semibold text-center leading-tight">Meio<br/>Ambiente</span>
+                  </div>
+                  <div 
+                    onClick={() => setNewEvent(p => ({ ...p, categoria_evento: 'Médico' }))}
+                    className={`cursor-pointer rounded-lg border-2 p-3 flex flex-col items-center justify-center gap-2 transition-all ${newEvent.categoria_evento === 'Médico' ? 'border-destructive bg-destructive/5 text-destructive shadow-sm' : 'border-transparent bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'}`}
+                  >
+                    <Stethoscope className="w-5 h-5" />
+                    <span className="text-xs font-semibold text-center leading-tight">Atendimento<br/>Médico</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <div className="space-y-2">
                   <Label>Data *</Label>
                   <Input type="date" value={newEvent.event_date} onChange={e => setNewEvent({ ...newEvent, event_date: e.target.value })} />
@@ -633,87 +690,103 @@ export default function Eventos() {
                   <Label>Horário</Label>
                   <FastInput value={newEvent.event_time} onValueChange={v => setNewEvent(p => ({ ...p, event_time: v }))} placeholder="Ex: 14:30" />
                 </div>
-                <div className="space-y-2">
-                  <Label>Dia da Semana</Label>
-                  <Select value={newEvent.day_of_week} onValueChange={v => setNewEvent({ ...newEvent, day_of_week: v })}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      {['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'].map(d => (
-                        <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Local</Label>
-                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Equipamento</Label>
-                  <FastInput value={newEvent.equipment} onValueChange={v => setNewEvent(p => ({ ...p, equipment: v }))} placeholder="Ex: CAMINHÃO PIPA" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Placa/TAG</Label>
-                  <FastInput value={newEvent.plate_tag} onValueChange={v => setNewEvent(p => ({ ...p, plate_tag: v }))} placeholder="Ex: QRD0980" />
-                </div>
+                
+                {/* Common fields for all categories */}
                 <div className="space-y-2">
                   <Label>Turno / Letra</Label>
                   <Select value={newEvent.shift} onValueChange={v => setNewEvent(p => ({ ...p, shift: v }))}>
                     <SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="A - Dia">A - Dia</SelectItem>
-                      <SelectItem value="A - Noite">A - Noite</SelectItem>
-                      <SelectItem value="B - Dia">B - Dia</SelectItem>
-                      <SelectItem value="B - Noite">B - Noite</SelectItem>
-                      <SelectItem value="C - Dia">C - Dia</SelectItem>
-                      <SelectItem value="C - Noite">C - Noite</SelectItem>
-                      <SelectItem value="D - Dia">D - Dia</SelectItem>
-                      <SelectItem value="D - Noite">D - Noite</SelectItem>
+                      <SelectItem value="A Dia">A Dia</SelectItem>
+                      <SelectItem value="A Noite">A Noite</SelectItem>
+                      <SelectItem value="B Dia">B Dia</SelectItem>
+                      <SelectItem value="B Noite">B Noite</SelectItem>
                       <SelectItem value="ADM">ADM</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Encarregado</Label>
-                  <FastInput value={newEvent.supervisor} onValueChange={v => setNewEvent(p => ({ ...p, supervisor: v }))} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Técnico de Segurança</Label>
-                  <FastInput value={newEvent.tecnico_seguranca || ''} onValueChange={v => setNewEvent(p => ({ ...p, tecnico_seguranca: v }))} placeholder="Nome do técnico" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
                   <Label>Nome do Envolvido *</Label>
                   <FastInput value={newEvent.involved_name} onValueChange={v => setNewEvent(p => ({ ...p, involved_name: v }))} placeholder="Nome completo" />
                 </div>
-                
-                {/* Novos campos médicos e de severidade */}
+
                 <div className="space-y-2">
-                  <Label>CID (Opcional)</Label>
-                  <FastInput value={newEvent.cid || ''} onValueChange={v => setNewEvent(p => ({ ...p, cid: v }))} placeholder="Ex: S60" />
-                </div>
-                <div className="flex items-center gap-2 mt-8">
-                  <input type="checkbox" id="atendimento" className="w-4 h-4 cursor-pointer" checked={newEvent.atendimento_medico} onChange={e => setNewEvent(p => ({ ...p, atendimento_medico: e.target.checked }))} />
-                  <Label htmlFor="atendimento" className="cursor-pointer">Com Atendimento Médico</Label>
-                </div>
-                <div className="flex items-center gap-2 mt-8">
-                  <input type="checkbox" id="atestado" className="w-4 h-4 cursor-pointer" checked={newEvent.atestado} onChange={e => setNewEvent(p => ({ ...p, atestado: e.target.checked }))} />
-                  <Label htmlFor="atestado" className="cursor-pointer">Gerou Atestado Médico</Label>
-                </div>
-                <div className="flex items-center gap-2 mt-8">
-                  <input type="checkbox" id="afastamento" className="w-4 h-4 cursor-pointer" checked={newEvent.afastamento} onChange={e => setNewEvent(p => ({ ...p, afastamento: e.target.checked }))} />
-                  <Label htmlFor="afastamento" className="cursor-pointer">Com Afastamento</Label>
-                </div>
-                <div className="flex items-center gap-2 mt-8">
-                  <input type="checkbox" id="danos" className="w-4 h-4 cursor-pointer" checked={newEvent.danos_materiais} onChange={e => setNewEvent(p => ({ ...p, danos_materiais: e.target.checked }))} />
-                  <Label htmlFor="danos" className="cursor-pointer">Danos Materiais</Label>
+                  <Label>Local</Label>
+                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P" />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
+                  <Label>Encarregado</Label>
+                  <FastInput value={newEvent.supervisor} onValueChange={v => setNewEvent(p => ({ ...p, supervisor: v }))} />
+                </div>
+
+                {/* Conditional Fields: Material */}
+                {newEvent.categoria_evento === 'Material' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Equipamento</Label>
+                      <FastInput value={newEvent.equipment} onValueChange={v => setNewEvent(p => ({ ...p, equipment: v }))} placeholder="Ex: CAMINHÃO PIPA" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Placa/TAG</Label>
+                      <FastInput value={newEvent.plate_tag} onValueChange={v => setNewEvent(p => ({ ...p, plate_tag: v }))} placeholder="Ex: QRD0980" />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <div className="flex items-center gap-2 mt-2">
+                        <input type="checkbox" id="danos" className="w-4 h-4 cursor-pointer" checked={newEvent.danos_materiais} onChange={e => setNewEvent(p => ({ ...p, danos_materiais: e.target.checked }))} />
+                        <Label htmlFor="danos" className="cursor-pointer">Gerou Danos Materiais</Label>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Conditional Fields: Meio Ambiente */}
+                {newEvent.categoria_evento === 'Meio Ambiente' && (
+                  <div className="space-y-2 md:col-span-2">
+                     <p className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-lg border border-border">
+                       <AlertTriangle className="w-4 h-4 inline mr-1 text-warning" />
+                       Para eventos de meio ambiente, descreva o tipo de substância e volume aproximado do vazamento no campo de descrição abaixo.
+                     </p>
+                  </div>
+                )}
+
+                {/* Conditional Fields: Médico */}
+                {newEvent.categoria_evento === 'Médico' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Encaminhamento</Label>
+                      <Select value={newEvent.encaminhamento_medico} onValueChange={v => setNewEvent(p => ({ ...p, encaminhamento_medico: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Selecione o destino" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Liberado">Liberado p/ Casa / Área</SelectItem>
+                          <SelectItem value="Posto da Vale">Posto Médico da Vale</SelectItem>
+                          <SelectItem value="Hospital Externo">Hospital Externo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>CID (Opcional)</Label>
+                      <FastInput value={newEvent.cid || ''} onValueChange={v => setNewEvent(p => ({ ...p, cid: v }))} placeholder="Ex: S60" />
+                    </div>
+                    <div className="space-y-2 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" id="atestado" className="w-4 h-4 cursor-pointer text-primary" checked={newEvent.atestado} onChange={e => setNewEvent(p => ({ ...p, atestado: e.target.checked }))} />
+                        <Label htmlFor="atestado" className="cursor-pointer">Gerou Atestado Médico</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input type="checkbox" id="afastamento" className="w-4 h-4 cursor-pointer text-destructive" checked={newEvent.afastamento} onChange={e => setNewEvent(p => ({ ...p, afastamento: e.target.checked }))} />
+                        <Label htmlFor="afastamento" className="cursor-pointer">Com Afastamento</Label>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                <div className="space-y-2 md:col-span-2 mt-2">
                   <Label>Descrição do Evento *</Label>
                   <FastTextarea rows={4} value={newEvent.description} onValueChange={v => setNewEvent(p => ({ ...p, description: v }))} placeholder="Descreva o evento detalhadamente..." />
                 </div>
-                <div className="md:col-span-2">
-                  <Button onClick={handleCreate} className="w-full">Registrar Evento</Button>
+                <div className="md:col-span-2 mt-4">
+                  <Button onClick={handleCreate} className="w-full h-11 text-base font-semibold">Registrar Evento</Button>
                 </div>
               </div>
             </DialogContent>
@@ -900,22 +973,22 @@ export default function Eventos() {
             </Card>
             
             <Card 
-              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'operacional' ? 'bg-warning/10 ring-2 ring-warning ring-offset-2' : 'bg-gradient-to-br from-warning/5 to-transparent'} group`}
-              onClick={() => { setTypeFilter('operacional'); scrollToTable(); }}
+              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'Material' ? 'bg-blue-500/10 ring-2 ring-blue-500 ring-offset-2' : 'bg-gradient-to-br from-blue-500/5 to-transparent'} group`}
+              onClick={() => { setTypeFilter('Material'); scrollToTable(); }}
             >
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-warning" />
-              <div className="absolute -right-4 -top-4 w-24 h-24 bg-warning/10 rounded-full blur-2xl group-hover:bg-warning/20 transition-colors" />
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors" />
               <CardContent className="p-6">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Eventos Operacionais</p>
-                    <p className="text-4xl font-black text-foreground mt-2">{analytics.operationalCount}</p>
-                    <p className="text-xs text-warning mt-2 font-bold bg-warning/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Eventos Materiais</p>
+                    <p className="text-4xl font-black text-foreground mt-2">{analytics.materialCount}</p>
+                    <p className="text-xs text-blue-500 mt-2 font-bold bg-blue-500/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
                       <Target className="w-3 h-3" />
-                      {analytics.total ? ((analytics.operationalCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                      {analytics.total ? ((analytics.materialCount / analytics.total) * 100).toFixed(0) : 0}% do total
                     </p>
                   </div>
-                  <div className="p-3 bg-warning/10 rounded-xl text-warning">
+                  <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500">
                     <Wrench className="w-6 h-6" />
                   </div>
                 </div>
@@ -923,8 +996,31 @@ export default function Eventos() {
             </Card>
 
             <Card 
-              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'medico' ? 'bg-destructive/10 ring-2 ring-destructive ring-offset-2' : 'bg-gradient-to-br from-destructive/5 to-transparent'} group`}
-              onClick={() => { setTypeFilter('medico'); scrollToTable(); }}
+              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'Meio Ambiente' ? 'bg-emerald-500/10 ring-2 ring-emerald-500 ring-offset-2' : 'bg-gradient-to-br from-emerald-500/5 to-transparent'} group`}
+              onClick={() => { setTypeFilter('Meio Ambiente'); scrollToTable(); }}
+            >
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Meio Ambiente</p>
+                    <p className="text-4xl font-black text-foreground mt-2">{analytics.meioAmbienteCount}</p>
+                    <p className="text-xs text-emerald-500 mt-2 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {analytics.total ? ((analytics.meioAmbienteCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                    </p>
+                  </div>
+                  <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'Médico' ? 'bg-destructive/10 ring-2 ring-destructive ring-offset-2' : 'bg-gradient-to-br from-destructive/5 to-transparent'} group`}
+              onClick={() => { setTypeFilter('Médico'); scrollToTable(); }}
             >
               <div className="absolute top-0 left-0 w-1.5 h-full bg-destructive" />
               <div className="absolute -right-4 -top-4 w-24 h-24 bg-destructive/10 rounded-full blur-2xl group-hover:bg-destructive/20 transition-colors" />
@@ -932,10 +1028,10 @@ export default function Eventos() {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Atendimento Médico</p>
-                    <p className="text-4xl font-black text-foreground mt-2">{analytics.medicalCount}</p>
+                    <p className="text-4xl font-black text-foreground mt-2">{analytics.medicoCount}</p>
                     <p className="text-xs text-destructive mt-2 font-bold bg-destructive/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
                       <HeartPulse className="w-3 h-3" />
-                      {analytics.total ? ((analytics.medicalCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                      {analytics.total ? ((analytics.medicoCount / analytics.total) * 100).toFixed(0) : 0}% do total
                     </p>
                   </div>
                   <div className="p-3 bg-destructive/10 rounded-xl text-destructive">
@@ -1359,8 +1455,8 @@ export default function Eventos() {
             <span>
               Registro de Eventos ({filtered.length})
               {typeFilter !== 'all' && (
-                <span className={`ml-3 text-xs px-2 py-1 rounded-full ${typeFilter === 'operacional' ? 'bg-warning/20 text-warning-foreground' : 'bg-destructive/20 text-destructive-foreground'}`}>
-                  Filtro: {typeFilter === 'operacional' ? 'Eventos Operacionais' : 'Atendimentos Médicos'}
+                <span className={`ml-3 text-xs px-2 py-1 rounded-full ${typeFilter === 'Material' ? 'bg-blue-500/20 text-blue-600' : typeFilter === 'Meio Ambiente' ? 'bg-emerald-500/20 text-emerald-600' : 'bg-destructive/20 text-destructive-foreground'}`}>
+                  Filtro: {typeFilter === 'Material' ? 'Eventos Materiais' : typeFilter === 'Meio Ambiente' ? 'Eventos de Meio Ambiente' : 'Atendimentos Médicos'}
                 </span>
               )}
             </span>
@@ -1499,7 +1595,7 @@ export default function Eventos() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDetailEvent(ev); }}>
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false, tecnico_seguranca: ev.tecnico_seguranca || '' }); setDialogOpen(true); }}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift, supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false, tecnico_seguranca: ev.tecnico_seguranca || '', categoria_evento: (ev as any).categoria_evento || 'Material', encaminhamento_medico: (ev as any).encaminhamento_medico || '' }); setDialogOpen(true); }}>
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteEvent(ev); }}>
