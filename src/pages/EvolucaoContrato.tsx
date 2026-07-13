@@ -1381,7 +1381,7 @@ export default function EvolucaoContrato() {
             <PerformanceMensalTab 
               medicoes={medicoes} 
               setMedicoes={setMedicoes} 
-              timeRange={timeRange} 
+              timeRange={period.label} 
               chartData={filteredChartData}
             />
           </TabsContent>
