@@ -733,7 +733,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                     <YAxis axisLine={false} tickLine={false} fontSize={12} />
                     <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                    <ReferenceLine y={40} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (40)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
+                    <ReferenceLine y={45} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (45)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
                     {uniqueNames.map((name, idx) => (
                       <Line key={name} type="monotone" dataKey={name} stroke={colors[idx % colors.length]} strokeWidth={2} dot={{ r: 4 }}>
                         <LabelList dataKey={name} position="top" fill={colors[idx % colors.length]} fontSize={11} fontWeight="bold" />
