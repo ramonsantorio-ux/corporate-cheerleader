@@ -240,38 +240,6 @@ export default function N3Dashboard() {
     setLoading(false);
   };
 
-  const pullFromPreviousMonth = () => {
-    const pastPeriods = Array.from(new Set(historicalData.map((d: any) => d.periodo))).filter((p: any) => p < periodo).sort();
-    const lastPeriod = pastPeriods.pop();
-    if (lastPeriod && periodo !== 'all') {
-      const lastPeriodData = historicalData.filter((d: any) => d.periodo === lastPeriod);
-      const existingNames = new Set(data.map(d => d.nome_email.toLowerCase().trim()));
-      
-      const newRows = lastPeriodData
-        .filter((d: any) => !existingNames.has(d.nome_email.toLowerCase().trim()))
-        .map((d: any) => ({
-          id: Math.random().toString(36).substring(2, 9),
-          nome_email: d.nome_email,
-          letra: d.letra,
-          periodo: periodo,
-          total_verificacoes: 0,
-          total_treinamentos: 0,
-          total_assistencia: 0,
-          verificacoes_nc: 0,
-          perguntas_nc: 0
-        }));
-
-      if (newRows.length > 0) {
-        setData(prev => [...prev, ...newRows].sort((a,b) => a.nome_email.localeCompare(b.nome_email)));
-        toast.success(`${newRows.length} colaboradores importados do mês anterior!`);
-      } else {
-        toast.info('Todos os colaboradores do mês anterior já estão na lista.');
-      }
-    } else {
-      toast.error('Não há dados de meses anteriores para importar.');
-    }
-  };
-
   const initMockData = () => {
     setData(
       DEFAULT_NAMES.map(colab => ({
@@ -571,9 +539,6 @@ export default function N3Dashboard() {
                 <CardDescription>Digite manualmente ou importe via planilha</CardDescription>
               </div>
               <div className="flex items-center gap-3">
-                <Button onClick={pullFromPreviousMonth} size="sm" className="gap-2 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white shadow-md shadow-indigo-500/20 border-0 rounded-lg">
-                  <Copy className="w-4 h-4" /> Importar Equipe do Mês Anterior
-                </Button>
                 <Button onClick={handleAddRow} size="sm" variant="outline" className="gap-1 border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm">
                   <Plus className="w-4 h-4" /> Adicionar Colaborador
                 </Button>
