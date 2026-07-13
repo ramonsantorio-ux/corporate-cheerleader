@@ -237,8 +237,8 @@ export default function MetasBusato() {
       { meta: 'Eventos c/ ou s/ perda', categoria: 'Segurança', ref: 10, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
       { meta: 'Custo Manutenção', categoria: 'Custo', ref: 10, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
       { meta: 'Atendimento Eventuais (%)', categoria: 'Programação', ref: 20, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
-      { meta: 'Atendimento Programação Preventivas (%)', categoria: 'Manutenção', ref: 5, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
       { meta: 'ISO 9001', categoria: 'Qualidade', ref: 20, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
+      { meta: 'Atendimento Programação Preventivas (%)', categoria: 'Manutenção', ref: 5, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 },
       { meta: 'Turnover', categoria: 'RH', ref: 5, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 }
     ];
 
@@ -325,23 +325,7 @@ export default function MetasBusato() {
         };
       });
 
-      const METAS_ORDER = [
-        'aderência',
-        'eventos',
-        'custo',
-        'eventuais',
-        'preventiva',
-        'iso 9001',
-        'turnover'
-      ];
-
       metasFormatadas.sort((a: any, b: any) => {
-        const indexA = METAS_ORDER.findIndex(m => a.meta.toLowerCase().includes(m));
-        const indexB = METAS_ORDER.findIndex(m => b.meta.toLowerCase().includes(m));
-        
-        if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-        if (indexA !== -1) return -1;
-        if (indexB !== -1) return 1;
         if (a.ordem !== b.ordem) return a.ordem - b.ordem;
         return a.meta.localeCompare(b.meta);
       });
