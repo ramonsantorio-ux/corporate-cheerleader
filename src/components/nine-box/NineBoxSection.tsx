@@ -244,23 +244,33 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 sm:gap-3 relative">
-                  {matrixBoxes.map((box) => (
-                    <button
-                      key={`${box.pot}-${box.des}`}
-                      onClick={() => { setPotencial(box.pot); setDesempenho(box.des); }}
-                      className={`
-                        flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all text-center min-h-[100px]
-                        ${potencial === box.pot && desempenho === box.des ? box.activeColor : box.color}
-                      `}
-                    >
-                      <span className="font-bold text-xs sm:text-sm text-foreground mb-1">{box.label}</span>
-                      <span className="text-[10px] sm:text-xs text-muted-foreground/80 leading-tight hidden sm:block">{box.desc}</span>
-                      
-                      {potencial === box.pot && desempenho === box.des && (
-                        <CheckCircle2 className="w-4 h-4 mt-2" />
-                      )}
-                    </button>
-                  ))}
+                  {matrixBoxes.map((box) => {
+                    const isSelected = potencial === box.pot && desempenho === box.des;
+                    // Em Nova Avaliação, TODAS as caixas ficam embaçadas para evitar viés.
+                    const shouldBlur = true;
+                    
+                    return (
+                      <button
+                        key={`${box.pot}-${box.des}`}
+                        onClick={() => { setPotencial(box.pot); setDesempenho(box.des); }}
+                        className={`
+                          flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all text-center min-h-[100px] relative overflow-hidden
+                          ${isSelected ? box.activeColor : box.color}
+                        `}
+                      >
+                        <div className={`flex flex-col items-center justify-center transition-all duration-500 ${shouldBlur ? 'blur-[5px] opacity-60 select-none' : ''}`}>
+                          <span className="font-bold text-xs sm:text-sm text-foreground mb-1">{box.label}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground/80 leading-tight hidden sm:block">{box.desc}</span>
+                        </div>
+                        
+                        {isSelected && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[1px]">
+                            <CheckCircle2 className="w-8 h-8 text-primary shadow-sm rounded-full bg-background/50" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -309,21 +319,62 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
               </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-8">
               {historico.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground border rounded-xl bg-muted/20 border-dashed">
                   Nenhuma avaliação registrada ainda.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {historico.map((av) => (
-                    <div key={av.id} className="p-4 rounded-xl border bg-card shadow-sm space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-primary">{av.cycle}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(av.created_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
-                        </span>
-                      </div>
+                <>
+                  <div className="bg-background rounded-xl p-6 border border-border/50 shadow-sm relative lg:w-[70%] mx-auto">
+                    <div className="text-center mb-6">
+                      <h4 className="font-bold text-lg text-foreground">Resultado Atual</h4>
+                      <p className="text-sm text-muted-foreground">Ciclo: {historico[0].cycle}</p>
+                    </div>
+                    <div className="absolute -left-6 top-[60%] -translate-y-1/2 -rotate-90 text-xs font-bold text-muted-foreground tracking-widest">
+                      POTENCIAL
+                    </div>
+                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-bold text-muted-foreground tracking-widest">
+                      DESEMPENHO (ENTREGA)
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 relative">
+                      {matrixBoxes.map((box) => {
+                        const isSelected = historico[0].potencial === box.pot && historico[0].desempenho === box.des;
+                        const shouldBlur = !isSelected;
+                        
+                        return (
+                          <div
+                            key={`hist-${box.pot}-${box.des}`}
+                            className={`
+                              flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all text-center min-h-[100px] relative overflow-hidden
+                              ${isSelected ? box.activeColor + ' shadow-md scale-[1.02] z-10' : box.color + ' opacity-50 grayscale'}
+                            `}
+                          >
+                            <div className={`flex flex-col items-center justify-center transition-all duration-500 ${shouldBlur ? 'blur-[5px] opacity-60 select-none' : ''}`}>
+                              <span className="font-bold text-xs sm:text-sm text-foreground mb-1">{box.label}</span>
+                              <span className="text-[10px] sm:text-xs text-muted-foreground/80 leading-tight hidden sm:block">{box.desc}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                      <History className="w-5 h-5 text-muted-foreground" />
+                      Histórico Completo
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {historico.map((av) => (
+                        <div key={av.id} className="p-4 rounded-xl border bg-card shadow-sm space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-primary">{av.cycle}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(av.created_at), "dd 'de' MMM, yyyy", { locale: ptBR })}
+                            </span>
+                          </div>
                       
                       <div className="flex gap-2">
                         <div className="bg-muted p-2 rounded-lg flex-1 text-center">
@@ -345,8 +396,10 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            </>
+          )}
+        </div>
           )}
         </TabsContent>
 
@@ -363,22 +416,31 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 sm:gap-3 relative">
-                  {matrixBoxesTrust.map((box) => (
-                    <button
-                      key={`trust-${box.des}-${box.conf}`}
-                      onClick={() => { setConfianca(box.conf); setDesempenho(box.des); }}
-                      className={`
-                        flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all text-center min-h-[100px]
-                        ${confianca === box.conf && desempenho === box.des ? box.activeColor : box.color}
-                      `}
-                    >
-                      <span className="font-bold text-xs sm:text-sm text-foreground mb-1">{box.label}</span>
-                      <span className="text-[10px] sm:text-xs text-muted-foreground/80 leading-tight hidden sm:block">{box.desc}</span>
-                      {confianca === box.conf && desempenho === box.des && (
-                        <CheckCircle2 className="w-4 h-4 mt-2" />
-                      )}
-                    </button>
-                  ))}
+                  {matrixBoxesTrust.map((box) => {
+                    const isSelected = confianca === box.conf && desempenho === box.des;
+                    const shouldBlur = true;
+
+                    return (
+                      <button
+                        key={`trust-${box.des}-${box.conf}`}
+                        onClick={() => { setConfianca(box.conf); setDesempenho(box.des); }}
+                        className={`
+                          flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all text-center min-h-[100px] relative overflow-hidden
+                          ${isSelected ? box.activeColor : box.color}
+                        `}
+                      >
+                        <div className={`flex flex-col items-center justify-center transition-all duration-500 ${shouldBlur ? 'blur-[5px] opacity-60 select-none' : ''}`}>
+                          <span className="font-bold text-xs sm:text-sm text-foreground mb-1">{box.label}</span>
+                          <span className="text-[10px] sm:text-xs text-muted-foreground/80 leading-tight hidden sm:block">{box.desc}</span>
+                        </div>
+                        {isSelected && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/20 backdrop-blur-[1px]">
+                            <CheckCircle2 className="w-8 h-8 text-primary shadow-sm rounded-full bg-background/50" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
