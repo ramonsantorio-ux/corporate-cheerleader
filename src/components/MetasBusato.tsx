@@ -389,11 +389,31 @@ export default function MetasBusato() {
   }, [data]);
 
   const evolutionData = useMemo(() => {
-    return meses.map(m => ({
-      month: m.substring(0, 3),
-      atingido: METAS_DATA[m as keyof typeof METAS_DATA].atingido,
-      meta: 100
-    }));
+    let runningSum = 0;
+    const monthsWithData = meses.filter(m => METAS_DATA[m as keyof typeof METAS_DATA].atingido > 0).length;
+
+    return meses.map((m, i) => {
+      const atingido = METAS_DATA[m as keyof typeof METAS_DATA].atingido;
+      
+      let esperado = 100;
+      if (i < monthsWithData) {
+        const remainingNeeded = 1200 - runningSum;
+        const remainingMonths = 12 - i;
+        esperado = remainingMonths > 0 ? (remainingNeeded / remainingMonths) : 0;
+        runningSum += atingido;
+      } else {
+        const remainingNeeded = 1200 - runningSum;
+        const remainingMonths = 12 - monthsWithData;
+        esperado = remainingMonths > 0 ? (remainingNeeded / remainingMonths) : 0;
+      }
+
+      return {
+        month: m.substring(0, 3),
+        atingido: atingido,
+        meta: 100,
+        esperado: Math.max(0, parseFloat(esperado.toFixed(1)))
+      };
+    });
   }, [meses, METAS_DATA]);
 
   if (isLoading) {
@@ -749,9 +769,11 @@ export default function MetasBusato() {
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--muted))', strokeWidth: 2, strokeDasharray: '5 5' }} />
                     <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                     <Area type="monotone" dataKey="atingido" name="Aderência" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} fill="url(#colorAtingido)" activeDot={{ r: 6 }}>
-                      <LabelList dataKey="atingido" position="top" style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} formatter={(val: number) => val.toFixed(0) + '%'} offset={10} />
+                      <LabelList dataKey="atingido" position="top" style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--primary))' }} formatter={(val: number) => val > 0 ? val.toFixed(0) + '%' : ''} offset={10} />
                     </Area>
-                    <Area type="monotone" dataKey="meta" name="Meta" stroke="hsl(var(--destructive))" strokeWidth={2} strokeDasharray="3 3" fill="none" activeDot={false} />
+                    <Area type="monotone" dataKey="esperado" name="Esperado p/ 100%" stroke="#f59e0b" strokeWidth={3} fill="none" strokeDasharray="5 5" activeDot={{ r: 6, fill: '#f59e0b' }}>
+                      <LabelList dataKey="esperado" position="bottom" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#f59e0b' }} formatter={(val: number) => val.toFixed(1) + '%'} offset={10} />
+                    </Area>
                     <ReferenceLine y={100} stroke="hsl(var(--destructive))" strokeDasharray="3 3" />
                   </AreaChart>
                 </ResponsiveContainer>
