@@ -76,7 +76,11 @@ const GestaoNotificacoes = () => {
   const [filterType, setFilterType] = useState<string>('all'); // all, notificacao, multa
   const [filterAction, setFilterAction] = useState<string>('all'); // all, pendente, ok
   const [searchQuery, setSearchQuery] = useState('');
-  const [period, setPeriod] = useState<PeriodRange>(getMonthPeriod(0));
+  const [period, setPeriod] = useState<PeriodRange>({
+    start: `${new Date().getFullYear()}-01-01`,
+    end: `${new Date().getFullYear()}-12-31`,
+    label: `Ano de ${new Date().getFullYear()}`
+  });
 
   const [formData, setFormData] = useState<Partial<NotificacaoGlobal>>({
     dataStr: '', local: '', motivo: '', solicitante: '', tipo: 'Notificação', planoDeAcao: 'Pendente', valorOriginal: 0
