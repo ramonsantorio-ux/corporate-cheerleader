@@ -356,6 +356,19 @@ export default function MetasPorto() {
   const perdidas = data.counts.abaixo;
   const totalMetas = batidas + perdidas;
 
+  const { totalAderencia, monthsWithData } = useMemo(() => {
+    return meses.reduce((acc, m) => {
+      const atingido = METAS_DATA[m as keyof typeof METAS_DATA].atingido;
+      if (atingido > 0) {
+        acc.totalAderencia += atingido;
+        acc.monthsWithData += 1;
+      }
+      return acc;
+    }, { totalAderencia: 0, monthsWithData: 0 });
+  }, [meses, METAS_DATA]);
+
+  const aderenciaAnual = monthsWithData > 0 ? (totalAderencia / monthsWithData) : 0;
+
   // Radar Data: Normalizamos Alcançado vs Referência
   const radarData = useMemo(() => {
     return data.metas.map(m => {
@@ -444,8 +457,38 @@ export default function MetasPorto() {
       {/* 2. Placares Gigantes de Win/Loss e Resumo Global */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         
+        <Card className="md:col-span-3 border-none bg-gradient-to-br from-indigo-500/10 to-purple-500/10 shadow-sm relative overflow-hidden flex flex-col justify-center">
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500" />
+          <div className="absolute -right-4 -top-4 text-indigo-500/10">
+            <Target className="w-24 h-24" />
+          </div>
+          <CardContent className="p-6 relative z-10">
+            <div className="flex justify-between items-start mb-2">
+              <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">Aderência Anual</p>
+            </div>
+            
+            <div className="flex items-baseline gap-2">
+              <p className="text-5xl font-black text-indigo-600 dark:text-indigo-400">{aderenciaAnual.toFixed(1).replace('.', ',')}%</p>
+            </div>
+
+            <div className="w-full bg-indigo-500/20 h-2.5 mt-6 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }} 
+                animate={{ width: `${Math.min(aderenciaAnual, 100)}%` }} 
+                transition={{ duration: 1.5, type: "spring" }}
+                className="h-full bg-indigo-500 rounded-full relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-white/20 w-full h-full skew-x-[-20deg] animate-[shimmer_2s_infinite]" />
+              </motion.div>
+            </div>
+            <p className="text-xs font-medium text-indigo-600/70 dark:text-indigo-400/70 mt-3 flex items-center gap-1">
+              <Target className="w-3.5 h-3.5" /> Meta de 100% (Média YTD)
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Painel Global */}
-        <Card className="md:col-span-4 border-none bg-gradient-to-br from-primary/10 to-primary/5 shadow-sm relative overflow-hidden flex flex-col justify-center">
+        <Card className="md:col-span-3 border-none bg-gradient-to-br from-primary/10 to-primary/5 shadow-sm relative overflow-hidden flex flex-col justify-center">
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-2">
@@ -492,7 +535,7 @@ export default function MetasPorto() {
         </Card>
 
         {/* Win Card */}
-        <Card className="md:col-span-4 border-none bg-emerald-50 dark:bg-emerald-950/20 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
+        <Card className="md:col-span-3 border-none bg-emerald-50 dark:bg-emerald-950/20 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
           <div className="absolute -right-6 -top-6 text-emerald-500/10">
             <Trophy className="w-32 h-32" />
           </div>
@@ -512,7 +555,7 @@ export default function MetasPorto() {
         </Card>
 
         {/* Loss Card */}
-        <Card className="md:col-span-4 border-none bg-rose-50 dark:bg-rose-950/20 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
+        <Card className="md:col-span-3 border-none bg-rose-50 dark:bg-rose-950/20 shadow-sm relative overflow-hidden hover:shadow-md transition-shadow">
           <div className="absolute -right-6 -top-6 text-rose-500/10">
             <AlertOctagon className="w-32 h-32" />
           </div>
