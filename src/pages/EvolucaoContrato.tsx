@@ -19,6 +19,7 @@ import { PerformanceMensalTab } from '@/components/PerformanceMensalTab';
 import MetasBusato from '@/components/MetasBusato';
 import MetasPorto from '@/components/MetasPorto';
 import { FrotaHabitual } from '@/components/FrotaHabitual';
+import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
 
 interface OfensorFinanceiro {
   motivo: string;
@@ -585,7 +586,16 @@ export default function EvolucaoContrato() {
   
   // Privacy mode state
   const [hiddenCards, setHiddenCards] = useState<Record<string, boolean>>({});
-  const [timeRange, setTimeRange] = useState('12');
+  const [period, setPeriod] = useState<PeriodRange>(() => {
+    const end = new Date();
+    const start = new Date();
+    start.setFullYear(start.getFullYear() - 1);
+    return {
+      start: start.toISOString().split('T')[0],
+      end: end.toISOString().split('T')[0],
+      label: 'Últimos 12 meses'
+    };
+  });
   const [activeTab, setActiveTab] = useState('visao_executiva');
   const [selectedMonthDRE, setSelectedMonthDRE] = useState<string | null>(null);
   const toggleCardVisibility = (key: string) => {
@@ -759,38 +769,33 @@ export default function EvolucaoContrato() {
     });
   }, [medicoes, notificacoesGlobais]);
 
-  const availableYears = useMemo(() => {
-    const years = new Set<string>();
-    medicoes.forEach(m => {
-      const parts = m.mes.split('/');
-      if (parts.length === 2) {
-        years.add(parts[1]);
-      }
-    });
-    return Array.from(years).sort((a, b) => b.localeCompare(a));
-  }, [medicoes]);
-
   const filteredChartData = useMemo(() => {
-    if (timeRange === 'all') return chartData;
-    if (timeRange.startsWith('year-')) {
-      const year = timeRange.split('-')[1];
-      return chartData.filter(m => m.mes.endsWith(`/${year}`));
-    }
-    const limit = parseInt(timeRange);
-    return chartData.slice(-limit);
-  }, [chartData, timeRange]);
+    const pStart = new Date(period.start + 'T00:00:00');
+    const pEnd = new Date(period.end + 'T23:59:59');
+
+    return chartData.filter(m => {
+      const [mName, mYear] = m.mes.split('/');
+      const mIndex = monthMap[mName as keyof typeof monthMap] || 0;
+      const mDate = new Date(Number(mYear), mIndex, 20);
+      return mDate >= pStart && mDate <= pEnd;
+    });
+  }, [chartData, period]);
 
   const filteredPortoMinerio = useMemo(() => {
-    if (timeRange === 'all' || timeRange.startsWith('year-')) return dataPortoMinerio;
-    const limit = parseInt(timeRange);
-    return dataPortoMinerio.slice(-limit);
-  }, [timeRange]);
+    const pStart = new Date(period.start);
+    const pEnd = new Date(period.end);
+    let diff = (pEnd.getFullYear() - pStart.getFullYear()) * 12 + (pEnd.getMonth() - pStart.getMonth()) + 1;
+    if (diff <= 0) diff = 1;
+    return dataPortoMinerio.slice(-diff);
+  }, [period]);
 
   const filteredPortoTPM = useMemo(() => {
-    if (timeRange === 'all' || timeRange.startsWith('year-')) return dataPortoTPM;
-    const limit = parseInt(timeRange);
-    return dataPortoTPM.slice(-limit);
-  }, [timeRange]);
+    const pStart = new Date(period.start);
+    const pEnd = new Date(period.end);
+    let diff = (pEnd.getFullYear() - pStart.getFullYear()) * 12 + (pEnd.getMonth() - pStart.getMonth()) + 1;
+    if (diff <= 0) diff = 1;
+    return dataPortoTPM.slice(-diff);
+  }, [period]);
 
   const filteredAderenciaDia = useMemo(() => {
     // O gráfico diário tem dados de apenas 1 mês, então ele sempre será exibido integralmente 
@@ -1727,7 +1732,7 @@ export default function EvolucaoContrato() {
         </SheetContent>
       </Sheet>
     </>
-  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth, activeTab, timeRange, selectedMonthDRE, ofensoresData, filteredChartData, handleDelete]);
+  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth, activeTab, period, selectedMonthDRE, ofensoresData, filteredChartData, handleDelete]);
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-8 animate-fade-in pb-20">
@@ -1744,21 +1749,7 @@ export default function EvolucaoContrato() {
         
         <div className="flex flex-wrap gap-2 items-center">
           {!(activeTab === 'metas_busato' || activeTab === 'metas_porto' || activeTab === 'frota') && (
-            <div className="flex items-center gap-2 mr-2">
-              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[140px] bg-background border-border/50 shadow-sm rounded-xl h-9 text-sm">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-border/50">
-                  <SelectItem value="12">Últimos 12 meses</SelectItem>
-                  {availableYears.map(year => (
-                    <SelectItem key={year} value={`year-${year}`}>Ano: {year}</SelectItem>
-                  ))}
-                  <SelectItem value="all">Todo o período</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <PeriodFilter value={period} onChange={setPeriod} />
           )}
 
           <Button onClick={() => window.location.reload()} variant="outline" size="sm" className="gap-2 border-primary/50 text-primary">
