@@ -129,10 +129,25 @@ export default function Eventos() {
     fetchHistoricalEvolution();
   }, [period]);
 
+  const parseEvent = (ev: any) => {
+    if (ev.shift) {
+      ev.shift = ev.shift.toUpperCase().replace(/\s*-\s*/g, ' ').replace('A DIA', 'A Dia').replace('A NOITE', 'A Noite').replace('B DIA', 'B Dia').replace('B NOITE', 'B Noite').trim();
+    }
+    if (ev.description && ev.description.includes('||EXTRA||')) {
+      const parts = ev.description.split('||EXTRA||');
+      ev.description = parts[0].trim();
+      try {
+        const extra = JSON.parse(parts[1]);
+        return { ...ev, ...extra };
+      } catch(e){}
+    }
+    return ev;
+  };
+
   async function fetchHistoricalEvolution() {
     const { data } = await supabase.from('events').select('*');
     if (data) {
-      setHistoricalEvolution(data);
+      setHistoricalEvolution(data.map(parseEvent));
     }
   }
 
@@ -144,20 +159,7 @@ export default function Eventos() {
     ]);
     
     const evtData = evtRes.data || [];
-    const parsedEvents = evtData.map((ev: any) => {
-      if (ev.shift) {
-        ev.shift = ev.shift.toUpperCase().replace(/\s*-\s*/g, ' ').replace('A DIA', 'A Dia').replace('A NOITE', 'A Noite').replace('B DIA', 'B Dia').replace('B NOITE', 'B Noite').trim();
-      }
-      if (ev.description && ev.description.includes('||EXTRA||')) {
-        const parts = ev.description.split('||EXTRA||');
-        ev.description = parts[0].trim();
-        try {
-          const extra = JSON.parse(parts[1]);
-          return { ...ev, ...extra };
-        } catch(e){}
-      }
-      return ev;
-    });
+    const parsedEvents = evtData.map(parseEvent);
 
     setEvents(parsedEvents as any[]);
     setFuncionarios((fRes.data || []) as any[]);
