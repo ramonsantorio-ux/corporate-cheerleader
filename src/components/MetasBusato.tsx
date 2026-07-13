@@ -455,11 +455,11 @@ export default function MetasBusato() {
           </div>
           <CardContent className="p-6 relative z-10">
             <div className="flex justify-between items-start mb-2">
-              <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">Aderência Anual</p>
+              <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-400 uppercase tracking-wider">Consolidado Anual</p>
             </div>
             
             <div className="flex items-baseline gap-2">
-              <p className="text-5xl font-black text-indigo-600 dark:text-indigo-400">{aderenciaAnual.toFixed(1).replace('.', ',')}%</p>
+              <p className="text-6xl font-black text-indigo-600 dark:text-indigo-400">{aderenciaAnual.toFixed(1).replace('.', ',')}%</p>
             </div>
 
             <div className="w-full bg-indigo-500/20 h-2.5 mt-6 rounded-full overflow-hidden">
@@ -482,7 +482,7 @@ export default function MetasBusato() {
           <div className="absolute top-0 left-0 w-1.5 h-full bg-primary" />
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-2">
-              <p className="text-sm font-semibold text-primary/80 uppercase tracking-wider">Atingimento Global ({selectedMonth})</p>
+              <p className="text-sm font-semibold text-primary/80 uppercase tracking-wider">Consolidado Mensal ({selectedMonth})</p>
               {!isEditingGlobal ? (
                 <Button variant="ghost" size="icon" className="h-6 w-6 text-primary hover:bg-primary/10 -mt-1 -mr-1" onClick={() => { setEditGlobalScore(data.atingido.toString()); setIsEditingGlobal(true); }}>
                   <Edit2 className="w-3.5 h-3.5" />
