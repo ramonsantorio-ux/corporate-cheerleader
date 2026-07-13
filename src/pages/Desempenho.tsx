@@ -172,54 +172,7 @@ export default function Desempenho() {
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Liderança & Gestão</p>
           <h1 className="text-2xl font-bold text-foreground">Painel do Gestor</h1>
         </div>
-        {activeTab === 'ciclos' && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild><Button size="sm"><Plus className="w-4 h-4 mr-2" />Novo Ciclo</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Criar Ciclo de Avaliação</DialogTitle></DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div><Label>Nome do Ciclo</Label><FastInput value={newCycle.name} onValueChange={v => setNewCycle({ ...newCycle, name: v })} placeholder="Ex: Avaliação Trimestral Q1 2026" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Início</Label><Input type="date" value={newCycle.start_date} onChange={e => setNewCycle({ ...newCycle, start_date: e.target.value })} /></div>
-                  <div><Label>Fim</Label><Input type="date" value={newCycle.end_date} onChange={e => setNewCycle({ ...newCycle, end_date: e.target.value })} /></div>
-                </div>
-                <div>
-                  <Label className="mb-3 block">Cargos Elegíveis para 9-Box</Label>
-                  <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto p-1">
-                    {uniqueRoles.length > 0 ? uniqueRoles.map(role => {
-                      const isSelected = newCycle.eligible_roles.includes(role);
-                      return (
-                        <button
-                          key={role}
-                          onClick={() => {
-                            setNewCycle(prev => ({
-                              ...prev,
-                              eligible_roles: isSelected
-                                ? prev.eligible_roles.filter(r => r !== role)
-                                : [...prev.eligible_roles, role]
-                            }));
-                          }}
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
-                            isSelected 
-                              ? 'bg-primary text-primary-foreground border-primary' 
-                              : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
-                          }`}
-                        >
-                          {role}
-                        </button>
-                      );
-                    }) : (
-                      <p className="text-xs text-muted-foreground">Nenhum cargo encontrado na base de colaboradores.</p>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground mt-2">Clique nos cargos para selecionar quais participarão do 9-Box neste ciclo.</p>
-                </div>
-                <p className="text-xs text-muted-foreground">Tipos: Trimestral (2x ao semestre) e Anual</p>
-                <Button onClick={createCycle} className="w-full">Criar Ciclo</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+
       </motion.div>
 
       {/* Tabs */}
@@ -341,6 +294,60 @@ export default function Desempenho() {
 
         {/* ═══ CICLOS ═══ */}
         <TabsContent value="ciclos" className="space-y-6 mt-4">
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-2">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Ciclos de Avaliação</h1>
+              <p className="text-muted-foreground text-sm mt-1">Gerenciamento de períodos de avaliação</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild><Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"><Plus className="w-4 h-4 mr-2" />Novo Ciclo</Button></DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Criar Ciclo de Avaliação</DialogTitle></DialogHeader>
+                  <div className="space-y-4 pt-2">
+                    <div><Label>Nome do Ciclo</Label><FastInput value={newCycle.name} onValueChange={v => setNewCycle({ ...newCycle, name: v })} placeholder="Ex: Avaliação Trimestral Q1 2026" /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label>Início</Label><Input type="date" value={newCycle.start_date} onChange={e => setNewCycle({ ...newCycle, start_date: e.target.value })} /></div>
+                      <div><Label>Fim</Label><Input type="date" value={newCycle.end_date} onChange={e => setNewCycle({ ...newCycle, end_date: e.target.value })} /></div>
+                    </div>
+                    <div>
+                      <Label className="mb-3 block">Cargos Elegíveis para 9-Box</Label>
+                      <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto p-1">
+                        {uniqueRoles.length > 0 ? uniqueRoles.map(role => {
+                          const isSelected = newCycle.eligible_roles.includes(role);
+                          return (
+                            <button
+                              key={role}
+                              onClick={() => {
+                                setNewCycle(prev => ({
+                                  ...prev,
+                                  eligible_roles: isSelected
+                                    ? prev.eligible_roles.filter(r => r !== role)
+                                    : [...prev.eligible_roles, role]
+                                }));
+                              }}
+                              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
+                                isSelected 
+                                  ? 'bg-primary text-primary-foreground border-primary' 
+                                  : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                              }`}
+                            >
+                              {role}
+                            </button>
+                          );
+                        }) : (
+                          <p className="text-xs text-muted-foreground">Nenhum cargo encontrado na base de colaboradores.</p>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-2">Clique nos cargos para selecionar quais participarão do 9-Box neste ciclo.</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Tipos: Trimestral (2x ao semestre) e Anual</p>
+                    <Button onClick={createCycle} className="w-full">Criar Ciclo</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </motion.div>
           <PeriodFilter value={period} onChange={setPeriod} />
 
           {/* KPIs */}
