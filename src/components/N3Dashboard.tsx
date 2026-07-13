@@ -627,15 +627,11 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                           const tot = Number(row.total_verificacoes) || 0;
                           const nc = Number(row.verificacoes_nc) || 0;
                           
-                          if (periodo >= '2026-07') {
-                            const maxScore = meta * 2;
-                            // Capped to prevent getting 100% just by doing one side
-                            const validTot = Math.min(tot, meta);
-                            const validNc = Math.min(nc, meta);
-                            pctNC = Number((((validTot + validNc) / maxScore) * 100).toFixed(0));
-                          } else {
-                            pctNC = tot > 0 ? Number(((nc / tot) * 100).toFixed(0)) : 0;
-                          }
+                          const maxScore = meta * 2;
+                          // Capped to prevent getting 100% just by doing one side
+                          const validTot = Math.min(tot, meta);
+                          const validNc = Math.min(nc, meta);
+                          pctNC = Number((((validTot + validNc) / maxScore) * 100).toFixed(0));
                           
                           const isCritical = Number(pctNC) < 50;
                           const isWarning = Number(pctNC) >= 50 && Number(pctNC) < 80;
