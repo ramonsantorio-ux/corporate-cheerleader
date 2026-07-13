@@ -477,25 +477,26 @@ interface NotificacaoGlobal {
   solicitante: string;
 }
 
+const monthMap: Record<string, number> = { 
+  'Jan': 0, 'Janeiro': 0, 
+  'Fev': 1, 'Fevereiro': 1, 
+  'Mar': 2, 'Março': 2, 
+  'Abr': 3, 'Abril': 3, 
+  'Mai': 4, 'Maio': 4, 
+  'Jun': 5, 'Junho': 5, 
+  'Jul': 6, 'Julho': 6, 
+  'Ago': 7, 'Agosto': 7, 
+  'Set': 8, 'Setembro': 8, 
+  'Out': 9, 'Outubro': 9, 
+  'Nov': 10, 'Novembro': 10, 
+  'Dez': 11, 'Dezembro': 11 
+};
+
 const isDateInMedicaoMonth = (dateStr: string, medicaoMes: string) => {
   const [day, month, year] = dateStr.split('/');
   if (!day || !month || !year) return false;
   const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
   
-  const monthMap: Record<string, number> = { 
-    'Jan': 0, 'Janeiro': 0, 
-    'Fev': 1, 'Fevereiro': 1, 
-    'Mar': 2, 'Março': 2, 
-    'Abr': 3, 'Abril': 3, 
-    'Mai': 4, 'Maio': 4, 
-    'Jun': 5, 'Junho': 5, 
-    'Jul': 6, 'Julho': 6, 
-    'Ago': 7, 'Agosto': 7, 
-    'Set': 8, 'Setembro': 8, 
-    'Out': 9, 'Outubro': 9, 
-    'Nov': 10, 'Novembro': 10, 
-    'Dez': 11, 'Dezembro': 11 
-  };
   const [mName, mYear] = medicaoMes.split('/');
   if (!mName || !mYear) return false;
   
