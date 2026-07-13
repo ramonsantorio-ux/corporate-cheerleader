@@ -344,7 +344,7 @@ export default function MetasBusato() {
 
   const meses = MESES;
 
-  const [selectedMonth, setSelectedMonth] = useState<string>('Maio');
+  const [selectedMonth, setSelectedMonth] = useState<string>(MESES[new Date().getMonth()]);
   const [isExporting, setIsExporting] = useState(false);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const data = METAS_DATA[selectedMonth as keyof typeof METAS_DATA];
