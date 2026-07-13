@@ -34,8 +34,10 @@ const renderActiveShape = (props: any) => {
 
   return (
     <g>
-      <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} className="text-xl font-black">
-        {payload.name.split(' ')[0]}
+      <text x={cx} y={cy - ((payload.name.split(' ').length - 1) * 11)} textAnchor="middle" fill={fill} className="text-base font-black uppercase">
+        {payload.name.split(' ').map((word: string, i: number) => (
+          <tspan x={cx} dy={i === 0 ? 0 : 22} key={i}>{word}</tspan>
+        ))}
       </text>
       <Sector
         cx={cx}
@@ -69,6 +71,11 @@ export function FrotaHabitual() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   const totalEquipamentos = FROTA_PORTO.reduce((acc, curr) => acc + curr.equipamentos.length, 0);
+  const tpmCount = FROTA_PORTO.reduce((acc, curr) => acc + curr.equipamentos.filter(e => e.includes('TPM')).length, 0);
+  const mfeCount = FROTA_PORTO.reduce((acc, curr) => acc + curr.equipamentos.filter(e => e.includes('MFE')).length, 0);
+  
+  const tpmPerc = ((tpmCount / totalEquipamentos) * 100).toFixed(1);
+  const mfePerc = ((mfeCount / totalEquipamentos) * 100).toFixed(1);
 
   const chartData = FROTA_PORTO.map((item, index) => ({
     name: item.grupo,
@@ -89,6 +96,40 @@ export function FrotaHabitual() {
           Distribuição e relação dos <strong className="text-primary">{totalEquipamentos}</strong> equipamentos que compõem a frota.
         </CardDescription>
       </CardHeader>
+      
+      {/* NOVO PAINEL PREMIUM MFE VS TPM */}
+      <div className="px-8 pt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="bg-gradient-to-br from-indigo-500/10 to-indigo-600/10 border-none shadow-sm flex relative overflow-hidden transition-all hover:shadow-md">
+             <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-500" />
+             <CardContent className="p-6 w-full flex flex-col justify-center">
+               <p className="text-sm font-bold uppercase tracking-wider text-indigo-700/80 mb-1">MFE - Minério de Ferro</p>
+               <div className="flex justify-between items-end">
+                  <p className="text-5xl font-black text-indigo-600">{mfeCount} <span className="text-xl font-bold text-indigo-600/50">unid.</span></p>
+                  <p className="text-3xl font-black text-indigo-600/80">{mfePerc}%</p>
+               </div>
+               <div className="w-full bg-indigo-500/20 h-2.5 mt-5 rounded-full overflow-hidden">
+                 <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${mfePerc}%` }} />
+               </div>
+             </CardContent>
+          </Card>
+          
+          <Card className="bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 border-none shadow-sm flex relative overflow-hidden transition-all hover:shadow-md">
+             <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+             <CardContent className="p-6 w-full flex flex-col justify-center">
+               <p className="text-sm font-bold uppercase tracking-wider text-emerald-700/80 mb-1">TPM - Carvão</p>
+               <div className="flex justify-between items-end">
+                  <p className="text-5xl font-black text-emerald-600">{tpmCount} <span className="text-xl font-bold text-emerald-600/50">unid.</span></p>
+                  <p className="text-3xl font-black text-emerald-600/80">{tpmPerc}%</p>
+               </div>
+               <div className="w-full bg-emerald-500/20 h-2.5 mt-5 rounded-full overflow-hidden">
+                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${tpmPerc}%` }} />
+               </div>
+             </CardContent>
+          </Card>
+        </div>
+      </div>
+
       <CardContent className="grid grid-cols-1 xl:grid-cols-2 gap-10 h-full p-8">
         {/* Gráfico Premium */}
         <div className="flex flex-col h-[500px] w-full items-center justify-center relative bg-slate-50/50 rounded-2xl border border-slate-100 p-4">
