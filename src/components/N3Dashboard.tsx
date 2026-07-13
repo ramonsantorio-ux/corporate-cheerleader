@@ -123,7 +123,7 @@ export default function N3Dashboard() {
   const getMeta = (nome: string) => {
     const nomeLower = nome.toLowerCase();
     if (nomeLower.includes('ramon') || nomeLower.includes('eduardo')) return 15;
-    return 35;
+    return 40;
   };
   const [data, setData] = useState<N3Data[]>([]);
   const [historicalData, setHistoricalData] = useState<N3Data[]>([]);
@@ -677,7 +677,7 @@ export default function N3Dashboard() {
                       contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.9)', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     />
                     <Legend />
-                    <ReferenceLine y={140} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (140)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
+                    <ReferenceLine y={160} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (160)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
                     <Area type="monotone" dataKey="Total Verificações" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorVerif)">
                       <LabelList dataKey="Total Verificações" position="top" fill="#3b82f6" fontSize={11} fontWeight="bold" />
                     </Area>
@@ -702,7 +702,7 @@ export default function N3Dashboard() {
                     <YAxis axisLine={false} tickLine={false} fontSize={12} />
                     <RechartsTooltip cursor={{ stroke: 'rgba(0,0,0,0.1)', strokeWidth: 2 }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                    <ReferenceLine y={35} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (35)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
+                    <ReferenceLine y={40} ifOverflow="extendDomain" stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: 'Meta N3 (40)', fill: '#ef4444', fontSize: 12, fontWeight: 'bold' }} />
                     {uniqueNames.map((name, idx) => (
                       <Line key={name} type="monotone" dataKey={name} stroke={colors[idx % colors.length]} strokeWidth={2} dot={{ r: 4 }}>
                         <LabelList dataKey={name} position="top" fill={colors[idx % colors.length]} fontSize={11} fontWeight="bold" />
