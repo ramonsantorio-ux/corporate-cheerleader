@@ -95,7 +95,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
           type="number" min="0" 
           value={row.verificacoes_nc || ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc', e.target.value)}
-          className={`${inputStyle} text-center text-emerald-600 font-bold`}
+          className={`h-9 text-center font-bold border-transparent hover:border-border focus:border-primary rounded-xl transition-all ${badgeClass}`}
         />
       </TableCell>
       <TableCell className="p-2 text-center">
@@ -108,7 +108,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
           type="number" min="0" 
           value={row.perguntas_nc || ''} 
           onChange={(e) => handleChange(idx, 'perguntas_nc', e.target.value)}
-          className={`${inputStyle} text-center text-emerald-600 font-bold`}
+          className={`h-9 text-center font-bold border-transparent hover:border-border focus:border-primary rounded-xl transition-all ${badgeClass}`}
         />
       </TableCell>
       <TableCell className="p-2 text-center">
@@ -621,6 +621,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                         perguntasNc: acc.perguntasNc + Number(curr.perguntas_nc || 0)
                       }), { verificacoes: 0, treinamentos: 0, assistencia: 0, ncs: 0, perguntasNc: 0 });
                       const pctNc = totals.verificacoes > 0 ? ((totals.ncs / totals.verificacoes) * 100).toFixed(1) : "0.0";
+                      const totalsBadgeClass = Number(pctNc) < 50 ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : Number(pctNc) < 80 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400';
                       
                       return (
                         <TableRow className="bg-slate-100 dark:bg-slate-800/50 font-bold hover:bg-slate-100 dark:hover:bg-slate-800/50">
@@ -628,13 +629,21 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                           <TableCell className="text-center p-4">{totals.verificacoes}</TableCell>
                           <TableCell className="text-center p-4">{totals.treinamentos}</TableCell>
                           <TableCell className="text-center p-4">{totals.assistencia}</TableCell>
-                          <TableCell className="text-center p-4 text-emerald-600">{totals.ncs}</TableCell>
                           <TableCell className="text-center p-4">
-                            <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${Number(pctNc) < 50 ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : Number(pctNc) < 80 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'}`}>
+                            <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold ${totalsBadgeClass}`}>
+                              {totals.ncs}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center p-4">
+                            <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${totalsBadgeClass}`}>
                               {pctNc}%
                             </div>
                           </TableCell>
-                          <TableCell className="text-center p-4 text-emerald-600">{totals.perguntasNc}</TableCell>
+                          <TableCell className="text-center p-4">
+                            <div className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-bold ${totalsBadgeClass}`}>
+                              {totals.perguntasNc}
+                            </div>
+                          </TableCell>
                           <TableCell></TableCell>
                         </TableRow>
                       );
