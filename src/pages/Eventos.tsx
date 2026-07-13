@@ -130,7 +130,7 @@ export default function Eventos() {
   }, [period]);
 
   async function fetchHistoricalEvolution() {
-    const { data } = await supabase.from('events').select('event_date, shift, categoria_evento, location, atendimento_medico, atestado, afastamento, cid');
+    const { data } = await supabase.from('events').select('*');
     if (data) {
       setHistoricalEvolution(data);
     }
@@ -1268,7 +1268,6 @@ export default function Eventos() {
                       <option value="A Noite">A Noite</option>
                       <option value="B Dia">B Dia</option>
                       <option value="B Noite">B Noite</option>
-                      <option value="ADM">ADM</option>
                     </select>
                   </div>
                 </div>
