@@ -46,12 +46,14 @@ export default function Sucessao() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-[1200px] mx-auto space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Plano de Sucessão (Matriz 9-Box)</h1>
-        <p className="text-muted-foreground mt-2">
-          Avaliação estratégica de talentos baseada em Desempenho (Eixo X) e Potencial (Eixo Y). Clique nos quadros para ver detalhes.
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Plano de Sucessão (Matriz 9-Box)</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Avaliação estratégica de talentos baseada em Desempenho e Potencial
+          </p>
+        </div>
       </div>
 
       <div className="flex justify-center mt-12">

@@ -344,7 +344,7 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
         </div>
         <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Novo PDI</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"><Plus className="w-4 h-4 mr-2" /> Novo PDI</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Criar PDI</DialogTitle></DialogHeader>

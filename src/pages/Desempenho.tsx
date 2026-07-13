@@ -235,6 +235,13 @@ export default function Desempenho() {
 
         {/* ═══ VISÃO GERAL ═══ */}
         <TabsContent value="visao-geral" className="space-y-6 mt-4">
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-2">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Visão da Equipe</h1>
+              <p className="text-muted-foreground text-sm mt-1">Panorama geral de talentos, sucessão e riscos do seu time</p>
+            </div>
+          </motion.div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <Card className="border-l-4 border-l-blue-500 shadow-sm">
               <CardHeader className="pb-2">
