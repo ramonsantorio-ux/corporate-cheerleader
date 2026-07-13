@@ -18,13 +18,13 @@ import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, 
 interface N3Data {
   id?: string;
   nome_email: string;
+  cargo?: string;
   letra?: string;
   periodo: string;
   total_verificacoes: number;
   total_treinamentos: number;
   total_assistencia: number;
   verificacoes_nc: number;
-  perguntas_nc: number;
 }
 
 const DEFAULT_NAMES = [
@@ -55,7 +55,15 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
           value={row.nome_email} 
           onChange={(e) => handleChange(idx, 'nome_email', e.target.value)}
           className={inputStyle}
-          placeholder="Nome do colaborador"
+          placeholder="Nome"
+        />
+      </TableCell>
+      <TableCell className="p-2">
+        <Input 
+          value={row.cargo || ''} 
+          onChange={(e) => handleChange(idx, 'cargo', e.target.value)}
+          className={inputStyle}
+          placeholder="Cargo"
         />
       </TableCell>
       <TableCell className="p-2">
@@ -103,13 +111,10 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
           {pctNC}%
         </div>
       </TableCell>
-      <TableCell className="p-2">
-        <Input 
-          type="number" min="0" 
-          value={row.perguntas_nc || ''} 
-          onChange={(e) => handleChange(idx, 'perguntas_nc', e.target.value)}
-          className={`h-9 text-center font-bold border-transparent hover:border-border focus:border-primary rounded-xl transition-all ${badgeClass}`}
-        />
+      <TableCell className="p-2 text-center">
+        <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
+          {pctNC}%
+        </div>
       </TableCell>
       <TableCell className="p-2 text-center">
         <Button variant="ghost" size="icon" onClick={() => handleRemoveRow(idx)} className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-colors">
@@ -125,9 +130,12 @@ interface N3DashboardProps {
 }
 
 export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
-  const getMeta = (nome: string) => {
-    const nomeLower = nome.toLowerCase();
-    if (nomeLower.includes('ramon') || nomeLower.includes('eduardo')) return 15;
+  const getMeta = (cargo?: string) => {
+    if (!cargo) return 40;
+    const c = cargo.toLowerCase();
+    if (c.includes('técnico de segurança')) return 45;
+    if (c.includes('supervisor de campo')) return 20;
+    if (c.includes('gerente')) return 10;
     return 40;
   };
   const [data, setData] = useState<N3Data[]>([]);
@@ -191,13 +199,24 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         console.error('Tabela n3 não existe ou erro ao buscar. Iniciando com dados locais.');
         initMockData();
       } else {
-        setHistoricalData(allData || []);
+        const { data: emps } = await supabase.from('funcionarios').select('nome, cargo');
+        const cargoMap = (emps || []).reduce((acc: any, e: any) => {
+          if (e.nome) acc[e.nome.toUpperCase().trim()] = e.cargo;
+          return acc;
+        }, {});
+
+        const allDataWithCargo = (allData || []).map((d: any) => ({
+          ...d,
+          cargo: d.cargo || cargoMap[(d.nome_email || '').toUpperCase().trim()] || ''
+        }));
+
+        setHistoricalData(allDataWithCargo);
         
         // Filter for current period
         
         let currentPeriodData = [];
         if (periodo === 'all') {
-          const aggregated = (allData || []).reduce((acc: any, curr: any) => {
+          const aggregated = allDataWithCargo.reduce((acc: any, curr: any) => {
             const key = curr.nome_email;
             if (!acc[key]) {
               acc[key] = { ...curr, id: key, periodo: 'all', total_verificacoes: 0, total_treinamentos: 0, total_assistencia: 0, verificacoes_nc: 0, perguntas_nc: 0 };
@@ -206,32 +225,31 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
             acc[key].total_treinamentos += Number(curr.total_treinamentos || 0);
             acc[key].total_assistencia += Number(curr.total_assistencia || 0);
             acc[key].verificacoes_nc += Number(curr.verificacoes_nc || 0);
-            acc[key].perguntas_nc += Number(curr.perguntas_nc || 0);
             return acc;
           }, {});
           currentPeriodData = Object.values(aggregated);
         } else {
-          currentPeriodData = (allData || []).filter((d: any) => d.periodo === periodo);
+          currentPeriodData = allDataWithCargo.filter((d: any) => d.periodo === periodo);
         }
 
         if (currentPeriodData.length > 0) {
           setData(currentPeriodData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)).map((d: any) => ({ ...d, id: d.id || Math.random().toString(36).substring(2, 9) })));
         } else {
           // Automatic pull
-          const pastPeriods = Array.from(new Set((allData || []).map((d: any) => d.periodo))).filter((p: any) => p < periodo).sort();
+          const pastPeriods = Array.from(new Set(allDataWithCargo.map((d: any) => d.periodo))).filter((p: any) => p < periodo).sort();
           const lastPeriod = pastPeriods.pop();
           if (lastPeriod && periodo !== 'all') {
-            const lastPeriodData = (allData || []).filter((d: any) => d.periodo === lastPeriod);
+            const lastPeriodData = allDataWithCargo.filter((d: any) => d.periodo === lastPeriod);
             const initialData = lastPeriodData.map((d: any) => ({
               id: Math.random().toString(36).substring(2, 9),
               nome_email: d.nome_email,
+              cargo: d.cargo,
               letra: d.letra,
               periodo: periodo,
               total_verificacoes: 0,
               total_treinamentos: 0,
               total_assistencia: 0,
-              verificacoes_nc: 0,
-              perguntas_nc: 0
+              verificacoes_nc: 0
             }));
             setData(initialData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)));
           } else {
@@ -255,8 +273,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         total_verificacoes: 0,
         total_treinamentos: 0,
         total_assistencia: 0,
-        verificacoes_nc: 0,
-        perguntas_nc: 0
+        verificacoes_nc: 0
       }))
     );
   };
@@ -280,8 +297,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       total_verificacoes: 0,
       total_treinamentos: 0,
       total_assistencia: 0,
-      verificacoes_nc: 0,
-      perguntas_nc: 0
+      verificacoes_nc: 0
     }]);
   };
 
@@ -304,8 +320,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
           total_verificacoes: d.total_verificacoes,
           total_treinamentos: d.total_treinamentos,
           total_assistencia: d.total_assistencia,
-          verificacoes_nc: d.verificacoes_nc,
-          perguntas_nc: d.perguntas_nc
+          verificacoes_nc: d.verificacoes_nc
         }))
       );
 
@@ -334,7 +349,6 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         total_treinamentos: Number(row['TOTAL TREINAMENTOS'] || row['Total Treinamentos'] || 0),
         total_assistencia: Number(row['TOTAL ASSISTÊNCIA'] || row['Total Assistência'] || 0),
         verificacoes_nc: Number(row['VERIFICAÇÕES NÃO CONFORMES'] || row['Verificações NC'] || 0),
-        perguntas_nc: Number(row['PERGUNTAS COM NÃO CONFORMIDADES'] || row['Perguntas NC'] || 0),
       }));
 
       if (importedData.length > 0) {
@@ -357,8 +371,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         'TOTAL VERIFICAÇÕES': 1,
         'TOTAL TREINAMENTOS': 1,
         'TOTAL ASSISTÊNCIA': 0,
-        'VERIFICAÇÕES NÃO CONFORMES': 1,
-        'PERGUNTAS COM NÃO CONFORMIDADES': 1
+        'VERIFICAÇÕES NÃO CONFORMES': 1
       }
     ];
     await writeExcelFile(templateData as Record<string, unknown>[], 'Modelo_Importacao_N3.xlsx', 'N3_Template');
@@ -376,8 +389,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       verificacoes: 0,
       treinamentos: 0,
       assistencia: 0,
-      ncs: 0,
-      perguntasNc: 0
+      ncs: 0
     };
 
     filteredHistoricalData.forEach(d => {
@@ -385,7 +397,6 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       totais.treinamentos += Number(d.total_treinamentos || 0);
       totais.assistencia += Number(d.total_assistencia || 0);
       totais.ncs += Number(d.verificacoes_nc || 0);
-      totais.perguntasNc += Number(d.perguntas_nc || 0);
     });
 
     const pctNc = totais.verificacoes > 0 ? ((totais.ncs / totais.verificacoes) * 100).toFixed(1) : '0.0';
@@ -573,23 +584,30 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-10"></TableHead>
-                        <TableHead className="min-w-[180px]">NOME-EMAIL</TableHead>
+                        <TableHead className="min-w-[180px]">NOME</TableHead>
+                        <TableHead>CARGO</TableHead>
                         <TableHead>LETRA</TableHead>
                         <TableHead>T. VERIFICAÇÕES</TableHead>
                         <TableHead>T. TREINAMENTOS</TableHead>
                         <TableHead>T. ASSISTÊNCIA</TableHead>
                         <TableHead>VERIFICAÇÕES NC</TableHead>
                         <TableHead>% NC</TableHead>
-                        <TableHead>PERGUNTAS NC</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       <SortableContext items={data.map(d => d.id || '')} strategy={verticalListSortingStrategy}>
                         {data.map((row, idx) => {
-                          const pctNC = row.total_verificacoes > 0 
-                            ? ((row.verificacoes_nc / row.total_verificacoes) * 100).toFixed(0) 
-                            : 0;
+                          let pctNC = 0;
+                          const meta = getMeta(row.cargo);
+                          const tot = Number(row.total_verificacoes) || 0;
+                          const nc = Number(row.verificacoes_nc) || 0;
+                          
+                          if (periodo >= '2026-07') {
+                            pctNC = Number((((tot + nc) / meta) * 100).toFixed(0));
+                          } else {
+                            pctNC = tot > 0 ? Number(((nc / tot) * 100).toFixed(0)) : 0;
+                          }
                           
                           const isCritical = Number(pctNC) < 50;
                           const isWarning = Number(pctNC) >= 50 && Number(pctNC) < 80;
