@@ -170,6 +170,15 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     }
   };
 
+  const handleSortByNC = () => {
+    const sorted = [...data].sort((a: any, b: any) => {
+      const diff = Number(b.verificacoes_nc || 0) - Number(a.verificacoes_nc || 0);
+      return diff !== 0 ? diff : (a.nome_email || '').localeCompare(b.nome_email || '');
+    });
+    setData(sorted);
+    toast.success('Lista atualizada pelo ranking de Verificações NC!');
+  };
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -244,7 +253,11 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         }
 
         if (currentPeriodData.length > 0) {
-          setData(currentPeriodData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)).map((d: any) => ({ ...d, id: d.id || Math.random().toString(36).substring(2, 9) })));
+          const sorted = currentPeriodData.sort((a: any, b: any) => {
+            const diff = Number(b.verificacoes_nc || 0) - Number(a.verificacoes_nc || 0);
+            return diff !== 0 ? diff : (a.nome_email || '').localeCompare(b.nome_email || '');
+          });
+          setData(sorted.map((d: any) => ({ ...d, id: d.id || Math.random().toString(36).substring(2, 9) })));
         } else {
           // Automatic pull
           const pastPeriods = Array.from(new Set(allDataWithCargo.map((d: any) => d.periodo))).filter((p: any) => p < periodo).sort();
@@ -585,6 +598,10 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-2 text-xs cursor-pointer">
                       <Upload className="w-4 h-4" /> Importar Planilha
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSortByNC} className="gap-2 text-xs cursor-pointer">
+                      <BarChart3 className="w-4 h-4" /> Ordenar por Maior NC
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleClearMonth} disabled={deleting} className="gap-2 text-xs text-rose-600 focus:bg-rose-50 focus:text-rose-700 cursor-pointer">
