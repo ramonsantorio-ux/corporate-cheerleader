@@ -259,26 +259,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
           });
           setData(sorted.map((d: any) => ({ ...d, id: d.id || Math.random().toString(36).substring(2, 9) })));
         } else {
-          // Automatic pull
-          const pastPeriods = Array.from(new Set(allDataWithCargo.map((d: any) => d.periodo))).filter((p: any) => p < periodo).sort();
-          const lastPeriod = pastPeriods.pop();
-          if (lastPeriod && periodo !== 'all') {
-            const lastPeriodData = allDataWithCargo.filter((d: any) => d.periodo === lastPeriod);
-            const initialData = lastPeriodData.map((d: any) => ({
-              id: Math.random().toString(36).substring(2, 9),
-              nome_email: d.nome_email,
-              cargo: d.cargo,
-              letra: d.letra,
-              periodo: periodo,
-              total_verificacoes: 0,
-              total_treinamentos: 0,
-              total_assistencia: 0,
-              verificacoes_nc: 0
-            }));
-            setData(initialData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)));
-          } else {
-            initMockData(cargoMap);
-          }
+          // Começar o mês em branco se não houver lançamentos
+          setData([]);
         }
       }
     } catch (e) {
