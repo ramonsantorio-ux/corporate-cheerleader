@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash, Copy } from 'lucide-react';
+import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash, Copy, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { readExcelRows, writeExcelFile } from '@/lib/excel';
 import ExpandableChart from './ExpandableChart';
 import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend, LabelList } from 'recharts';
@@ -29,6 +32,92 @@ const DEFAULT_NAMES = [
   { nome: 'NAIARA SANTOS', letra: 'B Dia' },
   { nome: 'THIAGO GOMES', letra: 'B Noite' }
 ];
+
+function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctNC, inputStyle }: any) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    ...(isDragging ? { position: 'relative' as any, zIndex: 50, backgroundColor: 'var(--background)' } : {}),
+  };
+
+  return (
+    <TableRow ref={setNodeRef} style={style} className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors border-b border-border/50 ${isDragging ? 'shadow-lg opacity-90' : ''}`}>
+      <TableCell className="p-2 w-10 text-center">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-slate-200 dark:hover:bg-slate-800 p-1.5 rounded-md text-slate-400 hover:text-slate-600 transition-colors inline-flex touch-none">
+          <GripVertical className="w-4 h-4" />
+        </div>
+      </TableCell>
+      <TableCell className="p-2">
+        <Input 
+          value={row.nome_email} 
+          onChange={(e) => handleChange(idx, 'nome_email', e.target.value)}
+          className={inputStyle}
+          placeholder="Nome do colaborador"
+        />
+      </TableCell>
+      <TableCell className="p-2">
+        <Input 
+          value={row.letra || ''} 
+          onChange={(e) => handleChange(idx, 'letra', e.target.value)}
+          className={`${inputStyle} w-24 text-center font-semibold text-slate-700 dark:text-slate-300`}
+          placeholder="Letra"
+        />
+      </TableCell>
+      <TableCell className="p-2">
+        <Input 
+          type="number" min="0" 
+          value={row.total_verificacoes || ''} 
+          onChange={(e) => handleChange(idx, 'total_verificacoes', e.target.value)}
+          className={`${inputStyle} text-center`}
+        />
+      </TableCell>
+      <TableCell className="p-2">
+        <Input 
+          type="number" min="0" 
+          value={row.total_treinamentos || ''} 
+          onChange={(e) => handleChange(idx, 'total_treinamentos', e.target.value)}
+          className={`${inputStyle} text-center`}
+        />
+      </TableCell>
+      <TableCell className="p-2">
+        <Input 
+          type="number" min="0" 
+          value={row.total_assistencia || ''} 
+          onChange={(e) => handleChange(idx, 'total_assistencia', e.target.value)}
+          className={`${inputStyle} text-center`}
+        />
+      </TableCell>
+      <TableCell className="p-2">
+        <Input 
+          type="number" min="0" 
+          value={row.verificacoes_nc || ''} 
+          onChange={(e) => handleChange(idx, 'verificacoes_nc', e.target.value)}
+          className={`${inputStyle} text-center text-rose-600 font-bold`}
+        />
+      </TableCell>
+      <TableCell className="p-2 text-center">
+        <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
+          {pctNC}%
+        </div>
+      </TableCell>
+      <TableCell className="p-2">
+        <Input 
+          type="number" min="0" 
+          value={row.perguntas_nc || ''} 
+          onChange={(e) => handleChange(idx, 'perguntas_nc', e.target.value)}
+          className={`${inputStyle} text-center text-rose-600 font-bold`}
+        />
+      </TableCell>
+      <TableCell className="p-2 text-center">
+        <Button variant="ghost" size="icon" onClick={() => handleRemoveRow(idx)} className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-colors">
+          <Trash className="w-4 h-4" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 export default function N3Dashboard() {
   const getMeta = (nome: string) => {
@@ -62,6 +151,24 @@ export default function N3Dashboard() {
     }
   };
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active && over && active.id !== over.id) {
+      setData((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -103,7 +210,7 @@ export default function N3Dashboard() {
         }
 
         if (currentPeriodData.length > 0) {
-          setData(currentPeriodData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)));
+          setData(currentPeriodData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)).map((d: any) => ({ ...d, id: d.id || Math.random().toString(36).substring(2, 9) })));
         } else {
           // Automatic pull
           const pastPeriods = Array.from(new Set((allData || []).map((d: any) => d.periodo))).filter((p: any) => p < periodo).sort();
@@ -111,6 +218,7 @@ export default function N3Dashboard() {
           if (lastPeriod && periodo !== 'all') {
             const lastPeriodData = (allData || []).filter((d: any) => d.periodo === lastPeriod);
             const initialData = lastPeriodData.map((d: any) => ({
+              id: Math.random().toString(36).substring(2, 9),
               nome_email: d.nome_email,
               letra: d.letra,
               periodo: periodo,
@@ -142,6 +250,7 @@ export default function N3Dashboard() {
       const newRows = lastPeriodData
         .filter((d: any) => !existingNames.has(d.nome_email.toLowerCase().trim()))
         .map((d: any) => ({
+          id: Math.random().toString(36).substring(2, 9),
           nome_email: d.nome_email,
           letra: d.letra,
           periodo: periodo,
@@ -166,6 +275,7 @@ export default function N3Dashboard() {
   const initMockData = () => {
     setData(
       DEFAULT_NAMES.map(colab => ({
+        id: Math.random().toString(36).substring(2, 9),
         nome_email: colab.nome,
         letra: colab.letra,
         periodo,
@@ -190,6 +300,7 @@ export default function N3Dashboard() {
 
   const handleAddRow = () => {
     setData([...data, {
+      id: Math.random().toString(36).substring(2, 9),
       nome_email: '',
       letra: '',
       periodo,
@@ -470,104 +581,50 @@ export default function N3Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="min-w-[180px]">NOME-EMAIL</TableHead>
-                      <TableHead>LETRA</TableHead>
-                      <TableHead>T. VERIFICAÇÕES</TableHead>
-                      <TableHead>T. TREINAMENTOS</TableHead>
-                      <TableHead>T. ASSISTÊNCIA</TableHead>
-                      <TableHead>VERIFICAÇÕES NC</TableHead>
-                      <TableHead>% NC</TableHead>
-                      <TableHead>PERGUNTAS NC</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.map((row, idx) => {
-                      const pctNC = row.total_verificacoes > 0 
-                        ? ((row.verificacoes_nc / row.total_verificacoes) * 100).toFixed(0) 
-                        : 0;
-                      
-                      const isCritical = Number(pctNC) > 20;
-                      const isWarning = Number(pctNC) > 0 && Number(pctNC) <= 20;
-                      const badgeClass = isCritical ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : isWarning ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400';
-                      
-                      const inputStyle = "h-9 font-medium bg-muted/30 border-transparent hover:border-border focus:bg-background focus:border-primary rounded-xl transition-all";
-                      
-                      return (
-                        <TableRow key={idx} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors border-b border-border/50">
-                          <TableCell className="p-2">
-                            <Input 
-                              value={row.nome_email} 
-                              onChange={(e) => handleChange(idx, 'nome_email', e.target.value)}
-                              className={inputStyle}
-                              placeholder="Nome do colaborador"
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-10"></TableHead>
+                        <TableHead className="min-w-[180px]">NOME-EMAIL</TableHead>
+                        <TableHead>LETRA</TableHead>
+                        <TableHead>T. VERIFICAÇÕES</TableHead>
+                        <TableHead>T. TREINAMENTOS</TableHead>
+                        <TableHead>T. ASSISTÊNCIA</TableHead>
+                        <TableHead>VERIFICAÇÕES NC</TableHead>
+                        <TableHead>% NC</TableHead>
+                        <TableHead>PERGUNTAS NC</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <SortableContext items={data.map(d => d.id || '')} strategy={verticalListSortingStrategy}>
+                        {data.map((row, idx) => {
+                          const pctNC = row.total_verificacoes > 0 
+                            ? ((row.verificacoes_nc / row.total_verificacoes) * 100).toFixed(0) 
+                            : 0;
+                          
+                          const isCritical = Number(pctNC) > 20;
+                          const isWarning = Number(pctNC) > 0 && Number(pctNC) <= 20;
+                          const badgeClass = isCritical ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : isWarning ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400';
+                          
+                          const inputStyle = "h-9 font-medium bg-muted/30 border-transparent hover:border-border focus:bg-background focus:border-primary rounded-xl transition-all";
+                          
+                          return (
+                            <SortableRow 
+                              key={row.id} 
+                              row={row} 
+                              idx={idx} 
+                              handleChange={handleChange} 
+                              handleRemoveRow={handleRemoveRow} 
+                              badgeClass={badgeClass} 
+                              pctNC={pctNC} 
+                              inputStyle={inputStyle} 
                             />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              value={row.letra || ''} 
-                              onChange={(e) => handleChange(idx, 'letra', e.target.value)}
-                              className={`${inputStyle} w-24 text-center font-semibold text-slate-700 dark:text-slate-300`}
-                              placeholder="Letra"
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              type="number" min="0" 
-                              value={row.total_verificacoes || ''} 
-                              onChange={(e) => handleChange(idx, 'total_verificacoes', e.target.value)}
-                              className={`${inputStyle} text-center`}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              type="number" min="0" 
-                              value={row.total_treinamentos || ''} 
-                              onChange={(e) => handleChange(idx, 'total_treinamentos', e.target.value)}
-                              className={`${inputStyle} text-center`}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              type="number" min="0" 
-                              value={row.total_assistencia || ''} 
-                              onChange={(e) => handleChange(idx, 'total_assistencia', e.target.value)}
-                              className={`${inputStyle} text-center`}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              type="number" min="0" 
-                              value={row.verificacoes_nc || ''} 
-                              onChange={(e) => handleChange(idx, 'verificacoes_nc', e.target.value)}
-                              className={`${inputStyle} text-center text-rose-600 font-bold`}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2 text-center">
-                            <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}`}>
-                              {pctNC}%
-                            </div>
-                          </TableCell>
-                          <TableCell className="p-2">
-                            <Input 
-                              type="number" min="0" 
-                              value={row.perguntas_nc || ''} 
-                              onChange={(e) => handleChange(idx, 'perguntas_nc', e.target.value)}
-                              className={`${inputStyle} text-center text-rose-600`}
-                            />
-                          </TableCell>
-                          <TableCell className="p-2 text-center">
-                            <Button variant="ghost" size="icon" onClick={() => handleRemoveRow(idx)} className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-colors">
-                              <Trash className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {(() => {
+                          );
+                        })}
+                      </SortableContext>
+                      {(() => {
                       if (data.length === 0 || periodo !== 'all') return null;
                       const totals = data.reduce((acc, curr) => ({
                         verificacoes: acc.verificacoes + Number(curr.total_verificacoes || 0),
@@ -595,8 +652,9 @@ export default function N3Dashboard() {
                         </TableRow>
                       );
                     })()}
-                  </TableBody>
-                </Table>
+                    </TableBody>
+                  </Table>
+                </DndContext>
               </div>
             </CardContent>
           </Card>
