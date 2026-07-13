@@ -591,8 +591,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                             ? ((row.verificacoes_nc / row.total_verificacoes) * 100).toFixed(0) 
                             : 0;
                           
-                          const isCritical = Number(pctNC) === 0;
-                          const isWarning = Number(pctNC) > 0 && Number(pctNC) <= 20;
+                          const isCritical = Number(pctNC) < 50;
+                          const isWarning = Number(pctNC) >= 50 && Number(pctNC) < 80;
                           const badgeClass = isCritical ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : isWarning ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400';
                           
                           const inputStyle = "h-9 font-medium bg-muted/30 border-transparent hover:border-border focus:bg-background focus:border-primary rounded-xl transition-all";
@@ -630,7 +630,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                           <TableCell className="text-center p-4">{totals.assistencia}</TableCell>
                           <TableCell className="text-center p-4 text-emerald-600">{totals.ncs}</TableCell>
                           <TableCell className="text-center p-4">
-                            <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${Number(pctNc) === 0 ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : Number(pctNc) <= 20 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'}`}>
+                            <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${Number(pctNc) < 50 ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : Number(pctNc) < 80 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'}`}>
                               {pctNc}%
                             </div>
                           </TableCell>
