@@ -34,7 +34,7 @@ const DEFAULT_NAMES = [
   { nome: 'THIAGO GOMES', letra: 'B Noite' }
 ];
 
-function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctNC, inputStyle }: any) {
+function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctNC, inputStyle, funcionariosList = [] }: any) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id });
 
   const style = {
@@ -51,12 +51,19 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
         </div>
       </TableCell>
       <TableCell className="p-2">
-        <Input 
-          value={row.nome_email} 
+        <select
+          value={row.nome_email}
           onChange={(e) => handleChange(idx, 'nome_email', e.target.value)}
-          className={inputStyle}
-          placeholder="Nome"
-        />
+          className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${inputStyle}`}
+        >
+          <option value="">Selecione o colaborador...</option>
+          {funcionariosList.map((f: any) => (
+            <option key={f.id} value={f.nome}>{f.nome}</option>
+          ))}
+          {!funcionariosList.find((f: any) => f.nome === row.nome_email) && row.nome_email && (
+            <option value={row.nome_email}>{row.nome_email}</option>
+          )}
+        </select>
       </TableCell>
       <TableCell className="p-2">
         <Input 
@@ -186,10 +193,14 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     fetchData();
   }, [periodo]);
 
+  const [funcionariosList, setFuncionariosList] = useState<any[]>([]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: emps } = await supabase.from('funcionarios').select('nome, cargo');
+      const { data: emps } = await supabase.from('funcionarios').select('id, nome, cargo, letra').order('nome');
+      setFuncionariosList(emps || []);
+      
       const cargoMap = (emps || []).reduce((acc: any, e: any) => {
         if (e.nome) acc[e.nome.toUpperCase().trim()] = e.cargo;
         return acc;
@@ -281,8 +292,17 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
 
   const handleChange = (index: number, field: keyof N3Data, value: string) => {
     const newData = [...data];
-    if (field === 'nome_email' || field === 'letra') {
+    if (field === 'nome_email' || field === 'letra' || field === 'cargo') {
       newData[index] = { ...newData[index], [field]: value };
+      
+      // Auto-fill cargo and letra if name changed
+      if (field === 'nome_email') {
+        const func = funcionariosList.find((f: any) => f.nome === value);
+        if (func) {
+          if (!newData[index].cargo && func.cargo) newData[index].cargo = func.cargo;
+          if (!newData[index].letra && func.letra) newData[index].letra = func.letra;
+        }
+      }
     } else {
       newData[index] = { ...newData[index], [field]: Number(value) || 0 };
     }
@@ -634,6 +654,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                               badgeClass={badgeClass} 
                               pctNC={pctNC} 
                               inputStyle={inputStyle} 
+                              funcionariosList={funcionariosList}
                             />
                           );
                         })}
