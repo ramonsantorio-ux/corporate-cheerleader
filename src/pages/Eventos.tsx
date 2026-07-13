@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import PeriodFilter, { getMonthPeriod } from '@/components/filters/PeriodFilter';
 import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import { toast } from 'sonner';
-import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend, LabelList, PieChart, Pie, ComposedChart } from 'recharts';
+import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend, LabelList, PieChart, Pie, ComposedChart } from 'recharts';
 import { readExcelRows, writeExcelFile, parseExcelDate } from '@/lib/excel';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { TreinamentosSSMA } from '@/components/TreinamentosSSMA';
