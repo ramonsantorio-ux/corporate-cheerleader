@@ -166,6 +166,34 @@ export default function Eventos() {
     setLoading(false);
   }
 
+  async function fixHistoricalShifts() {
+    toast.info("Iniciando limpeza de base de dados (Turnos)...");
+    const { data: allEvents, error } = await supabase.from('events').select('id, shift');
+    if (error) {
+      toast.error("Erro ao buscar eventos: " + error.message);
+      return;
+    }
+    
+    let updatedCount = 0;
+    for (const ev of allEvents) {
+      if (!ev.shift) continue;
+      const original = ev.shift;
+      let formatted = original.toUpperCase().replace(/\s*-\s*/g, ' ')
+                            .replace('A DIA', 'A Dia')
+                            .replace('A NOITE', 'A Noite')
+                            .replace('B DIA', 'B Dia')
+                            .replace('B NOITE', 'B Noite')
+                            .trim();
+      
+      if (original !== formatted) {
+        const { error: upErr } = await supabase.from('events').update({ shift: formatted }).eq('id', ev.id);
+        if (!upErr) updatedCount++;
+      }
+    }
+    toast.success(`Limpeza concluída! ${updatedCount} eventos atualizados.`);
+    fetchHistoricalEvolution();
+  }
+
   const scrollToTable = () => {
     setTimeout(() => {
       document.getElementById('events-table')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -696,6 +724,9 @@ export default function Eventos() {
           <Button variant="outline" size="sm" onClick={() => setDeleteAllConfirm(true)} className="text-destructive hover:bg-destructive hover:text-destructive-foreground">
             <Trash2 className="w-4 h-4 mr-1" />
             Excluir Todos
+          </Button>
+          <Button variant="outline" size="sm" onClick={fixHistoricalShifts} className="border-dashed" title="Padronizar textos de Letras (Turno) no Banco de Dados">
+            <Wrench className="w-4 h-4 mr-1" /> Limpar Base
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
