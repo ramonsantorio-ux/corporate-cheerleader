@@ -140,9 +140,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
   };
   const [data, setData] = useState<N3Data[]>([]);
   const [historicalData, setHistoricalData] = useState<N3Data[]>([]);
-  const [periodo, setPeriodo] = useState<string>(
-    new Date().toISOString().substring(0, 7) // Formato "YYYY-MM"
-  );
+  const [cargoMapState, setCargoMapState] = useState<Record<string, string>>({});
+  const [periodo, setPeriodo] = useState<string>(globalPeriod as any || new Date().toISOString().substring(0, 7));
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -190,6 +189,13 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
+      const { data: emps } = await supabase.from('funcionarios').select('nome, cargo');
+      const cargoMap = (emps || []).reduce((acc: any, e: any) => {
+        if (e.nome) acc[e.nome.toUpperCase().trim()] = e.cargo;
+        return acc;
+      }, {});
+      setCargoMapState(cargoMap);
+
       const { data: allData, error } = await supabase
         .from('n3_lancamentos')
         .select('*')
@@ -197,14 +203,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
 
       if (error) {
         console.error('Tabela n3 não existe ou erro ao buscar. Iniciando com dados locais.');
-        initMockData();
+        initMockData(cargoMap);
       } else {
-        const { data: emps } = await supabase.from('funcionarios').select('nome, cargo');
-        const cargoMap = (emps || []).reduce((acc: any, e: any) => {
-          if (e.nome) acc[e.nome.toUpperCase().trim()] = e.cargo;
-          return acc;
-        }, {});
-
         const allDataWithCargo = (allData || []).map((d: any) => ({
           ...d,
           cargo: d.cargo || cargoMap[(d.nome_email || '').toUpperCase().trim()] || ''
@@ -253,7 +253,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
             }));
             setData(initialData.sort((a,b) => a.nome_email.localeCompare(b.nome_email)));
           } else {
-            initMockData();
+            initMockData(cargoMap);
           }
         }
       }
@@ -263,11 +263,12 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     setLoading(false);
   };
 
-  const initMockData = () => {
+  const initMockData = (cargoMap: any = {}) => {
     setData(
       DEFAULT_NAMES.map(colab => ({
         id: Math.random().toString(36).substring(2, 9),
         nome_email: colab.nome,
+        cargo: cargoMap[colab.nome.toUpperCase().trim()] || '',
         letra: colab.letra,
         periodo,
         total_verificacoes: 0,
@@ -341,15 +342,19 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       const ab = await file.arrayBuffer();
       const rawData = await readExcelRows(ab);
 
-      const importedData: N3Data[] = rawData.map((row: any) => ({
-        nome_email: row['NOME-EMAIL'] || row['Nome'] || '',
-        letra: row['LETRA'] || row['Letra'] || '',
-        periodo: periodo,
-        total_verificacoes: Number(row['TOTAL VERIFICAÇÕES'] || row['Total Verificações'] || 0),
-        total_treinamentos: Number(row['TOTAL TREINAMENTOS'] || row['Total Treinamentos'] || 0),
-        total_assistencia: Number(row['TOTAL ASSISTÊNCIA'] || row['Total Assistência'] || 0),
-        verificacoes_nc: Number(row['VERIFICAÇÕES NÃO CONFORMES'] || row['Verificações NC'] || 0),
-      }));
+      const importedData: N3Data[] = rawData.map((row: any) => {
+        const nome = row['NOME-EMAIL'] || row['Nome'] || '';
+        return {
+          nome_email: nome,
+          cargo: row['CARGO'] || row['Cargo'] || cargoMapState[nome.toUpperCase().trim()] || '',
+          letra: row['LETRA'] || row['Letra'] || '',
+          periodo: periodo,
+          total_verificacoes: Number(row['TOTAL VERIFICAÇÕES'] || row['Total Verificações'] || 0),
+          total_treinamentos: Number(row['TOTAL TREINAMENTOS'] || row['Total Treinamentos'] || 0),
+          total_assistencia: Number(row['TOTAL ASSISTÊNCIA'] || row['Total Assistência'] || 0),
+          verificacoes_nc: Number(row['VERIFICAÇÕES NÃO CONFORMES'] || row['Verificações NC'] || 0),
+        };
+      });
 
       if (importedData.length > 0) {
         setData(importedData);
