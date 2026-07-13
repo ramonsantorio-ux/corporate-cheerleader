@@ -535,7 +535,8 @@ export default function Eventos() {
       const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
 
       if (cat !== 'Médico') {
-        const equip = ev.equipment && ev.equipment !== 'NA' ? ev.equipment : 'N/A';
+        const equipRaw = ev.equipment && ev.equipment !== 'NA' ? ev.equipment : 'N/A';
+        const equip = equipRaw === 'N/A' ? 'N/A' : equipRaw.replace(/\s+/g, ' ').trim().toUpperCase();
         byEquipment[equip] = (byEquipment[equip] || 0) + 1;
       }
 
