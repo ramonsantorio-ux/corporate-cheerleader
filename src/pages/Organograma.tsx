@@ -175,7 +175,7 @@ export default function Organograma() {
             <div
               ref={setDragRef}
               style={style}
-              className={`relative flex items-center gap-3 p-3 rounded-xl border ${isOver ? 'border-primary bg-primary/10 scale-105 shadow-md' : 'border-border bg-card shadow-sm hover:shadow-md'} transition-all w-64 cursor-pointer`}
+              className={`relative flex items-center gap-2 p-2 rounded-lg border ${isOver ? 'border-primary bg-primary/10 scale-105 shadow-md' : 'border-border bg-card shadow-sm hover:shadow-md'} transition-all w-56 cursor-pointer`}
               onClick={() => setSelectedNode(node)}
             >
               {/* Drag Handle explicitly separated for clarity */}
@@ -189,16 +189,16 @@ export default function Organograma() {
               </div>
 
               {/* Node Content */}
-              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border ml-2">
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border ml-2">
                 {node.foto_url ? (
                   <img src={node.foto_url} alt={node.nome} className="h-full w-full object-cover" />
                 ) : (
-                  <User className="h-5 w-5 text-muted-foreground" />
+                  <User className="h-4 w-4 text-muted-foreground" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-semibold truncate text-foreground">{node.nome}</h4>
-                <p className="text-xs text-muted-foreground truncate">{node.cargo}</p>
+                <h4 className="text-xs font-semibold truncate text-foreground">{node.nome}</h4>
+                <p className="text-[10px] text-muted-foreground truncate">{node.cargo}</p>
               </div>
               
               {node.children.length > 0 && (
@@ -206,7 +206,7 @@ export default function Organograma() {
                   onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
                   className="p-1 rounded-full hover:bg-muted text-muted-foreground shrink-0 z-20 relative"
                 >
-                  {expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  {expanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                 </button>
               )}
             </div>
