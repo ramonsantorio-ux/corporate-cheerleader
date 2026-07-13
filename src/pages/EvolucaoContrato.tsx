@@ -759,20 +759,35 @@ export default function EvolucaoContrato() {
     });
   }, [medicoes, notificacoesGlobais]);
 
+  const availableYears = useMemo(() => {
+    const years = new Set<string>();
+    medicoes.forEach(m => {
+      const parts = m.mes.split('/');
+      if (parts.length === 2) {
+        years.add(parts[1]);
+      }
+    });
+    return Array.from(years).sort((a, b) => b.localeCompare(a));
+  }, [medicoes]);
+
   const filteredChartData = useMemo(() => {
     if (timeRange === 'all') return chartData;
+    if (timeRange.startsWith('year-')) {
+      const year = timeRange.split('-')[1];
+      return chartData.filter(m => m.mes.endsWith(`/${year}`));
+    }
     const limit = parseInt(timeRange);
     return chartData.slice(-limit);
   }, [chartData, timeRange]);
 
   const filteredPortoMinerio = useMemo(() => {
-    if (timeRange === 'all') return dataPortoMinerio;
+    if (timeRange === 'all' || timeRange.startsWith('year-')) return dataPortoMinerio;
     const limit = parseInt(timeRange);
     return dataPortoMinerio.slice(-limit);
   }, [timeRange]);
 
   const filteredPortoTPM = useMemo(() => {
-    if (timeRange === 'all') return dataPortoTPM;
+    if (timeRange === 'all' || timeRange.startsWith('year-')) return dataPortoTPM;
     const limit = parseInt(timeRange);
     return dataPortoTPM.slice(-limit);
   }, [timeRange]);
@@ -1736,30 +1751,19 @@ export default function EvolucaoContrato() {
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-border/50">
-                  <SelectItem value="3">Últimos 3 meses</SelectItem>
-                  <SelectItem value="6">Últimos 6 meses</SelectItem>
                   <SelectItem value="12">Últimos 12 meses</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={`year-${year}`}>Ano: {year}</SelectItem>
+                  ))}
                   <SelectItem value="all">Todo o período</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           )}
 
-          <input type="file" id="import-backup" accept=".json" className="hidden" onChange={handleImport} />
-          
-          <Button onClick={() => document.getElementById('import-backup')?.click()} variant="outline" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
-            <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">Importar</span>
-          </Button>
-          
-          <Button onClick={handleExport} variant="outline" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Exportar</span>
-          </Button>
-
-          <Button onClick={() => { localStorage.removeItem('corporate_cheerleader_medicoes'); window.location.reload(); }} variant="outline" size="sm" className="gap-2 border-primary/50 text-primary">
+          <Button onClick={() => window.location.reload()} variant="outline" size="sm" className="gap-2 border-primary/50 text-primary">
             <RefreshCcw className="w-4 h-4" />
-            <span className="hidden sm:inline">Restaurar</span>
+            <span className="hidden sm:inline">Atualizar</span>
           </Button>
 
           <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); }}>
