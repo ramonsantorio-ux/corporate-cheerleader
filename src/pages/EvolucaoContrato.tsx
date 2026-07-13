@@ -963,24 +963,8 @@ export default function EvolucaoContrato() {
               <TabsTrigger value="performance_mensal" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><BarChart3 className="w-4 h-4 mr-2" />Performance Mensal</TabsTrigger>
               <TabsTrigger value="metas_busato" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Busato</TabsTrigger>
               <TabsTrigger value="metas_porto" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Target className="w-4 h-4 mr-2" />Metas Porto</TabsTrigger>
-              <TabsTrigger value="frota" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Truck className="w-4 h-4 mr-2" />Frota (Opção A)</TabsTrigger>
+              <TabsTrigger value="frota" className="rounded-lg data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm px-6 py-2 transition-all font-medium whitespace-nowrap"><Truck className="w-4 h-4 mr-2" />Frota Habitual</TabsTrigger>
             </TabsList>
-            {!(activeTab === 'metas_busato' || activeTab === 'metas_porto') && (
-<div className="flex items-center gap-2 w-full sm:w-auto">
-              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-full sm:w-[180px] bg-background border-border/50 shadow-sm rounded-xl h-10">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl border-border/50">
-                  <SelectItem value="3">Últimos 3 meses</SelectItem>
-                  <SelectItem value="6">Últimos 6 meses</SelectItem>
-                  <SelectItem value="12">Últimos 12 meses</SelectItem>
-                  <SelectItem value="all">Todo o período</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-)}
           </div>
 
           <TabsContent value="visao_executiva" className="space-y-6 mt-4">
@@ -1369,14 +1353,6 @@ export default function EvolucaoContrato() {
         </Card>
       )}
 
-                {/* OPÇÃO B: DENTRO DE VISÃO EXECUTIVA */}
-                <div className="mt-8 border-t border-border/50 pt-8 col-span-full w-full">
-                  <h3 className="text-xl font-bold mb-4 text-primary">Opção B: Embutido na Visão Executiva</h3>
-                  <div className="h-[600px]">
-                    <FrotaHabitual />
-                  </div>
-                </div>
-
                 </TabsContent>
 
 
@@ -1751,35 +1727,39 @@ export default function EvolucaoContrato() {
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          {!(activeTab === 'metas_busato' || activeTab === 'metas_porto' || activeTab === 'frota') && (
+            <div className="flex items-center gap-2 mr-2">
+              <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:block">Período:</span>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-[140px] bg-background border-border/50 shadow-sm rounded-xl h-9 text-sm">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl border-border/50">
+                  <SelectItem value="3">Últimos 3 meses</SelectItem>
+                  <SelectItem value="6">Últimos 6 meses</SelectItem>
+                  <SelectItem value="12">Últimos 12 meses</SelectItem>
+                  <SelectItem value="all">Todo o período</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <input type="file" id="import-backup" accept=".json" className="hidden" onChange={handleImport} />
           
-          <Button onClick={() => document.getElementById('import-backup')?.click()} variant="outline" className="gap-2 text-muted-foreground hover:text-foreground">
+          <Button onClick={() => document.getElementById('import-backup')?.click()} variant="outline" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
             <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">Importar Backup</span>
+            <span className="hidden sm:inline">Importar</span>
           </Button>
           
-          <Button onClick={handleExport} variant="outline" className="gap-2 text-muted-foreground hover:text-foreground">
+          <Button onClick={handleExport} variant="outline" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Exportar Backup</span>
+            <span className="hidden sm:inline">Exportar</span>
           </Button>
 
-          {/* OPÇÃO C: MODAL FLUTUANTE */}
-          <Dialog open={isFrotaModalOpen} onOpenChange={setIsFrotaModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2 border-primary/50 text-primary">
-                <Truck className="w-4 h-4" />
-                <span className="hidden sm:inline">Frota Habitual (Opção C)</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-5xl h-[80vh] flex flex-col">
-              <FrotaHabitual />
-            </DialogContent>
-          </Dialog>
-
-          <Button onClick={() => { localStorage.removeItem('corporate_cheerleader_medicoes'); window.location.reload(); }} variant="outline" className="gap-2 border-primary/50 text-primary">
+          <Button onClick={() => { localStorage.removeItem('corporate_cheerleader_medicoes'); window.location.reload(); }} variant="outline" size="sm" className="gap-2 border-primary/50 text-primary">
             <RefreshCcw className="w-4 h-4" />
-            <span className="hidden sm:inline">Restaurar Padrão</span>
+            <span className="hidden sm:inline">Restaurar</span>
           </Button>
 
           <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); }}>
