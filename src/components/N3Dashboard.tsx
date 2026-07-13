@@ -633,8 +633,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                           const validNc = Math.min(nc, meta);
                           pctNC = Number((((validTot + validNc) / maxScore) * 100).toFixed(0));
                           
-                          const isCritical = Number(pctNC) < 50;
-                          const isWarning = Number(pctNC) >= 50 && Number(pctNC) < 80;
+                          const isCritical = Number(pctNC) < 70;
+                          const isWarning = Number(pctNC) >= 70 && Number(pctNC) < 100;
                           const badgeClass = isCritical ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : isWarning ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400';
                           
                           const inputStyle = "h-9 font-medium bg-muted/30 border-transparent hover:border-border focus:bg-background focus:border-primary rounded-xl transition-all";
