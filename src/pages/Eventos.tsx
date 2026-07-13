@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import PeriodFilter, { getMonthPeriod } from '@/components/filters/PeriodFilter';
 import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import { toast } from 'sonner';
-import {  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area, LineChart, Line, Legend , ScatterChart, Scatter, ZAxis, RadialBarChart, RadialBar, LabelList, ComposedChart } from 'recharts';
+import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend, LabelList, PieChart, Pie, ComposedChart } from 'recharts';
 import { readExcelRows, writeExcelFile, parseExcelDate } from '@/lib/excel';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { TreinamentosSSMA } from '@/components/TreinamentosSSMA';
@@ -121,7 +121,20 @@ export default function Eventos() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const activeFiltersCount = (equipmentFilter !== 'all' ? 1 : 0) + (locationFilter !== 'all' ? 1 : 0) + (plateFilter !== 'all' ? 1 : 0) + (timeFilter !== 'all' ? 1 : 0) + (selectedEmployee ? 1 : 0);
 
-  useEffect(() => { fetchEvents(); }, [period]);
+  const [evolutionLetra, setEvolutionLetra] = useState<string>('all');
+  const [historicalEvolution, setHistoricalEvolution] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchEvents();
+    fetchHistoricalEvolution();
+  }, [period]);
+
+  async function fetchHistoricalEvolution() {
+    const { data } = await supabase.from('events').select('event_date, shift, categoria_evento, location, atendimento_medico, atestado, afastamento, cid');
+    if (data) {
+      setHistoricalEvolution(data);
+    }
+  }
 
   async function fetchEvents() {
     setLoading(true);
@@ -602,14 +615,50 @@ export default function Eventos() {
       { name: 'Eventos Sem Perda', value: danosSem, fill: '#3b82f6' }
     ].filter(d => d.value > 0);
 
+    const evolutionChartData = (() => {
+      const monthlyData: Record<string, number> = {};
+      const monthsSet = new Set<string>();
+
+      historicalEvolution.forEach(ev => {
+        const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
+        const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
+
+        if (cat !== 'Médico' && ev.event_date && ev.shift) {
+          let shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
+          if (shift.includes('A Dia')) shift = 'A Dia';
+          else if (shift.includes('A Noite')) shift = 'A Noite';
+          else if (shift.includes('B Dia')) shift = 'B Dia';
+          else if (shift.includes('B Noite')) shift = 'B Noite';
+          
+          const ym = ev.event_date.slice(0, 7);
+          
+          if (evolutionLetra === 'all' || evolutionLetra === shift) {
+            monthlyData[ym] = (monthlyData[ym] || 0) + 1;
+          }
+          monthsSet.add(ym);
+        }
+      });
+
+      const allMonths = Array.from(monthsSet).sort();
+      return allMonths.map(ym => {
+        const parts = ym.split('-');
+        const label = `${parts[1]}/${parts[0].slice(2)}`;
+        return {
+          periodo: ym,
+          month: label,
+          Eventos: monthlyData[ym] || 0
+        };
+      });
+    })();
+
     return { 
       monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
       materialCount, meioAmbienteCount, medicoCount, total: filtered.length,
       topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
       byLetra, letraData, hourlyData, daysWithoutAccident,
-      topCids, topAtestados, afastamentoData, danosData
+      topCids, topAtestados, afastamentoData, danosData, evolutionChartData
     };
-  }, [filtered]);
+  }, [filtered, historicalEvolution, evolutionLetra]);
 
   const formatTime = (timeStr: string) => {
     if (!timeStr) return '';
@@ -1195,6 +1244,58 @@ export default function Eventos() {
                       </BarChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 mb-6">
+            <Card className="border-t-4 border-t-primary shadow-sm hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-primary" /> Evolução Mensal por Letra (Histórico Completo)
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground font-medium">Filtrar Letra:</span>
+                    <select
+                      className="h-8 text-xs rounded-md border border-input bg-background px-3 py-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={evolutionLetra}
+                      onChange={(e) => setEvolutionLetra(e.target.value)}
+                    >
+                      <option value="all">Todas as Letras</option>
+                      <option value="A Dia">A Dia</option>
+                      <option value="A Noite">A Noite</option>
+                      <option value="B Dia">B Dia</option>
+                      <option value="B Noite">B Noite</option>
+                      <option value="ADM">ADM</option>
+                    </select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[280px] w-full mt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={analytics.evolutionChartData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
+                      <defs>
+                        <linearGradient id="colorEventosEvolution" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" strokeOpacity={0.5} />
+                      <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
+                        cursor={{ fill: 'var(--muted)', opacity: 0.4 }} 
+                      />
+                      <Bar dataKey="Eventos" fill="url(#colorEventosEvolution)" radius={[4, 4, 0, 0]} barSize={32}>
+                        <LabelList dataKey="Eventos" position="top" style={{ fontSize: '10px', fill: 'var(--muted-foreground)', fontWeight: 600 }} />
+                      </Bar>
+                      <Line type="monotone" dataKey="Eventos" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "hsl(var(--background))" }} activeDot={{ r: 6, strokeWidth: 0 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
