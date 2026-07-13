@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash, Copy, GripVertical } from 'lucide-react';
+import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash, Copy, GripVertical, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -535,20 +536,33 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <input type="file" ref={fileInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
-                <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="gap-2 text-xs h-8">
-                  <Download className="w-3.5 h-3.5" /> Modelo Excel
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2 text-xs h-8">
-                  <Upload className="w-3.5 h-3.5" /> Importar
-                </Button>
-                <Button variant="destructive" size="sm" onClick={handleClearMonth} disabled={deleting} className="gap-2 rounded-lg text-xs h-8">
-                  <Trash className="w-3.5 h-3.5" /> {deleting ? 'Limpando...' : 'Limpar'}
-                </Button>
-                <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-lg transition-all hover:scale-[1.02] text-xs h-8">
-                  <Save className="w-3.5 h-3.5" /> {saving ? 'Postando...' : 'Postar'}
-                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2 text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm">
+                      <MoreHorizontal className="w-4 h-4" /> Opções
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={handleDownloadTemplate} className="gap-2 text-xs cursor-pointer">
+                      <Download className="w-4 h-4" /> Baixar Modelo Excel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-2 text-xs cursor-pointer">
+                      <Upload className="w-4 h-4" /> Importar Planilha
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleClearMonth} disabled={deleting} className="gap-2 text-xs text-rose-600 focus:bg-rose-50 focus:text-rose-700 cursor-pointer">
+                      <Trash className="w-4 h-4" /> {deleting ? 'Limpando...' : 'Limpar Mês'}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <Button onClick={handleAddRow} size="sm" variant="outline" className="gap-1 border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm text-xs h-8">
                   <Plus className="w-3.5 h-3.5" /> Adicionar
+                </Button>
+                
+                <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-lg transition-all hover:scale-[1.02] text-xs h-8 px-4">
+                  <Save className="w-3.5 h-3.5" /> {saving ? 'Postando...' : 'Postar'}
                 </Button>
               </div>
             </CardHeader>
