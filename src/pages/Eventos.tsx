@@ -1448,7 +1448,7 @@ export default function Eventos() {
 
         {/* 6. N3 */}
         <TabsContent value="n3" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
-          <N3Dashboard />
+          <N3Dashboard globalPeriod={period} />
         </TabsContent>
       </Tabs>
 

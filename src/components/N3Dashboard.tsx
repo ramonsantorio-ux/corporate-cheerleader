@@ -119,7 +119,11 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
   );
 }
 
-export default function N3Dashboard() {
+interface N3DashboardProps {
+  globalPeriod?: { start: string; end: string; label: string; };
+}
+
+export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
   const getMeta = (nome: string) => {
     const nomeLower = nome.toLowerCase();
     if (nomeLower.includes('ramon') || nomeLower.includes('eduardo')) return 15;
@@ -359,6 +363,13 @@ export default function N3Dashboard() {
     await writeExcelFile(templateData as Record<string, unknown>[], 'Modelo_Importacao_N3.xlsx', 'N3_Template');
   };
 
+  const filteredHistoricalData = useMemo(() => {
+    if (!globalPeriod) return historicalData;
+    const startMonth = globalPeriod.start.substring(0, 7);
+    const endMonth = globalPeriod.end.substring(0, 7);
+    return historicalData.filter(curr => curr.periodo >= startMonth && curr.periodo <= endMonth);
+  }, [historicalData, globalPeriod]);
+
   const kpis = useMemo(() => {
     const totais = {
       verificacoes: 0,
@@ -368,7 +379,7 @@ export default function N3Dashboard() {
       perguntasNc: 0
     };
 
-    data.forEach(d => {
+    filteredHistoricalData.forEach(d => {
       totais.verificacoes += Number(d.total_verificacoes || 0);
       totais.treinamentos += Number(d.total_treinamentos || 0);
       totais.assistencia += Number(d.total_assistencia || 0);
@@ -379,19 +390,24 @@ export default function N3Dashboard() {
     const pctNc = totais.verificacoes > 0 ? ((totais.ncs / totais.verificacoes) * 100).toFixed(1) : '0.0';
 
     return { totais, pctNc };
-  }, [data]);
+  }, [filteredHistoricalData]);
 
   const chartData = useMemo(() => {
-    return data.map(d => ({
-      name: d.nome_email.split(' ')[0] || 'Novo',
-      Verificações: Number(d.total_verificacoes || 0),
-      Treinamentos: Number(d.total_treinamentos || 0),
-      'Não Conformes': Number(d.verificacoes_nc || 0)
-    }));
-  }, [data]);
+    const aggregated = filteredHistoricalData.reduce((acc, curr) => {
+      const name = curr.nome_email.split(' ')[0] || 'Novo';
+      if (!acc[name]) {
+        acc[name] = { name, Verificações: 0, Treinamentos: 0, 'Não Conformes': 0 };
+      }
+      acc[name].Verificações += Number(curr.total_verificacoes || 0);
+      acc[name].Treinamentos += Number(curr.total_treinamentos || 0);
+      acc[name]['Não Conformes'] += Number(curr.verificacoes_nc || 0);
+      return acc;
+    }, {} as Record<string, any>);
+    return Object.values(aggregated).sort((a: any, b: any) => a.name.localeCompare(b.name));
+  }, [filteredHistoricalData]);
 
   const evolutionChartData = useMemo(() => {
-    const grouped = historicalData.reduce((acc, curr) => {
+    const grouped = filteredHistoricalData.reduce((acc, curr) => {
       if (!acc[curr.periodo]) {
         acc[curr.periodo] = { periodo: curr.periodo, 'Total Verificações': 0, 'Total Treinamentos': 0, 'Total Não Conformes': 0 };
       }
@@ -401,16 +417,16 @@ export default function N3Dashboard() {
       return acc;
     }, {} as Record<string, any>);
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
-  }, [historicalData]);
+  }, [filteredHistoricalData]);
 
   const uniqueNames = useMemo(() => {
     const names = new Set<string>();
-    historicalData.forEach(d => names.add(d.nome_email.split(' ')[0] || 'Novo'));
+    filteredHistoricalData.forEach(d => names.add(d.nome_email.split(' ')[0] || 'Novo'));
     return Array.from(names).sort();
-  }, [historicalData]);
+  }, [filteredHistoricalData]);
 
   const evolutionByPersonData = useMemo(() => {
-    const grouped = historicalData.reduce((acc, curr) => {
+    const grouped = filteredHistoricalData.reduce((acc, curr) => {
       if (!acc[curr.periodo]) {
         acc[curr.periodo] = { periodo: curr.periodo };
         // Inicializa todos com 0 para não quebrar a linha no gráfico
@@ -423,7 +439,7 @@ export default function N3Dashboard() {
       return acc;
     }, {} as Record<string, any>);
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
-  }, [historicalData, uniqueNames]);
+  }, [filteredHistoricalData, uniqueNames]);
   
   const colors = [
     '#ec4899', // pink (antes era blue - Cristally)
@@ -439,43 +455,6 @@ export default function N3Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Select value={periodo} onValueChange={setPeriodo}>
-            <SelectTrigger className="w-[180px] bg-background">
-              <SelectValue placeholder="Selecione o Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os Meses</SelectItem>
-              {[
-                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-              ].map((m, i) => {
-                const val = '2026-' + (i + 1).toString().padStart(2, '0');
-                return <SelectItem key={val} value={val}>{m} 2026</SelectItem>;
-              })}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex items-center gap-2 flex-wrap">
-          <input type="file" ref={fileInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
-          <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="gap-2">
-            <Download className="w-4 h-4" /> Modelo Excel
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2">
-            <Upload className="w-4 h-4" /> Importar
-          </Button>
-          
-          <Button variant="destructive" size="sm" onClick={handleClearMonth} disabled={deleting} className="gap-2 rounded-full">
-            <Trash className="w-4 h-4" /> {deleting ? 'Limpando...' : 'Limpar Mês'}
-          </Button>
-<Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-full px-6 transition-all hover:scale-[1.02] ml-2">
-            <Save className="w-4 h-4" /> {saving ? 'Postando...' : 'Postar Lançamentos do Mês'}
-          </Button>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-white/50 dark:border-slate-800/50 shadow-lg shadow-blue-500/5 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 relative overflow-hidden group">
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
@@ -533,14 +512,43 @@ export default function N3Dashboard() {
       <div className="flex flex-col gap-6">
         <div className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <div>
-                <CardTitle className="text-xl">Lançamentos N3 - CRM</CardTitle>
-                <CardDescription>Digite manualmente ou importe via planilha</CardDescription>
+            <CardHeader className="flex flex-col xl:flex-row items-start xl:items-center justify-between pb-4 gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div>
+                  <CardTitle className="text-xl">Lançamentos N3 - CRM</CardTitle>
+                  <CardDescription>Digite manualmente ou importe via planilha</CardDescription>
+                </div>
+                <Select value={periodo} onValueChange={setPeriodo}>
+                  <SelectTrigger className="w-[160px] bg-background">
+                    <SelectValue placeholder="Selecione o Mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[
+                      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                    ].map((m, i) => {
+                      const val = '2026-' + (i + 1).toString().padStart(2, '0');
+                      return <SelectItem key={val} value={val}>{m} 2026</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex items-center gap-3">
-                <Button onClick={handleAddRow} size="sm" variant="outline" className="gap-1 border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm">
-                  <Plus className="w-4 h-4" /> Adicionar Colaborador
+              <div className="flex items-center gap-2 flex-wrap">
+                <input type="file" ref={fileInputRef} accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
+                <Button variant="outline" size="sm" onClick={handleDownloadTemplate} className="gap-2 text-xs h-8">
+                  <Download className="w-3.5 h-3.5" /> Modelo Excel
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} className="gap-2 text-xs h-8">
+                  <Upload className="w-3.5 h-3.5" /> Importar
+                </Button>
+                <Button variant="destructive" size="sm" onClick={handleClearMonth} disabled={deleting} className="gap-2 rounded-lg text-xs h-8">
+                  <Trash className="w-3.5 h-3.5" /> {deleting ? 'Limpando...' : 'Limpar'}
+                </Button>
+                <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-lg transition-all hover:scale-[1.02] text-xs h-8">
+                  <Save className="w-3.5 h-3.5" /> {saving ? 'Postando...' : 'Postar'}
+                </Button>
+                <Button onClick={handleAddRow} size="sm" variant="outline" className="gap-1 border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm text-xs h-8">
+                  <Plus className="w-3.5 h-3.5" /> Adicionar
                 </Button>
               </div>
             </CardHeader>
