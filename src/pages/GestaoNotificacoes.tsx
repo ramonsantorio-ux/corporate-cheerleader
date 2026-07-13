@@ -202,13 +202,27 @@ const GestaoNotificacoes = () => {
           <Search className="w-4 h-4 text-muted-foreground" />
           <input type="text" placeholder="Buscar por motivo ou local..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none outline-none text-sm w-full" />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant={filterType === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilterType('all')} className="h-9">Todas</Button>
-          <Button variant={filterType === 'notificacao' ? 'default' : 'outline'} size="sm" onClick={() => setFilterType('notificacao')} className="h-9">Notificações</Button>
-          <Button variant={filterType === 'multa' ? 'default' : 'outline'} size="sm" onClick={() => setFilterType('multa')} className="h-9 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground">Multas</Button>
-          <div className="w-px h-6 bg-border mx-1"></div>
-          <Button variant={filterAction === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setFilterAction('all')} className="h-9">Todos Status</Button>
-          <Button variant={filterAction === 'pendente' ? 'default' : 'outline'} size="sm" onClick={() => setFilterAction('pendente')} className="h-9 border-warning text-warning hover:bg-warning hover:text-warning-foreground">Pendentes</Button>
+        <div className="flex items-center gap-2">
+          <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+            <SelectTrigger className="w-[140px] h-9 bg-background border-slate-200">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Tipos</SelectItem>
+              <SelectItem value="notificacao">Notificações</SelectItem>
+              <SelectItem value="multa">Multas</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={filterAction} onValueChange={(v: any) => setFilterAction(v)}>
+            <SelectTrigger className="w-[140px] h-9 bg-background border-slate-200">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Status</SelectItem>
+              <SelectItem value="pendente">Pendentes</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

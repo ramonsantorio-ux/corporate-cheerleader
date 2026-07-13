@@ -4,9 +4,9 @@ import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import {
   CalendarDays, Plus, Loader2, Trash2, Clock, AlertTriangle,
   Users, TrendingUp, Sun, Shield, ChevronDown, ChevronUp, Eye,
-  Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert, Search, X, Download
+  Upload, Pencil, Bell, MinusCircle, FileText, ShieldAlert, Search, X, Download, MoreHorizontal
 } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
@@ -761,6 +761,33 @@ export default function PontoFerias() {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" className="gap-2 text-xs border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm">
+                <MoreHorizontal className="w-4 h-4" /> Opções
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 shadow-xl border-border/40 backdrop-blur-xl bg-card/90">
+              <DropdownMenuItem onClick={() => setWarningDialogOpen(true)} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
+                <ShieldAlert className="w-4 h-4 mr-2" /> Advertência
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => pontoFileRef.current?.click()} className="cursor-pointer">
+                <Upload className="w-4 h-4 mr-2" /> Importar Ponto
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => feriasFileRef.current?.click()} className="cursor-pointer">
+                <Upload className="w-4 h-4 mr-2" /> Importar Férias
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => extrasFileRef.current?.click()} className="cursor-pointer">
+                <Upload className="w-4 h-4 mr-2" /> Importar Extras
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={exportDeviationsReport} className="cursor-pointer text-orange-600 focus:bg-orange-50 focus:text-orange-700">
+                <FileText className="w-4 h-4 mr-2" /> Relatório de Desvios
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogContent>
                 <DialogHeader>
@@ -867,11 +894,6 @@ export default function PontoFerias() {
 
             {/* Warning Dialog */}
             <Dialog open={warningDialogOpen} onOpenChange={setWarningDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/5">
-                  <ShieldAlert className="w-4 h-4 mr-2" />Advertência
-                </Button>
-              </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Registrar Advertência</DialogTitle>
@@ -916,21 +938,6 @@ export default function PontoFerias() {
               </DialogContent>
             </Dialog>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline"><Upload className="w-4 h-4 mr-2" />Importar</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => pontoFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Ponto</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => feriasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Férias</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => extrasFileRef.current?.click()}><Upload className="w-4 h-4 mr-2" />Importar Extras</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Deviations Report */}
-            <Button size="sm" variant="outline" className="border-orange-500/30 text-orange-600 hover:bg-orange-500/10 transition-colors shadow-sm bg-card/50" onClick={exportDeviationsReport}>
-              <FileText className="w-4 h-4 mr-2" />Relatório de Desvios
-            </Button>
           </div>
       </motion.div>
 
