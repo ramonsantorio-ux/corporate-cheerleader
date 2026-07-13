@@ -638,8 +638,8 @@ export default function N3Dashboard() {
                     <YAxis axisLine={false} tickLine={false} fontSize={12} />
                     <RechartsTooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '8px', border: '1px solid var(--border)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
-                    <Bar dataKey="Verificações" stackId="a" fill="hsl(var(--primary))" radius={[0, 0, 4, 4]}>
-                      <LabelList dataKey="Verificações" position="center" fill="#ffffff" fontSize={11} fontWeight="bold" />
+                    <Bar dataKey="Verificações" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}>
+                      <LabelList dataKey="Verificações" position="top" fill="hsl(var(--primary))" fontSize={11} fontWeight="bold" />
                     </Bar>
                     
                     <Bar dataKey="Não Conformes" fill="#ef4444" radius={[4, 4, 0, 0]}>
