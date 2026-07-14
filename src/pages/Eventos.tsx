@@ -122,6 +122,7 @@ export default function Eventos() {
   const activeFiltersCount = (equipmentFilter !== 'all' ? 1 : 0) + (locationFilter !== 'all' ? 1 : 0) + (plateFilter !== 'all' ? 1 : 0) + (timeFilter !== 'all' ? 1 : 0) + (selectedEmployee ? 1 : 0);
 
   const [evolutionLetra, setEvolutionLetra] = useState<string>('all');
+  const [evolutionPeriod, setEvolutionPeriod] = useState<'mensal' | 'trimestral' | 'semestral'>('mensal');
   const [historicalEvolution, setHistoricalEvolution] = useState<any[]>([]);
 
   useEffect(() => {
@@ -647,8 +648,8 @@ export default function Eventos() {
     ].filter(d => d.value > 0);
 
     const evolutionChartData = (() => {
-      const monthlyData: Record<string, number> = {};
-      const monthsSet = new Set<string>();
+      const periodData: Record<string, number> = {};
+      const periodsSet = new Set<string>();
 
       historicalEvolution.forEach(ev => {
         const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
@@ -661,31 +662,70 @@ export default function Eventos() {
           else if (shift.includes('B Dia')) shift = 'B Dia';
           else if (shift.includes('B Noite')) shift = 'B Noite';
           
-          const ym = ev.event_date.slice(0, 7);
-          
           if (evolutionLetra === 'all' || evolutionLetra === shift) {
-            monthlyData[ym] = (monthlyData[ym] || 0) + 1;
+            const date = new Date(ev.event_date);
+            if (!isNaN(date.getTime())) {
+              const year = date.getFullYear();
+              const month = date.getMonth(); // 0-11
+              let periodKey = '';
+
+              if (evolutionPeriod === 'mensal') {
+                periodKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+              } else if (evolutionPeriod === 'trimestral') {
+                const quarter = Math.floor(month / 3) + 1;
+                periodKey = `${year}-Q${quarter}`;
+              } else if (evolutionPeriod === 'semestral') {
+                const semester = Math.floor(month / 6) + 1;
+                periodKey = `${year}-S${semester}`;
+              }
+
+              periodData[periodKey] = (periodData[periodKey] || 0) + 1;
+              periodsSet.add(periodKey);
+            }
           }
-          monthsSet.add(ym);
         }
       });
 
-      const allMonths = Array.from(monthsSet).sort();
-      return allMonths.map(ym => {
-        const parts = ym.split('-');
-        const label = `${parts[1]}/${parts[0].slice(2)}`;
+      const allPeriods = Array.from(periodsSet).sort();
+      return allPeriods.map(pk => {
+        let label = pk;
+        if (evolutionPeriod === 'mensal') {
+          const parts = pk.split('-');
+          label = `${parts[1]}/${parts[0].slice(2)}`;
+        } else if (evolutionPeriod === 'trimestral') {
+          const parts = pk.split('-');
+          label = `${parts[1]}/${parts[0].slice(2)}`;
+        } else if (evolutionPeriod === 'semestral') {
+          const parts = pk.split('-');
+          label = `${parts[1]}/${parts[0].slice(2)}`;
+        }
         return {
-          periodo: ym,
+          periodo: pk,
           month: label,
-          Eventos: monthlyData[ym] || 0
+          Eventos: periodData[pk] || 0
         };
       });
     })();
 
     const consolidations = (() => {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
+      let latestDate = new Date();
+      if (historicalEvolution.length > 0) {
+        const dates = historicalEvolution
+          .filter(ev => {
+            const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
+            const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
+            return cat !== 'Médico' && ev.event_date;
+          })
+          .map(ev => new Date(ev.event_date).getTime())
+          .filter(t => !isNaN(t));
+        
+        if (dates.length > 0) {
+          latestDate = new Date(Math.max(...dates));
+        }
+      }
+
+      const currentYear = latestDate.getFullYear();
+      const currentMonth = latestDate.getMonth();
       const currentQuarter = Math.floor(currentMonth / 3);
       const currentSemester = Math.floor(currentMonth / 6);
 
@@ -1354,7 +1394,8 @@ export default function Eventos() {
               <CardHeader className="pb-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-primary" /> Evolução Mensal por Letra (Histórico Completo)
+                    <Activity className="w-4 h-4 text-primary" /> 
+                    Evolução {evolutionPeriod === 'mensal' ? 'Mensal' : evolutionPeriod === 'trimestral' ? 'Trimestral' : 'Semestral'} por Letra (Histórico Completo)
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground font-medium">Filtrar Letra:</span>
@@ -1375,11 +1416,14 @@ export default function Eventos() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2 mt-2">
                   {/* Mensal */}
-                  <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl p-4 border border-blue-500/20 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><Calendar className="w-24 h-24 -mt-4 -mr-4 text-blue-500" /></div>
-                    <p className="text-[11px] font-bold text-blue-600/80 mb-1 uppercase tracking-wider">Consolidação Mensal</p>
+                  <div 
+                    onClick={() => setEvolutionPeriod('mensal')}
+                    className={`cursor-pointer rounded-xl p-4 border relative overflow-hidden group hover:shadow-md transition-all ${evolutionPeriod === 'mensal' ? 'bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/50 ring-1 ring-blue-500/20' : 'bg-muted/30 border-border hover:bg-blue-500/5'}`}
+                  >
+                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><Calendar className={`w-24 h-24 -mt-4 -mr-4 ${evolutionPeriod === 'mensal' ? 'text-blue-500' : 'text-muted-foreground'}`} /></div>
+                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'mensal' ? 'text-blue-600/80' : 'text-muted-foreground'}`}>Consolidação Mensal</p>
                     <div className="flex items-end gap-2">
-                      <span className="text-3xl font-black text-blue-600 tracking-tight">{analytics.consolidations.mensal.current}</span>
+                      <span className={`text-3xl font-black tracking-tight ${evolutionPeriod === 'mensal' ? 'text-blue-600' : 'text-foreground'}`}>{analytics.consolidations.mensal.current}</span>
                       <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-xs font-medium">
@@ -1393,16 +1437,19 @@ export default function Eventos() {
                         )}
                         <span className="text-muted-foreground/70">vs mês ant.</span>
                       </div>
-                      <span className="text-[10px] font-bold text-blue-600/40">{analytics.consolidations.mensal.prev} ant.</span>
+                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'mensal' ? 'text-blue-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.mensal.prev} ant.</span>
                     </div>
                   </div>
 
                   {/* Trimestral */}
-                  <div className="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 rounded-xl p-4 border border-indigo-500/20 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><BarChart3 className="w-24 h-24 -mt-4 -mr-4 text-indigo-500" /></div>
-                    <p className="text-[11px] font-bold text-indigo-600/80 mb-1 uppercase tracking-wider">Consolidação Trimestral</p>
+                  <div 
+                    onClick={() => setEvolutionPeriod('trimestral')}
+                    className={`cursor-pointer rounded-xl p-4 border relative overflow-hidden group hover:shadow-md transition-all ${evolutionPeriod === 'trimestral' ? 'bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 border-indigo-500/50 ring-1 ring-indigo-500/20' : 'bg-muted/30 border-border hover:bg-indigo-500/5'}`}
+                  >
+                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><BarChart3 className={`w-24 h-24 -mt-4 -mr-4 ${evolutionPeriod === 'trimestral' ? 'text-indigo-500' : 'text-muted-foreground'}`} /></div>
+                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'trimestral' ? 'text-indigo-600/80' : 'text-muted-foreground'}`}>Consolidação Trimestral</p>
                     <div className="flex items-end gap-2">
-                      <span className="text-3xl font-black text-indigo-600 tracking-tight">{analytics.consolidations.trimestral.current}</span>
+                      <span className={`text-3xl font-black tracking-tight ${evolutionPeriod === 'trimestral' ? 'text-indigo-600' : 'text-foreground'}`}>{analytics.consolidations.trimestral.current}</span>
                       <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-xs font-medium">
@@ -1416,16 +1463,19 @@ export default function Eventos() {
                         )}
                         <span className="text-muted-foreground/70">vs tri. ant.</span>
                       </div>
-                      <span className="text-[10px] font-bold text-indigo-600/40">{analytics.consolidations.trimestral.prev} ant.</span>
+                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'trimestral' ? 'text-indigo-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.trimestral.prev} ant.</span>
                     </div>
                   </div>
 
                   {/* Semestral */}
-                  <div className="bg-gradient-to-br from-violet-500/10 to-violet-600/5 rounded-xl p-4 border border-violet-500/20 relative overflow-hidden group hover:shadow-md transition-all">
-                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><Activity className="w-24 h-24 -mt-4 -mr-4 text-violet-500" /></div>
-                    <p className="text-[11px] font-bold text-violet-600/80 mb-1 uppercase tracking-wider">Consolidação Semestral</p>
+                  <div 
+                    onClick={() => setEvolutionPeriod('semestral')}
+                    className={`cursor-pointer rounded-xl p-4 border relative overflow-hidden group hover:shadow-md transition-all ${evolutionPeriod === 'semestral' ? 'bg-gradient-to-br from-violet-500/10 to-violet-600/5 border-violet-500/50 ring-1 ring-violet-500/20' : 'bg-muted/30 border-border hover:bg-violet-500/5'}`}
+                  >
+                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><Activity className={`w-24 h-24 -mt-4 -mr-4 ${evolutionPeriod === 'semestral' ? 'text-violet-500' : 'text-muted-foreground'}`} /></div>
+                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'semestral' ? 'text-violet-600/80' : 'text-muted-foreground'}`}>Consolidação Semestral</p>
                     <div className="flex items-end gap-2">
-                      <span className="text-3xl font-black text-violet-600 tracking-tight">{analytics.consolidations.semestral.current}</span>
+                      <span className={`text-3xl font-black tracking-tight ${evolutionPeriod === 'semestral' ? 'text-violet-600' : 'text-foreground'}`}>{analytics.consolidations.semestral.current}</span>
                       <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-xs font-medium">
@@ -1439,7 +1489,7 @@ export default function Eventos() {
                         )}
                         <span className="text-muted-foreground/70">vs sem. ant.</span>
                       </div>
-                      <span className="text-[10px] font-bold text-violet-600/40">{analytics.consolidations.semestral.prev} ant.</span>
+                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'semestral' ? 'text-violet-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.semestral.prev} ant.</span>
                     </div>
                   </div>
                 </div>
