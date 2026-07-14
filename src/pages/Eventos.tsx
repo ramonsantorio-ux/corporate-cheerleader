@@ -682,12 +682,78 @@ export default function Eventos() {
       });
     })();
 
+    const consolidations = (() => {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      const currentQuarter = Math.floor(currentMonth / 3);
+      const currentSemester = Math.floor(currentMonth / 6);
+
+      const currentQuarterStartMonth = currentQuarter * 3;
+      const prevQuarterStartMonth = currentQuarter === 0 ? 9 : (currentQuarter - 1) * 3;
+      const prevQuarterYear = currentQuarter === 0 ? currentYear - 1 : currentYear;
+      
+      const prevSemesterStartMonth = currentSemester === 0 ? 6 : 0;
+      const prevSemesterYear = currentSemester === 0 ? currentYear - 1 : currentYear;
+
+      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+      let mensalCount = 0; let prevMensalCount = 0;
+      let trimestralCount = 0; let prevTrimestralCount = 0;
+      let semestralCount = 0; let prevSemestralCount = 0;
+
+      historicalEvolution.forEach(ev => {
+        const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
+        const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
+
+        if (cat !== 'Médico' && ev.event_date && ev.shift) {
+          let shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
+          if (shift.includes('A Dia')) shift = 'A Dia';
+          else if (shift.includes('A Noite')) shift = 'A Noite';
+          else if (shift.includes('B Dia')) shift = 'B Dia';
+          else if (shift.includes('B Noite')) shift = 'B Noite';
+          
+          if (evolutionLetra === 'all' || evolutionLetra === shift) {
+            const evDate = new Date(ev.event_date);
+            if (!isNaN(evDate.getTime())) {
+              const evYear = evDate.getFullYear();
+              const evMonth = evDate.getMonth();
+
+              // Mensal
+              if (evYear === currentYear && evMonth === currentMonth) mensalCount++;
+              else if (evYear === prevMonthYear && evMonth === prevMonth) prevMensalCount++;
+
+              // Trimestral
+              if (evYear === currentYear && evMonth >= currentQuarterStartMonth && evMonth < currentQuarterStartMonth + 3) trimestralCount++;
+              else if (evYear === prevQuarterYear && evMonth >= prevQuarterStartMonth && evMonth < prevQuarterStartMonth + 3) prevTrimestralCount++;
+
+              // Semestral
+              if (evYear === currentYear && evMonth >= currentSemester * 6 && evMonth < (currentSemester * 6) + 6) semestralCount++;
+              else if (evYear === prevSemesterYear && evMonth >= prevSemesterStartMonth && evMonth < prevSemesterStartMonth + 6) prevSemestralCount++;
+            }
+          }
+        }
+      });
+
+      const calcTrend = (curr: number, prev: number) => {
+        if (prev === 0) return curr > 0 ? 100 : 0;
+        return Math.round(((curr - prev) / prev) * 100);
+      };
+
+      return {
+        mensal: { current: mensalCount, prev: prevMensalCount, trend: calcTrend(mensalCount, prevMensalCount) },
+        trimestral: { current: trimestralCount, prev: prevTrimestralCount, trend: calcTrend(trimestralCount, prevTrimestralCount) },
+        semestral: { current: semestralCount, prev: prevSemestralCount, trend: calcTrend(semestralCount, prevSemestralCount) }
+      };
+    })();
+
     return { 
       monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
       materialCount, meioAmbienteCount, medicoCount, total: filtered.length,
       topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
       byLetra, letraData, hourlyData, daysWithoutAccident,
-      topCids, topAtestados, afastamentoData, danosData, evolutionChartData
+      topCids, topAtestados, afastamentoData, danosData, evolutionChartData, consolidations
     };
   }, [filtered, historicalEvolution, evolutionLetra]);
 
@@ -1307,6 +1373,76 @@ export default function Eventos() {
                 </div>
               </CardHeader>
               <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2 mt-2">
+                  {/* Mensal */}
+                  <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl p-4 border border-blue-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><Calendar className="w-24 h-24 -mt-4 -mr-4 text-blue-500" /></div>
+                    <p className="text-[11px] font-bold text-blue-600/80 mb-1 uppercase tracking-wider">Consolidação Mensal</p>
+                    <div className="flex items-end gap-2">
+                      <span className="text-3xl font-black text-blue-600 tracking-tight">{analytics.consolidations.mensal.current}</span>
+                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs font-medium">
+                      <div className="flex items-center gap-1.5">
+                        {analytics.consolidations.mensal.trend > 0 ? (
+                          <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded flex items-center"><TrendingUp className="w-3 h-3 mr-1"/> +{analytics.consolidations.mensal.trend}%</span>
+                        ) : analytics.consolidations.mensal.trend < 0 ? (
+                          <span className="text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center"><TrendingDown className="w-3 h-3 mr-1"/> {analytics.consolidations.mensal.trend}%</span>
+                        ) : (
+                          <span className="text-muted-foreground bg-muted px-1.5 py-0.5 rounded">— 0%</span>
+                        )}
+                        <span className="text-muted-foreground/70">vs mês ant.</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-blue-600/40">{analytics.consolidations.mensal.prev} ant.</span>
+                    </div>
+                  </div>
+
+                  {/* Trimestral */}
+                  <div className="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 rounded-xl p-4 border border-indigo-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><BarChart3 className="w-24 h-24 -mt-4 -mr-4 text-indigo-500" /></div>
+                    <p className="text-[11px] font-bold text-indigo-600/80 mb-1 uppercase tracking-wider">Consolidação Trimestral</p>
+                    <div className="flex items-end gap-2">
+                      <span className="text-3xl font-black text-indigo-600 tracking-tight">{analytics.consolidations.trimestral.current}</span>
+                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs font-medium">
+                      <div className="flex items-center gap-1.5">
+                        {analytics.consolidations.trimestral.trend > 0 ? (
+                          <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded flex items-center"><TrendingUp className="w-3 h-3 mr-1"/> +{analytics.consolidations.trimestral.trend}%</span>
+                        ) : analytics.consolidations.trimestral.trend < 0 ? (
+                          <span className="text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center"><TrendingDown className="w-3 h-3 mr-1"/> {analytics.consolidations.trimestral.trend}%</span>
+                        ) : (
+                          <span className="text-muted-foreground bg-muted px-1.5 py-0.5 rounded">— 0%</span>
+                        )}
+                        <span className="text-muted-foreground/70">vs tri. ant.</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-indigo-600/40">{analytics.consolidations.trimestral.prev} ant.</span>
+                    </div>
+                  </div>
+
+                  {/* Semestral */}
+                  <div className="bg-gradient-to-br from-violet-500/10 to-violet-600/5 rounded-xl p-4 border border-violet-500/20 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><Activity className="w-24 h-24 -mt-4 -mr-4 text-violet-500" /></div>
+                    <p className="text-[11px] font-bold text-violet-600/80 mb-1 uppercase tracking-wider">Consolidação Semestral</p>
+                    <div className="flex items-end gap-2">
+                      <span className="text-3xl font-black text-violet-600 tracking-tight">{analytics.consolidations.semestral.current}</span>
+                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-xs font-medium">
+                      <div className="flex items-center gap-1.5">
+                        {analytics.consolidations.semestral.trend > 0 ? (
+                          <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded flex items-center"><TrendingUp className="w-3 h-3 mr-1"/> +{analytics.consolidations.semestral.trend}%</span>
+                        ) : analytics.consolidations.semestral.trend < 0 ? (
+                          <span className="text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center"><TrendingDown className="w-3 h-3 mr-1"/> {analytics.consolidations.semestral.trend}%</span>
+                        ) : (
+                          <span className="text-muted-foreground bg-muted px-1.5 py-0.5 rounded">— 0%</span>
+                        )}
+                        <span className="text-muted-foreground/70">vs sem. ant.</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-violet-600/40">{analytics.consolidations.semestral.prev} ant.</span>
+                    </div>
+                  </div>
+                </div>
                 <div className="h-[280px] w-full mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart data={analytics.evolutionChartData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
