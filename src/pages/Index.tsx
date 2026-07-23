@@ -20,13 +20,15 @@ interface AttendanceRow { id: string; employee_id: string; date: string; status:
 interface WarningRow { id: string; employee_id: string; date: string; applied: boolean; }
 interface EventRow { id: string; event_date: string; involved_name: string; }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem { name: string; value: number | string; color?: string; fill?: string; }
+interface CustomTooltipProps { active?: boolean; payload?: TooltipPayloadItem[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload || !payload.length) return null;
   return (
     <div className="bg-slate-950/95 backdrop-blur-xl border border-slate-800 rounded-lg shadow-2xl p-4 text-xs text-slate-200 z-50 font-mono min-w-[200px]">
       <p className="font-bold mb-3 uppercase tracking-widest text-slate-400 border-b border-slate-800 pb-2">{label || 'DETALHE'}</p>
       <div className="space-y-2">
-        {payload.map((p: any, i: number) => (
+        {payload.map((p, i: number) => (
           <div key={i} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(0,0,0,0.5)]" style={{ backgroundColor: p.color || p.fill }} />
@@ -130,7 +132,8 @@ export default function Index() {
 
   // Command Center Multi-Axis Data
   const trendData = useMemo(() => {
-    const dataByDate: Record<string, any> = {};
+    type TrendEntry = { date: string; SLA: number; Faltas: number; Eventos: number };
+    const dataByDate: Record<string, TrendEntry> = {};
     const last15Days = Array.from({length: 15}, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (14 - i));
@@ -154,7 +157,8 @@ export default function Index() {
   // Scatter Plot Data (Risk Matrix)
   const scatterData = useMemo(() => {
     if (sel) return [];
-    const map: Record<string, any> = {};
+    type MapEntry = { name: string; id: string; abs: number; events: number; warns: number; risk: number; impact: number };
+    const map: Record<string, MapEntry> = {};
     funcionarios.forEach(f => {
       map[f.id] = { name: f.nome, id: f.id, abs: 0, events: 0, warns: 0, risk: 0, impact: Math.floor(Math.random() * 100) };
     });

@@ -242,7 +242,7 @@ export default function AssessmentHub() {
     if (testType === 'bigfive' && Object.keys(bigFiveAnswers).length < 25) { toast({ title: 'Avalie todas as 25 afirmações.', variant: 'destructive' }); return; }
 
     setIsSubmitting(true);
-    let result: any = null;
+    let result: ReturnType<typeof calcDisc> | ReturnType<typeof calcMbti> | ReturnType<typeof calcBigFive> | null = null;
     if (testType === 'disc')    result = calcDisc();
     if (testType === 'mbti')    result = calcMbti();
     if (testType === 'bigfive') result = calcBigFive();
@@ -292,7 +292,7 @@ export default function AssessmentHub() {
         {testType === 'disc' && (() => {
           const dom = resultScreen.dominant;
           const info = discDescriptions[dom.letter];
-          const colorMap: any = { D: 'bg-red-500', I: 'bg-yellow-500', S: 'bg-green-500', C: 'bg-blue-500' };
+          const colorMap: Record<string, string> = { D: 'bg-red-500', I: 'bg-yellow-500', S: 'bg-green-500', C: 'bg-blue-500' };
           
           return (
             <div className="space-y-6">
@@ -620,7 +620,7 @@ export default function AssessmentHub() {
             {q.text || (isDisc ? q.text : q.text)}
           </p>
           <div className="grid grid-cols-1 gap-3">
-            {(isDisc ? q.options : [{ letter: q.A.letter, text: q.A.text }, { letter: q.B.letter, text: q.B.text }]).map((opt: any) => (
+            {(isDisc ? q.options : [{ letter: q.A.letter, text: q.A.text }, { letter: q.B.letter, text: q.B.text }]).map((opt: { letter: string; text: string }) => (
               <button key={opt.letter} onClick={() => {
                 setAnswers(prev => ({ ...prev, [q.id]: opt.letter }));
                 if (currentQ < totalQ - 1) setTimeout(() => setCurrentQ(c => c+1), 250);

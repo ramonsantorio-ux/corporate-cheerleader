@@ -15,12 +15,14 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipEntry { name: string; value: number | string; color?: string; }
+interface CustomTooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload) return null;
   return (
     <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-xs">
       <p className="font-semibold text-foreground mb-1">{label}</p>
-      {payload.map((entry: any) => (
+      {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-muted-foreground">{entry.name}:</span>
@@ -76,13 +78,15 @@ const assessments = [
 
 export default function Treinamentos() {
   const navigate = useNavigate();
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [assessmentsData, setAssessmentsData] = useState<any[]>([]);
+  type Employee = { id: string; nome: string; cargo: string; foto_url?: string };
+  type AssessmentResult = { id: string; user_id: string; type: string; result_data: unknown; created_at: string };
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [assessmentsData, setAssessmentsData] = useState<AssessmentResult[]>([]);
   const [search, setSearch] = useState('');
   const [selectedProfileId, setSelectedProfileId] = useState<string>('');
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
 
-  const [reportModal, setReportModal] = useState<{open: boolean; type: string; data: any; empName: string}>({open: false, type: '', data: null, empName: ''});
+  const [reportModal, setReportModal] = useState<{open: boolean; type: string; data: unknown; empName: string}>({open: false, type: '', data: null, empName: ''});
   const { toast } = useToast();
 
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
@@ -131,33 +135,29 @@ export default function Treinamentos() {
     fetchData();
   }, []);
 
-  const isTestValid = (tests: any[], type: string, empId: string) => {
-    // Para funcionar offline / mock, se for o mock-1
+  const isTestValid = (tests: AssessmentResult[], type: string, empId: string) => {
     if (empId === 'mock-1') return true;
-
     const test = tests.find(a => a.user_id === empId && a.type === type);
     if (!test) return false;
-    if (!test.created_at) return true; // Se não tiver data, assumimos válido
-
+    if (!test.created_at) return true;
     const testDate = new Date(test.created_at);
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
     return testDate >= oneYearAgo;
   };
 
-  const getTestData = (tests: any[], type: string, empId: string) => {
+  const getTestData = (tests: AssessmentResult[], type: string, empId: string) => {
     if (empId === 'mock-1') {
       if (type === 'disc') return { dominant: { letter: 'D' }, D: 85, I: 40, S: 15, C: 60 };
       if (type === 'mbti') return { type: 'ENTJ', desc: { title: 'Comandante', traits: ['Decisivo', 'Estratégico', 'Ambicioso'], desc: 'Líderes natos com visão estratégica e alto poder de execução.' } };
       if (type === 'bigfive') return { O: 85, C: 75, E: 90, A: 40, N: 30 };
     }
     const valid = isTestValid(tests, type, empId);
-    if (!valid) return null; // Só retorna os dados se estiver válido
+    if (!valid) return null;
     return tests.find(a => a.user_id === empId && a.type === type)?.result_data || tryParse(`${type}_${empId}`);
   };
 
-  const getTestId = (tests: any[], type: string, empId: string) => {
+  const getTestId = (tests: AssessmentResult[], type: string, empId: string) => {
     const test = tests.find(a => a.user_id === empId && a.type === type);
     return test?.id || null;
   };

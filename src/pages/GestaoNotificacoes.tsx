@@ -207,7 +207,7 @@ const GestaoNotificacoes = () => {
           <input type="text" placeholder="Buscar por motivo ou local..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent border-none outline-none text-sm w-full" />
         </div>
         <div className="flex items-center gap-2">
-          <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+          <Select value={filterType} onValueChange={(v: string) => setFilterType(v)}>
             <SelectTrigger className="w-[140px] h-9 bg-background border-slate-200">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
@@ -218,7 +218,7 @@ const GestaoNotificacoes = () => {
             </SelectContent>
           </Select>
           
-          <Select value={filterAction} onValueChange={(v: any) => setFilterAction(v)}>
+          <Select value={filterAction} onValueChange={(v: string) => setFilterAction(v)}>
             <SelectTrigger className="w-[140px] h-9 bg-background border-slate-200">
               <SelectValue placeholder="Status" />
             </SelectTrigger>

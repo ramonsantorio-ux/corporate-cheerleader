@@ -30,16 +30,16 @@ import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
 import { InstallPWA } from './components/InstallPWA';
 
-class ErrorBoundary extends React.Component<any, { hasError: boolean; errorId: string; errorMessage: string; errorStack: string }> {
-  constructor(props: any) {
+class ErrorBoundary extends React.Component<React.PropsWithChildren, { hasError: boolean; errorId: string; errorMessage: string; errorStack: string }> {
+  constructor(props: React.PropsWithChildren) {
     super(props);
     this.state = { hasError: false, errorId: '', errorMessage: '', errorStack: '' };
   }
-  static getDerivedStateFromError(error: any) {
+  static getDerivedStateFromError(error: Error) {
     const errorId = Math.random().toString(36).substring(2, 8).toUpperCase();
     return { hasError: true, errorId, errorMessage: error?.message || String(error), errorStack: error?.stack || '' };
   }
-  componentDidCatch(error: any, info: any) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     // Log do erro para debugging — NÃO exposto ao usuário
     console.error('[ErrorBoundary] Erro capturado:', error, info);
   }

@@ -48,12 +48,14 @@ const getRowColor = (status: string) => {
   return 'hover:bg-muted/50';
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipEntry { name: string; value: number | string; color?: string; fill?: string; }
+interface TooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-background/95 backdrop-blur-sm border border-border p-3 rounded-lg shadow-xl text-xs z-50">
         <p className="font-bold text-foreground mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry, index: number) => (
           <div key={index} className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
             <span className="text-muted-foreground">{entry.name}:</span>
@@ -68,9 +70,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+interface MetaItem { id: string; setor: string; meta: string; categoria: string; ref: number; alcBruto: string; alc: number; status: string; ordem?: number; score?: number; }
+type MonthData = { atingido: number; globalId: string | null; gap: number; counts: { acima: number; aceitavel: number; abaixo: number }; metas: MetaItem[] };
+
 export default function MetasPorto() {
 
-  const [dbData, setDbData] = useState<any[]>([]);
+  type DbRow = { id: string; indicador: string; setor: string; mes: string; referencia: number; alcancado: number; };
+  const [dbData, setDbData] = useState<DbRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}>>({});
@@ -97,8 +103,9 @@ export default function MetasPorto() {
       if (error) throw error;
       toast.success('Métrica adicionada com sucesso!');
       fetchMetas();
-    } catch (err: any) {
-      toast.error('Erro ao adicionar métrica: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao adicionar métrica: ' + msg);
     } finally {
       setIsSaving(false);
     }
@@ -112,8 +119,9 @@ export default function MetasPorto() {
       if (error) throw error;
       toast.success('Métrica excluída!');
       fetchMetas();
-    } catch (err: any) {
-      toast.error('Erro ao excluir: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao excluir: ' + msg);
     } finally {
       setIsSaving(false);
     }
@@ -140,7 +148,7 @@ export default function MetasPorto() {
   const handleEditAll = () => {
     const values: Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}> = {};
     const order: string[] = [];
-    data.metas.forEach((m: any) => {
+    data.metas.forEach((m: MetaItem) => {
       values[m.id] = { meta: m.meta, categoria: m.categoria, ref: m.ref.toString(), alcBruto: m.alcBruto, alcPeso: m.alc.toString(), status: m.status };
       order.push(m.id);
     });
@@ -194,8 +202,9 @@ export default function MetasPorto() {
       toast.success('Metas atualizadas!');
       setIsEditing(false);
       await fetchMetas();
-    } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error('Erro ao salvar: ' + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -221,8 +230,9 @@ export default function MetasPorto() {
       toast.success('Atingimento Global atualizado!');
       setIsEditingGlobal(false);
       await fetchMetas();
-    } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao salvar: ' + msg);
     } finally {
       setIsSavingGlobal(false);
     }
@@ -241,7 +251,7 @@ export default function MetasPorto() {
       { meta: 'Turnover', categoria: 'RH', ref: 5, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 }
     ];
 
-    const result: any = {};
+    const result: Record<string, MonthData> = {};
     MESES.forEach(m => { 
       result[m] = { 
         atingido: 0, globalId: null, gap: 100, counts: { acima: 0, aceitavel: 0, abaixo: 0 }, 
@@ -251,7 +261,7 @@ export default function MetasPorto() {
     
     if (!dbData || dbData.length === 0) return result;
 
-    const grouped = dbData.reduce((acc: any, row: any) => {
+    const grouped = dbData.reduce((acc: Record<string, DbRow[]>, row: DbRow) => {
       if (!acc[row.mes]) acc[row.mes] = [];
       acc[row.mes].push(row);
       return acc;
@@ -264,14 +274,14 @@ export default function MetasPorto() {
       let globalScore = 0;
       let globalId = null;
 
-      const metasFormatadas = metasMes.filter((row: any) => {
+      const metasFormatadas = metasMes.filter((row: DbRow) => {
         if (row.indicador === '__ATINGIMENTO_GLOBAL__') {
           globalScore = row.alcancado || 0;
           globalId = row.id;
           return false;
         }
         return true;
-      }).map((row: any) => {
+      }).map((row: DbRow) => {
         const rawInd = row.indicador || '';
         const parts = rawInd.split('|');
         const metaName = parts[0].trim();
@@ -295,7 +305,7 @@ export default function MetasPorto() {
         const alc = row.alcancado || 0;
         const ref = row.referencia || 1;
         
-        let status = dbStatus;
+        const status = dbStatus;
         
         if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
         else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
@@ -323,7 +333,7 @@ export default function MetasPorto() {
         'turnover'
       ];
 
-      metasFormatadas.sort((a: any, b: any) => {
+      metasFormatadas.sort((a: MetaItem, b: MetaItem) => {
         const indexA = METAS_ORDER.findIndex(m => a.meta.toLowerCase().includes(m));
         const indexB = METAS_ORDER.findIndex(m => b.meta.toLowerCase().includes(m));
         
@@ -634,7 +644,7 @@ export default function MetasPorto() {
               </TableHeader>
               <TableBody>
                 <AnimatePresence mode="popLayout">
-                  {(isEditing ? editOrder.map(id => data.metas.find(m => m.id === id)).filter(Boolean) : data.metas).map((m: any, idx) => {
+                  {(isEditing ? editOrder.map(id => data.metas.find(m => m.id === id)).filter(Boolean) : data.metas).map((m: { id: string; meta?: string; score: number; status?: string; peso?: number; meta_valor?: number | string; realizado?: number | string }, idx) => {
                     const fillPercentage = Math.min(m.score, 100) || 0;
                     const isCusto = m.meta?.toLowerCase().includes('custo');
                     return (

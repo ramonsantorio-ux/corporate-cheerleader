@@ -41,12 +41,14 @@ interface EvaluationCycle {
   id: string; end_date: string;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipEntry { name: string; value: number | string; color?: string; }
+interface CustomTooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload) return null;
   return (
     <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-xs">
       <p className="font-semibold text-foreground mb-1">{label}</p>
-      {payload.map((entry: any) => (
+      {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-muted-foreground">{entry.name}:</span>
@@ -93,7 +95,7 @@ export default function Competencias() {
       supabase.from('funcionarios').select('id, nome, cargo').then(({ data }) => { if (data) setFuncionarios(data as Funcionario[]); }),
       supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at').then(({ data }) => { if (data) setEvaluations(data as Evaluation[]); }),
       supabase.from('evaluation_cycles').select('id, end_date').then(({ data }) => { if (data) setEvalCycles(data as EvaluationCycle[]); }),
-      supabase.from('fit_cultural').select('employee_id, stage').then(({ data }) => { if (data) setFitCulturalAnswers(data as any[]); }),
+      supabase.from('fit_cultural').select('employee_id, stage').then(({ data }) => { if (data) setFitCulturalAnswers(data as { employee_id: string; stage: string }[]); }),
     ]);
   }, []);
 

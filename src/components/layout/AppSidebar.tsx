@@ -12,7 +12,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 const busatoGlobo = '/logo.png';
 import busatoLogoFull from '@/assets/busato-logo-full.png';
 
-interface NavItem { to: string; icon: any; label: string; badge?: string; key: string }
+import type { LucideIcon } from 'lucide-react';
+
+interface NavItem { to: string; icon: LucideIcon; label: string; badge?: string; key: string }
 interface NavGroup { label: string; items: NavItem[] }
 
 const navGroups: NavGroup[] = [

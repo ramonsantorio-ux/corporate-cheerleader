@@ -1,6 +1,20 @@
 // Utility to load the Busato logo as base64 for jsPDF
 let cachedLogo: string | null = null;
 
+/** Minimal interface covering the jsPDF methods we call internally. */
+interface JsPDFDoc {
+  internal: { pageSize: { getWidth(): number; getHeight(): number } };
+  addImage(data: string, format: string, x: number, y: number, w: number, h: number): void;
+  setTextColor(r: number, g: number, b: number): void;
+  setFontSize(size: number): void;
+  setFont(family: string, style: string): void;
+  text(text: string, x: number, y: number, options?: { align?: string }): void;
+  setDrawColor(r: number, g: number, b: number): void;
+  setLineWidth(width: number): void;
+  line(x1: number, y1: number, x2: number, y2: number): void;
+  setFillColor(r: number, g: number, b: number): void;
+  rect(x: number, y: number, w: number, h: number, style?: string): void;
+}
 // ── Corporate color palette (matching Busato logo) ──
 export const PDF_COLORS = {
   primary: [59, 130, 187] as const,      // Blue from logo
@@ -38,7 +52,7 @@ export async function getBusatoLogoBase64(): Promise<string | null> {
  * Returns the Y position after the header (typically 75).
  */
 export function drawBusatoHeader(
-  doc: any,
+  doc: JsPDFDoc,
   logoBase64: string | null,
   title: string,
   subtitle: string,
@@ -92,7 +106,7 @@ export function drawBusatoHeader(
 }
 
 export function drawBusatoFooter(
-  doc: any,
+  doc: JsPDFDoc,
   pageNum: number = 1,
   options?: { pageWidth?: number; pageHeight?: number }
 ) {
@@ -110,7 +124,7 @@ export function drawBusatoFooter(
  * Draws a section heading with blue accent bar (like "EMPRESA LOCADORA").
  */
 export function drawSectionHeading(
-  doc: any,
+  doc: JsPDFDoc,
   title: string,
   y: number,
   options?: { margin?: number; pageWidth?: number }
@@ -135,7 +149,7 @@ export function drawSectionHeading(
  * Draws a horizontal progress bar for charts.
  */
 export function drawPdfBarChart(
-  doc: any,
+  doc: JsPDFDoc,
   label: string,
   percentage: number,
   y: number,
@@ -171,7 +185,7 @@ export function drawPdfBarChart(
  * Draws a bidirectional slider (like MBTI / DISC trends).
  */
 export function drawPdfSlider(
-  doc: any,
+  doc: JsPDFDoc,
   leftLabel: string,
   rightLabel: string,
   leftVal: number,
@@ -199,14 +213,14 @@ export function drawPdfSlider(
   // Left fill
   const leftWidth = (leftVal / 100) * width;
   if (leftWidth > 0) {
-    doc.setFillColor(...lColor as any);
+    doc.setFillColor(...lColor);
     doc.rect(margin, barY, leftWidth, barHeight, 'F');
   }
 
   // Right fill
   const rightWidth = (rightVal / 100) * width;
   if (rightWidth > 0) {
-    doc.setFillColor(...rColor as any);
+    doc.setFillColor(...rColor);
     doc.rect(margin + leftWidth, barY, rightWidth, barHeight, 'F');
   }
 

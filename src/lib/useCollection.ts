@@ -20,7 +20,7 @@ export function useCollection<T>(collectionName: string, defaultData: T[]) {
 
   const updateData = async (newData: T[] | ((prev: T[]) => T[])) => {
     // Allow function updates similar to setState
-    const resolvedData = typeof newData === 'function' ? (newData as Function)(data) : newData;
+    const resolvedData = typeof newData === 'function' ? (newData as (prev: T[]) => T[])(data) : newData;
     
     setData(resolvedData);
     localStorage.setItem(localKey, JSON.stringify(resolvedData));

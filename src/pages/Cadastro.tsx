@@ -150,7 +150,7 @@ export default function Cadastro() {
       }
 
       const toInsert = records.map(r => {
-        const obj: any = {
+        const obj: Record<string, unknown> = {
           nome: r.nome,
           email: r.email,
           cargo: r.cargo,
@@ -243,7 +243,7 @@ export default function Cadastro() {
       return;
     }
 
-    const insertData: any = {
+    const insertData: Record<string, unknown> = {
       nome: newData.nome,
       email: newData.email,
       cargo: newData.cargo,
@@ -338,7 +338,7 @@ export default function Cadastro() {
       return;
     }
 
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       nome: editData.nome,
       email: editData.email,
       cargo: editData.cargo,

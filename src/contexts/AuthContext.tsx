@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function fetchRoleAndPermissions(userId: string) {
     const { data: rolesData } = await supabase.from('user_roles').select('role, profile_id').eq('user_id', userId);
-    const roles = rolesData?.map((r: any) => r.role) ?? [];
+    const roles = rolesData?.map((r: { role: string; profile_id?: string }) => r.role) ?? [];
     setIsAdmin(roles.includes('admin'));
 
     const profileId = rolesData?.[0]?.profile_id;
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .select('page, can_view, can_create, can_edit, can_delete')
         .eq('profile_id', profileId);
 
-      permsRes?.forEach((p: any) => {
+      permsRes?.forEach((p: { page: string; can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }) => {
         permsMap[p.page] = {
           can_view: p.can_view,
           can_create: p.can_create,
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('user_id', userId)
         .neq('page', 'banned'); // 'banned' é sentinela de bloqueio, não permissão real
 
-      legacyPerms?.forEach((p: any) => {
+      legacyPerms?.forEach((p: { page: string; can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }) => {
         permsMap[p.page] = {
           can_view: p.can_view,
           can_create: p.can_create,

@@ -214,8 +214,9 @@ export default function FuncionarioProfile() {
       const { error } = await supabase.from('goals').delete().eq('id', deleteGoalId);
       if (error) throw error;
       setDeleteGoalId(null); toast({ title: 'Meta excluída' }); fetchGoals();
-    } catch (err: any) {
-      toast({ title: 'Erro ao excluir meta', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast({ title: 'Erro ao excluir meta', description: msg, variant: 'destructive' });
     }
   }
 
@@ -230,7 +231,7 @@ export default function FuncionarioProfile() {
   const [fitScores, setFitScores] = useState<{ criteria: string; stage: string; score: number | null }[]>([]);
   useEffect(() => {
     if (!id) return;
-    supabase.from('fit_cultural').select('criteria, stage, score').eq('employee_id', id).then(({ data }) => { if (data) setFitScores(data as any); });
+    supabase.from('fit_cultural').select('criteria, stage, score').eq('employee_id', id).then(({ data }) => { if (data) setFitScores(data as { criteria: string; stage: string; score: number | null }[]); });
   }, [id]);
 
   const scoreFit = useMemo(() => {
@@ -302,13 +303,15 @@ export default function FuncionarioProfile() {
     return start > today && (start.getTime() - today.getTime()) <= 7 * 86400000;
   }, [vacationInfo]);
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipEntry { name: string; value: number | string; color?: string; fill?: string; }
+  interface CustomTooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[150px]">
           {label && <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>}
           <div className="space-y-2">
-            {payload.map((entry: any, index: number) => (
+            {payload.map((entry, index: number) => (
               <div key={index} className="flex items-center justify-between gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color || entry.fill }} />

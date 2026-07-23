@@ -34,7 +34,9 @@ const DEFAULT_NAMES = [
   { nome: 'THIAGO GOMES', letra: 'B Noite' }
 ];
 
-function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctNC, inputStyle, funcionariosList = [] }: any) {
+interface FuncItem { id: string; nome: string; cargo?: string; letra?: string; }
+interface SortableRowProps { row: N3Data; idx: number; handleChange: (index: number, field: keyof N3Data, value: string) => void; handleRemoveRow: (idx: number) => void; badgeClass: (n: number, t: number) => string; pctNC: (n: number, t: number) => number; inputStyle: string; funcionariosList?: FuncItem[]; }
+function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctNC, inputStyle, funcionariosList = [] }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id });
 
   const style = {
@@ -57,10 +59,10 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
           className={`flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${inputStyle}`}
         >
           <option value="">Selecione o colaborador...</option>
-          {funcionariosList.map((f: any) => (
+          {funcionariosList.map((f: FuncItem) => (
             <option key={f.id} value={f.nome}>{f.nome}</option>
           ))}
-          {!funcionariosList.find((f: any) => f.nome === row.nome_email) && row.nome_email && (
+          {!funcionariosList.find((f: FuncItem) => f.nome === row.nome_email) && row.nome_email && (
             <option value={row.nome_email}>{row.nome_email}</option>
           )}
         </select>
@@ -171,7 +173,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
   };
 
   const handleSortByNC = () => {
-    const sorted = [...data].sort((a: any, b: any) => {
+    const sorted = [...data].sort((a: N3Data, b: N3Data) => {
       const diff = Number(b.verificacoes_nc || 0) - Number(a.verificacoes_nc || 0);
       return diff !== 0 ? diff : (a.nome_email || '').localeCompare(b.nome_email || '');
     });
@@ -186,7 +188,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     })
   );
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: { active: { id: string }; over: { id: string } | null }) => {
     const { active, over } = event;
 
     if (active && over && active.id !== over.id) {
@@ -202,7 +204,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     fetchData();
   }, [periodo]);
 
-  const [funcionariosList, setFuncionariosList] = useState<any[]>([]);
+  const [funcionariosList, setFuncionariosList] = useState<FuncItem[]>([]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -210,8 +212,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       const { data: emps } = await supabase.from('funcionarios').select('id, nome, cargo, letra').order('nome');
       setFuncionariosList(emps || []);
       
-      const cargoMap = (emps || []).reduce((acc: any, e: any) => {
-        if (e.nome) acc[e.nome.toUpperCase().trim()] = e.cargo;
+      const cargoMap = (emps || []).reduce((acc: Record<string, string>, e: FuncItem) => {
+        if (e.nome) acc[e.nome.toUpperCase().trim()] = e.cargo || '';
         return acc;
       }, {});
       setCargoMapState(cargoMap);
@@ -225,7 +227,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         console.error('Tabela n3 não existe ou erro ao buscar. Iniciando com dados locais.');
         initMockData(cargoMap);
       } else {
-        const allDataWithCargo = (allData || []).map((d: any) => ({
+        const allDataWithCargo = (allData || []).map((d: N3Data & { cargo?: string; nome_email: string }) => ({
           ...d,
           cargo: d.cargo || cargoMap[(d.nome_email || '').toUpperCase().trim()] || ''
         }));
@@ -236,7 +238,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         
         let currentPeriodData = [];
         if (periodo === 'all') {
-          const aggregated = allDataWithCargo.reduce((acc: any, curr: any) => {
+          const aggregated = allDataWithCargo.reduce((acc: Record<string, N3Data>, curr: N3Data) => {
             const key = curr.nome_email;
             if (!acc[key]) {
               acc[key] = { ...curr, id: key, periodo: 'all', total_verificacoes: 0, total_treinamentos: 0, total_assistencia: 0, verificacoes_nc: 0, perguntas_nc: 0 };
@@ -249,15 +251,15 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
           }, {});
           currentPeriodData = Object.values(aggregated);
         } else {
-          currentPeriodData = allDataWithCargo.filter((d: any) => d.periodo === periodo);
+          currentPeriodData = allDataWithCargo.filter((d: N3Data) => d.periodo === periodo);
         }
 
         if (currentPeriodData.length > 0) {
-          const sorted = currentPeriodData.sort((a: any, b: any) => {
+          const sorted = currentPeriodData.sort((a: N3Data, b: N3Data) => {
             const diff = Number(b.verificacoes_nc || 0) - Number(a.verificacoes_nc || 0);
             return diff !== 0 ? diff : (a.nome_email || '').localeCompare(b.nome_email || '');
           });
-          setData(sorted.map((d: any) => ({ ...d, id: d.id || Math.random().toString(36).substring(2, 9) })));
+          setData(sorted.map((d: N3Data) => ({ ...d, id: (d as { id?: string }).id || Math.random().toString(36).substring(2, 9) })));
         } else {
           // Começar o mês em branco se não houver lançamentos
           setData([]);
@@ -269,7 +271,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     setLoading(false);
   };
 
-  const initMockData = (cargoMap: any = {}) => {
+  const initMockData = (cargoMap: Record<string, string> = {}) => {
     setData(
       DEFAULT_NAMES.map(colab => ({
         id: Math.random().toString(36).substring(2, 9),
@@ -292,7 +294,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       
       // Auto-fill cargo and letra if name changed
       if (field === 'nome_email') {
-        const func = funcionariosList.find((f: any) => f.nome === value);
+        const func = funcionariosList.find((f: FuncItem) => f.nome === value);
         if (func) {
           if (!newData[index].cargo && func.cargo) newData[index].cargo = func.cargo;
           if (!newData[index].letra && func.letra) newData[index].letra = func.letra;
@@ -343,8 +345,9 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       if (error) throw error;
       toast.success('Dados salvos com sucesso!');
       fetchData(); 
-    } catch (err: any) {
-      toast.error('Ocorreu um erro ao salvar: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Ocorreu um erro ao salvar: ' + msg);
     }
     setSaving(false);
   };
@@ -357,7 +360,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       const ab = await file.arrayBuffer();
       const rawData = await readExcelRows(ab);
 
-      const importedData: N3Data[] = rawData.map((row: any) => {
+      const importedData: N3Data[] = rawData.map((row: Record<string, unknown>) => {
         const nome = row['NOME-EMAIL'] || row['Nome'] || '';
         return {
           nome_email: nome,
@@ -434,8 +437,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       acc[name].Treinamentos += Number(curr.total_treinamentos || 0);
       acc[name]['Não Conformes'] += Number(curr.verificacoes_nc || 0);
       return acc;
-    }, {} as Record<string, any>);
-    return Object.values(aggregated).sort((a: any, b: any) => a.name.localeCompare(b.name));
+    }, {} as Record<string, { name: string; Verificações: number; Treinamentos: number; 'Não Conformes': number }>);
+    return Object.values(aggregated).sort((a, b) => a.name.localeCompare(b.name));
   }, [filteredHistoricalData]);
 
   const evolutionChartData = useMemo(() => {

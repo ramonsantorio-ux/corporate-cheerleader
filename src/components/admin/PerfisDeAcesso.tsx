@@ -75,8 +75,9 @@ export function PerfisDeAcesso() {
     }
 
     const permsMap = new Map(data?.map(p => [p.page, p]));
+    type PermRow = { page: string; can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean };
     const defaultPerms = PAGES.map(p => {
-      const existing = permsMap.get(p.key) as any;
+      const existing = permsMap.get(p.key) as PermRow | undefined;
       return {
         page: p.key,
         can_view: existing?.can_view || false,

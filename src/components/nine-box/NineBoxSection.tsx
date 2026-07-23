@@ -56,9 +56,11 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
   const [observacao, setObservacao] = useState('');
   const [activeTab, setActiveTab] = useState('tradicional');
   const [cycle, setCycle] = useState<string>('');
-  const [dbCycles, setDbCycles] = useState<any[]>([]);
+  type DbCycle = { id: string; name: string; created_at: string };
+  type HistoricoEntry = { id: string; employee_id: string; cycle: string; performance: string; potential: string; confianca?: string; observacao?: string; created_at: string };
+  const [dbCycles, setDbCycles] = useState<DbCycle[]>([]);
   const [loading, setLoading] = useState(false);
-  const [historico, setHistorico] = useState<any[]>([]);
+  const [historico, setHistorico] = useState<HistoricoEntry[]>([]);
   const [viewMode, setViewMode] = useState<'nova' | 'historico'>('nova');
 
   useEffect(() => {

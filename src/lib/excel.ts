@@ -8,7 +8,7 @@ export interface ExcelRow {
  * Converte de forma robusta valores de data vindos do Excel (nativos, numéricos ou strings)
  * para o formato ISO YYYY-MM-DD aceito pelo banco de dados.
  */
-export function parseExcelDate(val: any): string | null {
+export function parseExcelDate(val: unknown): string | null {
   if (!val) return null;
 
   // 1. Já é um objeto Date (caso cellDates: true tenha funcionado)
@@ -74,7 +74,7 @@ export async function readExcelRows(buffer: ArrayBuffer): Promise<ExcelRow[]> {
   const worksheet = workbook.Sheets[sheetName];
   if (!worksheet) return [];
 
-  const rawRows = XLSX.utils.sheet_to_json<any>(worksheet, { raw: true });
+  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { raw: true });
   
   return rawRows.map(row => {
     const newRow: ExcelRow = {};
@@ -104,13 +104,13 @@ export async function readExcelRows(buffer: ArrayBuffer): Promise<ExcelRow[]> {
  * Cada linha é um array com os valores de cada célula.
  * Datas Excel são retornadas como strings "YYYY-MM-DD".
  */
-export async function readExcelRaw(buffer: ArrayBuffer): Promise<any[][]> {
+export async function readExcelRaw(buffer: ArrayBuffer): Promise<unknown[][]> {
   const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   if (!worksheet) return [];
 
-  const result = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1, raw: true });
+  const result = XLSX.utils.sheet_to_json<unknown[]>(worksheet, { header: 1, raw: true });
   
   return result.map(row => {
     return row.map(val => {

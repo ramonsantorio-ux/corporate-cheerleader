@@ -68,19 +68,19 @@ export default function TopBar() {
 
     // Get employee names for warnings and absences
     const empIds = new Set<string>();
-    warnRes.data?.forEach((w: any) => empIds.add(w.employee_id));
-    attRes.data?.forEach((a: any) => empIds.add(a.employee_id));
+    warnRes.data?.forEach((w: { employee_id: string }) => empIds.add(w.employee_id));
+    attRes.data?.forEach((a: { employee_id: string }) => empIds.add(a.employee_id));
 
     let nameMap: Record<string, string> = {};
     if (empIds.size > 0) {
       const { data: emps } = await supabase.from('funcionarios').select('id, nome').in('id', Array.from(empIds));
-      if (emps) nameMap = Object.fromEntries(emps.map((e: any) => [e.id, e.nome]));
+      if (emps) nameMap = Object.fromEntries(emps.map((e: { id: string; nome: string }) => [e.id, e.nome]));
     }
 
     const items: AlertItem[] = [];
 
     // Warnings
-    warnRes.data?.forEach((w: any) => {
+    warnRes.data?.forEach((w: { id: string; employee_id: string; applied: boolean; reason?: string; date: string }) => {
       items.push({
         id: `warn-${w.id}`,
         type: 'warning',
@@ -94,7 +94,7 @@ export default function TopBar() {
     });
 
     // Events
-    evtRes.data?.forEach((e: any) => {
+    evtRes.data?.forEach((e: { id: string; event_date: string; description?: string; involved_name: string }) => {
       items.push({
         id: `evt-${e.id}`,
         type: 'event',
@@ -108,7 +108,7 @@ export default function TopBar() {
     });
 
     // Pending feedbacks
-    fbRes.data?.forEach((f: any) => {
+    fbRes.data?.forEach((f: { id: string; titulo: string; status: string; autor: string; criado_em?: string }) => {
       items.push({
         id: `fb-${f.id}`,
         type: 'feedback',
@@ -122,7 +122,7 @@ export default function TopBar() {
     });
 
     // Absences (unexcused)
-    attRes.data?.forEach((a: any) => {
+    attRes.data?.forEach((a: { id: string; employee_id: string; date: string }) => {
       items.push({
         id: `abs-${a.id}`,
         type: 'absence',
@@ -147,7 +147,9 @@ export default function TopBar() {
       const newSeen = new Set(seen);
       alerts.forEach(a => newSeen.add(a.id));
       setSeen(newSeen);
-      try { localStorage.setItem('seen_alerts', JSON.stringify(Array.from(newSeen))); } catch {}
+      try { localStorage.setItem('seen_alerts', JSON.stringify(Array.from(newSeen))); } catch {
+        // localStorage pode estar indisponível em modo restrito
+      }
     }
   }
 

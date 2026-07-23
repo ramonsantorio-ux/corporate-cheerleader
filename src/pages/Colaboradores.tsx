@@ -190,7 +190,7 @@ export default function Colaboradores() {
       })).filter(r => r.nome && r.cargo && r.departamento);
       if (records.length === 0) { toast.error('Nenhum registro válido encontrado.'); setImporting(false); return; }
       const toInsert = records.map(r => {
-        const obj: any = { nome: r.nome, email: r.email, cargo: r.cargo, departamento: r.departamento, escolaridade: r.escolaridade, graduacao: r.graduacao, pos_graduacao: r.pos_graduacao, pos_graduacao_tipo: r.pos_graduacao_tipo, turno: r.turno, letra: r.letra };
+        const obj: Record<string, unknown> = { nome: r.nome, email: r.email, cargo: r.cargo, departamento: r.departamento, escolaridade: r.escolaridade, graduacao: r.graduacao, pos_graduacao: r.pos_graduacao, pos_graduacao_tipo: r.pos_graduacao_tipo, turno: r.turno, letra: r.letra };
         if (r.data_admissao) obj.data_admissao = r.data_admissao;
         return obj;
       });
@@ -207,14 +207,16 @@ export default function Colaboradores() {
     setUploading(true);
     let foto_url = '';
     try { if (newPhotoFile) foto_url = await uploadPhoto(newPhotoFile); } catch { toast.error('Erro ao enviar foto'); setUploading(false); return; }
-    const insertData: any = { nome: newData.nome, email: newData.email, cargo: newData.cargo, departamento: newData.departamento, escolaridade: newData.escolaridade, graduacao: newData.graduacao, pos_graduacao: newData.pos_graduacao, pos_graduacao_tipo: newData.pos_graduacao_tipo, turno: newData.turno, letra: newData.letra, foto_url };
+    const insertData: Record<string, unknown> = { nome: newData.nome, email: newData.email, cargo: newData.cargo, departamento: newData.departamento, escolaridade: newData.escolaridade, graduacao: newData.graduacao, pos_graduacao: newData.pos_graduacao, pos_graduacao_tipo: newData.pos_graduacao_tipo, turno: newData.turno, letra: newData.letra, foto_url };
     if (newData.data_admissao) insertData.data_admissao = newData.data_admissao;
     if (newData.encarregado_id && newData.encarregado_id !== 'none') insertData.encarregado_id = newData.encarregado_id;
     const { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
     if (error) { toast.error('Erro ao cadastrar'); setUploading(false); return; }
     if (docFiles.length > 0 && inserted) {
       for (const file of docFiles) {
-        try { const { url, name } = await uploadDocument(file); await supabase.from('employee_documents').insert({ employee_id: inserted.id, file_url: url, file_name: name, document_type: 'habilitacao' }); } catch {}
+        try { const { url, name } = await uploadDocument(file); await supabase.from('employee_documents').insert({ employee_id: inserted.id, file_url: url, file_name: name, document_type: 'habilitacao' }); } catch {
+          // Falha ao fazer upload de um documento individual — ignorada para não bloquear o cadastro
+        }
       }
     }
     setUploading(false); setNewData(emptyForm); setNewPhotoFile(null); setNewPhotoPreview(''); setDocFiles([]); setCreateOpen(false);
@@ -231,12 +233,14 @@ export default function Colaboradores() {
     setUploading(true);
     let foto_url = editData.foto_url;
     try { if (editPhotoFile) foto_url = await uploadPhoto(editPhotoFile); } catch { toast.error('Erro foto'); setUploading(false); return; }
-    const updateData: any = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id && editData.encarregado_id !== 'none' ? editData.encarregado_id : null, foto_url };
+    const updateData: Record<string, unknown> = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id && editData.encarregado_id !== 'none' ? editData.encarregado_id : null, foto_url };
     if (editData.data_admissao) updateData.data_admissao = editData.data_admissao;
     const { error } = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
     if (editDocFiles.length > 0) {
       for (const file of editDocFiles) {
-        try { const { url, name } = await uploadDocument(file); await supabase.from('employee_documents').insert({ employee_id: editData.id, file_url: url, file_name: name, document_type: 'habilitacao' }); } catch {}
+        try { const { url, name } = await uploadDocument(file); await supabase.from('employee_documents').insert({ employee_id: editData.id, file_url: url, file_name: name, document_type: 'habilitacao' }); } catch {
+          // Falha ao fazer upload de um documento individual — ignorada para não bloquear a atualização
+        }
       }
     }
     setUploading(false);
@@ -492,7 +496,7 @@ export default function Colaboradores() {
                 <button onClick={() => editFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
               )}
             </div>
-            {renderFormFields(editData, setEditData as any, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
+            {renderFormFields(editData, setEditData as (v: typeof editData | ((p: typeof editData) => typeof editData)) => void, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
             <Button className="w-full" onClick={handleEdit} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Salvar Alterações</Button>
           </div>
         </DialogContent>

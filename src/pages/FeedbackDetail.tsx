@@ -1,4 +1,4 @@
-﻿import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { FastTextarea } from '@/components/ui/fast-textarea';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
@@ -31,8 +31,9 @@ interface FeedbackRow {
   atualizado_em: string;
 }
 
+import type { LucideIcon } from 'lucide-react';
 // Status workflow: which transitions are allowed
-const STATUS_TRANSITIONS: Record<string, { next: FeedbackStatus; label: string; icon: any; color: string }[]> = {
+const STATUS_TRANSITIONS: Record<string, { next: FeedbackStatus; label: string; icon: LucideIcon; color: string }[]> = {
   novo: [
     { next: 'em_analise', label: 'Iniciar Análise', icon: Clock, color: 'bg-warning text-warning-foreground' },
     { next: 'arquivado', label: 'Arquivar', icon: X, color: 'bg-muted text-muted-foreground' },
@@ -92,10 +93,10 @@ export default function FeedbackDetail() {
     }
   }, [user]);
 
-  async function changeStatus(newStatus: FeedbackStatus, extraFields?: Record<string, any>) {
+  async function changeStatus(newStatus: FeedbackStatus, extraFields?: Record<string, unknown>) {
     if (!feedback) return;
     setUpdating(true);
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       status: newStatus,
       atualizado_em: new Date().toISOString(),
       ...extraFields,
@@ -258,7 +259,7 @@ export default function FeedbackDetail() {
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }} className="corporate-kpi">
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Prioridade</p>
-          <div className="mt-2"><PriorityBadge priority={feedback.prioridade as any} /></div>
+          <div className="mt-2"><PriorityBadge priority={feedback.prioridade as string} /></div>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="corporate-kpi">
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Departamento</p>

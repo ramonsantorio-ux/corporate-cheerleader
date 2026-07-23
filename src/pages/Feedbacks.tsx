@@ -57,12 +57,14 @@ function getAlertType(fb: Feedback): 'quinzenal' | 'mensal' | null {
   return null;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem { name: string; value: number | string; color?: string; }
+interface CustomTooltipProps { active?: boolean; payload?: TooltipPayloadItem[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg bg-card border border-border px-3 py-2 shadow-lg text-xs">
       {label && <p className="font-semibold text-foreground mb-1">{label}</p>}
-      {payload.map((p: any, i: number) => (
+      {payload.map((p, i: number) => (
         <p key={i} style={{ color: p.color }} className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full inline-block" style={{ background: p.color }} />
           {p.name}: <span className="font-bold">{p.value}</span>

@@ -49,9 +49,10 @@ export default function CadastroMetas() {
       setIndicador('');
       setReferencia('');
       setAlcancado('');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
       console.error('Erro ao salvar meta:', error);
-      toast.error('Erro ao salvar: ' + error.message);
+      toast.error('Erro ao salvar: ' + msg);
     } finally {
       setIsSubmitting(false);
     }

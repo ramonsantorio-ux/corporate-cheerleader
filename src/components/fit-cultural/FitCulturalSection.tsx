@@ -81,7 +81,8 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
   const { isAdmin, permissions, user } = useAuth();
   
   // States
-  const [cycles, setCycles] = useState<any[]>([]);
+  type Cycle = { id: string; name: string };
+  const [cycles, setCycles] = useState<Cycle[]>([]);
   const [activeCycleId, setActiveCycleId] = useState<string>(initialCycleId || '');
   const [allScores, setAllScores] = useState<FitScore[]>([]);
   const [chartPeriod, setChartPeriod] = useState<'semestral' | 'anual'>('semestral');

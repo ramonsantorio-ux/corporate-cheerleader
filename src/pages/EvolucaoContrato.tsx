@@ -532,24 +532,26 @@ export default function EvolucaoContrato() {
   const [medicoes, setMedicoes] = useState<Medicao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const mergeMedicoes = (arr: any[]) => {
+  const mergeMedicoes = (arr: Medicao[]) => {
     return arr.reduce((acc, curr) => {
-      const existing = acc.find((m: any) => m.mes === curr.mes);
+      const existing = acc.find((m: Medicao) => m.mes === curr.mes);
       if (existing) {
-        Object.keys(curr).forEach(key => {
-          if (Array.isArray(curr[key]) && curr[key].length > 0) {
-            existing[key] = curr[key];
-          } else if (typeof curr[key] === 'number' && curr[key] !== 0 && existing[key] === 0) {
-            existing[key] = curr[key];
-          } else if (curr[key] && !existing[key]) {
-            existing[key] = curr[key];
+        (Object.keys(curr) as (keyof Medicao)[]).forEach(key => {
+          const currVal = curr[key];
+          const existVal = existing[key];
+          if (Array.isArray(currVal) && (currVal as unknown[]).length > 0) {
+            (existing as Record<string, unknown>)[key as string] = currVal;
+          } else if (typeof currVal === 'number' && currVal !== 0 && existVal === 0) {
+            (existing as Record<string, unknown>)[key as string] = currVal;
+          } else if (currVal && !existVal) {
+            (existing as Record<string, unknown>)[key as string] = currVal;
           }
         });
       } else {
         acc.push({ ...curr });
       }
       return acc;
-    }, [] as any[]);
+    }, [] as Medicao[]);
   };
 
   useEffect(() => {
@@ -647,8 +649,9 @@ export default function EvolucaoContrato() {
         }
         setMedicoes(prev => prev.filter(m => m.id !== id));
         toast({ title: 'Sucesso', description: 'Fechamento excluído com sucesso!' });
-      } catch (err: any) {
-        toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        toast({ title: 'Erro', description: msg, variant: 'destructive' });
       }
     }
   }, [medicoes, toast]);
@@ -831,13 +834,15 @@ export default function EvolucaoContrato() {
     return { icon: Minus, color: 'text-muted-foreground' };
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipEntry { name: string; value: number | string; color?: string; }
+  interface TooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
           <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>
           <div className="space-y-2">
-            {payload.map((entry: any, index: number) => (
+            {payload.map((entry, index: number) => (
               <div key={index} className="flex items-center justify-between gap-4 text-sm">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
@@ -859,7 +864,7 @@ export default function EvolucaoContrato() {
     return null;
   };
 
-  const handleChartClick = (data: any) => {
+  const handleChartClick = (data: { activePayload?: { payload: Medicao }[] }) => {
     if (data && data.activePayload && data.activePayload.length > 0) {
       const monthData = data.activePayload[0].payload;
       if (monthData && monthData.id) {
@@ -1824,7 +1829,7 @@ export default function EvolucaoContrato() {
 
             {expandedChart === 'resumo' && (
               <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={(e: any) => { if (e && e.activeLabel) { setSelectedMonthDRE(e.activeLabel); setActiveTab('dre'); } }} className="cursor-pointer">
+                  <ComposedChart data={filteredChartData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }} onClick={(e: { activeLabel?: string } | null) => { if (e && e.activeLabel) { setSelectedMonthDRE(e.activeLabel); setActiveTab('dre'); } }} className="cursor-pointer">
                     <defs>
                       <linearGradient id="colorSlaBig" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>

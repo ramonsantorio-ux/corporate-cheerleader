@@ -177,22 +177,22 @@ export default function PontoFerias() {
     const nameMap = Object.fromEntries(funcs.map(f => [f.id, f]));
 
     // Migrate old 'falta' status to 'falta_injustificada' in display
-    setAttendance((attRes.data || []).map((a: any) => ({
+    setAttendance((attRes.data || []).map((a) => ({
       ...a,
       status: a.status === 'falta' ? 'falta_injustificada' : a.status,
       employee_name: nameMap[a.employee_id]?.nome || 'Desconhecido',
       turno: nameMap[a.employee_id]?.turno, letra: nameMap[a.employee_id]?.letra,
       cargo: nameMap[a.employee_id]?.cargo,
     })));
-    setVacations((vacRes.data || []).map((v: any) => ({
+    setVacations((vacRes.data || []).map((v) => ({
       ...v, employee_name: nameMap[v.employee_id]?.nome || 'Desconhecido',
       turno: nameMap[v.employee_id]?.turno, letra: nameMap[v.employee_id]?.letra,
       cargo: nameMap[v.employee_id]?.cargo,
     })));
-    setOvertimes((ovtRes.data || []).map((o: any) => ({
+    setOvertimes((ovtRes.data || []).map((o) => ({
       ...o, employee_name: nameMap[o.employee_id]?.nome || 'Desconhecido',
     })));
-    setWarnings((warnRes.data || []).map((w: any) => ({
+    setWarnings((warnRes.data || []).map((w) => ({
       ...w, employee_name: nameMap[w.employee_id]?.nome || 'Desconhecido',
     })));
     setLoading(false);
@@ -313,8 +313,9 @@ export default function PontoFerias() {
       if (error) throw error;
       toast.success('Registro removido');
       fetchAll();
-    } catch (err: any) {
-      toast.error('Erro ao remover: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao remover: ' + msg);
     }
   }
 
@@ -324,8 +325,9 @@ export default function PontoFerias() {
       if (error) throw error;
       toast.success('Registro removido');
       fetchAll();
-    } catch (err: any) {
-      toast.error('Erro ao remover: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao remover: ' + msg);
     }
   }
 
@@ -352,8 +354,9 @@ export default function PontoFerias() {
       if (error) throw error;
       toast.success('Advertência removida');
       fetchAll();
-    } catch (err: any) {
-      toast.error('Erro ao remover: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao remover: ' + msg);
     }
   }
 
@@ -477,7 +480,7 @@ export default function PontoFerias() {
     doc.setTextColor(0, 0, 0);
 
     // Build data per employee
-    const deviationRows: any[][] = [];
+    const deviationRows: (string | number)[][] = [];
     funcionarios.forEach(f => {
       const empAtt = attendance.filter(a => a.employee_id === f.id);
       const faltasInj = empAtt.filter(a => a.status === 'falta_injustificada').length;
@@ -718,12 +721,14 @@ export default function PontoFerias() {
     return colors[s] || 'bg-muted text-muted-foreground';
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipEntry { name: string; value: number | string; color?: string; dataKey?: string; }
+  interface TooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (!active || !payload) return null;
     return (
       <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
         <p className="text-xs font-semibold text-foreground mb-1">{label}</p>
-        {payload.map((p: any) => (
+        {payload.map((p) => (
           <p key={p.dataKey} className="text-xs" style={{ color: p.color }}>{p.name}: {p.value}</p>
         ))}
       </div>

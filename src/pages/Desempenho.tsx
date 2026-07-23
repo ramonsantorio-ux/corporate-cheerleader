@@ -34,12 +34,14 @@ interface Evaluation {
   id: string; cycle_id: string; evaluated_name: string; status: string; completed_at: string | null;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipEntry { name: string; value: number | string; color?: string; }
+interface CustomTooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload) return null;
   return (
     <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-xs">
       <p className="font-semibold text-foreground mb-1">{label}</p>
-      {payload.map((entry: any) => (
+      {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
           <span className="text-muted-foreground">{entry.name}:</span>

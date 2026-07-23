@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Share, MoreVertical } from 'lucide-react';
 
 export function InstallPWA() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<Event & { prompt: () => void; userChoice: Promise<{ outcome: string }> } | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -11,7 +11,7 @@ export function InstallPWA() {
 
   useEffect(() => {
     // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true) {
+    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as unknown as { standalone?: boolean }).standalone === true) {
       setIsStandalone(true);
       return;
     }
@@ -56,9 +56,6 @@ export function InstallPWA() {
         setDeferredPrompt(null);
         setShowPrompt(false);
       }
-    } else {
-      // Se clicou em instalar mas não tem o prompt (ex: navegador não suporta via botão)
-      // O texto abaixo já orientará o usuário
     }
   };
 
@@ -66,7 +63,9 @@ export function InstallPWA() {
     setShowPrompt(false);
     try {
       sessionStorage.setItem('has_seen_install_prompt', 'true');
-    } catch (e) {}
+    } catch {
+      // Modo anônimo: sessionStorage pode estar bloqueado — ignora silenciosamente
+    }
   };
 
   if (isStandalone || !showPrompt) return null;

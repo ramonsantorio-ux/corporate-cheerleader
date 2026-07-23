@@ -22,14 +22,14 @@ interface Medicao {
   mes: string;
   performanceMensal?: DesvioMensal[];
   aderencia: number;
-  [key: string]: any;
+  [key: string]: string | number | undefined | DesvioMensal[];
 }
 
 interface PerformanceMensalTabProps {
   medicoes: Medicao[];
   setMedicoes: (val: Medicao[]) => void;
   timeRange: string;
-  chartData?: any[];
+  chartData?: Record<string, unknown>[];
 }
 
 export function PerformanceMensalTab({ medicoes, setMedicoes, timeRange, chartData = [] }: PerformanceMensalTabProps) {
@@ -202,7 +202,7 @@ export function PerformanceMensalTab({ medicoes, setMedicoes, timeRange, chartDa
     });
   }, [desviosAtuais]);
 
-  const CustomParetoTooltip = ({ active, payload, label }: any) => {
+  const CustomParetoTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number | string }[]; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background/95 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
@@ -227,7 +227,7 @@ export function PerformanceMensalTab({ medicoes, setMedicoes, timeRange, chartDa
     return null;
   };
 
-  const CustomTrendTooltip = ({ active, payload, label }: any) => {
+  const CustomTrendTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background/95 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">

@@ -60,7 +60,8 @@ export default function MbtiTest() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [employees, setEmployees] = useState<any[]>([]);
+  type Employee = { id: string; nome: string; cargo: string };
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmpId, setSelectedEmpId] = useState<string>(id || '');
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);

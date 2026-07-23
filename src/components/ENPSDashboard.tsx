@@ -15,7 +15,8 @@ export function ENPSDashboard() {
     total: 0,
     score: 0
   });
-  const [comments, setComments] = useState<any[]>([]);
+  type EnpsComment = { id: string; score: number; comment?: string; created_at: string };
+  const [comments, setComments] = useState<EnpsComment[]>([]);
 
   useEffect(() => {
     fetchENPSData();

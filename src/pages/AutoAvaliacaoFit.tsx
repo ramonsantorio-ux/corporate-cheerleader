@@ -54,8 +54,10 @@ const CRITERIA = [
 ];
 
 export default function AutoAvaliacaoFit() {
-  const [funcionarios, setFuncionarios] = useState<any[]>([]);
-  const [cycles, setCycles] = useState<any[]>([]);
+  type Func = { id: string; nome: string; cargo: string };
+  type Cycle = { id: string; name: string };
+  const [funcionarios, setFuncionarios] = useState<Func[]>([]);
+  const [cycles, setCycles] = useState<Cycle[]>([]);
   
   const [selectedFunc, setSelectedFunc] = useState('');
   const [selectedCycle, setSelectedCycle] = useState('');
@@ -128,9 +130,10 @@ export default function AutoAvaliacaoFit() {
       
       setSubmitted(true);
       toast({ title: 'Avaliação enviada com sucesso!' });
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : JSON.stringify(e);
       console.error(e);
-      toast({ title: 'Erro ao enviar', description: e.message || JSON.stringify(e), variant: 'destructive' });
+      toast({ title: 'Erro ao enviar', description: msg, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }

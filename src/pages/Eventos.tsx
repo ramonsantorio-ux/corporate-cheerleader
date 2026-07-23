@@ -48,6 +48,8 @@ interface EventRow {
   danos_materiais?: boolean;
   atendimento_medico?: boolean;
   tecnico_seguranca?: string;
+  categoria_evento?: string;
+  encaminhamento_medico?: string;
   created_at: string;
 }
 
@@ -57,12 +59,14 @@ const CHART_COLORS = [
   'hsl(120, 40%, 45%)', 'hsl(45, 80%, 55%)',
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem { name: string; value: number | string; color?: string; }
+interface CustomTooltipProps { active?: boolean; payload?: TooltipPayloadItem[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-xs">
       <p className="font-semibold text-foreground mb-1">{label}</p>
-      {payload.map((p: any, i: number) => (
+      {payload.map((p, i: number) => (
         <p key={i} style={{ color: p.color }} className="font-medium">
           {p.name}: {p.value}
         </p>
@@ -123,14 +127,15 @@ export default function Eventos() {
 
   const [evolutionLetra, setEvolutionLetra] = useState<string>('all');
   const [evolutionPeriod, setEvolutionPeriod] = useState<'mensal' | 'trimestral' | 'semestral'>('mensal');
-  const [historicalEvolution, setHistoricalEvolution] = useState<any[]>([]);
+  type EvolutionEntry = { date: string; [key: string]: number | string };
+  const [historicalEvolution, setHistoricalEvolution] = useState<EvolutionEntry[]>([]);
 
   useEffect(() => {
     fetchEvents();
     fetchHistoricalEvolution();
   }, [period]);
 
-  const parseEvent = (ev: any) => {
+  const parseEvent = (ev: EventRow): EventRow => {
     if (ev.shift) {
       ev.shift = ev.shift.toUpperCase().replace(/\s*-\s*/g, ' ').replace('A DIA', 'A Dia').replace('A NOITE', 'A Noite').replace('B DIA', 'B Dia').replace('B NOITE', 'B Noite').trim();
     }
@@ -138,9 +143,11 @@ export default function Eventos() {
       const parts = ev.description.split('||EXTRA||');
       ev.description = parts[0].trim();
       try {
-        const extra = JSON.parse(parts[1]);
+        const extra = JSON.parse(parts[1]) as Partial<EventRow>;
         return { ...ev, ...extra };
-      } catch(e){}
+      } catch(e){
+        // JSON inválido no campo extra — ignorado
+      }
     }
     return ev;
   };
@@ -162,8 +169,8 @@ export default function Eventos() {
     const evtData = evtRes.data || [];
     const parsedEvents = evtData.map(parseEvent);
 
-    setEvents(parsedEvents as any[]);
-    setFuncionarios((fRes.data || []) as any[]);
+    setEvents(parsedEvents as EventRow[]);
+    setFuncionarios((fRes.data || []) as { id: string; nome: string; cargo: string; departamento: string; foto_url: string }[]);
     setLoading(false);
   }
 
@@ -179,7 +186,7 @@ export default function Eventos() {
     for (const ev of allEvents) {
       if (!ev.shift) continue;
       const original = ev.shift;
-      let formatted = original.toUpperCase().replace(/\s*-\s*/g, ' ')
+      const formatted = original.toUpperCase().replace(/\s*-\s*/g, ' ')
                             .replace('A DIA', 'A Dia')
                             .replace('A NOITE', 'A Noite')
                             .replace('B DIA', 'B Dia')
@@ -201,7 +208,7 @@ export default function Eventos() {
     }, 100);
   };
 
-  const handleChartClick = (data: any, type: string) => {
+  const handleChartClick = (data: { name?: string; payload?: { name?: string }; activePayload?: { payload: { name?: string } }[] }, type: string) => {
     if (!data) return;
     const name = data.name || data.payload?.name || data.activePayload?.[0]?.payload?.name;
     if (!name || name === 'N/A' || name === 'NA') return;
@@ -269,8 +276,8 @@ export default function Eventos() {
     delete eventToSave.genero_envolvido;
     delete eventToSave.custo;
     delete eventToSave.tecnico_seguranca;
-    delete (eventToSave as any).categoria_evento;
-    delete (eventToSave as any).encaminhamento_medico;
+    delete eventToSave.categoria_evento;
+    delete eventToSave.encaminhamento_medico;
 
     const cleanDesc = (eventToSave.description || '').split('||EXTRA||')[0].trim();
     eventToSave.description = cleanDesc + " ||EXTRA||" + JSON.stringify(extraData);
@@ -307,7 +314,7 @@ export default function Eventos() {
       const ab = await file.arrayBuffer();
       const rows = await readExcelRows(ab);
       
-      const mapped = rows.map((r: any) => {
+      const mapped = rows.map((r: Record<string, unknown>) => {
           let dateVal = '';
           const rawDate = r['DATA'] || r['data'] || r['DATA DO EVENTO'];
           if (rawDate) {
@@ -387,8 +394,9 @@ export default function Eventos() {
       }
       toast.success(`${mapped.length} eventos importados com sucesso!`);
       fetchEvents();
-    } catch (err: any) {
-      toast.error('Erro ao importar: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao importar: ' + msg);
     } finally {
       setIsImporting(false);
       if (e.target) e.target.value = '';
@@ -408,8 +416,9 @@ export default function Eventos() {
       toast.success('Todos os eventos foram excluídos.');
       fetchEvents();
       setDeleteAllConfirm(false);
-    } catch (err: any) {
-      toast.error('Erro ao excluir eventos: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao excluir eventos: ' + msg);
     } finally {
       setIsDeletingAll(false);
     }
@@ -417,16 +426,18 @@ export default function Eventos() {
 
   async function handleExport() {
     const exportData = events.map(ev => {
-      let extra: any = {};
+      let extra: Record<string, unknown> = {};
       if (ev.description?.includes('||EXTRA||')) {
-         try { extra = JSON.parse(ev.description.split('||EXTRA||')[1]); } catch(e){}
+         try { extra = JSON.parse(ev.description.split('||EXTRA||')[1]) as Record<string, unknown>; } catch(e){
+           // JSON inválido no campo extra — ignorado
+         }
       }
 
       return {
         'DATA': ev.event_date ? new Date(ev.event_date).toLocaleDateString('pt-BR') : '',
         'HORÁRIO': ev.event_time || '',
         'DIA DA SEMANA': ev.day_of_week || '',
-        'CATEGORIA DO EVENTO': extra.categoria_evento || (ev as any).categoria_evento || 'Material',
+        'CATEGORIA DO EVENTO': (extra.categoria_evento as string) || ev.categoria_evento || 'Material',
         'DESCRIÇÃO DO EVENTO': ev.description?.split('||EXTRA||')[0].trim() || '',
         'LOCAL': ev.location || '',
         'CONTRATO': ev.contract || '',
@@ -435,13 +446,13 @@ export default function Eventos() {
         'NOME DO ENVOLVIDO': ev.involved_name || '',
         'LETRA/TURNO': ev.shift || '',
         'ENCARREGADO': ev.supervisor || '',
-        'TÉCNICO DE SEGURANÇA': extra.tecnico_seguranca || '',
-        'DATA ADMISSÃO': extra.data_admissao || '',
-        'ENCAMINHAMENTO MÉDICO': extra.encaminhamento_medico || (ev as any).encaminhamento_medico || '',
-        'CID': extra.cid || (ev as any).cid || '',
-        'ATESTADO': (extra.atestado || (ev as any).atestado) ? 'SIM' : 'NÃO',
-        'AFASTAMENTO': (extra.afastamento || (ev as any).afastamento) ? 'SIM' : 'NÃO',
-        'DANOS MATERIAIS': (extra.danos_materiais || (ev as any).danos_materiais) ? 'SIM' : 'NÃO',
+        'TÉCNICO DE SEGURANÇA': (extra.tecnico_seguranca as string) || '',
+        'DATA ADMISSÃO': (extra.data_admissao as string) || '',
+        'ENCAMINHAMENTO MÉDICO': (extra.encaminhamento_medico as string) || ev.encaminhamento_medico || '',
+        'CID': (extra.cid as string) || ev.cid || '',
+        'ATESTADO': (extra.atestado || ev.atestado) ? 'SIM' : 'NÃO',
+        'AFASTAMENTO': (extra.afastamento || ev.afastamento) ? 'SIM' : 'NÃO',
+        'DANOS MATERIAIS': (extra.danos_materiais || ev.danos_materiais) ? 'SIM' : 'NÃO',
       };
     });
     await writeExcelFile(exportData as Record<string, unknown>[], 'Eventos_Porto.xlsx', 'Eventos');
@@ -1659,7 +1670,7 @@ export default function Eventos() {
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
-                              {analytics.danosData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                              {analytics.danosData.map((d: { fill: string }, i: number) => <Cell key={i} fill={d.fill} />)}
                             </Pie>
                             <Tooltip content={<CustomTooltip />} />
                             <Legend wrapperStyle={{ fontSize: "10px" }} />
@@ -1687,7 +1698,7 @@ export default function Eventos() {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie data={analytics.afastamentoData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
-                            {analytics.afastamentoData.map((d: any, i: number) => <Cell key={i} fill={d.fill} />)}
+                            {analytics.afastamentoData.map((d: { fill: string }, i: number) => <Cell key={i} fill={d.fill} />)}
                           </Pie>
                           <Tooltip content={<CustomTooltip />} />
                           <Legend wrapperStyle={{ fontSize: "10px" }} />

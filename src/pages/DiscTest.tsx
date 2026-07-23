@@ -57,7 +57,8 @@ export default function DiscTest() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [employees, setEmployees] = useState<any[]>([]);
+  type Employee = { id: string; nome: string; cargo: string };
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmpId, setSelectedEmpId] = useState<string>(id || '');
   const [answers, setAnswers] = useState<AnswersState>({});
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -96,7 +96,7 @@ export function TreinamentosSSMA() {
     
     // Encontrar os índices das colunas de RACs baseados no Header 1 ou Header 2
     const racIndexes: Record<string, number> = {};
-    headers1.forEach((h: any, i: number) => {
+    headers1.forEach((h: unknown, i: number) => {
       if (typeof h === 'string' && h.includes('RAC')) {
         racIndexes[h.trim()] = i;
       }
@@ -148,7 +148,7 @@ export function TreinamentosSSMA() {
     e.target.value = '';
   }
 
-  function formatDate(val: any) { return parseExcelDate(val) || ''; }
+  function formatDate(val: unknown) { return parseExcelDate(val) || ''; }
 
   async function handleDelete(id: string) {
     if (!confirm('Deseja excluir este registro?')) return;

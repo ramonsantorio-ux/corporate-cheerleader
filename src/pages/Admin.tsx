@@ -59,7 +59,7 @@ export default function Admin() {
   const [savingBlock, setSavingBlock] = useState(false);
 
 
-  const adminAuthRequest = async (action: 'create' | 'manage', payload: any) => {
+  const adminAuthRequest = async (action: 'create' | 'manage', payload: Record<string, unknown>) => {
     const functionName = action === 'create' ? 'create-user' : 'manage-user';
     const { data, error } = await supabase.functions.invoke(functionName, {
       body: payload
@@ -91,7 +91,7 @@ export default function Admin() {
       // Usa edge function para obter status real de ban do Supabase Auth
       const response = await adminAuthRequest('manage', { action: 'list_users' });
       const usersData: UserWithRole[] = (response.users || [])
-        .filter((u: any) => u.full_name !== '__DELETED__');
+        .filter((u: { full_name?: string }) => u.full_name !== '__DELETED__');
       setUsers(usersData);
     } catch {
       // Fallback: leitura direta do banco sem N+1 queries
@@ -110,7 +110,7 @@ export default function Admin() {
         .select('user_id')
         .eq('page', 'banned')
         .in('user_id', profiles.map(p => p.id));
-      const bannedUserIds = new Set(bannedRows?.map((r: any) => r.user_id) || []);
+      const bannedUserIds = new Set(bannedRows?.map((r: { user_id: string }) => r.user_id) || []);
 
       const usersWithRoles: UserWithRole[] = profiles
         .filter(p => p.full_name !== '__DELETED__')
@@ -149,8 +149,9 @@ export default function Admin() {
 
       toast.success(`Conta de "${deleteUser.full_name}" excluída com sucesso!`);
       setUsers(prev => prev.filter(u => u.id !== deleteUser.id));
-    } catch (err: any) {
-      toast.error(err?.message || 'Erro ao excluir conta');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(msg || 'Erro ao excluir conta');
     }
     setSavingDelete(false);
     setDeleteUser(null);
@@ -197,8 +198,9 @@ export default function Admin() {
           });
         }
         fetchUsers();
-    } catch (err: any) {
-      toast.error(err.message || 'Erro inesperado');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro inesperado';
+      toast.error(msg);
     }
     setCreating(false);
   }
@@ -281,8 +283,9 @@ export default function Admin() {
       toast.success('Usuário atualizado com sucesso!');
       setEditUserDialog(null);
       fetchUsers();
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao atualizar');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao atualizar';
+      toast.error(msg);
     }
     setSavingEdit(false);
   }
@@ -317,8 +320,9 @@ export default function Admin() {
       setBlockUser(null);
       // Re-carrega da fonte de verdade para garantir estado correto após reload
       await fetchUsers();
-    } catch(err:any) {
-      toast.error(err.message || 'Erro ao alterar status do usuário');
+    } catch(err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao alterar status do usuário';
+      toast.error(msg);
     }
     setSavingBlock(false);
   }
@@ -347,8 +351,9 @@ export default function Admin() {
       toast.success('Senha alterada com sucesso!');
       setPasswordUser(null);
       setNewPassword('');
-    } catch(err:any) {
-      toast.error(err.message || 'Erro ao alterar senha');
+    } catch(err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao alterar senha';
+      toast.error(msg);
     }
     setSavingPassword(false);
   }

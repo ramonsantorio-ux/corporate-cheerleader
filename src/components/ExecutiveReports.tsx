@@ -7,7 +7,12 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter, drawPdfBarChart, drawPdfSlider } from '@/lib/pdfLogo';
 
-export const discDescriptions: Record<string, any> = {
+interface DiscDominant { letter: string; score: number; }
+interface DiscResult { D: number; I: number; S: number; C: number; dominant: DiscDominant; }
+interface MbtiResult { type: string; desc: { title: string; desc: string }; percentages: { E: number; I: number; S: number; N: number; T: number; F: number; J: number; P: number }; }
+interface BigFiveResult { O: number; C: number; E: number; A: number; N: number; }
+
+export const discDescriptions: Record<string, Record<string, unknown>> = {
   D: {
     title: 'Dominância',
     desc: 'Focado em resultados, desafios e ação rápida. Toma a liderança naturalmente e busca o controle para garantir que as metas sejam cumpridas de forma eficiente.',
@@ -176,11 +181,11 @@ export const bigFiveDetails: Record<string, any> = {
 };
 
 
-export function DiscReport({ resultScreen, employeeName = "Colaborador" }: { resultScreen: any, employeeName?: string }) {
+export function DiscReport({ resultScreen, employeeName = "Colaborador" }: { resultScreen: DiscResult, employeeName?: string }) {
   const dom = resultScreen.dominant;
   const info = discDescriptions[dom.letter];
-  const colorMap: any = { D: 'bg-red-500', I: 'bg-yellow-500', S: 'bg-green-500', C: 'bg-blue-500' };
-  const hexMap: any = { D: '#ef4444', I: '#eab308', S: '#22c55e', C: '#3b82f6' };
+  const colorMap: Record<string, string> = { D: 'bg-red-500', I: 'bg-yellow-500', S: 'bg-green-500', C: 'bg-blue-500' };
+  const hexMap: Record<string, string> = { D: '#ef4444', I: '#eab308', S: '#22c55e', C: '#3b82f6' };
 
   // Secundário (maior após o dominante)
   const sorted = [
@@ -574,7 +579,7 @@ export function DiscReport({ resultScreen, employeeName = "Colaborador" }: { res
   );
 }
 
-export function MbtiReport({ resultScreen }: { resultScreen: any }) {
+export function MbtiReport({ resultScreen }: { resultScreen: MbtiResult }) {
   const type = resultScreen.type;
   const info = resultScreen.desc;
   const p = resultScreen.percentages || { E: 50, I: 50, S: 50, N: 50, T: 50, F: 50, J: 50, P: 50 };
@@ -618,7 +623,7 @@ export function MbtiReport({ resultScreen }: { resultScreen: any }) {
     });
   };
 
-  const AxisBar = ({ label1, val1, label2, val2 }: any) => (
+  const AxisBar = ({ label1, val1, label2, val2 }: { label1: string; val1: number; label2: string; val2: number }) => (
     <div className="mb-4">
       <div className="flex justify-between text-xs font-bold mb-1">
         <span>{label1} ({val1}%)</span>
@@ -680,7 +685,7 @@ export function MbtiReport({ resultScreen }: { resultScreen: any }) {
   );
 }
 
-export function BigFiveReport({ resultScreen }: { resultScreen: any }) {
+export function BigFiveReport({ resultScreen }: { resultScreen: BigFiveResult }) {
   return (
     <div className="space-y-6 animate-fade-in text-left">
       <div className="text-center mb-8">

@@ -49,12 +49,13 @@ const getRowColor = (status: string) => {
   return 'hover:bg-muted/50';
 };
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type TooltipPayload = { color?: string; fill?: string; name?: string; value?: number | string; payload?: unknown };
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: TooltipPayload[]; label?: string }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-background/95 backdrop-blur-sm border border-border p-3 rounded-lg shadow-xl text-xs z-50">
         <p className="font-bold text-foreground mb-2">{label}</p>
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry: TooltipPayload, index: number) => (
           <div key={index} className="flex items-center gap-2 mb-1">
             <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
             <span className="text-muted-foreground">{entry.name}:</span>
@@ -69,9 +70,13 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+interface MetaItemB { id: string; setor: string; meta: string; categoria: string; ref: number; alcBruto: string; alc: number; status: string; score?: number; ordem?: number; }
+type MonthDataB = { atingido: number; globalId: string | null; gap: number; counts: { acima: number; aceitavel: number; abaixo: number }; metas: MetaItemB[] };
+
 export default function MetasBusato() {
 
-  const [dbData, setDbData] = useState<any[]>([]);
+  type DbRowB = { id: string; indicador: string; setor: string; mes: string; referencia: number; alcancado: number; };
+  const [dbData, setDbData] = useState<DbRowB[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}>>({});
@@ -108,8 +113,9 @@ export default function MetasBusato() {
       if (error) throw error;
       toast.success('Métrica excluída!');
       fetchMetas();
-    } catch (err: any) {
-      toast.error('Erro ao excluir: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao excluir: ' + msg);
     } finally {
       setIsSaving(false);
     }
@@ -131,8 +137,9 @@ export default function MetasBusato() {
       if (error) throw error;
       toast.success('Métrica adicionada com sucesso!');
       fetchMetas();
-    } catch (err: any) {
-      toast.error('Erro ao adicionar métrica: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao adicionar métrica: ' + msg);
     } finally {
       setIsSaving(false);
     }
@@ -195,8 +202,9 @@ export default function MetasBusato() {
       toast.success('Metas atualizadas!');
       setIsEditing(false);
       await fetchMetas();
-    } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao salvar: ' + msg);
     } finally {
       setIsSaving(false);
     }
@@ -222,8 +230,9 @@ export default function MetasBusato() {
       toast.success('Atingimento Global atualizado!');
       setIsEditingGlobal(false);
       await fetchMetas();
-    } catch (err: any) {
-      toast.error('Erro ao salvar: ' + err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Erro ao salvar: ' + msg);
     } finally {
       setIsSavingGlobal(false);
     }
@@ -242,7 +251,7 @@ export default function MetasBusato() {
       { meta: 'Turnover', categoria: 'RH', ref: 5, alcBruto: '', alc: 0, status: 'Dentro Esperado (Aceitável)', score: 90 }
     ];
 
-    const result: any = {};
+    const result: Record<string, MonthDataB> = {};
     MESES.forEach(m => { 
       result[m] = { 
         atingido: 0, globalId: null, gap: 100, counts: { acima: 0, aceitavel: 0, abaixo: 0 }, 
@@ -252,7 +261,7 @@ export default function MetasBusato() {
     
     if (!dbData || dbData.length === 0) return result;
 
-    const grouped = dbData.reduce((acc: any, row: any) => {
+    const grouped = dbData.reduce((acc: Record<string, DbRowB[]>, row: DbRowB) => {
       if (!acc[row.mes]) acc[row.mes] = [];
       acc[row.mes].push(row);
       return acc;
@@ -262,20 +271,20 @@ export default function MetasBusato() {
       const metasMes = grouped[m];
       const counts = { acima: 0, aceitavel: 0, abaixo: 0 };
       
-      let totalWeight = 0;
-      let weightedSum = 0;
+      const totalWeight = 0;
+      const weightedSum = 0;
       
       let globalScore = 0;
       let globalId = null;
 
-      const metasFormatadas = metasMes.filter((row: any) => {
+      const metasFormatadas = metasMes.filter((row: DbRowB) => {
         if (row.indicador === '__ATINGIMENTO_GLOBAL__') {
           globalScore = row.alcancado || 0;
           globalId = row.id;
           return false;
         }
         return true;
-      }).map((row: any) => {
+      }).map((row: DbRowB) => {
         const rawInd = row.indicador || '';
         const parts = rawInd.split('|');
         const metaName = parts[0].trim();
@@ -299,7 +308,7 @@ export default function MetasBusato() {
         const alc = row.alcancado || 0;
         const ref = row.referencia || 1;
         
-        let status = dbStatus;
+        const status = dbStatus;
         let score = 90;
 
         if (status === 'Muito Acima do Esperado') score = 130;
@@ -325,7 +334,7 @@ export default function MetasBusato() {
         };
       });
 
-      metasFormatadas.sort((a: any, b: any) => {
+      metasFormatadas.sort((a: MetaItemB, b: MetaItemB) => {
         if (a.ordem !== b.ordem) return a.ordem - b.ordem;
         return a.meta.localeCompare(b.meta);
       });
@@ -621,7 +630,7 @@ export default function MetasBusato() {
               </TableHeader>
               <TableBody>
                 <AnimatePresence mode="popLayout">
-                  {(isEditing ? editOrder.map(id => data.metas.find(m => m.id === id)).filter(Boolean) : data.metas).map((m: any, idx) => {
+                  {(isEditing ? editOrder.map(id => data.metas.find(m => m.id === id)).filter(Boolean) : data.metas).map((m: { id: string; meta?: string; score: number; status?: string; peso?: number; meta_valor?: number | string; realizado?: number | string }, idx) => {
                     const fillPercentage = Math.min(m.score, 100) || 0;
                     const isOver = m.score >= 100;
                     const isCusto = m.meta?.toLowerCase().includes('custo');

@@ -114,7 +114,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
   }, [medicaoToEdit]);
 
   const addDesconto = () => setDescontosList([...descontosList, { motivo: '', valor: 0 }]);
-  const updateDesconto = (index: number, field: 'motivo'|'valor', value: any) => {
+  const updateDesconto = (index: number, field: 'motivo'|'valor', value: string | number) => {
     const list = [...descontosList];
     list[index] = { ...list[index], [field]: value };
     setDescontosList(list);
@@ -122,7 +122,7 @@ export function MedicaoForm({ medicaoToEdit, onSave, onCancel }: { medicaoToEdit
   const removeDesconto = (index: number) => setDescontosList(descontosList.filter((_, i) => i !== index));
 
   const addMulta = () => setMultasList([...multasList, { motivo: '', valor: 0 }]);
-  const updateMulta = (index: number, field: 'motivo'|'valor', value: any) => {
+  const updateMulta = (index: number, field: 'motivo'|'valor', value: string | number) => {
     const list = [...multasList];
     list[index] = { ...list[index], [field]: value };
     setMultasList(list);
