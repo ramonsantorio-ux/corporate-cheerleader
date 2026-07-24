@@ -92,16 +92,6 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchData();
-  }, [employeeId, fetchData]);
-
-  useEffect(() => {
-    if (activeCycleId) {
-      checkIfClosed(activeCycleId);
-    }
-  }, [activeCycleId, employeeId, checkIfClosed]);
-
   const checkIfClosed = useCallback(async (cid: string) => {
     if (!cid) {
       setIsClosed(false);
@@ -137,6 +127,16 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     if (sData) setAllScores(sData as unknown as FitScore[]);
     setLoading(false);
   }, [employeeId, activeCycleId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [employeeId, fetchData]);
+
+  useEffect(() => {
+    if (activeCycleId) {
+      checkIfClosed(activeCycleId);
+    }
+  }, [activeCycleId, employeeId, checkIfClosed]);
 
   const currentCycleScores = useMemo(() => {
     return allScores.filter(s => s.cycle_id === activeCycleId);

@@ -63,11 +63,6 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
   const [historico, setHistorico] = useState<HistoricoEntry[]>([]);
   const [viewMode, setViewMode] = useState<'nova' | 'historico'>('nova');
 
-  useEffect(() => {
-    fetchCycles();
-    fetchHistorico();
-  }, [employeeId, fetchCycles, fetchHistorico]);
-
   const fetchCycles = useCallback(async () => {
     const { data } = await supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false });
     if (data && data.length > 0) {
@@ -77,14 +72,6 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
       setCycle('Ciclo Padrão');
     }
   }, []);
-
-  // Lógica de elegibilidade dinâmica baseada no ciclo selecionado
-  const selectedDbCycle = dbCycles.find(c => c.name === cycle);
-  const eligibleRolesArray = selectedDbCycle?.eligible_roles || [];
-  
-  const isElegivel = eligibleRolesArray.length > 0 
-    ? eligibleRolesArray.some((c: string) => cargo.toLowerCase().includes(c.toLowerCase()))
-    : ['analista', 'supervisor', 'coordenador', 'gerente'].some(c => cargo.toLowerCase().includes(c));
 
   const fetchHistorico = useCallback(async () => {
     const { data, error } = await supabase
@@ -100,6 +87,11 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
       }
     }
   }, [employeeId, desempenho]);
+
+  useEffect(() => {
+    fetchCycles();
+    fetchHistorico();
+  }, [employeeId, fetchCycles, fetchHistorico]);
 
   async function handleSave() {
     if (activeTab === 'tradicional' && (!desempenho || !potencial)) {

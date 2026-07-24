@@ -75,16 +75,6 @@ export default function Admin() {
     return data;
   }, []);
 
-  useEffect(() => {
-    if (isAdmin) fetchUsers();
-  }, [isAdmin, fetchUsers]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      supabase.from('access_profiles').select('id, name').then(({data}) => setAccessProfiles(data || []));
-    }
-  }, [isAdmin]);
-
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
@@ -129,6 +119,16 @@ export default function Admin() {
     }
     setLoading(false);
   }, [adminAuthRequest]);
+
+  useEffect(() => {
+    if (isAdmin) fetchUsers();
+  }, [isAdmin, fetchUsers]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      supabase.from('access_profiles').select('id, name').then(({data}) => setAccessProfiles(data || []));
+    }
+  }, [isAdmin]);
 
   // Delete user handler
   const [deleteUser, setDeleteUser] = useState<UserWithRole | null>(null);
