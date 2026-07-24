@@ -42,7 +42,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    ...(isDragging ? { position: 'relative' as any, zIndex: 50, backgroundColor: 'var(--background)' } : {}),
+    ...(isDragging ? { position: 'relative' as const, zIndex: 50, backgroundColor: 'var(--background)' } : {}),
   };
 
   return (
@@ -150,7 +150,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
   const [data, setData] = useState<N3Data[]>([]);
   const [historicalData, setHistoricalData] = useState<N3Data[]>([]);
   const [cargoMapState, setCargoMapState] = useState<Record<string, string>>({});
-  const [periodo, setPeriodo] = useState<string>(globalPeriod as any || new Date().toISOString().substring(0, 7));
+  const [periodo, setPeriodo] = useState<string>((globalPeriod as string) || new Date().toISOString().substring(0, 7));
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -202,6 +202,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodo]);
 
   const [funcionariosList, setFuncionariosList] = useState<FuncItem[]>([]);
@@ -450,7 +451,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       acc[curr.periodo]['Total Treinamentos'] += curr.total_treinamentos;
       acc[curr.periodo]['Total Não Conformes'] += curr.verificacoes_nc;
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, Record<string, number | string>>);
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
   }, [filteredHistoricalData]);
 
@@ -472,7 +473,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       const name = curr.nome_email.split(' ')[0] || 'Novo';
       acc[curr.periodo][name] += curr.verificacoes_nc;
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, Record<string, number | string>>);
     return Object.values(grouped).sort((a, b) => a.periodo.localeCompare(b.periodo));
   }, [filteredHistoricalData, uniqueNames]);
   

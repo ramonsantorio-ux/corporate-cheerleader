@@ -23,6 +23,7 @@ import { readExcelRows, writeExcelFile, parseExcelDate } from '@/lib/excel';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { TreinamentosSSMA } from '@/components/TreinamentosSSMA';
 import N3Dashboard from '@/components/N3Dashboard';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface EventRow {
   id: string;
@@ -77,6 +78,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export default function Eventos() {
   const navigate = useNavigate();
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [activeTab, setActiveTab] = useState("visao-geral");
   const [events, setEvents] = useState<EventRow[]>([]);
   const [funcionarios, setFuncionarios] = useState<{ id: string; nome: string; cargo: string; departamento: string; foto_url: string }[]>([]);
@@ -133,6 +135,7 @@ export default function Eventos() {
   useEffect(() => {
     fetchEvents();
     fetchHistoricalEvolution();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period]);
 
   const parseEvent = (ev: EventRow): EventRow => {
@@ -300,6 +303,7 @@ export default function Eventos() {
 
   async function confirmDelete() {
     if (!deleteEvent) return;
+    if (!canDelete('eventos')) { toast.error('Você não tem permissão para excluir eventos.'); return; }
     await supabase.from('events').delete().eq('id', deleteEvent.id);
     toast.success('Evento removido');
     setDeleteEvent(null);
@@ -307,6 +311,7 @@ export default function Eventos() {
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!canCreate('eventos')) { toast.error('Você não tem permissão para importar eventos.'); return; }
     const file = e.target.files?.[0];
     if (!file) return;
     setIsImporting(true);
@@ -405,6 +410,7 @@ export default function Eventos() {
 
   async function handleDeleteAll() {
     if (!events.length) return;
+    if (!canDelete('eventos')) { toast.error('Você não tem permissão para excluir eventos.'); return; }
     setIsDeletingAll(true);
     try {
       const ids = events.map(e => e.id);
@@ -806,7 +812,7 @@ export default function Eventos() {
       byLetra, letraData, hourlyData, daysWithoutAccident,
       topCids, topAtestados, afastamentoData, danosData, evolutionChartData, consolidations
     };
-  }, [filtered, historicalEvolution, evolutionLetra]);
+  }, [filtered, historicalEvolution, evolutionLetra, evolutionPeriod]);
 
   const formatTime = (timeStr: string) => {
     if (!timeStr) return '';
@@ -826,36 +832,41 @@ export default function Eventos() {
           <p className="text-muted-foreground text-sm mt-1">Registro e análise de ocorrências operacionais</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <label className={isImporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}>
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={isImporting} />
-            <Button variant="outline" size="sm" asChild disabled={isImporting}>
-              <span>
-                {isImporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />} 
-                {isImporting ? 'Importando...' : 'Importar'}
-              </span>
-            </Button>
-          </label>
+          {canCreate('eventos') && (
+            <label className={isImporting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}>
+              <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={isImporting} />
+              <Button variant="outline" size="sm" asChild disabled={isImporting}>
+                <span>
+                  {isImporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />} 
+                  {isImporting ? 'Importando...' : 'Importar'}
+                </span>
+              </Button>
+            </label>
+          )}
           <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
             {isExporting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Download className="w-4 h-4 mr-1" />} 
             {isExporting ? 'Exportando...' : 'Exportar'}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setDeleteAllConfirm(true)} className="text-destructive hover:bg-destructive hover:text-destructive-foreground">
-            <Trash2 className="w-4 h-4 mr-1" />
-            Excluir Todos
-          </Button>
+          {canDelete('eventos') && (
+            <Button variant="outline" size="sm" onClick={() => setDeleteAllConfirm(true)} className="text-destructive hover:bg-destructive hover:text-destructive-foreground">
+              <Trash2 className="w-4 h-4 mr-1" />
+              Excluir Todos
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={fixHistoricalShifts} className="border-dashed" title="Padronizar textos de Letras (Turno) no Banco de Dados">
             <Wrench className="w-4 h-4 mr-1" /> Limpar Base
           </Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" onClick={() => {
-                setEditingEvent(null);
-                setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '', categoria_evento: 'Material', encaminhamento_medico: '' });
-              }}>
-                <Plus className="w-4 h-4 mr-1" /> Novo Evento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {canCreate('eventos') && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" onClick={() => {
+                  setEditingEvent(null);
+                  setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '', categoria_evento: 'Material', encaminhamento_medico: '' });
+                }}>
+                  <Plus className="w-4 h-4 mr-1" /> Novo Evento
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{editingEvent ? "Editar Evento" : "Registrar Novo Evento"}</DialogTitle></DialogHeader>
               
               {/* Category Selector */}
@@ -996,6 +1007,7 @@ export default function Eventos() {
               </div>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </motion.div>
 
@@ -1937,12 +1949,16 @@ export default function Eventos() {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDetailEvent(ev); }}>
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift || '', supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false, tecnico_seguranca: ev.tecnico_seguranca || '', categoria_evento: (ev as any).categoria_evento || 'Material', encaminhamento_medico: (ev as any).encaminhamento_medico || '' }); setDialogOpen(true); }}>
-                              <Pencil className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteEvent(ev); }}>
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
+                            {canEdit('eventos') && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift || '', supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false, tecnico_seguranca: ev.tecnico_seguranca || '', categoria_evento: ev.categoria_evento || 'Material', encaminhamento_medico: ev.encaminhamento_medico || '' }); setDialogOpen(true); }}>
+                                <Pencil className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                            {canDelete('eventos') && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteEvent(ev); }}>
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
                             {expandedRow === ev.id ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                           </div>
                         </TableCell>

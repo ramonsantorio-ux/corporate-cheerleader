@@ -50,7 +50,7 @@ export function PerformanceMensalTab({ medicoes, setMedicoes, timeRange, chartDa
   const selectedMedicao = currentMonthIdx >= 0 ? chartData[currentMonthIdx] : null;
   const previousMedicao = currentMonthIdx > 0 ? chartData[currentMonthIdx - 1] : null;
   
-  const desviosAtuais = selectedMedicao?.performanceMensal || [];
+  const desviosAtuais = useMemo(() => selectedMedicao?.performanceMensal || [], [selectedMedicao]);
 
   // KPI calculations
   const faturamento = selectedMedicao?.receitaTotal || 0;

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -87,7 +87,7 @@ export default function MetasBusato() {
   const [editGlobalScore, setEditGlobalScore] = useState("");
   const [isSavingGlobal, setIsSavingGlobal] = useState(false);
 
-  async function fetchMetas() {
+  const fetchMetas = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('indicadores_metas')
@@ -103,7 +103,7 @@ export default function MetasBusato() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [selectedYear]);
 
   const handleDeleteMetric = async (id: string) => {
     if (!window.confirm('Tem certeza que deseja excluir esta métrica?')) return;
@@ -238,7 +238,7 @@ export default function MetasBusato() {
     }
   };
 
-  useEffect(() => { fetchMetas(); }, [selectedYear]);
+  useEffect(() => { fetchMetas(); }, [selectedYear, fetchMetas]);
 
   const METAS_DATA = useMemo(() => {
     const defaultMetasTemplate = [
@@ -376,7 +376,7 @@ export default function MetasBusato() {
 
   const radarData = useMemo(() => {
     return data.metas.map(m => ({
-      subject: m.meta.replace(/ \(\%\)/g, '').substring(0, 15) + '...',
+      subject: m.meta.replace(/ \(%\)/g, '').substring(0, 15) + '...',
       fullSubject: m.meta,
       Atingido: Math.min(m.score, 150),
       Referencia: 100,
@@ -389,7 +389,7 @@ export default function MetasBusato() {
     return data.metas.map(m => {
       const variance = m.alc - m.ref;
       return {
-        name: m.meta.replace(/ \(\%\)/g, '').substring(0, 12) + '...',
+        name: m.meta.replace(/ \(%\)/g, '').substring(0, 12) + '...',
         fullName: m.meta,
         variance: variance,
         isPositive: variance >= 0

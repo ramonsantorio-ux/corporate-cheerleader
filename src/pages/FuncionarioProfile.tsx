@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -39,6 +40,11 @@ interface AttendanceRecord { id: string; date: string; status: string; observati
 interface VacationInfo { id: string; start_date: string | null; end_date: string | null; days_count: number; scheduled_month: string; remaining_days: number | null; observation: string; }
 interface WarningRecord { id: string; date: string; reason: string; applied: boolean; observation: string; created_at: string; }
 interface EventRecord { id: string; event_date: string; event_time: string; day_of_week: string; description: string; location: string; equipment: string; plate_tag: string; shift: string; supervisor: string; }
+
+interface DiscResultData { profile_name?: string; [key: string]: unknown; }
+interface MbtiResultData { mbti_type?: string; [key: string]: unknown; }
+interface BigFiveResultData { [key: string]: unknown; }
+interface DocWithAutoTable { lastAutoTable?: { finalY: number }; }
 
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
@@ -76,6 +82,7 @@ export default function FuncionarioProfile() {
   };
   
   const { toast } = useToast();
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [func, setFunc] = useState<Funcionario | null>(null);
   const [feedbacks, setFeedbacks] = useState<FeedbackItem[]>([]);
   const [allFuncionarios, setAllFuncionarios] = useState<Funcionario[]>([]);
@@ -96,9 +103,9 @@ export default function FuncionarioProfile() {
   const [goalForm, setGoalForm] = useState(emptyGoalForm);
   const cargoSemMeta = func ? CARGOS_SEM_META.includes(func.cargo) : false;
 
-  const [discResult, setDiscResult] = useState<any>(null);
-  const [mbtiResult, setMbtiResult] = useState<any>(null);
-  const [bigFiveResult, setBigFiveResult] = useState<any>(null);
+  const [discResult, setDiscResult] = useState<DiscResultData | null>(null);
+  const [mbtiResult, setMbtiResult] = useState<MbtiResultData | null>(null);
+  const [bigFiveResult, setBigFiveResult] = useState<BigFiveResultData | null>(null);
 
   const refreshFunc = async () => {
     if (!id) return;
@@ -125,7 +132,7 @@ export default function FuncionarioProfile() {
       if (meetRes.data) setMeetings(meetRes.data as MeetingItem[]);
       if (docRes.data) setDocuments(docRes.data as unknown as EmployeeDocument[]);
       if (assessRes.data) {
-        const arr = assessRes.data as any[];
+        const arr = assessRes.data as { assessment_type: string; result_data: DiscResultData | MbtiResultData | BigFiveResultData }[];
         const disc = arr.find(a => a.assessment_type === 'disc');
         const mbti = arr.find(a => a.assessment_type === 'mbti');
         const bigfive = arr.find(a => a.assessment_type === 'bigfive');
@@ -210,6 +217,7 @@ export default function FuncionarioProfile() {
 
   async function confirmDeleteGoal() {
     if (!deleteGoalId) return;
+    if (!canDelete('colaboradores')) { toast({ title: 'Sem permissão para excluir meta', variant: 'destructive' }); return; }
     try {
       const { error } = await supabase.from('goals').delete().eq('id', deleteGoalId);
       if (error) throw error;
@@ -415,7 +423,7 @@ export default function FuncionarioProfile() {
       margin: { left: margin, right: margin },
     });
 
-    y = (doc as any).lastAutoTable?.finalY + 6 || y + 40;
+    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 40;
 
     // ─── PERFIL PSICOMÉTRICO ───
     y = checkPageBreak(y, 30);
@@ -436,7 +444,7 @@ export default function FuncionarioProfile() {
       margin: { left: margin, right: margin },
     });
 
-    y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
+    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 20;
 
     // ─── RESUMO DE OCORRÊNCIAS ───
     const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
@@ -463,7 +471,7 @@ export default function FuncionarioProfile() {
       margin: { left: margin, right: margin },
     });
 
-    y = (doc as any).lastAutoTable?.finalY + 6 || y + 40;
+    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 40;
 
     // ─── FEEDBACKS ───
     y = checkPageBreak(y, 40);
@@ -484,7 +492,7 @@ export default function FuncionarioProfile() {
         alternateRowStyles: { fillColor: blueLt },
         margin: { left: margin, right: margin },
       });
-      y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 20;
     } else {
       doc.setFontSize(8);
       doc.setFont('helvetica', 'italic');
@@ -511,7 +519,7 @@ export default function FuncionarioProfile() {
         alternateRowStyles: { fillColor: blueLt },
         margin: { left: margin, right: margin },
       });
-      y = (doc as any).lastAutoTable?.finalY + 6 || y + 20;
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 20;
     } else {
       doc.setFontSize(8);
       doc.setFont('helvetica', 'italic');

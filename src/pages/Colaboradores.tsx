@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface Funcionario {
   id: string; nome: string; email: string; departamento: string; cargo: string;
@@ -41,6 +42,7 @@ function letraFromTurno(turno: string): string {
 
 export default function Colaboradores() {
   const navigate = useNavigate();
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
   const [turnoFilter, setTurnoFilter] = useState('todos');
@@ -126,6 +128,7 @@ export default function Colaboradores() {
   }
 
   async function handleBulkDelete() {
+    if (!canDelete('colaboradores')) { toast.error('Você não tem permissão para excluir colaboradores.'); return; }
     setBulkDeleting(true);
     const ids = Array.from(selectedIds);
     let deleted = 0;
@@ -172,6 +175,7 @@ export default function Colaboradores() {
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!canCreate('colaboradores')) { toast.error('Você não tem permissão para importar colaboradores.'); return; }
     const file = e.target.files?.[0];
     if (!file) return;
     setImporting(true);
@@ -203,6 +207,7 @@ export default function Colaboradores() {
   }
 
   async function handleCreate() {
+    if (!canCreate('colaboradores')) { toast.error('Você não tem permissão para cadastrar colaboradores.'); return; }
     if (!newData.nome || !newData.cargo || !newData.departamento) { toast.error('Preencha campos obrigatórios'); return; }
     setUploading(true);
     let foto_url = '';
@@ -224,11 +229,13 @@ export default function Colaboradores() {
   }
 
   function openEdit(f: Funcionario) {
+    if (!canEdit('colaboradores')) { toast.error('Você não tem permissão para editar colaboradores.'); return; }
     setEditData({ id: f.id, nome: f.nome, email: f.email || '', cargo: f.cargo, departamento: f.departamento, foto_url: f.foto_url || '', data_admissao: f.data_admissao || '', escolaridade: f.escolaridade || '', graduacao: f.graduacao || '', pos_graduacao: f.pos_graduacao || false, pos_graduacao_tipo: f.pos_graduacao_tipo || '', turno: f.turno || '', letra: f.letra || '', encarregado_id: f.encarregado_id || 'none' });
     setEditPhotoFile(null); setEditPhotoPreview(f.foto_url || ''); setEditDocFiles([]); setEditOpen(true);
   }
 
   async function handleEdit() {
+    if (!canEdit('colaboradores')) { toast.error('Você não tem permissão para editar colaboradores.'); return; }
     if (!editData.nome || !editData.cargo || !editData.departamento) { toast.error('Preencha campos obrigatórios'); return; }
     setUploading(true);
     let foto_url = editData.foto_url;
@@ -250,6 +257,7 @@ export default function Colaboradores() {
 
   async function handleDelete() {
     if (!deleteId) return;
+    if (!canDelete('colaboradores')) { toast.error('Você não tem permissão para excluir colaboradores.'); return; }
     const { error } = await supabase.from('funcionarios').delete().eq('id', deleteId);
     if (error) { toast.error('Erro ao excluir'); return; }
     setDeleteId(null); toast.success('Funcionário excluído!'); fetchFuncionarios(true);
@@ -327,28 +335,32 @@ export default function Colaboradores() {
             {TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
           </SelectContent>
         </Select>
-        <div className="flex gap-2">
-          <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
-          <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={importing}>{importing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}Importar</Button>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" />Novo Funcionário</Button></DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Cadastrar Funcionário</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="flex flex-col items-center gap-2">
-                <input ref={newFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) { setNewPhotoFile(file); setNewPhotoPreview(URL.createObjectURL(file)); }}} />
-                {newPhotoPreview ? (
-                  <div className="relative"><img src={newPhotoPreview} alt="Preview" className="w-20 h-20 rounded-full object-cover border-2 border-primary/20" /><button onClick={() => { setNewPhotoFile(null); setNewPhotoPreview(''); }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"><X className="w-3 h-3" /></button></div>
-                ) : (
-                  <button onClick={() => newFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
-                )}
+        {canCreate('colaboradores') && (
+          <div className="flex gap-2">
+            <input ref={importFileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} />
+            <Button variant="outline" onClick={() => importFileRef.current?.click()} disabled={importing}>{importing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}Importar</Button>
+          </div>
+        )}
+        {canCreate('colaboradores') && (
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" />Novo Funcionário</Button></DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle>Cadastrar Funcionário</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="flex flex-col items-center gap-2">
+                  <input ref={newFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) { setNewPhotoFile(file); setNewPhotoPreview(URL.createObjectURL(file)); }}} />
+                  {newPhotoPreview ? (
+                    <div className="relative"><img src={newPhotoPreview} alt="Preview" className="w-20 h-20 rounded-full object-cover border-2 border-primary/20" /><button onClick={() => { setNewPhotoFile(null); setNewPhotoPreview(''); }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"><X className="w-3 h-3" /></button></div>
+                  ) : (
+                    <button onClick={() => newFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
+                  )}
+                </div>
+                {renderFormFields(newData, setNewData, docFiles, setDocFiles, docFileRef as React.RefObject<HTMLInputElement>)}
+                <Button className="w-full" onClick={handleCreate} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Cadastrar</Button>
               </div>
-              {renderFormFields(newData, setNewData, docFiles, setDocFiles, docFileRef as React.RefObject<HTMLInputElement>)}
-              <Button className="w-full" onClick={handleCreate} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Cadastrar</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {loading ? (
@@ -358,30 +370,32 @@ export default function Colaboradores() {
       ) : (
         <>
           {/* Bulk selection bar */}
-          <div className="flex items-center gap-3 glass-card rounded-xl p-3">
-            <Checkbox
-              checked={allFilteredSelected}
-              onCheckedChange={toggleSelectAll}
-              id="select-all-employees"
-            />
-            <label htmlFor="select-all-employees" className="text-sm font-medium cursor-pointer">
-              Selecionar todos ({filtered.length})
-            </label>
-            {selectedIds.size > 0 && (
-              <>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  {selectedIds.size} selecionado(s)
-                </span>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setBulkDeleteOpen(true)}
-                >
-                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir Selecionados
-                </Button>
-              </>
-            )}
-          </div>
+          {canDelete('colaboradores') && (
+            <div className="flex items-center gap-3 glass-card rounded-xl p-3">
+              <Checkbox
+                checked={allFilteredSelected}
+                onCheckedChange={toggleSelectAll}
+                id="select-all-employees"
+              />
+              <label htmlFor="select-all-employees" className="text-sm font-medium cursor-pointer">
+                Selecionar todos ({filtered.length})
+              </label>
+              {selectedIds.size > 0 && (
+                <>
+                  <span className="text-sm text-muted-foreground ml-auto">
+                    {selectedIds.size} selecionado(s)
+                  </span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setBulkDeleteOpen(true)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Excluir Selecionados
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {paginated.map((f, i) => {
             const turnoLabel = TURNOS.find(t => t.value === f.turno)?.label;
@@ -389,17 +403,25 @@ export default function Colaboradores() {
               <motion.div key={f.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                 className={`glass-card rounded-2xl p-5 flex flex-col items-center text-center gap-4 hover:ring-1 hover:ring-primary/30 transition-all relative overflow-hidden group ${selectedIds.has(f.id) ? 'ring-2 ring-primary/50 bg-primary/5' : ''}`}
               >
-                <div className="absolute top-4 left-4">
-                  <Checkbox
-                    checked={selectedIds.has(f.id)}
-                    onCheckedChange={() => toggleSelect(f.id)}
-                  />
-                </div>
+                {canDelete('colaboradores') && (
+                  <div className="absolute top-4 left-4">
+                    <Checkbox
+                      checked={selectedIds.has(f.id)}
+                      onCheckedChange={() => toggleSelect(f.id)}
+                    />
+                  </div>
+                )}
                 
-                <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => openEdit(f)} title="Editar"><Edit className="w-3.5 h-3.5" /></Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-destructive hover:text-destructive" onClick={() => setDeleteId(f.id)} title="Excluir"><Trash2 className="w-3.5 h-3.5" /></Button>
-                </div>
+                {(canEdit('colaboradores') || canDelete('colaboradores')) && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm rounded-full p-1 shadow-sm">
+                    {canEdit('colaboradores') && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full" onClick={() => openEdit(f)} title="Editar"><Edit className="w-3.5 h-3.5" /></Button>
+                    )}
+                    {canDelete('colaboradores') && (
+                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full text-destructive hover:text-destructive" onClick={() => setDeleteId(f.id)} title="Excluir"><Trash2 className="w-3.5 h-3.5" /></Button>
+                    )}
+                  </div>
+                )}
 
                 <div className="mt-2">
                   {f.foto_url ? (

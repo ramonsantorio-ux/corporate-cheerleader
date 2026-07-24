@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
 
 interface Competency {
@@ -60,6 +61,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 };
 
 export default function Competencias() {
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [competencies, setCompetencies] = useState<Competency[]>([]);
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -173,18 +175,20 @@ export default function Competencias() {
   }
 
   async function deleteCompetency(id: string) {
+    if (!canDelete('desempenho')) { toast({ title: 'Sem permissão para excluir', variant: 'destructive' }); return; }
     await supabase.from('competencies').delete().eq('id', id);
     fetchCompetencies();
   }
 
   async function deleteFitCulturalEmployee(employeeId: string, cycleId: string) {
+    if (!canDelete('desempenho')) { toast({ title: 'Sem permissão para excluir', variant: 'destructive' }); return; }
     const { error } = await supabase.from('fit_cultural').delete().eq('employee_id', employeeId).eq('stage', cycleId);
     if (error) {
       toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Avaliação excluída com sucesso!' });
       const { data } = await supabase.from('fit_cultural').select('employee_id, stage');
-      if (data) setFitCulturalAnswers(data as any[]);
+      if (data) setFitCulturalAnswers(data as { employee_id: string; stage: string }[]);
     }
   }
 
@@ -501,13 +505,15 @@ export default function Competencias() {
                                   <span>• {emp.nome}</span>
                                   {filterCycle === 'all' && <span className="text-xs text-muted-foreground ml-3">Ciclo: {emp.cycleName}</span>}
                                 </button>
-                                <button 
-                                  onClick={() => deleteFitCulturalEmployee(emp.id, emp.cycleId)}
-                                  className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                                  title="Excluir Avaliação deste Colaborador neste Ciclo"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                {canDelete('desempenho') && (
+                                  <button 
+                                    onClick={() => deleteFitCulturalEmployee(emp.id, emp.cycleId)}
+                                    className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                                    title="Excluir Avaliação deste Colaborador neste Ciclo"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
                               </div>
                             ))}
                           </motion.div>
@@ -550,9 +556,11 @@ export default function Competencias() {
                 {comp.description && <p className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{comp.description}</p>}
                 <span className="text-xs text-muted-foreground mt-1 inline-block">Ciclo: {cycleName(comp.cycle_id)}</span>
               </div>
-              <button onClick={() => deleteCompetency(comp.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {canDelete('desempenho') && (
+                <button onClick={() => deleteCompetency(comp.id)} className="text-muted-foreground hover:text-destructive transition-colors p-1">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
             </motion.div>
           ))}
         </div>

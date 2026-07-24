@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2, Eye, EyeOff, MoreHorizontal } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -59,7 +59,7 @@ export default function Admin() {
   const [savingBlock, setSavingBlock] = useState(false);
 
 
-  const adminAuthRequest = async (action: 'create' | 'manage', payload: Record<string, unknown>) => {
+  const adminAuthRequest = useCallback(async (action: 'create' | 'manage', payload: Record<string, unknown>) => {
     const functionName = action === 'create' ? 'create-user' : 'manage-user';
     const { data, error } = await supabase.functions.invoke(functionName, {
       body: payload
@@ -73,11 +73,11 @@ export default function Admin() {
        throw new Error(data.error);
     }
     return data;
-  };
+  }, []);
 
   useEffect(() => {
     if (isAdmin) fetchUsers();
-  }, [isAdmin]);
+  }, [isAdmin, fetchUsers]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -85,7 +85,7 @@ export default function Admin() {
     }
   }, [isAdmin]);
 
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       // Usa edge function para obter status real de ban do Supabase Auth
@@ -128,7 +128,7 @@ export default function Admin() {
       setUsers(usersWithRoles);
     }
     setLoading(false);
-  }
+  }, [adminAuthRequest]);
 
   // Delete user handler
   const [deleteUser, setDeleteUser] = useState<UserWithRole | null>(null);

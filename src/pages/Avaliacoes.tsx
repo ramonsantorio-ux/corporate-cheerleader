@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -48,7 +49,9 @@ export default function Avaliacoes() {
   const [form, setForm] = useState(emptyForm);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const { toast } = useToast();
+  const { canCreate, canEdit, canDelete } = usePermissions();
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchGoals(); }, []);
 
   async function fetchGoals() {
@@ -122,6 +125,7 @@ export default function Avaliacoes() {
 
   async function confirmDelete() {
     if (!deleteId) return;
+    if (!canDelete('desempenho')) { toast({ title: 'Sem permissão para excluir meta', variant: 'destructive' }); return; }
     await supabase.from('goals').delete().eq('id', deleteId);
     setDeleteId(null);
     toast({ title: 'Meta excluída' });
@@ -284,12 +288,16 @@ export default function Avaliacoes() {
                       <td className="p-3 text-center text-xs text-primary font-medium">{goal.muito_acima}</td>
                       <td className="p-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <button onClick={() => openEdit(goal)} className="p-1 text-muted-foreground hover:text-primary transition-colors" title="Editar">
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setDeleteId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Excluir">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canEdit('desempenho') && (
+                            <button onClick={() => openEdit(goal)} className="p-1 text-muted-foreground hover:text-primary transition-colors" title="Editar">
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          )}
+                          {canDelete('desempenho') && (
+                            <button onClick={() => setDeleteId(goal.id)} className="p-1 text-muted-foreground hover:text-destructive transition-colors" title="Excluir">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

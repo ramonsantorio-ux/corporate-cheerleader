@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/components/ExecutiveReports';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -76,8 +77,22 @@ const assessments = [
   }
 ];
 
+interface TestEntry { user_id: string; type: string; created_at?: string; }
+
+function isTestValid(tests: TestEntry[], type: string, empId: string): boolean {
+  if (empId === 'mock-1') return true;
+  const test = tests.find(a => a.user_id === empId && a.type === type);
+  if (!test) return false;
+  if (!test.created_at) return true;
+  const testDate = new Date(test.created_at);
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  return testDate >= oneYearAgo;
+}
+
 export default function Treinamentos() {
   const navigate = useNavigate();
+  const { canCreate, canEdit, canDelete } = usePermissions();
   type Employee = { id: string; nome: string; cargo: string; foto_url?: string };
   type AssessmentResult = { id: string; user_id: string; type: string; result_data: unknown; created_at: string };
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -135,16 +150,6 @@ export default function Treinamentos() {
     fetchData();
   }, []);
 
-  const isTestValid = (tests: AssessmentResult[], type: string, empId: string) => {
-    if (empId === 'mock-1') return true;
-    const test = tests.find(a => a.user_id === empId && a.type === type);
-    if (!test) return false;
-    if (!test.created_at) return true;
-    const testDate = new Date(test.created_at);
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-    return testDate >= oneYearAgo;
-  };
 
   const getTestData = (tests: AssessmentResult[], type: string, empId: string) => {
     if (empId === 'mock-1') {
@@ -163,6 +168,7 @@ export default function Treinamentos() {
   };
 
   async function deleteAssessment(id: string) {
+    if (!canDelete('treinamentos')) { toast({ title: 'Sem permissão para excluir', variant: 'destructive' }); return; }
     if (!confirm('Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.')) return;
     const { error } = await supabase.from('assessment_results').delete().eq('id', id);
     if (error) {
@@ -429,10 +435,10 @@ export default function Treinamentos() {
                             <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('disc', f.id)}>Copiar Link DISC</DropdownMenuItem>
                             <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('mbti', f.id)}>Copiar Link MBTI</DropdownMenuItem>
                             <DropdownMenuItem className="cursor-pointer" onClick={() => copyLink('bigfive', f.id)}>Copiar Link Big Five</DropdownMenuItem>
-                            {(discId || mbtiId || bigfiveId) && <DropdownMenuSeparator />}
-                            {discId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(discId)}>Excluir DISC</DropdownMenuItem>}
-                            {mbtiId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(mbtiId)}>Excluir MBTI</DropdownMenuItem>}
-                            {bigfiveId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(bigfiveId)}>Excluir Big Five</DropdownMenuItem>}
+                            {canDelete('treinamentos') && (discId || mbtiId || bigfiveId) && <DropdownMenuSeparator />}
+                            {canDelete('treinamentos') && discId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(discId)}>Excluir DISC</DropdownMenuItem>}
+                            {canDelete('treinamentos') && mbtiId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(mbtiId)}>Excluir MBTI</DropdownMenuItem>}
+                            {canDelete('treinamentos') && bigfiveId && <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10" onClick={() => deleteAssessment(bigfiveId)}>Excluir Big Five</DropdownMenuItem>}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>

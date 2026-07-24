@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Brain, CheckCircle2, AlertTriangle, User, Zap, BarChart2, Target, Lightbulb, FileText, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, Cell, CartesianGrid } from 'recharts';
@@ -11,6 +12,11 @@ interface DiscDominant { letter: string; score: number; }
 interface DiscResult { D: number; I: number; S: number; C: number; dominant: DiscDominant; }
 interface MbtiResult { type: string; desc: { title: string; desc: string }; percentages: { E: number; I: number; S: number; N: number; T: number; F: number; J: number; P: number }; }
 interface BigFiveResult { O: number; C: number; E: number; A: number; N: number; }
+interface MbtiEntry { title: string; desc: string; traits: string[]; }
+interface BigFiveLevelEntry { title: string; desc: string; impact: string; }
+interface BigFiveEntry { label: string; color: string; icon: string; high: BigFiveLevelEntry; mid: BigFiveLevelEntry; low: BigFiveLevelEntry; }
+interface DocWithAutoTable { lastAutoTable: { finalY: number }; }
+
 
 export const discDescriptions: Record<string, Record<string, unknown>> = {
   D: {
@@ -128,7 +134,7 @@ export const discDescriptions: Record<string, Record<string, unknown>> = {
   }
 };
 
-export const mbtiDescriptions: Record<string, any> = {
+export const mbtiDescriptions: Record<string, MbtiEntry> = {
   ENTJ: { title: "Comandante", desc: "Líderes natos com visão estratégica e alto poder de execução.", traits: ["Decisivo", "Estratégico", "Ambicioso"] },
   ENTP: { title: "Debatedor",  desc: "Pensadores criativos que adoram desafiar ideias estabelecidas.", traits: ["Criativo", "Analítico", "Debates"] },
   ENFJ: { title: "Protagonista", desc: "Carismáticos e inspiradores, focados em desenvolver as pessoas.", traits: ["Empático", "Inspirador", "Comunicativo"] },
@@ -147,7 +153,7 @@ export const mbtiDescriptions: Record<string, any> = {
   ISFP: { title: "Aventureiro", desc: "Artistas flexíveis, sempre prontos para explorar e sentir.", traits: ["Artístico", "Gentil", "Adaptável"] },
 };
 
-export const bigFiveDetails: Record<string, any> = {
+export const bigFiveDetails: Record<string, BigFiveEntry> = {
   O: {
     label: 'Abertura à Experiência', color: 'bg-violet-500', icon: '💡',
     high: { title: 'Visionário e Inovador', desc: 'Indivíduo criativo, com facilidade para propor soluções disruptivas e pensar fora da caixa.', impact: 'Pode atuar como um catalisador de transformações, mas pode se dispersar em rotinas ou processos muito rígidos.' },
@@ -295,11 +301,11 @@ export function DiscReport({ resultScreen, employeeName = "Colaborador" }: { res
       });
 
       doc.setFont("helvetica", "bold");
-      doc.text("Áreas de Desenvolvimento Profissional", 14, (doc as any).lastAutoTable.finalY + 15);
+      doc.text("Áreas de Desenvolvimento Profissional", 14, (doc as unknown as DocWithAutoTable).lastAutoTable.finalY + 15);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       info.professional.development.forEach((dev: string, idx: number) => {
-        doc.text(`• ${dev}`, 14, (doc as any).lastAutoTable.finalY + 25 + (idx * 6));
+        doc.text(`• ${dev}`, 14, (doc as unknown as DocWithAutoTable).lastAutoTable.finalY + 25 + (idx * 6));
       });
 
       // Nova Página: Formação Acadêmica e Perfil Secundário

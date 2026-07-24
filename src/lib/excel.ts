@@ -41,7 +41,7 @@ export function parseExcelDate(val: unknown): string | null {
     }
     
     // Verifica formato brasileiro comum: DD/MM/YYYY ou D/M/YY
-    const parts = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    const parts = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
     if (parts) {
       const d = parts[1].padStart(2, '0');
       const m = parts[2].padStart(2, '0');

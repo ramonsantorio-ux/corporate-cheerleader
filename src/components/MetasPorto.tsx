@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -127,7 +127,7 @@ export default function MetasPorto() {
     }
   };
 
-  async function fetchMetas() {
+  const fetchMetas = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('indicadores_metas')
@@ -143,7 +143,7 @@ export default function MetasPorto() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [selectedYear]);
 
   const handleEditAll = () => {
     const values: Record<string, {meta: string, categoria: string, ref: string, alcBruto: string, alcPeso: string, status: string}> = {};
@@ -238,7 +238,7 @@ export default function MetasPorto() {
     }
   };
 
-  useEffect(() => { fetchMetas(); }, [selectedYear]);
+  useEffect(() => { fetchMetas(); }, [selectedYear, fetchMetas]);
 
   const METAS_DATA = useMemo(() => {
     const defaultMetasTemplate = [
@@ -384,7 +384,7 @@ export default function MetasPorto() {
     return data.metas.map(m => {
       const reachedPct = m.ref === 0 ? (m.alc === 0 ? 100 : 0) : Math.min((m.alc / m.ref) * 100, 150);
       return {
-        subject: m.meta.replace(/ \(\%\)/g, '').substring(0, 15) + '...',
+        subject: m.meta.replace(/ \(%\)/g, '').substring(0, 15) + '...',
         fullSubject: m.meta,
         Atingido: reachedPct,
         Referencia: 100,
@@ -406,7 +406,7 @@ export default function MetasPorto() {
       }
       
       return {
-        name: m.meta.replace(/ \(\%\)/g, '').substring(0, 12) + '...',
+        name: m.meta.replace(/ \(%\)/g, '').substring(0, 12) + '...',
         fullName: m.meta,
         variance: variance,
         isPositive: variance >= 0

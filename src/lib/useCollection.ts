@@ -87,7 +87,7 @@ export function useCollection<T>(collectionName: string, defaultData: T[]) {
 
     window.addEventListener('online', handleOnline);
     return () => window.removeEventListener('online', handleOnline);
-  }, [collectionName]);
+  }, [collectionName, localKey]);
 
   return { data, updateData, isSyncing };
 }

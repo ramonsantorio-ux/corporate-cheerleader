@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,15 +94,15 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
 
   useEffect(() => {
     fetchData();
-  }, [employeeId]);
+  }, [employeeId, fetchData]);
 
   useEffect(() => {
     if (activeCycleId) {
       checkIfClosed(activeCycleId);
     }
-  }, [activeCycleId, employeeId]);
+  }, [activeCycleId, employeeId, checkIfClosed]);
 
-  async function checkIfClosed(cid: string) {
+  const checkIfClosed = useCallback(async (cid: string) => {
     if (!cid) {
       setIsClosed(false);
       return;
@@ -114,9 +114,9 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
       .eq('cycle_id', cid)
       .maybeSingle();
     setIsClosed(!!data);
-  }
+  }, [employeeId]);
 
-  async function fetchData() {
+  const fetchData = useCallback(async () => {
     // Busca ciclos
     const { data: cData } = await supabase.from('evaluation_cycles').select('*').order('start_date', { ascending: true });
     if (cData) {
@@ -136,7 +136,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
       
     if (sData) setAllScores(sData as unknown as FitScore[]);
     setLoading(false);
-  }
+  }, [employeeId, activeCycleId]);
 
   const currentCycleScores = useMemo(() => {
     return allScores.filter(s => s.cycle_id === activeCycleId);

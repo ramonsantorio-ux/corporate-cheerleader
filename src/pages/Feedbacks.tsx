@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, AreaChart, Area, CartesianGrid, RadialBarChart, RadialBar, Legend } from 'recharts';
 
 const departamentos = Object.entries(setorLabels) as [FeedbackSetor, string][];
@@ -77,6 +78,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 export default function Feedbacks() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | 'todos'>('todos');
@@ -283,6 +285,7 @@ export default function Feedbacks() {
 
   async function handleDelete() {
     if (!deleteId) return;
+    if (!canDelete('feedbacks')) { toast.error('Você não tem permissão para excluir feedbacks.'); return; }
     const { error } = await supabase.from('feedbacks').delete().eq('id', deleteId);
     if (error) { toast.error('Erro ao excluir feedback.'); return; }
     setFeedbacks(feedbacks.filter(fb => fb.id !== deleteId));
@@ -631,7 +634,7 @@ export default function Feedbacks() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filtered.map((fb, i) => (
-          <FeedbackCard key={fb.id} feedback={fb} index={i} onClick={() => navigate(`/feedbacks/${fb.id}`)} onDelete={() => setDeleteId(fb.id)} />
+          <FeedbackCard key={fb.id} feedback={fb} index={i} onClick={() => navigate(`/feedbacks/${fb.id}`)} onDelete={canDelete('feedbacks') ? () => setDeleteId(fb.id) : undefined} />
         ))}
       </div>
 

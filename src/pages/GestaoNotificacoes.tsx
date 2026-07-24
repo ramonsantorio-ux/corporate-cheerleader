@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -14,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import PeriodFilter, { getMonthPeriod } from '@/components/filters/PeriodFilter';
 import type { PeriodRange } from '@/components/filters/PeriodFilter';
 import ExpandableChart from '@/components/ExpandableChart';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export interface NotificacaoGlobal {
   id: string;
@@ -68,6 +70,7 @@ const getMonthForNotification = (dataStr?: string) => {
 };
 
 const GestaoNotificacoes = () => {
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [notificacoes, setNotificacoes] = useState<NotificacaoGlobal[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -105,9 +108,11 @@ const GestaoNotificacoes = () => {
     if (!formData.dataStr || !formData.motivo) return;
 
     if (editingId) {
+      if (!canEdit('notificacoes')) return;
       const updated = notificacoes.map(n => n.id === editingId ? { ...formData, id: editingId } as NotificacaoGlobal : n);
       saveToStorage(updated);
     } else {
+      if (!canCreate('notificacoes')) return;
       const newNotif = { ...formData, id: Date.now().toString() } as NotificacaoGlobal;
       saveToStorage([...notificacoes, newNotif]);
     }
@@ -115,18 +120,30 @@ const GestaoNotificacoes = () => {
   };
 
   const handleDelete = (id: string) => {
+    if (!canDelete('notificacoes')) {
+      alert('Você não tem permissão para excluir notificações.');
+      return;
+    }
     if (confirm('Tem certeza que deseja excluir esta ocorrência?')) {
       saveToStorage(notificacoes.filter(n => n.id !== id));
     }
   };
 
   const openNew = () => {
+    if (!canCreate('notificacoes')) {
+      alert('Você não tem permissão para criar notificações.');
+      return;
+    }
     setEditingId(null);
     setFormData({ dataStr: '', local: '', motivo: '', solicitante: '', tipo: 'Notificação', planoDeAcao: 'Pendente', valorOriginal: 0 });
     setIsModalOpen(true);
   };
 
   const openEdit = (n: NotificacaoGlobal) => {
+    if (!canEdit('notificacoes')) {
+      alert('Você não tem permissão para editar notificações.');
+      return;
+    }
     setEditingId(n.id);
     setFormData(n);
     setIsModalOpen(true);
@@ -193,10 +210,12 @@ const GestaoNotificacoes = () => {
           <h1 className="text-3xl font-black text-primary tracking-tight">Notificações e Multas</h1>
           <p className="text-muted-foreground mt-1">Gestão centralizada de ocorrências contratuais.</p>
         </div>
-        <Button onClick={openNew} className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Ocorrência
-        </Button>
+        {canCreate('notificacoes') && (
+          <Button onClick={openNew} className="shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+            <Plus className="w-4 h-4 mr-2" />
+            Nova Ocorrência
+          </Button>
+        )}
       </div>
 
       {/* Control Bar Inovadora */}
@@ -393,8 +412,12 @@ const GestaoNotificacoes = () => {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right whitespace-nowrap">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(n)} className="h-8 w-8 text-muted-foreground hover:text-primary"><Pencil className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(n.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                        {canEdit('notificacoes') && (
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(n)} className="h-8 w-8 text-muted-foreground hover:text-primary"><Pencil className="w-4 h-4" /></Button>
+                        )}
+                        {canDelete('notificacoes') && (
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(n.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   );

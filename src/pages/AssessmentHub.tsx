@@ -171,13 +171,13 @@ export default function AssessmentHub() {
 
   const testType = type || 'disc';
 
-  const [employees, setEmployees] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<{ id: string; nome: string; cargo: string }[]>([]);
   const [selectedEmpId, setSelectedEmpId] = useState(id || '');
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [bigFiveAnswers, setBigFiveAnswers] = useState<Record<number, number>>({});
   const [currentQ, setCurrentQ] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [resultScreen, setResultScreen] = useState<any>(null);
+  const [resultScreen, setResultScreen] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     supabase.from('funcionarios').select('id, nome, cargo').order('nome')
@@ -380,7 +380,7 @@ export default function AssessmentHub() {
                     </div>
                     <div className="bg-primary/5 p-4 rounded-lg text-sm text-primary-foreground/90 leading-relaxed border border-primary/20 mt-4">
                       <strong className="text-primary flex items-center gap-1 mb-2"><Zap className="w-4 h-4"/> Aplicação Prática</strong>
-                      Os perfis <strong className="uppercase">{info?.title}</strong> geralmente buscam ambientes onde possam aplicar seus pontos fortes naturais ({info?.traits?.join(', ').toLowerCase()}). Trazem diversidade cognitiva Ã  equipe, influenciando o formato de tomada de decisão e resolução de problemas operacionais.
+                      Os perfis <strong className="uppercase">{info?.title}</strong> geralmente buscam ambientes onde possam aplicar seus pontos fortes naturais ({info?.traits?.join(', ').toLowerCase()}). Trazem diversidade cognitiva à equipe, influenciando o formato de tomada de decisão e resolução de problemas operacionais.
                     </div>
                   </div>
 
@@ -391,7 +391,7 @@ export default function AssessmentHub() {
         })()}
 
         {testType === 'bigfive' && (() => {
-          const bigFiveDetails: Record<string, any> = {
+          const bigFiveDetails: Record<string, { label: string; color: string; icon: string; high: { title: string; desc: string; impact: string }; mid: { title: string; desc: string; impact: string }; low: { title: string; desc: string; impact: string } }> = {
             O: {
               label: 'Abertura Ã  Experiência', color: 'bg-violet-500', icon: 'ðŸ’¡',
               high: { title: 'Visionário e Inovador', desc: 'Indivíduo criativo, com facilidade para propor soluções disruptivas e pensar fora da caixa.', impact: 'Pode atuar como um catalisador de transformações, mas pode se dispersar em rotinas ou processos muito rígidos.' },
@@ -567,7 +567,7 @@ export default function AssessmentHub() {
   }
 
   // â”€â”€ DISC / MBTI Screen (paginado por questão) â”€â”€
-  const q = questions[currentQ] as any;
+  const q = questions[currentQ];
   const isDisc = testType === 'disc';
 
   return (

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect } from 'react';
 import { Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';

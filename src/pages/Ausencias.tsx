@@ -25,6 +25,7 @@ import { readExcelRows, parseExcelDate } from '@/lib/excel';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
+import { usePermissions } from '@/hooks/usePermissions';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Attendance {
@@ -83,6 +84,7 @@ function formatDate(d: string | null) {
 
 // ─── Main Component ─────────────────────────────────────────────────────────
 export default function PontoFerias() {
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [vacations, setVacations] = useState<VacationRecord[]>([]);
   const [overtimes, setOvertimes] = useState<OvertimeRecord[]>([]);
@@ -124,6 +126,7 @@ export default function PontoFerias() {
     employee_id: '', date: new Date().toISOString().split('T')[0], reason: '', applied: 'true', observation: ''
   });
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchAll(); }, [period]);
 
   // ─── Leader alert popups ──────────────────────────────────────────────
@@ -233,15 +236,15 @@ export default function PontoFerias() {
 
       if (existing) {
         await supabase.from('overtime_control').update({
-          extras_count: (existing as any).extras_count + 1, updated_at: new Date().toISOString()
-        }).eq('id', (existing as any).id);
+          extras_count: (existing as { extras_count: number; id: string }).extras_count + 1, updated_at: new Date().toISOString()
+        }).eq('id', (existing as { extras_count: number; id: string }).id);
       } else {
         await supabase.from('overtime_control').insert({
           employee_id: form.employee_id, period_start: period.start, period_end: period.end, extras_count: 1, max_extras: 3,
         });
       }
 
-      const newCount = (existing ? (existing as any).extras_count + 1 : 1);
+      const newCount = (existing ? (existing as { extras_count: number }).extras_count + 1 : 1);
       if (newCount >= 3) {
         const empName = funcionarios.find(f => f.id === form.employee_id)?.nome || '';
         toast.warning(`⛔ ALERTA LÍDER: ${empName} atingiu o LIMITE de 3 extras! Novas extras BLOQUEADAS.`, { duration: 10000 });
@@ -308,6 +311,7 @@ export default function PontoFerias() {
   }
 
   async function deleteAttendance(id: string) {
+    if (!canDelete('ausencias')) { toast.error('Você não tem permissão para excluir.'); return; }
     try {
       const { error } = await supabase.from('daily_attendance').delete().eq('id', id);
       if (error) throw error;
@@ -320,6 +324,7 @@ export default function PontoFerias() {
   }
 
   async function deleteVacation(id: string) {
+    if (!canDelete('ausencias')) { toast.error('Você não tem permissão para excluir.'); return; }
     try {
       const { error } = await supabase.from('vacation_control').delete().eq('id', id);
       if (error) throw error;
@@ -349,6 +354,7 @@ export default function PontoFerias() {
   }
 
   async function deleteWarning(id: string) {
+    if (!canDelete('ausencias')) { toast.error('Você não tem permissão para excluir.'); return; }
     try {
       const { error } = await supabase.from('employee_warnings').delete().eq('id', id);
       if (error) throw error;
@@ -526,7 +532,7 @@ export default function PontoFerias() {
 
     // Warning details section
     if (warnings.length > 0) {
-      const finalY = (doc as any).lastAutoTable?.finalY || 120;
+      const finalY = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 120;
       doc.setFontSize(11);
       doc.setFont('helvetica', 'bold');
       doc.text('DETALHAMENTO DE ADVERTÊNCIAS', 14, finalY + 12);
@@ -1454,9 +1460,11 @@ export default function PontoFerias() {
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{w.observation || '—'}</td>
                       <td className="px-4 py-2.5 text-right">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteWarning(w.id)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {canDelete('ausencias') && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteWarning(w.id)}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1634,9 +1642,11 @@ export default function PontoFerias() {
   </td>
   <td className="px-4 py-2.5 text-xs text-muted-foreground max-w-[150px] truncate">{a.observation || '—'}</td>
                       <td className="px-4 py-2.5 text-right">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteAttendance(a.id)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {canDelete('ausencias') && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteAttendance(a.id)}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1697,12 +1707,16 @@ export default function PontoFerias() {
                           )}
                         </td>
                         <td className="px-4 py-2.5 text-right flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditVacation(v)}>
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteVacation(v.id)}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
+                          {canEdit('ausencias') && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditVacation(v)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                          {canDelete('ausencias') && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => deleteVacation(v.id)}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -1735,9 +1749,11 @@ export default function PontoFerias() {
             <div className="space-y-2"><Label>Observação</Label><FastTextarea value={editVacForm.observation} onValueChange={v => setEditVacForm(f => ({ ...f, observation: v }))} rows={2} /></div>
             <div className="flex gap-2">
               <Button className="flex-1" onClick={handleEditVacation}>Salvar Alterações</Button>
-              <Button variant="destructive" onClick={() => { deleteVacation(editVacForm.id); setEditVacDialogOpen(false); }}>
-                <Trash2 className="w-4 h-4 mr-1" /> Excluir
-              </Button>
+              {canDelete('ausencias') && (
+                <Button variant="destructive" onClick={() => { deleteVacation(editVacForm.id); setEditVacDialogOpen(false); }}>
+                  <Trash2 className="w-4 h-4 mr-1" /> Excluir
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>

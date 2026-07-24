@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface Funcionario {
   id: string;
@@ -70,6 +71,7 @@ function letraFromTurno(turno: string): string {
 
 export default function Cadastro() {
   const navigate = useNavigate();
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -390,6 +392,10 @@ export default function Cadastro() {
 
   async function handleDelete() {
     if (!deleteId) return;
+    if (!canDelete('cadastro')) {
+      toast.error('Você não tem permissão para excluir funcionário');
+      return;
+    }
     const { error } = await supabase.from('funcionarios').delete().eq('id', deleteId);
     if (error) {
       toast.error('Erro ao excluir funcionário');
@@ -672,12 +678,16 @@ export default function Cadastro() {
                   <Button variant="ghost" size="icon" onClick={() => navigate(`/funcionario/${f.id}`)} title="Ver perfil">
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(f)} title="Editar">
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={() => setDeleteId(f.id)} title="Excluir" className="text-destructive hover:text-destructive">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  {canEdit('cadastro') && (
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(f)} title="Editar">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {canDelete('cadastro') && (
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteId(f.id)} title="Excluir" className="text-destructive hover:text-destructive">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             );
@@ -708,7 +718,7 @@ export default function Cadastro() {
               )}
               <button onClick={() => editFileRef.current?.click()} className="text-xs text-primary hover:underline">Alterar foto</button>
             </div>
-            {renderFormFields(editData, setEditData as any, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
+            {renderFormFields(editData, (d) => setEditData(prev => ({ ...prev, ...d })), editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
             <Button className="w-full" onClick={handleEdit} disabled={uploading}>
               {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Salvar Alterações

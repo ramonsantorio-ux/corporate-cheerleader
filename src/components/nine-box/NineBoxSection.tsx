@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -66,9 +66,9 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
   useEffect(() => {
     fetchCycles();
     fetchHistorico();
-  }, [employeeId]);
+  }, [employeeId, fetchCycles, fetchHistorico]);
 
-  async function fetchCycles() {
+  const fetchCycles = useCallback(async () => {
     const { data } = await supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false });
     if (data && data.length > 0) {
       setDbCycles(data);
@@ -76,7 +76,7 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
     } else {
       setCycle('Ciclo Padrão');
     }
-  }
+  }, []);
 
   // Lógica de elegibilidade dinâmica baseada no ciclo selecionado
   const selectedDbCycle = dbCycles.find(c => c.name === cycle);
@@ -86,7 +86,7 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
     ? eligibleRolesArray.some((c: string) => cargo.toLowerCase().includes(c.toLowerCase()))
     : ['analista', 'supervisor', 'coordenador', 'gerente'].some(c => cargo.toLowerCase().includes(c));
 
-  async function fetchHistorico() {
+  const fetchHistorico = useCallback(async () => {
     const { data, error } = await supabase
       .from('nine_box_historico')
       .select('*')
@@ -99,7 +99,7 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
         setViewMode('historico');
       }
     }
-  }
+  }, [employeeId, desempenho]);
 
   async function handleSave() {
     if (activeTab === 'tradicional' && (!desempenho || !potencial)) {

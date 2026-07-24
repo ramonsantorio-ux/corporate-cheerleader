@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, Cell } from 'recharts';
@@ -53,6 +54,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 };
 
 export default function Desempenho() {
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [cycles, setCycles] = useState<EvaluationCycle[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -105,6 +107,7 @@ export default function Desempenho() {
   }
 
   async function deleteCycle(cycleId: string) {
+    if (!canDelete('desempenho')) { toast({ title: 'Sem permissão para excluir ciclo', variant: 'destructive' }); return; }
     if (!confirm('Tem certeza que deseja excluir este ciclo? Todas as avaliações de Fit Cultural, Succession 9Box e PDIs vinculadas a ele serão apagadas permanentemente.')) return;
     
     await supabase.from('fit_cultural').delete().eq('stage', cycleId);
@@ -396,13 +399,15 @@ export default function Desempenho() {
                       <span className={`corporate-badge ${statusColor[cycle.status] || 'bg-muted text-muted-foreground'}`}>
                         {statusLabel[cycle.status] || cycle.status}
                       </span>
-                      <button 
-                        onClick={() => deleteCycle(cycle.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                        title="Excluir Ciclo"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canDelete('desempenho') && (
+                        <button 
+                          onClick={() => deleteCycle(cycle.id)}
+                          className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                          title="Excluir Ciclo"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </motion.div>
                 ))

@@ -10,6 +10,7 @@ import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadius
 import { readExcelRaw, parseExcelDate } from '@/lib/excel';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface Treinamento {
   id: string;
@@ -29,6 +30,7 @@ const RAC_LIST = [
 ];
 
 export function TreinamentosSSMA() {
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [data, setData] = useState<Treinamento[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -84,6 +86,7 @@ export function TreinamentosSSMA() {
   };
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!canCreate('eventos')) { toast.error('Você não tem permissão para importar treinamentos.'); return; }
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true);
@@ -151,6 +154,7 @@ export function TreinamentosSSMA() {
   function formatDate(val: unknown) { return parseExcelDate(val) || ''; }
 
   async function handleDelete(id: string) {
+    if (!canDelete('eventos')) { toast.error('Você não tem permissão para excluir treinamentos.'); return; }
     if (!confirm('Deseja excluir este registro?')) return;
     await supabase.from('treinamentos_ssma').delete().eq('id', id);
     toast.success('Excluído');
@@ -158,6 +162,7 @@ export function TreinamentosSSMA() {
   }
 
   async function handleSaveEdit() {
+    if (!canEdit('eventos')) { toast.error('Você não tem permissão para editar treinamentos.'); return; }
     if (!editItem) return;
     const { error } = await supabase.from('treinamentos_ssma').update({
       nome: editItem.nome,
@@ -282,54 +287,58 @@ export function TreinamentosSSMA() {
                           </div>
                         </TableCell>
                         <TableCell className="text-xs py-2 text-right">
-                          <Dialog open={editItem?.id === d.id} onOpenChange={(open) => !open && setEditItem(null)}>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditItem(d)}>
-                                <Pencil className="w-3 h-3" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-md">
-                              <DialogHeader>
-                                <DialogTitle>Editar Treinamentos - {d.nome}</DialogTitle>
-                              </DialogHeader>
-                              {editItem && (
-                                <div className="space-y-4 py-4">
-                                  <div className="space-y-2">
-                                    <Label>Nome</Label>
-                                    <Input value={editItem.nome} onChange={e => setEditItem({...editItem, nome: e.target.value})} />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label>Função</Label>
-                                    <Input value={editItem.funcao} onChange={e => setEditItem({...editItem, funcao: e.target.value})} />
-                                  </div>
-                                  
-                                  <h3 className="font-semibold text-sm mt-4">Vencimentos</h3>
-                                  <div className="grid grid-cols-2 gap-3">
-                                    {Object.entries(editItem.treinamentos).map(([key, val]) => (
-                                      <div key={key} className="space-y-1">
-                                        <Label className="text-[10px]">{key}</Label>
-                                        <div className="flex items-center gap-2">
-                                          <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(val)}`} />
-                                          <Input 
-                                            value={val} 
-                                            className="h-7 text-xs"
-                                            onChange={e => setEditItem({
-                                              ...editItem, 
-                                              treinamentos: {...editItem.treinamentos, [key]: e.target.value}
-                                            })} 
-                                          />
+                          {canEdit('eventos') && (
+                            <Dialog open={editItem?.id === d.id} onOpenChange={(open) => !open && setEditItem(null)}>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditItem(d)}>
+                                  <Pencil className="w-3 h-3" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-md">
+                                <DialogHeader>
+                                  <DialogTitle>Editar Treinamentos - {d.nome}</DialogTitle>
+                                </DialogHeader>
+                                {editItem && (
+                                  <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                      <Label>Nome</Label>
+                                      <Input value={editItem.nome} onChange={e => setEditItem({...editItem, nome: e.target.value})} />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label>Função</Label>
+                                      <Input value={editItem.funcao} onChange={e => setEditItem({...editItem, funcao: e.target.value})} />
+                                    </div>
+                                    
+                                    <h3 className="font-semibold text-sm mt-4">Vencimentos</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      {Object.entries(editItem.treinamentos).map(([key, val]) => (
+                                        <div key={key} className="space-y-1">
+                                          <Label className="text-[10px]">{key}</Label>
+                                          <div className="flex items-center gap-2">
+                                            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusColor(val)}`} />
+                                            <Input 
+                                              value={val} 
+                                              className="h-7 text-xs"
+                                              onChange={e => setEditItem({
+                                                ...editItem, 
+                                                treinamentos: {...editItem.treinamentos, [key]: e.target.value}
+                                              })} 
+                                            />
+                                          </div>
                                         </div>
-                                      </div>
-                                    ))}
+                                      ))}
+                                    </div>
+                                    <Button className="w-full mt-4" onClick={handleSaveEdit}>Salvar Alterações</Button>
                                   </div>
-                                  <Button className="w-full mt-4" onClick={handleSaveEdit}>Salvar Alterações</Button>
-                                </div>
-                              )}
-                            </DialogContent>
-                          </Dialog>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(d.id)}>
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
+                                )}
+                              </DialogContent>
+                            </Dialog>
+                          )}
+                          {canDelete('eventos') && (
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(d.id)}>
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     );

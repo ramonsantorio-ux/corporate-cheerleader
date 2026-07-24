@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { TrendingUp, DollarSign, Calculator, LineChart as LineChartIcon, ShieldAlert, Target, AlertTriangle, FileWarning, TrendingDown, ArrowUpRight, ArrowDownRight, Minus, Plus, Trash2, Info, Pencil, Eye, EyeOff, RefreshCcw, Download, Upload, BarChart3, Truck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from "@/lib/supabase";
 import { ResponsiveContainer, ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Area, ReferenceLine, LabelList, PieChart, Pie, Cell, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 
@@ -24,6 +26,7 @@ import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/fil
 interface OfensorFinanceiro {
   motivo: string;
   valor: number;
+  isGlobal?: boolean;
 }
 
 interface OfensorNotificacao {
@@ -516,8 +519,39 @@ const isDateInMedicaoMonth = (dateStr: string, medicaoMes: string) => {
   return dateObj >= startDate && dateObj <= endDate;
 };
 
+interface TooltipEntry { name: string; value: number | string; color?: string; }
+interface TooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
+        <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>
+        <div className="space-y-2">
+          {payload.map((entry, index: number) => (
+            <div key={index} className="flex items-center justify-between gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
+                <span className="text-muted-foreground font-medium">{entry.name}</span>
+              </div>
+              <span className="font-bold text-foreground">
+                {entry.name.includes('Margem') || entry.name.includes('Aderência') || entry.name.includes('Meta')
+                  ? `${entry.value}%`
+                  : entry.name.includes('Notificações')
+                    ? entry.value
+                    : typeof entry.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.value) : entry.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function EvolucaoContrato() {
   const { toast } = useToast();
+  const { canCreate, canEdit, canDelete } = usePermissions();
   const [notificacaoDetalhe, setNotificacaoDetalhe] = useState<OfensorNotificacao | null>(null);
   const [notificacoesGlobais, setNotificacoesGlobais] = useState<NotificacaoGlobal[]>(seedNotificacoes);
   
@@ -640,6 +674,10 @@ export default function EvolucaoContrato() {
   };
 
   const handleDelete = useCallback(async (id: number) => {
+    if (!canDelete('evolucao')) {
+      toast({ title: 'Acesso negado', description: 'Você não tem permissão para excluir.', variant: 'destructive' });
+      return;
+    }
     if (confirm('Tem certeza que deseja excluir este fechamento mensal?')) {
       try {
         const existing = medicoes.find(m => m.id === id);
@@ -654,7 +692,7 @@ export default function EvolucaoContrato() {
         toast({ title: 'Erro', description: msg, variant: 'destructive' });
       }
     }
-  }, [medicoes, toast]);
+  }, [medicoes, toast, canDelete]);
 
   const handleSaveFromComponent = async (novaMedicao: Medicao) => {
     // Validação anti-duplicação: se não for uma edição (editingId vazio) 
@@ -834,35 +872,6 @@ export default function EvolucaoContrato() {
     return { icon: Minus, color: 'text-muted-foreground' };
   };
 
-  interface TooltipEntry { name: string; value: number | string; color?: string; }
-  interface TooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
-  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[200px]">
-          <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>
-          <div className="space-y-2">
-            {payload.map((entry, index: number) => (
-              <div key={index} className="flex items-center justify-between gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
-                  <span className="text-muted-foreground font-medium">{entry.name}</span>
-                </div>
-                <span className="font-bold text-foreground">
-                  {entry.name.includes('Margem') || entry.name.includes('Aderência') || entry.name.includes('Meta') 
-                    ? `${entry.value}%` 
-                    : entry.name.includes('Notificações') 
-                      ? entry.value 
-                      : typeof entry.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.value) : entry.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   const handleChartClick = (data: { activePayload?: { payload: Medicao }[] }) => {
     if (data && data.activePayload && data.activePayload.length > 0) {
@@ -1362,12 +1371,16 @@ export default function EvolucaoContrato() {
                       </td>
                       <td className="px-2 py-3 text-center sticky right-0 bg-background/95 backdrop-blur-md z-10 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.05)] border-l whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(m)} className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10">
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {canEdit('evolucao') && (
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(m)} className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {canDelete('evolucao') && (
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(m.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1637,12 +1650,12 @@ export default function EvolucaoContrato() {
                           {detalhesMedicao.multas.map((m, i) => (
                             <li 
                               key={i} 
-                              onClick={() => (m as any).isGlobal ? setNotificacaoDetalhe(m as any) : undefined}
-                              className={`flex justify-between items-center text-sm p-3 bg-destructive/10 rounded-lg border border-destructive/20 ${(m as any).isGlobal ? 'cursor-pointer hover:bg-destructive/20 hover:border-destructive/50 transition-colors' : ''}`}
+                              onClick={() => m.isGlobal ? setNotificacaoDetalhe(m as unknown as Parameters<typeof setNotificacaoDetalhe>[0]) : undefined}
+                              className={`flex justify-between items-center text-sm p-3 bg-destructive/10 rounded-lg border border-destructive/20 ${m.isGlobal ? 'cursor-pointer hover:bg-destructive/20 hover:border-destructive/50 transition-colors' : ''}`}
                             >
                               <div className="flex flex-col gap-1">
                                 <span className="text-destructive font-medium">{m.motivo}</span>
-                                {(m as any).isGlobal && <span className="text-[10px] uppercase bg-destructive/20 px-2 py-0.5 rounded-full w-fit text-destructive">Detalhes</span>}
+                                {m.isGlobal && <span className="text-[10px] uppercase bg-destructive/20 px-2 py-0.5 rounded-full w-fit text-destructive">Detalhes</span>}
                               </div>
                               <span className="font-bold text-destructive">{formatCurrency(m.valor)}</span>
                             </li>
@@ -1738,7 +1751,7 @@ export default function EvolucaoContrato() {
         </SheetContent>
       </Sheet>
     </>
-  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth, activeTab, period, selectedMonthDRE, ofensoresData, filteredChartData, handleDelete]);
+  ), [medicoes, lastMonth, chartData, detalhesMedicao, hiddenCards, prevMonth, activeTab, period, selectedMonthDRE, ofensoresData, filteredChartData, handleDelete, canDelete, canEdit]);
 
   return (
     <div className="p-4 md:p-8 max-w-[1400px] mx-auto space-y-8 animate-fade-in pb-20">
