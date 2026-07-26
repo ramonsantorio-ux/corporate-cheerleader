@@ -46,6 +46,30 @@ interface MbtiResultData { mbti_type?: string; [key: string]: unknown; }
 interface BigFiveResultData { [key: string]: unknown; }
 interface DocWithAutoTable { lastAutoTable?: { finalY: number }; }
 
+interface TooltipEntry { name: string; value: number | string; color?: string; fill?: string; }
+interface CustomTooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[150px]">
+        {label && <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>}
+        <div className="space-y-2">
+          {payload.map((entry, index: number) => (
+            <div key={index} className="flex items-center justify-between gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color || entry.fill }} />
+                <span className="text-muted-foreground font-medium">{entry.name}</span>
+              </div>
+              <span className="font-bold text-foreground">{entry.value}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 const CHART_COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--accent))'];
 const emptyGoalForm = { descricao: '', peso: 0, resultado: '' as string, muito_abaixo: '', abaixo: '', dentro: '', acima: '', muito_acima: '' };
 const CARGOS_SEM_META = ['Motorista', 'Operador de Equipamentos', 'Ajudante de Caminhão Pipa', 'Operador de Mini Carregadeira'];
@@ -311,29 +335,7 @@ export default function FuncionarioProfile() {
     return start > today && (start.getTime() - today.getTime()) <= 7 * 86400000;
   }, [vacationInfo]);
 
-  interface TooltipEntry { name: string; value: number | string; color?: string; fill?: string; }
-  interface CustomTooltipProps { active?: boolean; payload?: TooltipEntry[]; label?: string; }
-  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background/80 border border-border/50 p-4 rounded-xl shadow-2xl backdrop-blur-md min-w-[150px]">
-          {label && <p className="font-black text-sm mb-3 border-b border-border/50 pb-2">{label}</p>}
-          <div className="space-y-2">
-            {payload.map((entry, index: number) => (
-              <div key={index} className="flex items-center justify-between gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: entry.color || entry.fill }} />
-                  <span className="text-muted-foreground font-medium">{entry.name}</span>
-                </div>
-                <span className="font-bold text-foreground">{entry.value}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
+
 
   async function exportFullProfileReport() {
     if (!func) return;
