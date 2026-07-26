@@ -81,7 +81,17 @@ export function useCollection<T>(collectionName: string, defaultData: T[]) {
       // E também força o upload do que tem no porta-malas local
       const saved = localStorage.getItem(localKey);
       if (saved) {
-         supabase.from('app_collections').upsert({ colecao: collectionName, dados: JSON.parse(saved) }, { onConflict: 'colecao' });
+        try {
+          const parsed = JSON.parse(saved);
+          supabase
+            .from('app_collections')
+            .upsert({ colecao: collectionName, dados: parsed }, { onConflict: 'colecao' })
+            .catch(() => {
+              // Falha silenciosa — será retentada na próxima reconexão
+            });
+        } catch {
+          // JSON inválido no localStorage — ignorado
+        }
       }
     };
 

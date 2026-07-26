@@ -145,12 +145,16 @@ export default function Avaliacoes() {
         data.filter(f => !selectedCargo || f.cargo === selectedCargo).forEach(f => {
           const savedDisc = localStorage.getItem(`disc_${f.id}`);
           if (savedDisc) {
-            const parsed = JSON.parse(savedDisc);
-            const dom = parsed.dominant.letter;
-            if (dom === 'D') d++;
-            if (dom === 'I') i++;
-            if (dom === 'S') s++;
-            if (dom === 'C') c++;
+            try {
+              const parsed = JSON.parse(savedDisc);
+              const dom = parsed?.dominant?.letter;
+              if (dom === 'D') d++;
+              if (dom === 'I') i++;
+              if (dom === 'S') s++;
+              if (dom === 'C') c++;
+            } catch {
+              // JSON inválido no localStorage — ignorado
+            }
           }
         });
         setDiscAggregation([

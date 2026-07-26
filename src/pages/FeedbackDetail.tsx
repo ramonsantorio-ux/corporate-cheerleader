@@ -87,7 +87,7 @@ export default function FeedbackDetail() {
 
   useEffect(() => {
     if (user?.id) {
-      supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
+      supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle().then(({ data }) => {
         if (data) setGestorName(data.full_name || user.email || '');
       });
     }
@@ -114,7 +114,7 @@ export default function FeedbackDetail() {
         .from('funcionarios')
         .select('id, feedbacks_resolvidos')
         .eq('nome', feedback.autor)
-        .single();
+        .maybeSingle();
       if (funcData) {
         await supabase.from('funcionarios').update({
           feedbacks_resolvidos: funcData.feedbacks_resolvidos + 1,
@@ -123,7 +123,7 @@ export default function FeedbackDetail() {
     }
 
     // Reload
-    const { data } = await supabase.from('feedbacks').select('*').eq('id', feedback.id).single();
+    const { data } = await supabase.from('feedbacks').select('*').eq('id', feedback.id).maybeSingle();
     setFeedback(data as FeedbackRow | null);
     setUpdating(false);
     toast.success(`Status alterado para "${statusLabels[newStatus]}".`);

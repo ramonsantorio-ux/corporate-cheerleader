@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +30,7 @@ export default function NovoFeedback() {
     });
     // Get logged user name for gestor field
     if (user?.id) {
-      supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
+      supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle().then(({ data }) => {
         if (data) setGestorName(data.full_name || user.email || '');
       });
     }
@@ -67,7 +67,7 @@ export default function NovoFeedback() {
       .from('funcionarios')
       .select('id, feedbacks_recebidos')
       .eq('nome', form.funcionario)
-      .single();
+      .maybeSingle();
 
     if (funcData) {
       await supabase.from('funcionarios').update({

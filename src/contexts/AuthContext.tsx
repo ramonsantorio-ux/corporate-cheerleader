@@ -27,12 +27,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>>({});
 
   useEffect(() => {
+    let pendingTimer: ReturnType<typeof setTimeout> | null = null;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        // Defer fetching to avoid deadlocks
-        setTimeout(() => {
+        // Defer fetching to avoid deadlocks; cancel any previous pending call
+        if (pendingTimer !== null) clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(() => {
+          pendingTimer = null;
           fetchRoleAndPermissions(session.user.id);
         }, 0);
       } else {
@@ -52,7 +56,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (pendingTimer !== null) clearTimeout(pendingTimer);
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function fetchRoleAndPermissions(userId: string) {

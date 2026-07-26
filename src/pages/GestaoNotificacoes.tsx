@@ -92,7 +92,12 @@ const GestaoNotificacoes = () => {
   useEffect(() => {
     const saved = localStorage.getItem('corporate_cheerleader_notificacoes_globais');
     if (saved) {
-      setNotificacoes(JSON.parse(saved));
+      try {
+        setNotificacoes(JSON.parse(saved));
+      } catch {
+        setNotificacoes(seedNotificacoes);
+        localStorage.setItem('corporate_cheerleader_notificacoes_globais', JSON.stringify(seedNotificacoes));
+      }
     } else {
       setNotificacoes(seedNotificacoes);
       localStorage.setItem('corporate_cheerleader_notificacoes_globais', JSON.stringify(seedNotificacoes));

@@ -558,7 +558,11 @@ export default function EvolucaoContrato() {
   useEffect(() => {
     const saved = localStorage.getItem('corporate_cheerleader_notificacoes_globais');
     if (saved) {
-      setNotificacoesGlobais(JSON.parse(saved));
+      try {
+        setNotificacoesGlobais(JSON.parse(saved));
+      } catch {
+        // JSON inválido no localStorage — ignorado
+      }
     }
   }, []);
 
@@ -602,15 +606,26 @@ export default function EvolucaoContrato() {
         } else if (data && data.length === 0) {
           setMedicoes([]);
         } else if (saved) {
-          setMedicoes(mergeMedicoes(JSON.parse(saved)));
+          try {
+            setMedicoes(mergeMedicoes(JSON.parse(saved)));
+          } catch {
+            setMedicoes([]);
+          }
         } else {
           setMedicoes([]);
         }
       } catch (error) {
         console.error('Erro ao buscar do supabase:', error);
         const saved = localStorage.getItem('corporate_cheerleader_medicoes');
-        if (saved) setMedicoes(mergeMedicoes(JSON.parse(saved)));
-        else setMedicoes([]);
+        if (saved) {
+          try {
+            setMedicoes(mergeMedicoes(JSON.parse(saved)));
+          } catch {
+            setMedicoes([]);
+          }
+        } else {
+          setMedicoes([]);
+        }
       } finally {
         setIsLoading(false);
       }

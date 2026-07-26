@@ -24,15 +24,17 @@ export function InstallPWA() {
     setIsIOS(isIOSDevice);
     setIsAndroid(isAndroidDevice);
 
+    let promptTimer: ReturnType<typeof setTimeout> | null = null;
+
     // Para iOS ou Android, sempre mostrar após um pequeno atraso caso não tenha pego o evento
     try {
       const hasSeenPrompt = sessionStorage.getItem('has_seen_install_prompt');
       if (!hasSeenPrompt) {
-        setTimeout(() => setShowPrompt(true), 3000);
+        promptTimer = setTimeout(() => setShowPrompt(true), 3000);
       }
     } catch (e) {
       // Previne crash em modo anônimo
-      setTimeout(() => setShowPrompt(true), 3000);
+      promptTimer = setTimeout(() => setShowPrompt(true), 3000);
     }
 
     const handler = (e: Event) => {
@@ -44,6 +46,7 @@ export function InstallPWA() {
     window.addEventListener('beforeinstallprompt', handler);
 
     return () => {
+      if (promptTimer !== null) clearTimeout(promptTimer);
       window.removeEventListener('beforeinstallprompt', handler);
     };
   }, []);

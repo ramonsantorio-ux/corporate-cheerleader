@@ -109,7 +109,7 @@ export default function Feedbacks() {
       }
     });
     if (user?.id) {
-      supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
+      supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle().then(({ data }) => {
         if (data) setGestorName(data.full_name || user.email || '');
       });
     }
@@ -143,7 +143,7 @@ export default function Feedbacks() {
     });
     if (error) { toast.error('Erro ao enviar feedback.'); return; }
 
-    const { data: funcData } = await supabase.from('funcionarios').select('id, feedbacks_recebidos').eq('nome', form.funcionario).single();
+    const { data: funcData } = await supabase.from('funcionarios').select('id, feedbacks_recebidos').eq('nome', form.funcionario).maybeSingle();
     if (funcData) {
       await supabase.from('funcionarios').update({ feedbacks_recebidos: funcData.feedbacks_recebidos + 1 }).eq('id', funcData.id);
     }
