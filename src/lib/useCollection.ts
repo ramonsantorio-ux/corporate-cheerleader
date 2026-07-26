@@ -59,9 +59,13 @@ export function useCollection<T>(collectionName: string, defaultData: T[]) {
           // Vamos fazer o upload dos dados locais (Migração)
           const saved = localStorage.getItem(localKey);
           if (saved) {
-            const local = JSON.parse(saved);
-            if (local && local.length > 0) {
-               await supabase.from('app_collections').upsert({ colecao: collectionName, dados: local }, { onConflict: 'colecao' });
+            try {
+              const local = JSON.parse(saved);
+              if (local && local.length > 0) {
+                await supabase.from('app_collections').upsert({ colecao: collectionName, dados: local }, { onConflict: 'colecao' });
+              }
+            } catch {
+              // JSON inválido no localStorage — ignorado
             }
           }
         }

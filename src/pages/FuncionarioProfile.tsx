@@ -133,7 +133,7 @@ export default function FuncionarioProfile() {
 
   const refreshFunc = async () => {
     if (!id) return;
-    const { data } = await supabase.from('funcionarios').select('*').eq('id', id).single();
+    const { data } = await supabase.from('funcionarios').select('*').eq('id', id).maybeSingle();
     if (data) setFunc(data as unknown as Funcionario);
   };
 
@@ -408,7 +408,7 @@ export default function FuncionarioProfile() {
       ['Cargo', func.cargo, 'Nine Box (Desemp.)', func.nine_box_desempenho || 'Não Avaliado'],
       ['Departamento', func.departamento, 'Nine Box (Potenc.)', func.nine_box_potencial || 'Não Avaliado'],
       ['E-mail', func.email || '—', 'Turno', func.turno],
-      ['Data de Admissão', new Date(func.data_admissao).toLocaleDateString('pt-BR'), 'Escolaridade', func.escolaridade || '—'],
+      ['Data de Admissão', func.data_admissao ? new Date(func.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—', 'Escolaridade', func.escolaridade || '—'],
     ];
 
     autoTable(doc, {

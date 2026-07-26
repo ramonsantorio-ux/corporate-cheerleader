@@ -79,7 +79,7 @@ export default function FeedbackDetail() {
 
   useEffect(() => {
     if (!id) return;
-    supabase.from('feedbacks').select('*').eq('id', id).single().then(({ data }) => {
+    supabase.from('feedbacks').select('*').eq('id', id).maybeSingle().then(({ data }) => {
       setFeedback(data as FeedbackRow | null);
       setLoading(false);
     });
