@@ -180,6 +180,20 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
     }
   }
 
+
+  // Cargos que NÃO são elegíveis para avaliação 9-Box (operacionais sem gestão)
+  const CARGOS_INELEGIVEIS_9BOX = [
+    'Motorista', 'Operador', 'Auxiliar', 'Ajudante', 'Servente',
+    'Lavador', 'Borracheiro', 'Lubrificador', 'Eletricista',
+    'Mecânico', 'Soldador', 'Almoxarife', 'Vigilante', 'Porteiro',
+  ];
+
+  const eligibleRolesArray = ['Analistas', 'Supervisores', 'Coordenadores', 'Gerentes', 'Encarregados'];
+
+  const isElegivel = !CARGOS_INELEGIVEIS_9BOX.some(
+    prefix => cargo?.toLowerCase().includes(prefix.toLowerCase())
+  );
+
   if (!isElegivel) {
     const defaultRolesText = "Analistas, Supervisores, Coordenadores e Gerentes";
     const allowedRolesText = eligibleRolesArray.length > 0 ? eligibleRolesArray.join(', ') : defaultRolesText;
@@ -192,6 +206,7 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
       </div>
     );
   }
+
 
   return (
     <div className="flex flex-col gap-6">
