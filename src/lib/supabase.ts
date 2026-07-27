@@ -1,6 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'https://xucfprdbduvrjslasyrt.supabase.co';
-const supabaseAnonKey = 'sb_publishable_JhFa9TjXwOd2gy5-g2_6Gw_vwY2AqmD';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Reexporta a instância única do Supabase para evitar múltiplas instâncias GoTrueClient
+// (que causam o warning "Multiple GoTrueClient instances detected")
+export { supabase } from '@/integrations/supabase/client';
