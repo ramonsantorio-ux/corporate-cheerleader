@@ -29,6 +29,7 @@ import DiscTest from "./pages/DiscTest";
 import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
 import { InstallPWA } from './components/InstallPWA';
+import { PWAUpdateHandler } from './components/PWAUpdateHandler';
 
 class ErrorBoundary extends React.Component<React.PropsWithChildren, { hasError: boolean; errorId: string; errorMessage: string; errorStack: string }> {
   constructor(props: React.PropsWithChildren) {
@@ -149,6 +150,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <InstallPWA />
+      <PWAUpdateHandler />
       <BrowserRouter>
         <AuthProvider>
           <Routes>
