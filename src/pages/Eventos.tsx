@@ -60,6 +60,15 @@ const CHART_COLORS = [
   'hsl(120, 40%, 45%)', 'hsl(45, 80%, 55%)',
 ];
 
+const LETRA_COLORS_MAP: Record<string, string> = {
+  'A Dia': '#ec4899',   // Rosa vibrante
+  'A Noite': '#10b981', // Verde esmeralda
+  'B Dia': '#f59e0b',   // Laranja ambar
+  'B Noite': '#8b5cf6', // Roxo violeta
+  'ADM': '#06b6d4',     // Ciano
+};
+const FALLBACK_LETRA_COLORS = ['#3b82f6', '#ef4444', '#14b8a6', '#6366f1', '#eab308'];
+
 interface TooltipPayloadItem { name: string; value: number | string; color?: string; }
 interface CustomTooltipProps { active?: boolean; payload?: TooltipPayloadItem[]; label?: string; }
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
@@ -665,8 +674,10 @@ export default function Eventos() {
     ].filter(d => d.value > 0);
 
     const evolutionChartData = (() => {
-      const periodData: Record<string, number> = {};
+      const periodShiftData: Record<string, Record<string, number>> = {};
       const periodsSet = new Set<string>();
+      const defaultLetras = ['A Dia', 'A Noite', 'B Dia', 'B Noite'];
+      const letrasSet = new Set<string>(defaultLetras);
 
       historicalEvolution.forEach(ev => {
         const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
@@ -679,49 +690,54 @@ export default function Eventos() {
           else if (shift.includes('B Dia')) shift = 'B Dia';
           else if (shift.includes('B Noite')) shift = 'B Noite';
           
-          if (evolutionLetra === 'all' || evolutionLetra === shift) {
-            const date = new Date(ev.event_date);
-            if (!isNaN(date.getTime())) {
-              const year = date.getFullYear();
-              const month = date.getMonth(); // 0-11
-              let periodKey = '';
+          letrasSet.add(shift);
 
-              if (evolutionPeriod === 'mensal') {
-                periodKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-              } else if (evolutionPeriod === 'trimestral') {
-                const quarter = Math.floor(month / 3) + 1;
-                periodKey = `${year}-Q${quarter}`;
-              } else if (evolutionPeriod === 'semestral') {
-                const semester = Math.floor(month / 6) + 1;
-                periodKey = `${year}-S${semester}`;
-              }
+          const date = new Date(ev.event_date);
+          if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = date.getMonth(); // 0-11
+            let periodKey = '';
 
-              periodData[periodKey] = (periodData[periodKey] || 0) + 1;
-              periodsSet.add(periodKey);
+            if (evolutionPeriod === 'mensal') {
+              periodKey = `${year}-${String(month + 1).padStart(2, '0')}`;
+            } else if (evolutionPeriod === 'trimestral') {
+              const quarter = Math.floor(month / 3) + 1;
+              periodKey = `${year}-Q${quarter}`;
+            } else if (evolutionPeriod === 'semestral') {
+              const semester = Math.floor(month / 6) + 1;
+              periodKey = `${year}-S${semester}`;
             }
+
+            periodsSet.add(periodKey);
+            if (!periodShiftData[periodKey]) periodShiftData[periodKey] = {};
+            periodShiftData[periodKey][shift] = (periodShiftData[periodKey][shift] || 0) + 1;
+            periodShiftData[periodKey]['Total'] = (periodShiftData[periodKey]['Total'] || 0) + 1;
           }
         }
       });
 
       const allPeriods = Array.from(periodsSet).sort();
-      return allPeriods.map(pk => {
+      const letrasList = Array.from(letrasSet);
+
+      const chartData = allPeriods.map(pk => {
         let label = pk;
-        if (evolutionPeriod === 'mensal') {
-          const parts = pk.split('-');
-          label = `${parts[1]}/${parts[0].slice(2)}`;
-        } else if (evolutionPeriod === 'trimestral') {
-          const parts = pk.split('-');
-          label = `${parts[1]}/${parts[0].slice(2)}`;
-        } else if (evolutionPeriod === 'semestral') {
-          const parts = pk.split('-');
-          label = `${parts[1]}/${parts[0].slice(2)}`;
-        }
-        return {
+        const parts = pk.split('-');
+        label = `${parts[1]}/${parts[0].slice(2)}`;
+
+        const row: Record<string, string | number> = {
           periodo: pk,
           month: label,
-          Eventos: periodData[pk] || 0
+          Total: periodShiftData[pk]?.['Total'] || 0,
         };
+
+        letrasList.forEach(l => {
+          row[l] = periodShiftData[pk]?.[l] || 0;
+        });
+
+        return row;
       });
+
+      return { chartData, letrasList };
     })();
 
     const consolidations = (() => {
@@ -1516,28 +1532,42 @@ export default function Eventos() {
                     </div>
                   </div>
                 </div>
-                <div className="h-[280px] w-full mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={analytics.evolutionChartData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
-                      <defs>
-                        <linearGradient id="colorEventosEvolution" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" strokeOpacity={0.5} />
-                      <XAxis dataKey="month" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-                        cursor={{ fill: 'var(--muted)', opacity: 0.4 }} 
-                      />
-                      <Bar dataKey="Eventos" fill="url(#colorEventosEvolution)" radius={[4, 4, 0, 0]} barSize={32}>
-                        <LabelList dataKey="Eventos" position="top" style={{ fontSize: '10px', fill: 'var(--muted-foreground)', fontWeight: 600 }} />
-                      </Bar>
-                      <Line type="monotone" dataKey="Eventos" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "hsl(var(--background))" }} activeDot={{ r: 6, strokeWidth: 0 }} />
-                    </ComposedChart>
-                  </ResponsiveContainer>
+                <div className="h-[340px] w-full mt-4">
+                  <ExpandableChart title={`Evolução ${evolutionPeriod === 'mensal' ? 'Mensal' : evolutionPeriod === 'trimestral' ? 'Trimestral' : 'Semestral'} por Letra`}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={analytics.evolutionChartData.chartData} margin={{ top: 25, right: 30, bottom: 10, left: -10 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" strokeOpacity={0.4} />
+                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--muted-foreground)', strokeDasharray: '3 3', strokeOpacity: 0.4 }} />
+                        <Legend wrapperStyle={{ paddingTop: '16px', fontSize: '11px', fontWeight: 600 }} iconType="circle" />
+                        {analytics.evolutionChartData.letrasList
+                          .filter(letra => evolutionLetra === 'all' || evolutionLetra === letra)
+                          .map((letra, idx) => {
+                            const color = LETRA_COLORS_MAP[letra] || FALLBACK_LETRA_COLORS[idx % FALLBACK_LETRA_COLORS.length];
+                            return (
+                              <Line
+                                key={letra}
+                                type="monotone"
+                                dataKey={letra}
+                                name={letra.toUpperCase()}
+                                stroke={color}
+                                strokeWidth={3}
+                                dot={{ r: 4, strokeWidth: 2, fill: "hsl(var(--background))" }}
+                                activeDot={{ r: 6, strokeWidth: 0 }}
+                              >
+                                <LabelList
+                                  dataKey={letra}
+                                  position="top"
+                                  style={{ fontSize: '10px', fontWeight: 700, fill: color }}
+                                  formatter={(val: number) => (val > 0 ? val : '')}
+                                />
+                              </Line>
+                            );
+                          })}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ExpandableChart>
                 </div>
               </CardContent>
             </Card>
