@@ -683,7 +683,10 @@ export default function Eventos() {
         const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
         const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
 
-        if (cat !== 'Médico' && ev.event_date && ev.shift) {
+        // Respeita o filtro de categoria se selecionado (todos / Material / Meio Ambiente / Médico)
+        if (typeFilter !== 'all' && typeFilter !== cat) return;
+
+        if (ev.event_date && ev.shift) {
           let shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
           if (shift.includes('A Dia')) shift = 'A Dia';
           else if (shift.includes('A Noite')) shift = 'A Noite';
@@ -692,26 +695,30 @@ export default function Eventos() {
           
           letrasSet.add(shift);
 
-          const date = new Date(ev.event_date);
-          if (!isNaN(date.getTime())) {
-            const year = date.getFullYear();
-            const month = date.getMonth(); // 0-11
-            let periodKey = '';
+          // Extrai ano e mês diretamente da string (YYYY-MM-DD) sem sofrer alteração de fuso horário
+          const dateParts = ev.event_date.split('T')[0].split('-');
+          if (dateParts.length >= 2) {
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]); // 1-12
 
-            if (evolutionPeriod === 'mensal') {
-              periodKey = `${year}-${String(month + 1).padStart(2, '0')}`;
-            } else if (evolutionPeriod === 'trimestral') {
-              const quarter = Math.floor(month / 3) + 1;
-              periodKey = `${year}-Q${quarter}`;
-            } else if (evolutionPeriod === 'semestral') {
-              const semester = Math.floor(month / 6) + 1;
-              periodKey = `${year}-S${semester}`;
+            if (!isNaN(year) && !isNaN(month)) {
+              let periodKey = '';
+
+              if (evolutionPeriod === 'mensal') {
+                periodKey = `${year}-${String(month).padStart(2, '0')}`;
+              } else if (evolutionPeriod === 'trimestral') {
+                const quarter = Math.floor((month - 1) / 3) + 1;
+                periodKey = `${year}-Q${quarter}`;
+              } else if (evolutionPeriod === 'semestral') {
+                const semester = Math.floor((month - 1) / 6) + 1;
+                periodKey = `${year}-S${semester}`;
+              }
+
+              periodsSet.add(periodKey);
+              if (!periodShiftData[periodKey]) periodShiftData[periodKey] = {};
+              periodShiftData[periodKey][shift] = (periodShiftData[periodKey][shift] || 0) + 1;
+              periodShiftData[periodKey]['Total'] = (periodShiftData[periodKey]['Total'] || 0) + 1;
             }
-
-            periodsSet.add(periodKey);
-            if (!periodShiftData[periodKey]) periodShiftData[periodKey] = {};
-            periodShiftData[periodKey][shift] = (periodShiftData[periodKey][shift] || 0) + 1;
-            periodShiftData[periodKey]['Total'] = (periodShiftData[periodKey]['Total'] || 0) + 1;
           }
         }
       });
@@ -1961,12 +1968,28 @@ export default function Eventos() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.slice(0, 100).map((ev) => (
-                    <>
-                      <TableRow key={ev.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setExpandedRow(expandedRow === ev.id ? null : ev.id)}>
+                  {filtered.slice(0, 100).map((ev) => {
+                    const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
+                    const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
+
+                    const rowBgClass = cat === 'Médico' 
+                      ? 'bg-blue-500/10 hover:bg-blue-500/20 border-l-4 border-l-blue-500' 
+                      : cat === 'Meio Ambiente'
+                      ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-l-4 border-l-emerald-500'
+                      : 'bg-red-500/10 hover:bg-red-500/20 border-l-4 border-l-red-500';
+
+                    const expandBgClass = cat === 'Médico'
+                      ? 'bg-blue-500/15 border-l-4 border-l-blue-500'
+                      : cat === 'Meio Ambiente'
+                      ? 'bg-emerald-500/15 border-l-4 border-l-emerald-500'
+                      : 'bg-red-500/15 border-l-4 border-l-red-500';
+
+                    return (
+                    <React.Fragment key={ev.id}>
+                      <TableRow className={`cursor-pointer transition-colors ${rowBgClass}`} onClick={() => setExpandedRow(expandedRow === ev.id ? null : ev.id)}>
                         <TableCell className="text-xs font-medium">{new Date(ev.event_date + 'T12:00').toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell className="text-xs">{formatTime(ev.event_time)}</TableCell>
-                        <TableCell className="text-xs text-center font-bold text-muted-foreground">
+                        <TableCell className="text-xs text-center font-bold">
                           {ev.shift || '—'}
                         </TableCell>
                         <TableCell className="text-xs font-medium">{ev.involved_name}</TableCell>
@@ -1999,9 +2022,9 @@ export default function Eventos() {
                       <AnimatePresence>
                         {expandedRow === ev.id && (
                           <TableRow key={`${ev.id}-expand`}>
-                            <TableCell colSpan={8} className="bg-muted/30 p-4">
+                            <TableCell colSpan={8} className={`p-4 ${expandBgClass}`}>
                               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                                <p className="text-xs text-foreground leading-relaxed">{ev.description}</p>
+                                <p className="text-xs text-foreground leading-relaxed font-medium">{ev.description}</p>
                                 <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground">
                                   {ev.day_of_week && <span>📅 {ev.day_of_week}</span>}
                                   {ev.supervisor && <span>👤 Enc.: {ev.supervisor}</span>}
@@ -2014,8 +2037,9 @@ export default function Eventos() {
                           </TableRow>
                         )}
                       </AnimatePresence>
-                    </>
-                  ))}
+                    </React.Fragment>
+                  );
+                })}
                 </TableBody>
               </Table>
               {filtered.length > 100 && (
