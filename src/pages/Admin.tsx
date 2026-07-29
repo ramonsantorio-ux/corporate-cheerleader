@@ -180,15 +180,17 @@ export default function Admin() {
       setDialogOpen(false);
       const userId = user.user_id;
       if (userId) {
-          const defaultPerms = PAGES.map(p => ({
-            user_id: userId,
-            page: p.key,
-            can_view: true,
-            can_create: false,
-            can_edit: false,
-            can_delete: false,
-          }));
-          await supabase.from('user_permissions').insert(defaultPerms);
+          if (!newUser.profile_id) {
+            const defaultPerms = PAGES.map(p => ({
+              user_id: userId,
+              page: p.key,
+              can_view: false,
+              can_create: false,
+              can_edit: false,
+              can_delete: false,
+            }));
+            await supabase.from('user_permissions').insert(defaultPerms);
+          }
           await supabase.from('user_roles').insert({ user_id: userId, role: 'user', profile_id: newUser.profile_id || null });
 
           await logAudit({

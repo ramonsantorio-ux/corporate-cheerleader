@@ -30,6 +30,7 @@ import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
 import { InstallPWA } from './components/InstallPWA';
 import { PWAUpdateHandler } from './components/PWAUpdateHandler';
+import { PageGuard } from "./components/auth/PageGuard";
 
 class ErrorBoundary extends React.Component<React.PropsWithChildren, { hasError: boolean; errorId: string; errorMessage: string; errorStack: string }> {
   constructor(props: React.PropsWithChildren) {
@@ -111,30 +112,30 @@ function ProtectedRoutes() {
     <ErrorBoundary>
       <Routes>
         <Route element={<AppLayout />}>
-          <Route path="/" element={<Index />} />
-          <Route path="/colaboradores" element={<Colaboradores />} />
+          <Route path="/" element={<PageGuard pageKey="dashboard"><Index /></PageGuard>} />
+          <Route path="/colaboradores" element={<PageGuard pageKey="colaboradores"><Colaboradores /></PageGuard>} />
           <Route path="/cadastro" element={<Navigate to="/colaboradores" replace />} />
           <Route path="/feedbacks" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
-          <Route path="/feedbacks/:id" element={<FeedbackDetail />} />
+          <Route path="/feedbacks/:id" element={<PageGuard pageKey="desempenho"><FeedbackDetail /></PageGuard>} />
           <Route path="/novo" element={<Navigate to="/desempenho?tab=feedbacks" replace />} />
-          <Route path="/configuracoes" element={<Configuracoes />} />
-          <Route path="/desempenho" element={<Desempenho />} />
+          <Route path="/configuracoes" element={<PageGuard pageKey="configuracoes"><Configuracoes /></PageGuard>} />
+          <Route path="/desempenho" element={<PageGuard pageKey="desempenho"><Desempenho /></PageGuard>} />
           <Route path="/desempenho/avaliacoes" element={<Navigate to="/desempenho?tab=metas" replace />} />
           <Route path="/desempenho/competencias" element={<Navigate to="/desempenho?tab=fit-cultural" replace />} />
           <Route path="/desempenho/pdi" element={<Navigate to="/desempenho?tab=pdi" replace />} />
-          <Route path="/funcionario/:id" element={<FuncionarioProfile />} />
-          <Route path="/eventos" element={<Eventos />} />
-          <Route path="/ausencias" element={<Ausencias />} />
-          <Route path="/organograma" element={<Organograma />} />
+          <Route path="/funcionario/:id" element={<PageGuard pageKey="colaboradores"><FuncionarioProfile /></PageGuard>} />
+          <Route path="/eventos" element={<PageGuard pageKey="eventos"><Eventos /></PageGuard>} />
+          <Route path="/ausencias" element={<PageGuard pageKey="ausencias"><Ausencias /></PageGuard>} />
+          <Route path="/organograma" element={<PageGuard pageKey="organograma"><Organograma /></PageGuard>} />
           <Route path="/sucessao" element={<Navigate to="/desempenho?tab=sucessao" replace />} />
-          <Route path="/evolucao" element={<EvolucaoContrato />} />
-          <Route path="/cadastro-metas" element={<CadastroMetas />} />
-          <Route path="/notificacoes" element={<GestaoNotificacoes />} />
-          <Route path="/treinamentos" element={<Treinamentos />} />
-          <Route path="/assessments" element={<AssessmentHub />} />
+          <Route path="/evolucao" element={<PageGuard pageKey="evolucao"><EvolucaoContrato /></PageGuard>} />
+          <Route path="/cadastro-metas" element={<PageGuard pageKey="desempenho"><CadastroMetas /></PageGuard>} />
+          <Route path="/notificacoes" element={<PageGuard pageKey="notificacoes"><GestaoNotificacoes /></PageGuard>} />
+          <Route path="/treinamentos" element={<PageGuard pageKey="treinamentos"><Treinamentos /></PageGuard>} />
+          <Route path="/assessments" element={<PageGuard pageKey="treinamentos"><AssessmentHub /></PageGuard>} />
           {/* Legacy compat */}
-          <Route path="/disc" element={<DiscTest />} />
-          <Route path="/disc/:id" element={<DiscTest />} />
+          <Route path="/disc" element={<PageGuard pageKey="disc"><DiscTest /></PageGuard>} />
+          <Route path="/disc/:id" element={<PageGuard pageKey="disc"><DiscTest /></PageGuard>} />
 
           <Route path="/admin" element={<AdminGuard><Admin /></AdminGuard>} />
         </Route>
