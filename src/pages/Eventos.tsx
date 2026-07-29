@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Fragment } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Download, Search, Filter, Plus, User, AlertTriangle, TrendingUp, TrendingDown, Calendar, Trash2, Eye, FileText, CheckCircle2, ChevronRight, Menu, X, CheckCircle, Clock, Activity, Wrench, Stethoscope, LineChart as LucideLineChart, BarChart3, Target, Zap, ChevronDown, ChevronUp, MapPin, Truck, HeartPulse, Pencil, ShieldAlert, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -1985,7 +1985,7 @@ export default function Eventos() {
                       : 'bg-red-500/15 border-l-4 border-l-red-500';
 
                     return (
-                    <React.Fragment key={ev.id}>
+                    <Fragment key={ev.id}>
                       <TableRow className={`cursor-pointer transition-colors ${rowBgClass}`} onClick={() => setExpandedRow(expandedRow === ev.id ? null : ev.id)}>
                         <TableCell className="text-xs font-medium">{new Date(ev.event_date + 'T12:00').toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell className="text-xs">{formatTime(ev.event_time)}</TableCell>
@@ -2037,7 +2037,7 @@ export default function Eventos() {
                           </TableRow>
                         )}
                       </AnimatePresence>
-                    </React.Fragment>
+                    </Fragment>
                   );
                 })}
                 </TableBody>
