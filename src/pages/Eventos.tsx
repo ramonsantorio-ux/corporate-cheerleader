@@ -1414,12 +1414,14 @@ export default function Eventos() {
                 <div className="h-[240px] mt-2">
                   <ExpandableChart title="Por Tipo de Equipamento">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.topEquipment} layout="vertical" margin={{ left: 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
+                      <BarChart data={analytics.topEquipment} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
                         <XAxis type="number" tick={{ fontSize: 11 }} />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={140} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Bar dataKey="value" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[0, 4, 4, 0]} onClick={(data) => handleChartClick(data, 'equipment')} className="cursor-pointer hover:opacity-80 transition-opacity" />
+                        <Bar dataKey="value" name="Eventos" fill="hsl(38, 90%, 50%)" radius={[0, 4, 4, 0]} onClick={(data) => handleChartClick(data, 'equipment')} className="cursor-pointer hover:opacity-80 transition-opacity">
+                          <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }} />
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </ExpandableChart>
@@ -1584,13 +1586,13 @@ export default function Eventos() {
                 <div className="h-[240px] w-full mt-2">
                   <ExpandableChart title="Horário dos Eventos">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.hourlyData} margin={{ top: 20, right: 20, bottom: 0, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                      <BarChart data={analytics.hourlyData} margin={{ top: 25, right: 20, bottom: 0, left: -20 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                        <XAxis dataKey="hour" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.2 }} />
                         <Bar dataKey="count" fill="#eb7d5b" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="count" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
+                          <LabelList dataKey="count" position="top" style={{ fontSize: '11px', fill: 'var(--foreground)', fontWeight: 'bold' }} />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -1611,12 +1613,13 @@ export default function Eventos() {
                 <div className="h-[240px] mt-2">
                   <ExpandableChart title="Por Dia da Semana">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={analytics.dayData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" />
-                        <XAxis dataKey="day" tick={{ fontSize: 10 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip content={<CustomTooltip />} />
+                      <BarChart data={analytics.dayData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                        <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.2 }} />
                         <Bar dataKey="eventos" name="Eventos" radius={[4, 4, 0, 0]}>
+                          <LabelList dataKey="eventos" position="top" style={{ fontSize: '11px', fill: 'var(--foreground)', fontWeight: 'bold' }} />
                           {analytics.dayData.map((_, i) => (
                             <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                           ))}
@@ -1639,12 +1642,12 @@ export default function Eventos() {
                   <ExpandableChart title="Eventos por Letra">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={analytics.letraData} margin={{ top: 25, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                        <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f1f5f9' }} />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                        <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)', opacity: 0.2 }} />
                         <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                          <LabelList dataKey="value" position="top" style={{ fontSize: '10px', fill: '#64748b' }} />
+                          <LabelList dataKey="value" position="top" style={{ fontSize: '11px', fill: 'var(--foreground)', fontWeight: 'bold' }} />
                           {analytics.letraData?.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.fill} />
                           ))}
