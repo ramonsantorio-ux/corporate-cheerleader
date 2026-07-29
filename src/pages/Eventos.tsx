@@ -118,10 +118,65 @@ export default function Eventos() {
   const [newEvent, setNewEvent] = useState({
     event_date: '', event_time: '', day_of_week: '', description: '',
     location: '', contract: 'PORTO', equipment: '', plate_tag: '',
-    shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
+    shift: '', supervisor1: '', supervisor2: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
     cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '',
     categoria_evento: 'Material', encaminhamento_medico: ''
   });
+
+  const openCreateModal = () => {
+    setEditingEvent(null);
+    setNewEvent({
+      event_date: '', event_time: '', day_of_week: '', description: '',
+      location: '', contract: 'PORTO', equipment: '', plate_tag: '',
+      shift: '', supervisor1: '', supervisor2: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
+      cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '',
+      categoria_evento: 'Material', encaminhamento_medico: ''
+    });
+  };
+
+  const openEditModal = (ev: EventRow) => {
+    setEditingEvent(ev);
+    let s1 = ev.supervisor || '';
+    let s2 = '';
+    if (s1.includes(' / ')) {
+      const parts = s1.split(' / ');
+      s1 = parts[0].trim();
+      s2 = parts.slice(1).join(' / ').trim();
+    } else if (s1.includes(' - ')) {
+      const parts = s1.split(' - ');
+      s1 = parts[0].trim();
+      s2 = parts.slice(1).join(' - ').trim();
+    }
+
+    setNewEvent({
+      event_date: ev.event_date.split('T')[0],
+      event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5),
+      day_of_week: ev.day_of_week,
+      description: ev.description,
+      location: ev.location,
+      contract: ev.contract,
+      equipment: ev.equipment,
+      plate_tag: ev.plate_tag,
+      shift: ev.shift || '',
+      supervisor1: s1,
+      supervisor2: s2,
+      involved_name: ev.involved_name,
+      tipo_acidente: ev.tipo_acidente || '',
+      agente_lesao: ev.agente_lesao || '',
+      parte_corpo: ev.parte_corpo || '',
+      genero_envolvido: ev.genero_envolvido || '',
+      custo: ev.custo || 0,
+      cid: ev.cid || '',
+      atestado: ev.atestado || false,
+      afastamento: ev.afastamento || false,
+      danos_materiais: ev.danos_materiais || false,
+      atendimento_medico: ev.atendimento_medico || false,
+      tecnico_seguranca: ev.tecnico_seguranca || '',
+      categoria_evento: ev.categoria_evento || 'Material',
+      encaminhamento_medico: ev.encaminhamento_medico || ''
+    });
+    setDialogOpen(true);
+  };
 
   // Employee filter
   const [employeeSearch, setEmployeeSearch] = useState('');
@@ -249,7 +304,17 @@ export default function Eventos() {
       return;
     }
 
-    const eventToSave = { ...newEvent };
+    const eventToSave: any = { ...newEvent };
+    
+    const sup1 = (eventToSave.supervisor1 || '').trim();
+    const sup2 = (eventToSave.supervisor2 || '').trim();
+    if (sup1 && sup2) {
+      eventToSave.supervisor = `${sup1} / ${sup2}`;
+    } else {
+      eventToSave.supervisor = sup1 || sup2;
+    }
+    delete eventToSave.supervisor1;
+    delete eventToSave.supervisor2;
     
     // Format event_time specifically for the database (HH:mm:ss or HH:mm)
     if (eventToSave.event_time) {
@@ -306,7 +371,7 @@ export default function Eventos() {
     if (error) { toast.error(`Erro ao salvar evento: ${error.message}`); return; }
     toast.success('Evento registrado!');
     setDialogOpen(false);
-    setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '', categoria_evento: 'Material', encaminhamento_medico: '' });
+    openCreateModal();
     fetchEvents();
   }
 
@@ -882,10 +947,7 @@ export default function Eventos() {
           {canCreate('eventos') && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" onClick={() => {
-                  setEditingEvent(null);
-                  setNewEvent({ event_date: '', event_time: '', day_of_week: '', description: '', location: '', contract: 'PORTO', equipment: '', plate_tag: '', shift: '', supervisor: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0, cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '', categoria_evento: 'Material', encaminhamento_medico: '' });
-                }}>
+                <Button size="sm" onClick={openCreateModal}>
                   <Plus className="w-4 h-4 mr-1" /> Novo Evento
                 </Button>
               </DialogTrigger>
@@ -955,8 +1017,13 @@ export default function Eventos() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Encarregado</Label>
-                  <FastInput value={newEvent.supervisor} onValueChange={v => setNewEvent(p => ({ ...p, supervisor: v }))} />
+                  <Label>Encarregado 1</Label>
+                  <FastInput value={newEvent.supervisor1} onValueChange={v => setNewEvent(p => ({ ...p, supervisor1: v }))} placeholder="Nome do 1º Encarregado" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Encarregado 2</Label>
+                  <FastInput value={newEvent.supervisor2} onValueChange={v => setNewEvent(p => ({ ...p, supervisor2: v }))} placeholder="Nome do 2º Encarregado" />
                 </div>
 
                 {/* Conditional Fields: Material */}
@@ -2006,7 +2073,7 @@ export default function Eventos() {
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
                             {canEdit('eventos') && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); setEditingEvent(ev); setNewEvent({ event_date: ev.event_date.split('T')[0], event_time: (ev.event_time || '').match(/\b\d{2}:\d{2}\b/) ? (ev.event_time || '').match(/\b\d{2}:\d{2}\b/)![0] : (ev.event_time || '').substring(0, 5), day_of_week: ev.day_of_week, description: ev.description, location: ev.location, contract: ev.contract, equipment: ev.equipment, plate_tag: ev.plate_tag, shift: ev.shift || '', supervisor: ev.supervisor, involved_name: ev.involved_name, tipo_acidente: ev.tipo_acidente || '', agente_lesao: ev.agente_lesao || '', parte_corpo: ev.parte_corpo || '', genero_envolvido: ev.genero_envolvido || '', custo: ev.custo || 0, cid: ev.cid || '', atestado: ev.atestado || false, afastamento: ev.afastamento || false, danos_materiais: ev.danos_materiais || false, tecnico_seguranca: ev.tecnico_seguranca || '', categoria_evento: ev.categoria_evento || 'Material', encaminhamento_medico: ev.encaminhamento_medico || '' }); setDialogOpen(true); }}>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); openEditModal(ev); }}>
                                 <Pencil className="w-3.5 h-3.5" />
                               </Button>
                             )}
@@ -2069,7 +2136,19 @@ export default function Eventos() {
                 <div><Label className="text-muted-foreground">Parte do Corpo</Label><p className="font-medium">{detailEvent.parte_corpo || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Gênero</Label><p className="font-medium">{detailEvent.genero_envolvido || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Turno</Label><p className="font-medium">{detailEvent.shift || '—'}</p></div>
-                <div><Label className="text-muted-foreground">Encarregado</Label><p className="font-medium">{detailEvent.supervisor || '—'}</p></div>
+                {(() => {
+                  const s = detailEvent.supervisor || '';
+                  if (s.includes(' / ')) {
+                    const [s1, s2] = s.split(' / ');
+                    return (
+                      <>
+                        <div><Label className="text-muted-foreground">Encarregado 1</Label><p className="font-medium">{s1 || '—'}</p></div>
+                        <div><Label className="text-muted-foreground">Encarregado 2</Label><p className="font-medium">{s2 || '—'}</p></div>
+                      </>
+                    );
+                  }
+                  return <div><Label className="text-muted-foreground">Encarregado</Label><p className="font-medium">{s || '—'}</p></div>;
+                })()}
                 <div><Label className="text-muted-foreground">Técnico de Segurança</Label><p className="font-medium">{detailEvent.tecnico_seguranca || '—'}</p></div>
               </div>
               <div>
