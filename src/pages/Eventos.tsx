@@ -1973,16 +1973,16 @@ export default function Eventos() {
                     const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
 
                     const rowBgClass = cat === 'Médico' 
-                      ? 'bg-blue-500/10 hover:bg-blue-500/20 border-l-4 border-l-blue-500' 
+                      ? 'bg-red-500/10 hover:bg-red-500/20 border-l-4 border-l-red-500' 
                       : cat === 'Meio Ambiente'
                       ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-l-4 border-l-emerald-500'
-                      : 'bg-red-500/10 hover:bg-red-500/20 border-l-4 border-l-red-500';
+                      : 'bg-blue-500/10 hover:bg-blue-500/20 border-l-4 border-l-blue-500';
 
                     const expandBgClass = cat === 'Médico'
-                      ? 'bg-blue-500/15 border-l-4 border-l-blue-500'
+                      ? 'bg-red-500/15 border-l-4 border-l-red-500'
                       : cat === 'Meio Ambiente'
                       ? 'bg-emerald-500/15 border-l-4 border-l-emerald-500'
-                      : 'bg-red-500/15 border-l-4 border-l-red-500';
+                      : 'bg-blue-500/15 border-l-4 border-l-blue-500';
 
                     return (
                     <Fragment key={ev.id}>
