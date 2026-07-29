@@ -750,7 +750,8 @@ export default function Eventos() {
         const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
         const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
 
-        // Respeita o filtro de categoria se selecionado (todos / Material / Meio Ambiente / Médico)
+        // Considera apenas eventos materiais no gráfico de evolução
+        if (cat !== 'Material') return;
         if (typeFilter !== 'all' && typeFilter !== cat) return;
 
         if (ev.event_date && ev.shift) {
@@ -821,7 +822,7 @@ export default function Eventos() {
           .filter(ev => {
             const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
             const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
-            return cat !== 'Médico' && ev.event_date;
+            return cat === 'Material' && ev.event_date;
           })
           .map(ev => new Date(ev.event_date).getTime())
           .filter(t => !isNaN(t));
@@ -854,7 +855,7 @@ export default function Eventos() {
         const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
         const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
 
-        if (cat !== 'Médico' && ev.event_date && ev.shift) {
+        if (cat === 'Material' && ev.event_date && ev.shift) {
           let shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
           if (shift.includes('A Dia')) shift = 'A Dia';
           else if (shift.includes('A Noite')) shift = 'A Noite';
@@ -1520,7 +1521,7 @@ export default function Eventos() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <Activity className="w-4 h-4 text-primary" /> 
-                    Evolução {evolutionPeriod === 'mensal' ? 'Mensal' : evolutionPeriod === 'trimestral' ? 'Trimestral' : 'Semestral'} por Letra (Histórico Completo)
+                    Evolução Eventos Materiais por Letra (Histórico Completo)
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground font-medium">Filtrar Letra:</span>
@@ -1619,7 +1620,7 @@ export default function Eventos() {
                   </div>
                 </div>
                 <div className="h-[340px] w-full mt-4">
-                  <ExpandableChart title={`Evolução ${evolutionPeriod === 'mensal' ? 'Mensal' : evolutionPeriod === 'trimestral' ? 'Trimestral' : 'Semestral'} por Letra`}>
+                  <ExpandableChart title="Evolução Eventos Materiais por Letra">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={analytics.evolutionChartData.chartData} margin={{ top: 25, right: 30, bottom: 10, left: -10 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" strokeOpacity={0.4} />
@@ -1747,72 +1748,118 @@ export default function Eventos() {
 {/* 3. SAÚDE & SEGURANÇA (SST) */}
         <TabsContent value="sst" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <Card className="border-none bg-gradient-to-br from-emerald-500/10 to-transparent shadow-sm relative overflow-hidden group">
+            <Card 
+              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'Meio Ambiente' ? 'bg-emerald-500/10 ring-2 ring-emerald-500 ring-offset-2' : 'bg-gradient-to-br from-emerald-500/5 to-transparent'} group`}
+              onClick={() => { setTypeFilter('Meio Ambiente'); scrollToTable(); }}
+            >
               <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
-              <CardContent className="p-8 flex flex-col justify-center items-center text-center h-full">
-                <p className="text-sm text-emerald-700 font-bold mb-2 uppercase tracking-wider">Status de Segurança</p>
-                <p className="text-6xl font-black text-emerald-600 mb-2">{analytics.daysWithoutAccident}</p>
-                <p className="text-sm text-muted-foreground font-medium uppercase">Dias sem Ocorrências</p>
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors" />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Meio Ambiente</p>
+                    <p className="text-4xl font-black text-foreground mt-2">{analytics.meioAmbienteCount}</p>
+                    <p className="text-xs text-emerald-500 mt-2 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      {analytics.total ? ((analytics.meioAmbienteCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                    </p>
+                  </div>
+                  <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-600">
+                    <AlertTriangle className="w-6 h-6" />
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <HeartPulse className="w-4 h-4 text-destructive" /> Top CIDs (Doenças/Lesões)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[200px]">
-                    {analytics.topCids.length > 0 ? (
-                      <ExpandableChart title="Top CIDs">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={analytics.topCids} layout="vertical" margin={{ left: 0, right: 20 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" vertical={false} />
-                            <XAxis type="number" tick={{ fontSize: 10 }} />
-                            <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={50} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="value" fill="hsl(0, 68%, 50%)" radius={[0, 4, 4, 0]}>
-                              <LabelList dataKey="value" position="right" style={{ fontSize: '10px' }} />
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </ExpandableChart>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados de CID</div>
-                    )}
+            <Card 
+              className={`relative overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-none ${typeFilter === 'Médico' ? 'bg-red-500/10 ring-2 ring-red-500 ring-offset-2' : 'bg-gradient-to-br from-red-500/5 to-transparent'} group`}
+              onClick={() => { setTypeFilter('Médico'); scrollToTable(); }}
+            >
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-red-500" />
+              <div className="absolute -right-4 -top-4 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors" />
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Atendimento Médico</p>
+                    <p className="text-4xl font-black text-foreground mt-2">{analytics.medicoCount}</p>
+                    <p className="text-xs text-red-500 mt-2 font-bold bg-red-500/10 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                      <HeartPulse className="w-3 h-3" />
+                      {analytics.total ? ((analytics.medicoCount / analytics.total) * 100).toFixed(0) : 0}% do total
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="p-3 bg-red-500/10 rounded-xl text-red-500">
+                    <Stethoscope className="w-6 h-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-destructive" /> Severidade dos Eventos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[200px]">
-                    {analytics.danosData.length > 0 ? (
-                      <ExpandableChart title="Eventos com Danos">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
-                              {analytics.danosData.map((d: { fill: string }, i: number) => <Cell key={i} fill={d.fill} />)}
-                            </Pie>
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: "10px" }} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </ExpandableChart>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados</div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card className="border-none bg-gradient-to-br from-emerald-500/10 to-transparent shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+              <CardContent className="p-6 flex flex-col justify-center items-center text-center h-full">
+                <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">Status de Segurança</p>
+                <p className="text-4xl font-black text-emerald-600 mt-2">{analytics.daysWithoutAccident}</p>
+                <p className="text-xs text-muted-foreground font-medium uppercase mt-2">Dias sem Ocorrências</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <HeartPulse className="w-4 h-4 text-destructive" /> Top CIDs (Doenças/Lesões)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[200px]">
+                  {analytics.topCids.length > 0 ? (
+                    <ExpandableChart title="Top CIDs">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={analytics.topCids} layout="vertical" margin={{ left: 0, right: 20 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" vertical={false} />
+                          <XAxis type="number" tick={{ fontSize: 10 }} />
+                          <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={50} />
+                          <Tooltip content={<CustomTooltip />} />
+                          <Bar dataKey="value" fill="hsl(0, 68%, 50%)" radius={[0, 4, 4, 0]}>
+                            <LabelList dataKey="value" position="right" style={{ fontSize: '10px' }} />
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </ExpandableChart>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados de CID</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-destructive" /> Severidade dos Eventos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[200px]">
+                  {analytics.danosData.length > 0 ? (
+                    <ExpandableChart title="Eventos com Danos">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={analytics.danosData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius="50%" outerRadius="80%">
+                            {analytics.danosData.map((d: { fill: string }, i: number) => <Cell key={i} fill={d.fill} />)}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend wrapperStyle={{ fontSize: "10px" }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </ExpandableChart>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Sem dados</div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
