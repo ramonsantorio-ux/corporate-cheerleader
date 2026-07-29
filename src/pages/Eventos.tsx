@@ -306,9 +306,11 @@ export default function Eventos() {
 
     const eventToSave: any = { ...newEvent };
     
+    const isDayShift = eventToSave.shift === 'A Dia' || eventToSave.shift === 'B Dia';
     const sup1 = (eventToSave.supervisor1 || '').trim();
-    const sup2 = (eventToSave.supervisor2 || '').trim();
-    if (sup1 && sup2) {
+    const sup2 = isDayShift ? (eventToSave.supervisor2 || '').trim() : '';
+
+    if (isDayShift && sup1 && sup2) {
       eventToSave.supervisor = `${sup1} / ${sup2}`;
     } else {
       eventToSave.supervisor = sup1 || sup2;
@@ -1016,15 +1018,23 @@ export default function Eventos() {
                   <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P" />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Encarregado 1</Label>
-                  <FastInput value={newEvent.supervisor1} onValueChange={v => setNewEvent(p => ({ ...p, supervisor1: v }))} placeholder="Nome do 1º Encarregado" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Encarregado 2</Label>
-                  <FastInput value={newEvent.supervisor2} onValueChange={v => setNewEvent(p => ({ ...p, supervisor2: v }))} placeholder="Nome do 2º Encarregado" />
-                </div>
+                {(newEvent.shift === 'A Dia' || newEvent.shift === 'B Dia') ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Encarregado 1</Label>
+                      <FastInput value={newEvent.supervisor1} onValueChange={v => setNewEvent(p => ({ ...p, supervisor1: v }))} placeholder="Nome do 1º Encarregado" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Encarregado 2</Label>
+                      <FastInput value={newEvent.supervisor2} onValueChange={v => setNewEvent(p => ({ ...p, supervisor2: v }))} placeholder="Nome do 2º Encarregado" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-2">
+                    <Label>Encarregado</Label>
+                    <FastInput value={newEvent.supervisor1} onValueChange={v => setNewEvent(p => ({ ...p, supervisor1: v, supervisor2: '' }))} placeholder="Nome do Encarregado" />
+                  </div>
+                )}
 
                 {/* Conditional Fields: Material */}
                 {newEvent.categoria_evento === 'Material' && (
