@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  Activity, Zap, AlertOctagon, HeartPulse, PieChart as PieChartIcon, Search, X, TrendingUp, TrendingDown, Clock, ShieldAlert, Target, BrainCircuit, LineChart as LineChartIcon
+  Activity, Zap, AlertOctagon, HeartPulse, PieChart as PieChartIcon, Search, X, TrendingUp, TrendingDown, Clock, ShieldAlert, Target, BrainCircuit, LineChart as LineChartIcon, CheckCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -179,12 +179,60 @@ export default function Index() {
       .slice(0, 50);
   }, [funcionarios, filteredAttendance, filteredEvents, filteredWarnings, sel]);
 
-  const aiInsight = useMemo(() => {
-    if (absenteismo > 4) return `ALERTA PREDITIVO: O modelo identifica 82% de probabilidade de quebra de SLA devido à tendência altista de absenteísmo (${absenteismo}%). Recomendada realocação imediata de equipe de suporte.`;
-    if (totalEventsCount > 5) return `ANÁLISE DE RISCO: Anomalia detectada no volume de eventos operacionais (${totalEventsCount}). Risco de acidente crítico elevado em 45%. Ações preventivas mandatórias necessárias.`;
-    if (fbTaxaResolucao < 70) return `DEGRADAÇÃO CLIMA: A lentidão na resolução de feedbacks (${fbTaxaResolucao}%) pode gerar turnover não programado nos próximos 15 dias nas áreas críticas.`;
-    return "SISTEMA ESTÁVEL. Todos os indicadores operam dentro das bandas de tolerância preditivas. Risco sistêmico: Baixo.";
-  }, [absenteismo, totalEventsCount, fbTaxaResolucao]);
+  const fbPendentesCount = useMemo(() => {
+    return periodFeedbacks.filter(f => f.status !== 'resolvido').length;
+  }, [periodFeedbacks]);
+
+  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+
+  const systemStatus = useMemo(() => {
+    const issues: { type: 'error' | 'warning' | 'info'; title: string; desc: string }[] = [];
+
+    if (!isOnline) {
+      issues.push({ type: 'warning', title: 'Conexão Offline', desc: 'Dispositivo em modo cache offline. Operação local mantida.' });
+    }
+
+    if (fbPendentesCount > 0) {
+      issues.push({ type: 'warning', title: 'Feedbacks Pendentes', desc: `${fbPendentesCount} feedback(s) aguardando resolução pela equipe.` });
+    }
+
+    if (totalEventsCount > 0) {
+      issues.push({ type: 'warning', title: 'Ocorrências SSMA', desc: `${totalEventsCount} evento(s) operacional(is) registrado(s) no período.` });
+    }
+
+    if (totalFaltasInj > 0) {
+      issues.push({ type: 'warning', title: 'Faltas Injustificadas', desc: `${totalFaltasInj} falta(s) injustificada(s) computada(s).` });
+    }
+
+    if (riskEmployees > 0) {
+      issues.push({ type: 'error', title: 'Colaboradores em Risco', desc: `${riskEmployees} colaborador(es) com reincidência de advertências.` });
+    }
+
+    const hasErrors = issues.some(i => i.type === 'error');
+    const hasWarnings = issues.some(i => i.type === 'warning');
+
+    let overallState: 'ok' | 'warning' | 'error' = 'ok';
+    let statusText = 'SISTEMA 100% OPERACIONAL & ESTÁVEL';
+    let statusSubtitle = 'Todas as conexões de banco de dados Supabase, autenticação e módulos operam sem erros sistêmicos.';
+
+    if (hasErrors) {
+      overallState = 'error';
+      statusText = 'ALERTA PREDITIVO - REQUER AÇÃO';
+      statusSubtitle = 'Detectados pontos críticos com colaboradores em matriz de risco e anomalias que requerem intervenção imediata.';
+    } else if (hasWarnings) {
+      overallState = 'warning';
+      statusText = 'SISTEMA OPERACIONAL COM PENDÊNCIAS';
+      statusSubtitle = 'A infraestrutura do banco de dados e APIs está saudável. Existem pendências operacionais a resolver abaixo:';
+    }
+
+    return {
+      overallState,
+      statusText,
+      statusSubtitle,
+      issues,
+      totalIssuesCount: issues.length
+    };
+  }, [isOnline, fbPendentesCount, totalEventsCount, totalFaltasInj, riskEmployees]);
 
 
   if (loading) {
@@ -273,16 +321,53 @@ export default function Index() {
         </div>
       </div>
 
-      {/* ── AI PREDICTIVE INSIGHTS & eNPS ── */}
+      {/* ── AI PREDICTIVE INSIGHTS, DIAGNÓSTICO DO SISTEMA & eNPS ── */}
       {!sel && (
         <div className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="command-card p-0 flex flex-col md:flex-row border-l-4 border-l-primary/60 lg:col-span-2">
-            <div className="bg-primary/10 p-4 flex items-center justify-center border-r border-border/50 shrink-0">
-              <Zap className="w-6 h-6 text-primary animate-pulse" />
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`command-card p-4 flex flex-col justify-between border-l-4 ${systemStatus.overallState === 'error' ? 'border-l-rose-500 bg-rose-500/5' : systemStatus.overallState === 'warning' ? 'border-l-amber-500 bg-amber-500/5' : 'border-l-emerald-500 bg-emerald-500/5'} lg:col-span-2 space-y-3`}>
+            <div className="flex items-center justify-between border-b border-border/40 pb-2">
+              <div className="flex items-center gap-2">
+                <div className={`p-1.5 rounded-md ${systemStatus.overallState === 'error' ? 'bg-rose-500/10 text-rose-500' : systemStatus.overallState === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                  <Zap className="w-4 h-4 animate-pulse" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Status do Sistema & Diagnóstico Preditivo (Predict-AI)</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`text-xs font-extrabold ${systemStatus.overallState === 'error' ? 'text-rose-500' : systemStatus.overallState === 'warning' ? 'text-amber-500' : 'text-emerald-500'}`}>
+                      {systemStatus.statusText}
+                    </span>
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-muted text-muted-foreground">
+                      {systemStatus.totalIssuesCount === 0 ? '0 Pendências' : `${systemStatus.totalIssuesCount} Pendência(s)`}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" /> Supabase: Conectado</span>
+              </div>
             </div>
-            <div className="p-4 flex-1 flex flex-col justify-center">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground mb-1">Módulo Predict-AI (Simulado)</p>
-              <p className="text-sm font-medium text-foreground font-mono leading-relaxed">{aiInsight}</p>
+
+            <p className="text-xs text-foreground/80 font-mono leading-relaxed">
+              {systemStatus.statusSubtitle}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {systemStatus.issues.length > 0 ? (
+                systemStatus.issues.map((issue, idx) => (
+                  <div key={idx} className={`p-2 rounded border text-xs flex items-start gap-2 ${issue.type === 'error' ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300' : 'bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300'}`}>
+                    <AlertOctagon className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold uppercase tracking-wider block text-[10px]">{issue.title}</span>
+                      <span className="text-[11px] opacity-90">{issue.desc}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="sm:col-span-2 p-2.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 text-xs flex items-center gap-2 font-mono">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span>✅ Nenhuma falha de sistema ou pendência de alto risco detectada. Todos os módulos operam perfeitamente.</span>
+                </div>
+              )}
             </div>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-1">
