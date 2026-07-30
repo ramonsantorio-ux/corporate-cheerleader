@@ -7,7 +7,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/filters/PeriodFilter';
-import { ENPSVoting } from '@/components/ENPSVoting';
+import { UserActivityCard } from '@/components/dashboard/UserActivityCard';
 import {
   ComposedChart, ScatterChart, Scatter, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   ZAxis, Area, ReferenceLine, Cell
@@ -244,10 +244,10 @@ export default function Index() {
       <div className="p-6 md:p-8 max-w-[1400px] mx-auto space-y-8">
         <div>
           <h1 className="text-2xl font-bold">Meu Painel</h1>
-          <p className="text-muted-foreground">Acesso restrito para visualização executiva. Por favor, deixe sua avaliação de clima abaixo.</p>
+          <p className="text-muted-foreground">Acompanhamento em tempo real dos lançamentos e alterações efetuados no dia pela sua conta.</p>
         </div>
-        <div className="max-w-md">
-          <ENPSVoting />
+        <div className="max-w-5xl">
+          <UserActivityCard />
         </div>
       </div>
     );
@@ -321,10 +321,10 @@ export default function Index() {
         </div>
       </div>
 
-      {/* ── AI PREDICTIVE INSIGHTS, DIAGNÓSTICO DO SISTEMA & eNPS ── */}
+      {/* ── AI PREDICTIVE INSIGHTS, DIAGNÓSTICO DO SISTEMA & MONITOR DE LANÇAMENTOS DO DIA ── */}
       {!sel && (
         <div className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`command-card p-4 flex flex-col justify-between border-l-4 ${systemStatus.overallState === 'error' ? 'border-l-rose-500 bg-rose-500/5' : systemStatus.overallState === 'warning' ? 'border-l-amber-500 bg-amber-500/5' : 'border-l-emerald-500 bg-emerald-500/5'} lg:col-span-2 space-y-3`}>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`command-card p-4 flex flex-col justify-between border-l-4 ${systemStatus.overallState === 'error' ? 'border-l-rose-500 bg-rose-500/5' : systemStatus.overallState === 'warning' ? 'border-l-amber-500 bg-amber-500/5' : 'border-l-emerald-500 bg-emerald-500/5'} lg:col-span-1 space-y-3`}>
             <div className="flex items-center justify-between border-b border-border/40 pb-2">
               <div className="flex items-center gap-2">
                 <div className={`p-1.5 rounded-md ${systemStatus.overallState === 'error' ? 'bg-rose-500/10 text-rose-500' : systemStatus.overallState === 'warning' ? 'bg-amber-500/10 text-amber-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
@@ -351,7 +351,7 @@ export default function Index() {
               {systemStatus.statusSubtitle}
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+            <div className="grid grid-cols-1 gap-2 pt-1">
               {systemStatus.issues.length > 0 ? (
                 systemStatus.issues.map((issue, idx) => (
                   <div key={idx} className={`p-2 rounded border text-xs flex items-start gap-2 ${issue.type === 'error' ? 'bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-300' : 'bg-amber-500/10 border-amber-500/30 text-amber-800 dark:text-amber-300'}`}>
@@ -363,16 +363,17 @@ export default function Index() {
                   </div>
                 ))
               ) : (
-                <div className="sm:col-span-2 p-2.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 text-xs flex items-center gap-2 font-mono">
+                <div className="p-2.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 text-xs flex items-center gap-2 font-mono">
                   <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
                   <span>✅ Nenhuma falha de sistema ou pendência de alto risco detectada. Todos os módulos operam perfeitamente.</span>
                 </div>
               )}
             </div>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-1">
-            <ENPSVoting />
-          </motion.div>
+
+          <div className="lg:col-span-2">
+            <UserActivityCard />
+          </div>
         </div>
       )}
 
