@@ -287,7 +287,7 @@ export default function Index() {
             <BrainCircuit className="w-4 h-4" />
             <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Command Center Analytics</p>
           </div>
-          <h1 className="text-3xl font-black text-foreground tracking-tighter uppercase">Painel Global</h1>
+          <h1 className="text-3xl font-black text-foreground tracking-tighter uppercase">Central de Movimentações</h1>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto items-end">

@@ -21,7 +21,7 @@ const navGroups: NavGroup[] = [
   {
     label: 'Visão Geral',
     items: [
-      { to: '/', icon: LayoutDashboard, label: 'Dashboard', key: 'dashboard' },
+      { to: '/', icon: Activity, label: 'Central de Movimentações', key: 'dashboard' },
     ],
   },
   {

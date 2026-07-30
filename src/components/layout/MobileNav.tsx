@@ -1,11 +1,11 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Target, Settings, AlertTriangle, CalendarDays, MoreHorizontal } from 'lucide-react';
+import { Activity, Users, Target, Settings, AlertTriangle, CalendarDays, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 
 const mainItems = [
-  { to: '/', icon: LayoutDashboard, label: 'Geral', key: 'dashboard' },
+  { to: '/', icon: Activity, label: 'Movimentações', key: 'dashboard' },
   { to: '/colaboradores', icon: Users, label: 'Pessoas', key: 'colaboradores' },
   { to: '/desempenho', icon: Target, label: 'Gestão', key: 'desempenho' },
   { to: '/ausencias', icon: CalendarDays, label: 'Ponto', key: 'ausencias' },
