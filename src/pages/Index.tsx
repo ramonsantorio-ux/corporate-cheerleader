@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  Activity, Zap, AlertOctagon, HeartPulse, PieChart as PieChartIcon, Search, X, TrendingUp, TrendingDown, Clock, ShieldAlert, Target, BrainCircuit, LineChart as LineChartIcon, CheckCircle
+  Activity, Zap, AlertOctagon, HeartPulse, PieChart as PieChartIcon, Search, X, TrendingUp, TrendingDown, Clock, ShieldAlert, Target, BrainCircuit, LineChart as LineChartIcon, CheckCircle, Users, Wrench, Shield, FileText
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,15 +10,18 @@ import PeriodFilter, { getPortoPeriod, type PeriodRange } from '@/components/fil
 import { UserActivityCard } from '@/components/dashboard/UserActivityCard';
 import {
   ComposedChart, ScatterChart, Scatter, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  ZAxis, Area, ReferenceLine, Cell
+  ZAxis, Area, ReferenceLine, Cell, BarChart, Legend
 } from 'recharts';
 
 // ─── Types ───
 interface Func { id: string; nome: string; cargo: string; departamento: string; foto_url: string; feedbacks_recebidos: number; feedbacks_resolvidos: number; turno: string; letra: string; data_admissao: string; }
 interface FeedbackRow { id: string; setor: string; status: string; prioridade: string; criado_em: string; autor: string; }
-interface AttendanceRow { id: string; employee_id: string; date: string; status: string; }
-interface WarningRow { id: string; employee_id: string; date: string; applied: boolean; }
-interface EventRow { id: string; event_date: string; involved_name: string; }
+interface AttendanceRow { id: string; employee_id: string; date: string; status: string; created_at?: string; }
+interface WarningRow { id: string; employee_id: string; date: string; applied: boolean; created_at?: string; }
+interface EventRow { id: string; event_date: string; involved_name: string; created_at?: string; }
+interface CcoMaintRow { id: string; created_at: string; motorista?: string; servico?: string; placa?: string; }
+interface CcoThirdRow { id: string; created_at: string; dono?: string; atendimento?: string; os?: string; }
+interface AuditLogRow { id: string; created_at: string; user_id?: string; action?: string; table_name?: string; }
 
 interface TooltipPayloadItem { name: string; value: number | string; color?: string; fill?: string; }
 interface CustomTooltipProps { active?: boolean; payload?: TooltipPayloadItem[]; label?: string; }
@@ -51,6 +54,9 @@ export default function Index() {
   const [attendance, setAttendance] = useState<AttendanceRow[]>([]);
   const [warnings, setWarnings] = useState<WarningRow[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
+  const [ccoMaint, setCcoMaint] = useState<CcoMaintRow[]>([]);
+  const [ccoThird, setCcoThird] = useState<CcoThirdRow[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Search
@@ -61,18 +67,28 @@ export default function Index() {
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const [fRes, fbRes, attRes, warnRes, evtRes] = await Promise.all([
+      const dayStartIso = `${period.start}T00:00:00.000Z`;
+      const dayEndIso = `${period.end}T23:59:59.999Z`;
+
+      const [fRes, fbRes, attRes, warnRes, evtRes, ccoMaintRes, ccoThirdRes, auditRes] = await Promise.all([
         supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, turno, letra, data_admissao').order('nome'),
         supabase.from('feedbacks').select('id, setor, status, prioridade, criado_em, autor'),
-        supabase.from('daily_attendance').select('id, employee_id, date, status').gte('date', period.start).lte('date', period.end),
-        supabase.from('employee_warnings').select('id, employee_id, date, applied').gte('date', period.start).lte('date', period.end),
-        supabase.from('events').select('id, event_date, involved_name').gte('event_date', period.start).lte('event_date', period.end),
+        supabase.from('daily_attendance').select('id, employee_id, date, status, created_at').gte('date', period.start).lte('date', period.end),
+        supabase.from('employee_warnings').select('id, employee_id, date, applied, created_at').gte('date', period.start).lte('date', period.end),
+        supabase.from('events').select('id, event_date, involved_name, created_at').gte('event_date', period.start).lte('event_date', period.end),
+        supabase.from('cco_maintenance').select('id, created_at, motorista, servico, placa').gte('created_at', dayStartIso).lte('created_at', dayEndIso),
+        supabase.from('cco_third_party').select('id, created_at, dono, atendimento, os').gte('created_at', dayStartIso).lte('created_at', dayEndIso),
+        supabase.from('audit_log').select('id, created_at, user_id, action, table_name').gte('created_at', dayStartIso).lte('created_at', dayEndIso),
       ]);
+
       setFuncionarios((fRes.data || []) as Func[]);
       setFeedbacks((fbRes.data || []) as FeedbackRow[]);
       setAttendance((attRes.data || []) as AttendanceRow[]);
       setWarnings((warnRes.data || []) as WarningRow[]);
       setEvents((evtRes.data || []) as EventRow[]);
+      setCcoMaint((ccoMaintRes.data || []) as CcoMaintRow[]);
+      setCcoThird((ccoThirdRes.data || []) as CcoThirdRow[]);
+      setAuditLogs((auditRes.data || []) as AuditLogRow[]);
       setLoading(false);
     }
     load();
@@ -111,28 +127,27 @@ export default function Index() {
     return evts;
   }, [events, registeredNames, sel]);
 
-  // ─── KPIs & DATA PROCESSING ───
-  const totalColab = funcionarios.length;
+  // ─── REAL SYSTEM MOVEMENT METRICS (100% REAL DATA) ───
+  const ccoTotal = ccoMaint.length + ccoThird.length;
+  const rhTotal = filteredAttendance.length + filteredWarnings.length;
+  const adminTotal = filteredEvents.length + auditLogs.length;
   const fbTotal = periodFeedbacks.length;
-  const fbResolvidos = periodFeedbacks.filter(f => f.status === 'resolvido').length;
-  const fbTaxaResolucao = fbTotal > 0 ? Math.round((fbResolvidos / fbTotal) * 100) : 100;
 
-  const totalFaltasInj = filteredAttendance.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
-  const totalAtestados = filteredAttendance.filter(a => a.status === 'atestado').length;
-  const absenteismo = totalColab > 0 ? Number((((totalFaltasInj + totalAtestados) / (totalColab * 22)) * 100).toFixed(1)) : 0;
-  
-  const totalAdvertencias = filteredWarnings.length;
-  const totalEventsCount = filteredEvents.length;
+  const totalMovimentacoes = ccoTotal + rhTotal + adminTotal + fbTotal;
 
-  const riskEmployees = useMemo(() => {
-    const warnCount: Record<string, number> = {};
-    warnings.forEach(w => { warnCount[w.employee_id] = (warnCount[w.employee_id] || 0) + 1; });
-    return Object.entries(warnCount).filter(([, c]) => c >= 2).length;
-  }, [warnings]);
+  // Days in period range for daily average calculation
+  const periodDays = useMemo(() => {
+    const s = new Date(period.start);
+    const e = new Date(period.end);
+    const diff = Math.max(1, Math.ceil((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    return diff;
+  }, [period]);
 
-  // Command Center Multi-Axis Data
+  const mediaDiaria = (totalMovimentacoes / periodDays).toFixed(1);
+
+  // REAL Time-Series Trend Data (Last 15 Days)
   const trendData = useMemo(() => {
-    type TrendEntry = { date: string; SLA: number; Faltas: number; Eventos: number };
+    type TrendEntry = { date: string; CCO: number; RH: number; Admin: number; Total: number };
     const dataByDate: Record<string, TrendEntry> = {};
     const last15Days = Array.from({length: 15}, (_, i) => {
       const d = new Date();
@@ -141,43 +156,79 @@ export default function Index() {
     });
 
     last15Days.forEach(date => {
-      dataByDate[date] = { date: date.substring(5).replace('-', '/'), SLA: 95 + Math.random() * 5, Faltas: 0, Eventos: 0 };
+      dataByDate[date] = { date: date.substring(5).replace('-', '/'), CCO: 0, RH: 0, Admin: 0, Total: 0 };
     });
 
+    // Populate real counts by date
     filteredAttendance.forEach(a => {
-      if (dataByDate[a.date]) dataByDate[a.date].Faltas += 1;
+      const d = a.date || (a.created_at ? a.created_at.split('T')[0] : '');
+      if (dataByDate[d]) { dataByDate[d].RH += 1; dataByDate[d].Total += 1; }
+    });
+    filteredWarnings.forEach(w => {
+      const d = w.date || (w.created_at ? w.created_at.split('T')[0] : '');
+      if (dataByDate[d]) { dataByDate[d].RH += 1; dataByDate[d].Total += 1; }
+    });
+    feedbacks.forEach(f => {
+      const d = f.criado_em ? f.criado_em.split('T')[0] : '';
+      if (dataByDate[d]) { dataByDate[d].RH += 1; dataByDate[d].Total += 1; }
+    });
+    ccoMaint.forEach(m => {
+      const d = m.created_at ? m.created_at.split('T')[0] : '';
+      if (dataByDate[d]) { dataByDate[d].CCO += 1; dataByDate[d].Total += 1; }
+    });
+    ccoThird.forEach(t => {
+      const d = t.created_at ? t.created_at.split('T')[0] : '';
+      if (dataByDate[d]) { dataByDate[d].CCO += 1; dataByDate[d].Total += 1; }
     });
     filteredEvents.forEach(e => {
-      if (dataByDate[e.event_date]) dataByDate[e.event_date].Eventos += 1;
+      const d = e.event_date || (e.created_at ? e.created_at.split('T')[0] : '');
+      if (dataByDate[d]) { dataByDate[d].Admin += 1; dataByDate[d].Total += 1; }
+    });
+    auditLogs.forEach(a => {
+      const d = a.created_at ? a.created_at.split('T')[0] : '';
+      if (dataByDate[d]) { dataByDate[d].Admin += 1; dataByDate[d].Total += 1; }
     });
 
     return Object.values(dataByDate);
-  }, [filteredAttendance, filteredEvents]);
+  }, [filteredAttendance, filteredWarnings, feedbacks, ccoMaint, ccoThird, filteredEvents, auditLogs]);
 
-  // Scatter Plot Data (Risk Matrix)
-  const scatterData = useMemo(() => {
-    if (sel) return [];
-    type MapEntry = { name: string; id: string; abs: number; events: number; warns: number; risk: number; impact: number };
-    const map: Record<string, MapEntry> = {};
-    funcionarios.forEach(f => {
-      map[f.id] = { name: f.nome, id: f.id, abs: 0, events: 0, warns: 0, risk: 0, impact: Math.floor(Math.random() * 100) };
+  // REAL Accounts Ranking Chart Data
+  const topAccountsData = useMemo(() => {
+    const userCounts: Record<string, number> = {};
+
+    feedbacks.forEach(f => {
+      if (f.autor) {
+        const name = f.autor.trim();
+        userCounts[name] = (userCounts[name] || 0) + 1;
+      }
     });
-    filteredAttendance.forEach(a => { if(map[a.employee_id]) map[a.employee_id].abs++; });
+
+    ccoMaint.forEach(m => {
+      if (m.motorista) {
+        const name = m.motorista.trim();
+        userCounts[name] = (userCounts[name] || 0) + 1;
+      }
+    });
+
+    ccoThird.forEach(t => {
+      if (t.dono) {
+        const name = t.dono.trim();
+        userCounts[name] = (userCounts[name] || 0) + 1;
+      }
+    });
+
     filteredEvents.forEach(e => {
-      const f = funcionarios.find(func => func.nome.trim().toLowerCase() === e.involved_name.trim().toLowerCase());
-      if(f && map[f.id]) map[f.id].events++;
+      if (e.involved_name) {
+        const name = e.involved_name.trim();
+        userCounts[name] = (userCounts[name] || 0) + 1;
+      }
     });
-    filteredWarnings.forEach(w => { if(map[w.employee_id]) map[w.employee_id].warns++; });
 
-    return Object.values(map)
-      .map(d => ({
-        ...d,
-        risk: (d.abs * 2) + (d.events * 3) + (d.warns * 5) + Math.floor(Math.random()*10)
-      }))
-      .filter(d => d.risk > 0)
-      .sort((a,b) => b.risk - a.risk)
-      .slice(0, 50);
-  }, [funcionarios, filteredAttendance, filteredEvents, filteredWarnings, sel]);
+    return Object.entries(userCounts)
+      .map(([name, count]) => ({ name: name.length > 16 ? `${name.substring(0, 14)}...` : name, Lançamentos: count }))
+      .sort((a, b) => b.Lançamentos - a.Lançamentos)
+      .slice(0, 8);
+  }, [feedbacks, ccoMaint, ccoThird, filteredEvents]);
 
   const fbPendentesCount = useMemo(() => {
     return periodFeedbacks.filter(f => f.status !== 'resolvido').length;
@@ -196,16 +247,8 @@ export default function Index() {
       issues.push({ type: 'warning', title: 'Feedbacks Pendentes', desc: `${fbPendentesCount} feedback(s) aguardando resolução pela equipe.` });
     }
 
-    if (totalEventsCount > 0) {
-      issues.push({ type: 'warning', title: 'Ocorrências SSMA', desc: `${totalEventsCount} evento(s) operacional(is) registrado(s) no período.` });
-    }
-
-    if (totalFaltasInj > 0) {
-      issues.push({ type: 'warning', title: 'Faltas Injustificadas', desc: `${totalFaltasInj} falta(s) injustificada(s) computada(s).` });
-    }
-
-    if (riskEmployees > 0) {
-      issues.push({ type: 'error', title: 'Colaboradores em Risco', desc: `${riskEmployees} colaborador(es) com reincidência de advertências.` });
+    if (filteredEvents.length > 0) {
+      issues.push({ type: 'warning', title: 'Ocorrências SSMA', desc: `${filteredEvents.length} evento(s) operacional(is) registrado(s) no período.` });
     }
 
     const hasErrors = issues.some(i => i.type === 'error');
@@ -218,11 +261,11 @@ export default function Index() {
     if (hasErrors) {
       overallState = 'error';
       statusText = 'ALERTA PREDITIVO - REQUER AÇÃO';
-      statusSubtitle = 'Detectados pontos críticos com colaboradores em matriz de risco e anomalias que requerem intervenção imediata.';
+      statusSubtitle = 'Detectados pontos críticos com pendências que requerem atenção da gestão.';
     } else if (hasWarnings) {
       overallState = 'warning';
       statusText = 'SISTEMA OPERACIONAL COM PENDÊNCIAS';
-      statusSubtitle = 'A infraestrutura do banco de dados e APIs está saudável. Existem pendências operacionais a resolver abaixo:';
+      statusSubtitle = 'A infraestrutura do banco de dados e APIs está saudável. Registradas pendências operacionais no período:';
     }
 
     return {
@@ -232,7 +275,7 @@ export default function Index() {
       issues,
       totalIssuesCount: issues.length
     };
-  }, [isOnline, fbPendentesCount, totalEventsCount, totalFaltasInj, riskEmployees]);
+  }, [isOnline, fbPendentesCount, filteredEvents]);
 
 
   if (loading) {
@@ -270,12 +313,11 @@ export default function Index() {
       <div className="ticker-wrap -mx-4 sm:-mx-8 lg:-mx-8 mb-6 mt-[-1.5rem]">
         <div className="ticker flex items-center gap-12 text-[11px] font-bold uppercase tracking-widest data-mono text-muted-foreground">
           <span className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/> SYS ONLINE</span>
-          <span className="text-emerald-500">SLA GERAL: 97.4% (▲ 0.2%)</span>
-          <span className={absenteismo > 3 ? 'text-rose-500' : 'text-emerald-500'}>ABSENTEÍSMO: {absenteismo}%</span>
-          <span>COLABS ATIVOS: {totalColab}</span>
-          <span className={fbTaxaResolucao < 80 ? 'text-amber-500' : 'text-emerald-500'}>RESOLUÇÃO RH: {fbTaxaResolucao}%</span>
-          <span className={totalEventsCount > 5 ? 'text-rose-500' : 'text-blue-500'}>EVENTOS: {totalEventsCount}</span>
-          <span className={riskEmployees > 0 ? 'text-rose-500' : 'text-emerald-500'}>RISCO CRÍTICO: {riskEmployees} COLABS</span>
+          <span className="text-emerald-500">MOVIMENTAÇÕES NO PERÍODO: {totalMovimentacoes}</span>
+          <span className="text-blue-500">CCO & FROTA: {ccoTotal}</span>
+          <span className="text-emerald-500">GESTÃO RH: {rhTotal}</span>
+          <span className="text-amber-500">FEEDBACKS: {fbTotal}</span>
+          <span className="text-rose-500">AUDITORIA & SSMA: {adminTotal}</span>
           <span>LAST UPDATE: {new Date().toISOString().substring(11,19)}Z</span>
         </div>
       </div>
@@ -377,37 +419,30 @@ export default function Index() {
         </div>
       )}
 
-      {/* ── MACRO DOUBLE-DATA KPIs ── */}
+      {/* ── MACRO DOUBLE-DATA KPIs (100% REAL MOVEMENTS DATA) ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Absenteísmo Sistêmico", val: absenteismo, unit: "%", target: 3.0, diff: (absenteismo - 3.0).toFixed(1), impact: `EST: ${(totalColab * absenteismo * 0.08).toFixed(0)}H PERDIDAS`, inv: true },
-          { label: "Eventos Críticos (SST)", val: totalEventsCount, unit: " OCORR", target: 5, diff: totalEventsCount - 5, impact: `RISCO ACIDENTE: ${(totalEventsCount * 4)}%`, inv: true },
-          { label: "Engajamento RH/Clima", val: fbTaxaResolucao, unit: "%", target: 80, diff: (fbTaxaResolucao - 80), impact: `REDUÇÃO TURNOVER: +${(fbTaxaResolucao * 0.05).toFixed(1)}%`, inv: false },
-          { label: "Matriz de Risco (Headcount)", val: riskEmployees, unit: " USR", target: 0, diff: riskEmployees, impact: `CUSTO RESCISÃO EST: R$ ${(riskEmployees * 15).toFixed(1)}K`, inv: true }
+          { label: "Movimentações Globais", val: totalMovimentacoes, unit: " REGISTROS", icon: Activity, color: "text-primary", bg: "bg-primary/10 border-primary/20", impact: `MÉDIA DIÁRIA: ${mediaDiaria}/DIA` },
+          { label: "Operações CCO & Frota", val: ccoTotal, unit: " CHAMADOS", icon: Wrench, color: "text-blue-500", bg: "bg-blue-500/10 border-blue-500/20", impact: "FROTA & MANUTENÇÃO" },
+          { label: "Gestão RH & Frequência", val: rhTotal, unit: " APONTAMENTOS", icon: Users, color: "text-emerald-500", bg: "bg-emerald-500/10 border-emerald-500/20", impact: "PONTO & ADVERTÊNCIAS" },
+          { label: "Segurança & Auditoria Admin", val: adminTotal, unit: " AÇÕES", icon: Shield, color: "text-rose-500", bg: "bg-rose-500/10 border-rose-500/20", impact: "AUDITORIA & EVENTOS SSMA" }
         ].map((kpi, i) => {
-          const isBad = kpi.inv ? kpi.val > kpi.target : kpi.val < kpi.target;
-          const color = isBad ? 'text-rose-500' : 'text-emerald-500';
-          const bg = isBad ? 'bg-rose-500/10 border-rose-500/20' : 'bg-emerald-500/10 border-emerald-500/20';
-          const Icon = isBad ? TrendingDown : TrendingUp;
+          const Icon = kpi.icon;
 
           return (
             <motion.div key={i} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 * i }} className="command-card p-5 flex flex-col relative group">
               <div className="flex justify-between items-start mb-6">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{kpi.label}</p>
-                <div className={`p-1.5 rounded-md border ${bg}`}>
-                  <Icon className={`w-4 h-4 ${color}`} />
+                <div className={`p-1.5 rounded-md border ${kpi.bg}`}>
+                  <Icon className={`w-4 h-4 ${kpi.color}`} />
                 </div>
               </div>
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-4xl font-black data-mono tracking-tighter text-foreground">{kpi.val}</span>
-                <span className="text-sm font-bold text-muted-foreground">{kpi.unit}</span>
+                <span className="text-xs font-bold text-muted-foreground">{kpi.unit}</span>
               </div>
               
               <div className="mt-auto space-y-2 pt-4 border-t border-border/50">
-                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
-                  <span className="text-muted-foreground">Meta: {kpi.target}</span>
-                  <span className={`data-mono ${color}`}>Var: {Number(kpi.diff) > 0 ? '+' : ''}{kpi.diff}</span>
-                </div>
                 <div className="bg-muted/50 rounded p-1.5 text-center">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-foreground opacity-80">{kpi.impact}</span>
                 </div>
@@ -417,82 +452,71 @@ export default function Index() {
         })}
       </div>
 
-      {/* ── HIGH DENSITY CHARTS ── */}
+      {/* ── HIGH DENSITY CHARTS (100% REAL DATA) ── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 relative z-10">
         
-        {/* Multi-Axis Trend */}
+        {/* Real Daily Movement Trend Chart (15 Days) */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="command-card p-6 flex flex-col h-[450px]">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-xs font-bold uppercase tracking-widest text-foreground flex items-center gap-2">
-                <LineChartIcon className="w-4 h-4 text-primary" /> Análise Temporal Multi-Eixo
+                <LineChartIcon className="w-4 h-4 text-primary" /> Análise Temporal de Movimentações (15D)
               </h2>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">SLA vs Eventos vs Absenteísmo (15D)</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Volume Diário por Categoria: CCO vs RH vs Admin</p>
             </div>
           </div>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={trendData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+              <ComposedChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorSla" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
                     <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} opacity={0.5} />
                 <XAxis dataKey="date" tick={{fontSize: 9, fill: 'hsl(var(--muted-foreground))', fontFamily: 'monospace'}} axisLine={false} tickLine={false} dy={10} />
-                <YAxis yAxisId="left" tick={{fontSize: 9, fill: 'hsl(var(--muted-foreground))', fontFamily: 'monospace'}} axisLine={false} tickLine={false} domain={[80, 100]} />
-                <YAxis yAxisId="right" orientation="right" tick={{fontSize: 9, fill: 'hsl(var(--muted-foreground))', fontFamily: 'monospace'}} axisLine={false} tickLine={false} hide />
+                <YAxis tick={{fontSize: 9, fill: 'hsl(var(--muted-foreground))', fontFamily: 'monospace'}} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.2)' }} />
+                <Legend iconType="circle" wrapperStyle={{ fontSize: '11px' }} />
                 
-                <Area yAxisId="left" type="monotone" dataKey="SLA" name="SLA (%)" stroke="hsl(var(--primary))" fill="url(#colorSla)" strokeWidth={2} />
-                <Bar yAxisId="right" dataKey="Faltas" name="Faltas" fill="#f59e0b" barSize={12} radius={[4,4,0,0]} opacity={0.8} />
-                <Line yAxisId="right" type="step" dataKey="Eventos" name="Eventos Críticos" stroke="#ef4444" strokeWidth={2} dot={{r:3, fill:'#ef4444', strokeWidth:0}} />
+                <Area type="monotone" dataKey="Total" name="Total Movimentos" stroke="hsl(var(--primary))" fill="url(#colorTotal)" strokeWidth={2} />
+                <Bar dataKey="CCO" name="CCO / Frota" fill="#3b82f6" barSize={10} radius={[4,4,0,0]} opacity={0.8} />
+                <Bar dataKey="RH" name="Gestão RH" fill="#10b981" barSize={10} radius={[4,4,0,0]} opacity={0.8} />
+                <Line type="monotone" dataKey="Admin" name="SSMA & Admin" stroke="#ef4444" strokeWidth={2} dot={{r:3, fill:'#ef4444', strokeWidth:0}} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
         </motion.div>
 
-        {/* Scatter Plot Risk Matrix */}
+        {/* Real Ranking of Most Active Accounts Chart */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="command-card p-6 flex flex-col h-[450px]">
            <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-xs font-bold uppercase tracking-widest text-foreground flex items-center gap-2">
-                <Target className="w-4 h-4 text-warning" /> Matriz Scatter de Risco
+                <Users className="w-4 h-4 text-primary" /> Contas & Usuários Mais Ativos no Sistema
               </h2>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Impacto Operacional vs Fator de Risco (Top 50)</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Ranking de lançamentos e edições por conta no período</p>
             </div>
           </div>
-          <div className="flex-1 w-full min-h-0 bg-black/10 rounded-xl relative border border-border/30">
-            {/* Grid overlay to look like radar */}
-            <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 opacity-20 pointer-events-none">
-              <div className="border-r border-b border-rose-500/50 bg-rose-500/5" />
-              <div className="border-b border-emerald-500/50 bg-emerald-500/5" />
-              <div className="border-r border-amber-500/50 bg-amber-500/5" />
-              <div className="bg-blue-500/5" />
-            </div>
-            
-            {scatterData.length > 0 ? (
+          <div className="flex-1 w-full min-h-0 relative border border-border/30 rounded-xl p-2 bg-black/10">
+            {topAccountsData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                  <XAxis type="number" dataKey="impact" name="Impacto Operacional" tick={{fontSize: 9, fill: 'hsl(var(--muted-foreground))'}} domain={[0, 100]} axisLine={{stroke: 'hsl(var(--border))'}} tickLine={false} />
-                  <YAxis type="number" dataKey="risk" name="Fator de Risco" tick={{fontSize: 9, fill: 'hsl(var(--muted-foreground))'}} domain={[0, 'dataMax + 10']} axisLine={{stroke: 'hsl(var(--border))'}} tickLine={false} />
-                  <ZAxis type="number" dataKey="warns" range={[40, 400]} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3' }} />
-                  <Scatter name="Colaboradores" data={scatterData} fill="hsl(var(--primary))">
-                    {scatterData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.risk > 15 ? '#ef4444' : entry.risk > 5 ? '#f59e0b' : '#3b82f6'} opacity={0.7} />
+                <BarChart data={topAccountsData} layout="vertical" margin={{ top: 10, right: 30, left: 40, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" opacity={0.3} />
+                  <XAxis type="number" tick={{fontSize: 9, fill: 'hsl(var(--muted-foreground))'}} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" tick={{fontSize: 10, fill: 'hsl(var(--foreground))', fontWeight: 'bold'}} axisLine={false} tickLine={false} width={100} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.2)' }} />
+                  <Bar dataKey="Lançamentos" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]}>
+                    {topAccountsData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={index === 0 ? '#3b82f6' : index === 1 ? '#10b981' : index === 2 ? '#f59e0b' : '#8b5cf6'} />
                     ))}
-                  </Scatter>
-                </ScatterChart>
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-muted-foreground">Sem dados suficientes (Risco Mínimo)</div>
+              <div className="absolute inset-0 flex items-center justify-center text-xs font-bold uppercase tracking-widest text-muted-foreground">Nenhuma movimentação registrada no período</div>
             )}
-
-            {/* Labels */}
-            <span className="absolute top-2 left-2 text-[8px] font-bold text-rose-500/70 uppercase tracking-widest pointer-events-none">Zona Crítica</span>
-            <span className="absolute bottom-2 right-2 text-[8px] font-bold text-emerald-500/70 uppercase tracking-widest pointer-events-none">Zona Segura</span>
           </div>
         </motion.div>
 
