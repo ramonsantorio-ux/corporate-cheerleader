@@ -114,6 +114,8 @@ export default function MbtiTest() {
 
     const resultData = { type: typeStr, desc: { title: typeStr }, percentages };
 
+    localStorage.setItem(`mbti_${selectedEmpId}`, JSON.stringify(resultData));
+
     try {
       const { error } = await supabase.from('assessment_results').insert({
         user_id: selectedEmpId,
@@ -121,11 +123,12 @@ export default function MbtiTest() {
         result_data: resultData
       });
       if (error) {
-        localStorage.setItem(`mbti_${selectedEmpId}`, JSON.stringify(resultData));
+        console.error("Erro ao salvar MBTI no Supabase:", error);
       }
     } catch (e) {
-      localStorage.setItem(`mbti_${selectedEmpId}`, JSON.stringify(resultData));
+      console.error("Exceção ao salvar MBTI no Supabase:", e);
     } finally {
+      window.dispatchEvent(new Event('assessment_updated'));
       setIsSubmitting(false);
       setIsSubmitted(true);
     }

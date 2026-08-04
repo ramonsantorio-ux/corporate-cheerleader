@@ -156,6 +156,9 @@ export default function DiscTest() {
     setIsSubmitting(true);
     const result = calculateResult();
     
+    // Always store in localStorage as instant fallback
+    localStorage.setItem(`disc_${selectedEmpId}`, JSON.stringify(result));
+    
     try {
       const { error } = await supabase.from('assessment_results').insert({
         user_id: selectedEmpId,
@@ -163,14 +166,13 @@ export default function DiscTest() {
         result_data: result
       });
       if (error) {
-        console.error(error);
-        localStorage.setItem(`disc_${selectedEmpId}`, JSON.stringify(result));
+        console.error("Erro ao salvar no Supabase:", error);
       }
     } catch (e) {
-      console.error(e);
-      localStorage.setItem(`disc_${selectedEmpId}`, JSON.stringify(result));
+      console.error("Exceção ao salvar no Supabase:", e);
     }
     
+    window.dispatchEvent(new Event('assessment_updated'));
     setIsSubmitting(false);
     setIsSubmitted(true);
   };

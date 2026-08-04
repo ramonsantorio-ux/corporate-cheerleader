@@ -91,6 +91,8 @@ export default function IntegrityTest() {
     setIsSubmitting(true);
     const result = calculateScore();
     
+    localStorage.setItem(`integrity_${selectedEmpId}`, JSON.stringify(result));
+
     try {
       const { error } = await supabase.from('assessment_results').insert({
         user_id: selectedEmpId,
@@ -98,14 +100,13 @@ export default function IntegrityTest() {
         result_data: result
       });
       if (error) {
-        console.error(error);
-        localStorage.setItem(`integrity_${selectedEmpId}`, JSON.stringify(result));
+        console.error("Erro ao salvar teste de integridade no Supabase:", error);
       }
     } catch (e) {
-      console.error(e);
-      localStorage.setItem(`integrity_${selectedEmpId}`, JSON.stringify(result));
+      console.error("Exceção ao salvar teste de integridade no Supabase:", e);
     }
     
+    window.dispatchEvent(new Event('assessment_updated'));
     setIsSubmitting(false);
     setIsSubmitted(true);
   };

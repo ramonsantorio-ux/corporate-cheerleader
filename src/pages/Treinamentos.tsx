@@ -77,17 +77,40 @@ const assessments = [
   }
 ];
 
+function tryParse(key: string) {
+  try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : null; } catch { return null; }
+}
+
 interface TestEntry { user_id: string; type: string; created_at?: string; }
 
 function isTestValid(tests: TestEntry[], type: string, empId: string): boolean {
   if (empId === 'mock-1') return true;
   const test = tests.find(a => a.user_id === empId && a.type === type);
-  if (!test) return false;
-  if (!test.created_at) return true;
-  const testDate = new Date(test.created_at);
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  return testDate >= oneYearAgo;
+  if (test) {
+    if (!test.created_at) return true;
+    const testDate = new Date(test.created_at);
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    return testDate >= oneYearAgo;
+  }
+  return !!tryParse(`${type}_${empId}`);
+}
+
+function getDiscLetter(discData: any): string | null {
+  if (!discData) return null;
+  if (typeof discData.dominant === 'string') return discData.dominant;
+  if (discData.dominant?.letter) return discData.dominant.letter;
+  if (typeof discData.D === 'number') {
+    const scores = [
+      { l: 'D', v: discData.D || 0 },
+      { l: 'I', v: discData.I || 0 },
+      { l: 'S', v: discData.S || 0 },
+      { l: 'C', v: discData.C || 0 },
+    ];
+    scores.sort((a, b) => b.v - a.v);
+    return scores[0].l;
+  }
+  return '✓';
 }
 
 export default function Treinamentos() {
@@ -114,42 +137,48 @@ export default function Treinamentos() {
     toast({ title: 'Link copiado!', description: `Envie este link para o colaborador responder o teste.` });
   };
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const { data: emps, error } = await supabase.from('funcionarios').select('id, nome, cargo, foto_url').order('nome');
-        
-        let employeesList = emps;
-        
-        // Fallback para mock data se o banco estiver vazio
-        if (!employeesList || employeesList.length === 0) {
-          employeesList = [
-            { id: 'mock-1', nome: 'Eduardo Silva', cargo: 'Analista Sênior', departamento: 'TI', foto_url: '' },
-            { id: 'mock-2', nome: 'Ramon Leonard', cargo: 'Diretor', departamento: 'Diretoria', foto_url: '' },
-            { id: 'mock-3', nome: 'Mariana Costa', cargo: 'Gerente de Projetos', departamento: 'Projetos', foto_url: '' }
-          ];
-        }
-
-        if (error) {
-          console.error("Erro ao buscar funcionários:", error);
-        }
-
-        const { data: assessments } = await supabase.from('assessment_results').select('id, user_id, type, result_data, created_at');
-        setAssessmentsData(assessments || []);
-        
-        const enriched = (employeesList || []).map(f => {
-          return {
-            ...f,
-          };
-        });
-        setEmployees(enriched);
-      } catch (err) {
-        console.error("Fatal error in fetchData:", err);
+  const fetchData = async () => {
+    try {
+      const { data: emps, error } = await supabase.from('funcionarios').select('id, nome, cargo, foto_url').order('nome');
+      
+      let employeesList = emps;
+      
+      // Fallback para mock data se o banco estiver vazio
+      if (!employeesList || employeesList.length === 0) {
+        employeesList = [
+          { id: 'mock-1', nome: 'Eduardo Silva', cargo: 'Analista Sênior', departamento: 'TI', foto_url: '' },
+          { id: 'mock-2', nome: 'Ramon Leonard', cargo: 'Diretor', departamento: 'Diretoria', foto_url: '' },
+          { id: 'mock-3', nome: 'Mariana Costa', cargo: 'Gerente de Projetos', departamento: 'Projetos', foto_url: '' }
+        ];
       }
-    }
-    fetchData();
-  }, []);
 
+      if (error) {
+        console.error("Erro ao buscar funcionários:", error);
+      }
+
+      const { data: assessments } = await supabase.from('assessment_results').select('id, user_id, type, result_data, created_at');
+      setAssessmentsData(assessments || []);
+      
+      const enriched = (employeesList || []).map(f => {
+        return {
+          ...f,
+        };
+      });
+      setEmployees(enriched);
+    } catch (err) {
+      console.error("Fatal error in fetchData:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    window.addEventListener('focus', fetchData);
+    window.addEventListener('assessment_updated', fetchData);
+    return () => {
+      window.removeEventListener('focus', fetchData);
+      window.removeEventListener('assessment_updated', fetchData);
+    };
+  }, []);
 
   const getTestData = (tests: AssessmentResult[], type: string, empId: string) => {
     if (empId === 'mock-1') {
@@ -157,9 +186,17 @@ export default function Treinamentos() {
       if (type === 'mbti') return { type: 'ENTJ', desc: { title: 'Comandante', traits: ['Decisivo', 'Estratégico', 'Ambicioso'], desc: 'Líderes natos com visão estratégica e alto poder de execução.' } };
       if (type === 'bigfive') return { O: 85, C: 75, E: 90, A: 40, N: 30 };
     }
-    const valid = isTestValid(tests, type, empId);
-    if (!valid) return null;
-    return tests.find(a => a.user_id === empId && a.type === type)?.result_data || tryParse(`${type}_${empId}`);
+    const test = tests.find(a => a.user_id === empId && a.type === type);
+    if (test) {
+      if (test.created_at) {
+        const testDate = new Date(test.created_at);
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        if (testDate < oneYearAgo) return null;
+      }
+      return test.result_data;
+    }
+    return tryParse(`${type}_${empId}`);
   };
 
   const getTestId = (tests: AssessmentResult[], type: string, empId: string) => {
@@ -177,10 +214,6 @@ export default function Treinamentos() {
       toast({ title: 'Avaliação excluída com sucesso!' });
       setAssessmentsData(prev => prev.filter(a => a.id !== id));
     }
-  }
-
-  function tryParse(key: string) {
-    try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : null; } catch { return null; }
   }
 
   const cargoStats = useMemo(() => {
@@ -404,7 +437,7 @@ export default function Treinamentos() {
                       </div>
                     </td>
                     {[
-                      { key: 'disc', val: discData?.dominant?.letter, fullData: discData },
+                      { key: 'disc', val: getDiscLetter(discData), fullData: discData },
                       { key: 'mbti', val: mbtiData?.type, fullData: mbtiData },
                       { key: 'bigfive', val: bigfiveData ? '✓' : null, fullData: bigfiveData },
                     ].map(col => (

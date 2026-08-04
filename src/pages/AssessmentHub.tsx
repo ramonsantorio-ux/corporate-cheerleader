@@ -247,8 +247,10 @@ export default function AssessmentHub() {
     if (testType === 'mbti')    result = calcMbti();
     if (testType === 'bigfive') result = calcBigFive();
 
+    localStorage.setItem(`${testType}_${selectedEmpId}`, JSON.stringify(result));
+
     try {
-      // 1. Tenta salvar no Supabase
+      // 1. Salva no Supabase
       const { error } = await supabase.from('assessment_results').insert({
         user_id: selectedEmpId,
         type: testType,
@@ -256,17 +258,16 @@ export default function AssessmentHub() {
       });
       
       if (error) {
-        console.warn("A tabela assessment_results pode ainda não existir no Supabase. Usando LocalStorage como fallback.", error);
-        localStorage.setItem(`${testType}_${selectedEmpId}`, JSON.stringify(result));
+        console.warn("Erro ao salvar no Supabase:", error);
       }
 
       setResultScreen(result);
-      toast({ title: error ? 'âœ… Salvo localmente.' : 'âœ… Análise salva no banco de dados!' });
+      toast({ title: '✅ Análise concluída e salva!' });
     } catch (err) {
-      localStorage.setItem(`${testType}_${selectedEmpId}`, JSON.stringify(result));
       setResultScreen(result);
-      toast({ title: 'âœ… Análise concluída (salva localmente).' });
+      toast({ title: '✅ Análise concluída (salva localmente).' });
     } finally {
+      window.dispatchEvent(new Event('assessment_updated'));
       setIsSubmitting(false);
     }
   };

@@ -145,7 +145,7 @@ export default function FuncionarioProfile() {
       supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url, feedbacks_recebidos, feedbacks_resolvidos, email, data_admissao'),
       supabase.from('meetings').select('*').eq('employee_id', id).order('meeting_date', { ascending: false }),
       supabase.from('employee_documents').select('*').eq('employee_id', id).order('created_at', { ascending: false }),
-      supabase.from('employee_assessments').select('*').eq('employee_id', id)
+      supabase.from('assessment_results').select('*').eq('user_id', id)
     ]).then(([funcRes, fbRes, allRes, meetRes, docRes, assessRes]) => {
       if (funcRes.data) {
         const f = funcRes.data as unknown as Funcionario;
@@ -155,15 +155,24 @@ export default function FuncionarioProfile() {
       if (allRes.data) setAllFuncionarios(allRes.data as Funcionario[]);
       if (meetRes.data) setMeetings(meetRes.data as MeetingItem[]);
       if (docRes.data) setDocuments(docRes.data as unknown as EmployeeDocument[]);
-      if (assessRes.data) {
-        const arr = assessRes.data as { assessment_type: string; result_data: DiscResultData | MbtiResultData | BigFiveResultData }[];
-        const disc = arr.find(a => a.assessment_type === 'disc');
-        const mbti = arr.find(a => a.assessment_type === 'mbti');
-        const bigfive = arr.find(a => a.assessment_type === 'bigfive');
-        if (disc) setDiscResult(disc.result_data);
-        if (mbti) setMbtiResult(mbti.result_data);
-        if (bigfive) setBigFiveResult(bigfive.result_data);
-      }
+      
+      const tryParseLocal = (key: string) => {
+        try { const s = localStorage.getItem(key); return s ? JSON.parse(s) : null; } catch { return null; }
+      };
+
+      const arr = (assessRes.data || []) as { type?: string; assessment_type?: string; result_data: DiscResultData | MbtiResultData | BigFiveResultData }[];
+      const disc = arr.find(a => (a.type || a.assessment_type) === 'disc');
+      const mbti = arr.find(a => (a.type || a.assessment_type) === 'mbti');
+      const bigfive = arr.find(a => (a.type || a.assessment_type) === 'bigfive');
+      
+      const discData = disc?.result_data as DiscResultData || tryParseLocal(`disc_${id}`);
+      const mbtiData = mbti?.result_data as MbtiResultData || tryParseLocal(`mbti_${id}`);
+      const bigfiveData = bigfive?.result_data as BigFiveResultData || tryParseLocal(`bigfive_${id}`);
+
+      if (discData) setDiscResult(discData);
+      if (mbtiData) setMbtiResult(mbtiData);
+      if (bigfiveData) setBigFiveResult(bigfiveData);
+      
       setLoading(false);
     });
   }, [id]);
