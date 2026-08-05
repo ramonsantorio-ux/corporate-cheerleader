@@ -11,45 +11,185 @@ import { useSearchParams } from 'react-router-dom';
 import loginBg from '@/assets/login-bg.jpg';
 
 const CRITERIA = [
+  // ── BLOCO UNIVERSAL ─────────────────────────────────────────────────
   {
-    label: 'Preocupação com a empresa como um todo',
-    desc: 'Pratico senso de dono, se preocupa com a performance de outros setores, coopera com seus pares e colegas de equipe',
+    label: 'Demonstra senso de dono nas suas responsabilidades',
+    desc: 'Age como se a empresa fosse sua, vai além do mínimo exigido',
   },
   {
-    label: 'Postura voltada ao desenvolvimento da equipe',
-    desc: 'Estimula o crescimento da equipe, realiza feedbacks',
+    label: 'Coopera com pares e colegas de equipe',
+    desc: 'Ajuda outros setores sem ser solicitado quando necessário',
   },
   {
-    label: 'Proporciona um ambiente de trabalho saudável',
-    desc: 'Pratica um diálogo aberto, transparente e respeitador',
+    label: 'Demonstra preocupação com a performance de outras áreas',
+    desc: 'Entende o impacto do seu trabalho no resultado geral da empresa',
   },
   {
-    label: 'Proporciona um ambiente de trabalho inclusivo',
-    desc: 'Sem discriminação de qualquer natureza',
+    label: 'Propõe soluções quando identifica problemas',
+    desc: 'Não apenas aponta problemas, mas sugere melhorias',
   },
   {
-    label: 'Possui atitudes/práticas alinhadas as questões voltadas a saúde, segurança e meio ambiente',
-    desc: 'Demonstra no dia a dia a preocupação com temos voltados a saúde, segurança e meio ambiente',
+    label: 'Compartilha conhecimento com a equipe espontaneamente',
+    desc: 'Repassa aprendizados, técnicas e boas práticas sem ser solicitado',
   },
   {
-    label: 'Utiliza de forma racional os recursos da empresa',
-    desc: 'Tem preocupação com desperdícios de qualquer que seja a natureza',
+    label: 'Realiza feedbacks construtivos aos colegas',
+    desc: 'Aponta pontos de melhoria de forma respeitosa e objetiva',
   },
   {
-    label: 'Atua com princípios éticos',
-    desc: 'Não compactua com corrupção, uso indevido de recursos da empresa, apropriação indevida de qualquer natureza',
+    label: 'Apoia novos colaboradores na integração',
+    desc: 'Auxilia quem está aprendendo sem demonstrar impaciência',
   },
   {
-    label: 'Atua de forma alinhada com os 4 C\'s da empresa',
-    desc: 'Disciplina com horário, com as demandas, com os valores, com os compromissos assumidos',
+    label: 'Estimula o crescimento dos colegas',
+    desc: 'Incentiva a participação, autonomia e desenvolvimento dos pares',
   },
   {
-    label: 'Desenvolvimento pessoal/profissional',
-    desc: 'Realiza cursos, seminários e especializações pessoais/profissionais',
+    label: 'Mantém comunicação respeitosa com todos',
+    desc: 'Usa linguagem adequada, tom respeitoso e ouve o outro',
   },
   {
-    label: 'Busca do desenvolvimento do negócio de forma sustentável',
-    desc: 'Atitudes voltadas ao bem estar geral incluindo a comunidade, parceiros e sociedade em geral',
+    label: 'Pratica diálogo aberto e transparente',
+    desc: 'Expõe opiniões com clareza, sem fofoca ou duplicidade',
+  },
+  {
+    label: 'Respeita as diferenças (gênero, etnia, cultura, religião)',
+    desc: 'Não pratica e não compactua com discriminação de qualquer natureza',
+  },
+  {
+    label: 'Resolve conflitos de forma construtiva',
+    desc: 'Busca entendimento, não agrava situações de tensão',
+  },
+  {
+    label: 'Trata todos com igualdade, independente do cargo',
+    desc: 'Não age de forma diferente com superiores e subordinados',
+  },
+  {
+    label: 'Evita desperdício de materiais e insumos',
+    desc: 'Utiliza apenas o necessário e cuida dos recursos disponíveis',
+  },
+  {
+    label: 'Cuida dos patrimônios e equipamentos da empresa',
+    desc: 'Zeloso com ferramentas, veículos, instalações e sistemas',
+  },
+  {
+    label: 'Age com honestidade e transparência',
+    desc: 'Não omite informações relevantes, age de forma íntegra',
+  },
+  {
+    label: 'Não compactua com corrupção ou uso indevido de recursos',
+    desc: 'Reporta irregularidades que presencia',
+  },
+  {
+    label: 'Atua junto aos subordinados quanto ao zelo pelos recursos e à atuação com ética',
+    desc: 'Orienta e cobra da equipe o uso correto dos recursos e a conduta ética no dia a dia',
+  },
+  {
+    label: 'É pontual e cumpre os horários estabelecidos',
+    desc: 'Chega no horário, avisa antecipadamente ausências e atrasos',
+  },
+  {
+    label: 'Entrega as demandas no prazo combinado',
+    desc: 'Cumpre prazos e avisa quando há risco de não entregar',
+  },
+  {
+    label: 'Assume responsabilidade pelos próprios erros',
+    desc: 'Não terceiriza a culpa, busca corrigir e aprender',
+  },
+  {
+    label: 'Busca capacitações e treinamentos voluntariamente',
+    desc: 'Realiza cursos, seminários e especializações por iniciativa própria',
+  },
+  {
+    label: 'Aplica no dia a dia os conhecimentos adquiridos',
+    desc: 'Coloca em prática o que aprende nos treinamentos',
+  },
+  {
+    label: 'Contribui para o desenvolvimento sustentável do negócio',
+    desc: 'Considera o impacto em comunidade, parceiros e sociedade nas suas ações',
+  },
+  // ── SEGURANÇA DO TRABALHO ─────────────────────────────────────────────────
+  {
+    label: 'Usa corretamente os EPIs obrigatórios',
+    desc: 'Utiliza os equipamentos de proteção sem precisar ser cobrado',
+  },
+  {
+    label: 'Reporta condições e atos inseguros imediatamente',
+    desc: 'Não ignora situações de risco, comunica ao responsável',
+  },
+  {
+    label: 'Conhece e segue os procedimentos de emergência',
+    desc: 'Sabe como agir em casos de acidente, incêndio ou evacuação',
+  },
+  {
+    label: 'Mantém a área de trabalho limpa e organizada (5S)',
+    desc: 'Pratica a organização como hábito, não como obrigação pontual',
+  },
+  {
+    label: 'Dá o exemplo em comportamentos seguros para os colegas',
+    desc: 'Lidera pelo exemplo, incentiva a segurança nos outros',
+  },
+  // ── GESTÃO DE PESSOAS / LIDERANÇA ─────────────────────────────────────────
+  {
+    label: 'Planeja e distribui atividades de forma equilibrada',
+    desc: 'Organiza a equipe com critérios justos e estratégicos',
+  },
+  {
+    label: 'Acompanha a execução e oferece suporte à equipe',
+    desc: 'Está presente e acessível durante a operação',
+  },
+  {
+    label: 'Gerencia conflitos na equipe de forma construtiva',
+    desc: 'Media situações de tensão com equilíbrio e justiça',
+  },
+  {
+    label: 'Desenvolve ativamente os colaboradores sob sua liderança',
+    desc: 'Investe no crescimento técnico e comportamental da equipe',
+  },
+  {
+    label: 'Cobra resultados com respeito e assertividade',
+    desc: 'Exige qualidade sem desrespeitar nem constranger a equipe',
+  },
+  {
+    label: 'Dá o exemplo comportamental para a equipe',
+    desc: 'Age da forma que espera que seus liderados ajam',
+  },
+  {
+    label: 'Toma decisões com base em dados e evidências',
+    desc: 'Não decide por impulso; busca informações antes de agir',
+  },
+  {
+    label: 'Reconhece e valoriza as boas práticas da equipe',
+    desc: 'Celebra conquistas e dá crédito a quem merece',
+  },
+  {
+    label: 'Mantém a equipe motivada mesmo em períodos de pressão',
+    desc: 'Conduz a equipe com energia positiva em momentos críticos',
+  },
+  // ── MEIO AMBIENTE / SUSTENTABILIDADE ──────────────────────────────────────
+  {
+    label: 'Descarta resíduos corretamente conforme as normas',
+    desc: 'Separa e descarta resíduos nos locais e formas adequadas',
+  },
+  {
+    label: 'Reduz o consumo de água, energia e combustível',
+    desc: 'Adota hábitos de consumo consciente no dia a dia',
+  },
+  {
+    label: 'Conhece e cumpre os procedimentos ambientais da empresa',
+    desc: 'Segue as normas ambientais internas e da legislação',
+  },
+  {
+    label: 'Demonstra atitude proativa na preservação ambiental',
+    desc: 'Vai além do exigido, sugere práticas sustentáveis',
+  },
+  {
+    label: 'Considera o impacto ambiental antes de tomar decisões',
+    desc: 'Avalia as consequências ambientais nas escolhas operacionais',
+  },
+  {
+    label: 'Orienta colegas sobre a importância das práticas ambientais',
+    desc: 'Atua como multiplicador da cultura ambiental na equipe',
   },
 ];
 
