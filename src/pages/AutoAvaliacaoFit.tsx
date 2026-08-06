@@ -359,13 +359,15 @@ export default function AutoAvaliacaoFit() {
   if (submitted) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="bg-white p-8 rounded-2xl shadow-sm border border-border/50 max-w-md w-full">
-          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white p-8 rounded-2xl shadow-xl border border-border/50 max-w-md w-full">
+          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">Muito Obrigado!</h2>
-          <p className="text-muted-foreground mb-6">Sua autoavaliação de fit cultural foi registrada com sucesso e enviada ao seu gestor.</p>
-          <Button onClick={() => window.location.reload()} variant="outline" className="w-full">Fazer outra avaliação</Button>
+          <h2 className="text-2xl font-black text-slate-800 mb-2">Muito Obrigado!</h2>
+          <p className="text-slate-600 text-sm mb-4">Sua autoavaliação de fit cultural foi registrada com sucesso e enviada ao seu gestor.</p>
+          <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs text-slate-500 font-medium">
+            Você já pode fechar esta aba ou janela.
+          </div>
         </motion.div>
       </div>
     );
