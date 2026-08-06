@@ -20,188 +20,263 @@ interface FitScore {
   updated_at: string;
 }
 
-const CRITERIA = [
-  // ── BLOCO UNIVERSAL ──────────────────────────────────────────────────────
+export interface CriterionItem {
+  label: string;
+  desc: string;
+}
+
+export interface CriteriaTopic {
+  number: number;
+  title: string;
+  category: 'UNIVERSAL' | 'SEGURANÇA DO TRABALHO' | 'LIDERANÇA / SUPERVISÃO' | 'MEIO AMBIENTE / SUSTENTABILIDADE';
+  badgeStyle: string;
+  items: CriterionItem[];
+}
+
+export const CRITERIA_TOPICS: CriteriaTopic[] = [
   {
-    label: 'Demonstra senso de dono nas suas responsabilidades',
-    desc: 'Age como se a empresa fosse sua, vai além do mínimo exigido',
+    number: 1,
+    title: 'Preocupação com a Empresa como um Todo',
+    category: 'UNIVERSAL',
+    badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
+    items: [
+      {
+        label: 'Demonstra senso de dono nas suas responsabilidades',
+        desc: 'Age como se a empresa fosse sua, vai além do mínimo exigido',
+      },
+      {
+        label: 'Coopera com pares e colegas de equipe',
+        desc: 'Ajuda outros setores sem ser solicitado quando necessário',
+      },
+      {
+        label: 'Demonstra preocupação com a performance de outras áreas',
+        desc: 'Entende o impacto do seu trabalho no resultado geral da empresa',
+      },
+      {
+        label: 'Propõe soluções quando identifica problemas',
+        desc: 'Não apenas aponta problemas, mas sugere melhorias',
+      },
+    ]
   },
   {
-    label: 'Coopera com pares e colegas de equipe',
-    desc: 'Ajuda outros setores sem ser solicitado quando necessário',
+    number: 2,
+    title: 'Postura Voltada ao Desenvolvimento da Equipe',
+    category: 'UNIVERSAL',
+    badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
+    items: [
+      {
+        label: 'Compartilha conhecimento com a equipe espontaneamente',
+        desc: 'Repassa aprendizados, técnicas e boas práticas sem ser solicitado',
+      },
+      {
+        label: 'Realiza feedbacks construtivos aos colegas',
+        desc: 'Aponta pontos de melhoria de forma respeitosa e objetiva',
+      },
+      {
+        label: 'Apoia novos colaboradores na integração',
+        desc: 'Auxilia quem está aprendendo sem demonstrar impaciência',
+      },
+      {
+        label: 'Estimula o crescimento dos colegas',
+        desc: 'Incentiva a participação, autonomia e desenvolvimento dos pares',
+      },
+    ]
   },
   {
-    label: 'Demonstra preocupação com a performance de outras áreas',
-    desc: 'Entende o impacto do seu trabalho no resultado geral da empresa',
+    number: 3,
+    title: 'Ambiente de Trabalho Saudável e Inclusivo',
+    category: 'UNIVERSAL',
+    badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
+    items: [
+      {
+        label: 'Mantém comunicação respeitosa com todos',
+        desc: 'Usa linguagem adequada, tom respeitoso e ouve o outro',
+      },
+      {
+        label: 'Pratica diálogo aberto e transparente',
+        desc: 'Expõe opiniões com clareza, sem fofoca ou duplicidade',
+      },
+      {
+        label: 'Respeita as diferenças (gênero, etnia, cultura, religião)',
+        desc: 'Não pratica e não compactua com discriminação de qualquer natureza',
+      },
+      {
+        label: 'Resolve conflitos de forma construtiva',
+        desc: 'Busca entendimento, não agrava situações de tensão',
+      },
+      {
+        label: 'Trata todos com igualdade, independente do cargo',
+        desc: 'Não age de forma diferente com superiores e subordinados',
+      },
+    ]
   },
   {
-    label: 'Propõe soluções quando identifica problemas',
-    desc: 'Não apenas aponta problemas, mas sugere melhorias',
+    number: 4,
+    title: 'Uso Racional dos Recursos e Princípios Éticos',
+    category: 'UNIVERSAL',
+    badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
+    items: [
+      {
+        label: 'Evita desperdício de materiais e insumos',
+        desc: 'Utiliza apenas o necessário e cuida dos recursos disponíveis',
+      },
+      {
+        label: 'Cuida dos patrimônios e equipamentos da empresa',
+        desc: 'Zeloso com ferramentas, veículos, instalações e sistemas',
+      },
+      {
+        label: 'Age com honestidade e transparência',
+        desc: 'Não omite informações relevantes, age de forma íntegra',
+      },
+      {
+        label: 'Não compactua com corrupção ou uso indevido de recursos',
+        desc: 'Reporta irregularidades que presencia',
+      },
+      {
+        label: 'Atua junto aos subordinados quanto ao zelo pelos recursos e à atuação com ética',
+        desc: 'Orienta e cobra da equipe o uso correto dos recursos e a conduta ética no dia a dia',
+      },
+    ]
   },
   {
-    label: 'Compartilha conhecimento com a equipe espontaneamente',
-    desc: 'Repassa aprendizados, técnicas e boas práticas sem ser solicitado',
+    number: 5,
+    title: 'Alinhamento com os 4 C’s e Desenvolvimento Contínuo',
+    category: 'UNIVERSAL',
+    badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800',
+    items: [
+      {
+        label: 'É pontual e cumpre os horários estabelecidos',
+        desc: 'Chega no horário, avisa antecipadamente ausências e atrasos',
+      },
+      {
+        label: 'Entrega as demandas no prazo combinado',
+        desc: 'Cumpre prazos e avisa quando há risco de não entregar',
+      },
+      {
+        label: 'Assume responsabilidade pelos próprios erros',
+        desc: 'Não terceiriza a culpa, busca corrigir e aprender',
+      },
+      {
+        label: 'Busca capacitações e treinamentos voluntariamente',
+        desc: 'Realiza cursos, seminários e especializações por iniciativa própria',
+      },
+      {
+        label: 'Aplica no dia a dia os conhecimentos adquiridos',
+        desc: 'Coloca em prática o que aprende nos treinamentos',
+      },
+      {
+        label: 'Contribui para o desenvolvimento sustentável do negócio',
+        desc: 'Considera o impacto em comunidade, parceiros e sociedade nas suas ações',
+      },
+    ]
   },
   {
-    label: 'Realiza feedbacks construtivos aos colegas',
-    desc: 'Aponta pontos de melhoria de forma respeitosa e objetiva',
+    number: 6,
+    title: 'Comportamento Seguro e Cultura de Prevenção',
+    category: 'SEGURANÇA DO TRABALHO',
+    badgeStyle: 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800',
+    items: [
+      {
+        label: 'Usa corretamente os EPIs obrigatórios',
+        desc: 'Utiliza os equipamentos de proteção sem precisar ser cobrado',
+      },
+      {
+        label: 'Reporta condições e atos inseguros imediatamente',
+        desc: 'Não ignora situações de risco, comunica ao responsável',
+      },
+      {
+        label: 'Conhece e segue os procedimentos de emergência',
+        desc: 'Sabe como agir em casos de acidente, incêndio ou evacuação',
+      },
+      {
+        label: 'Mantém a área de trabalho limpa e organizada (5S)',
+        desc: 'Pratica a organização como hábito, não como obrigação pontual',
+      },
+      {
+        label: 'Dá o exemplo em comportamentos seguros para os colegas',
+        desc: 'Lidera pelo exemplo, incentiva a segurança nos outros',
+      },
+    ]
   },
   {
-    label: 'Apoia novos colaboradores na integração',
-    desc: 'Auxilia quem está aprendendo sem demonstrar impaciência',
+    number: 7,
+    title: 'Gestão de Pessoas',
+    category: 'LIDERANÇA / SUPERVISÃO',
+    badgeStyle: 'bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800',
+    items: [
+      {
+        label: 'Planeja e distribui atividades de forma equilibrada',
+        desc: 'Organiza a equipe com critérios justos e estratégicos',
+      },
+      {
+        label: 'Acompanha a execução e oferece suporte à equipe',
+        desc: 'Está presente e acessível durante a operação',
+      },
+      {
+        label: 'Gerencia conflitos na equipe de forma construtiva',
+        desc: 'Media situações de tensão com equilíbrio e justiça',
+      },
+      {
+        label: 'Desenvolve ativamente os colaboradores sob sua liderança',
+        desc: 'Investe no crescimento técnico e comportamental da equipe',
+      },
+      {
+        label: 'Cobra resultados com respeito e assertividade',
+        desc: 'Exige qualidade sem desrespeitar nem constranger a equipe',
+      },
+      {
+        label: 'Dá o exemplo comportamental para a equipe',
+        desc: 'Age da forma que espera que seus liderados ajam',
+      },
+      {
+        label: 'Toma decisões com base em dados e evidências',
+        desc: 'Não decide por impulso; busca informações antes de agir',
+      },
+      {
+        label: 'Reconhece e valoriza as boas práticas da equipe',
+        desc: 'Celebra conquistas e dá crédito a quem merece',
+      },
+      {
+        label: 'Mantém a equipe motivada mesmo em períodos de pressão',
+        desc: 'Conduz a equipe com energia positiva em momentos críticos',
+      },
+    ]
   },
   {
-    label: 'Estimula o crescimento dos colegas',
-    desc: 'Incentiva a participação, autonomia e desenvolvimento dos pares',
-  },
-  {
-    label: 'Mantém comunicação respeitosa com todos',
-    desc: 'Usa linguagem adequada, tom respeitoso e ouve o outro',
-  },
-  {
-    label: 'Pratica diálogo aberto e transparente',
-    desc: 'Expõe opiniões com clareza, sem fofoca ou duplicidade',
-  },
-  {
-    label: 'Respeita as diferenças (gênero, etnia, cultura, religião)',
-    desc: 'Não pratica e não compactua com discriminação de qualquer natureza',
-  },
-  {
-    label: 'Resolve conflitos de forma construtiva',
-    desc: 'Busca entendimento, não agrava situações de tensão',
-  },
-  {
-    label: 'Trata todos com igualdade, independente do cargo',
-    desc: 'Não age de forma diferente com superiores e subordinados',
-  },
-  {
-    label: 'Evita desperdício de materiais e insumos',
-    desc: 'Utiliza apenas o necessário e cuida dos recursos disponíveis',
-  },
-  {
-    label: 'Cuida dos patrimônios e equipamentos da empresa',
-    desc: 'Zeloso com ferramentas, veículos, instalações e sistemas',
-  },
-  {
-    label: 'Age com honestidade e transparência',
-    desc: 'Não omite informações relevantes, age de forma íntegra',
-  },
-  {
-    label: 'Não compactua com corrupção ou uso indevido de recursos',
-    desc: 'Reporta irregularidades que presencia',
-  },
-  {
-    label: 'Atua junto aos subordinados quanto ao zelo pelos recursos e à atuação com ética',
-    desc: 'Orienta e cobra da equipe o uso correto dos recursos e a conduta ética no dia a dia',
-  },
-  {
-    label: 'É pontual e cumpre os horários estabelecidos',
-    desc: 'Chega no horário, avisa antecipadamente ausências e atrasos',
-  },
-  {
-    label: 'Entrega as demandas no prazo combinado',
-    desc: 'Cumpre prazos e avisa quando há risco de não entregar',
-  },
-  {
-    label: 'Assume responsabilidade pelos próprios erros',
-    desc: 'Não terceiriza a culpa, busca corrigir e aprender',
-  },
-  {
-    label: 'Busca capacitações e treinamentos voluntariamente',
-    desc: 'Realiza cursos, seminários e especializações por iniciativa própria',
-  },
-  {
-    label: 'Aplica no dia a dia os conhecimentos adquiridos',
-    desc: 'Coloca em prática o que aprende nos treinamentos',
-  },
-  {
-    label: 'Contribui para o desenvolvimento sustentável do negócio',
-    desc: 'Considera o impacto em comunidade, parceiros e sociedade nas suas ações',
-  },
-  // ── SEGURANÇA DO TRABALHO ─────────────────────────────────────────────────
-  {
-    label: 'Usa corretamente os EPIs obrigatórios',
-    desc: 'Utiliza os equipamentos de proteção sem precisar ser cobrado',
-  },
-  {
-    label: 'Reporta condições e atos inseguros imediatamente',
-    desc: 'Não ignora situações de risco, comunica ao responsável',
-  },
-  {
-    label: 'Conhece e segue os procedimentos de emergência',
-    desc: 'Sabe como agir em casos de acidente, incêndio ou evacuação',
-  },
-  {
-    label: 'Mantém a área de trabalho limpa e organizada (5S)',
-    desc: 'Pratica a organização como hábito, não como obrigação pontual',
-  },
-  {
-    label: 'Dá o exemplo em comportamentos seguros para os colegas',
-    desc: 'Lidera pelo exemplo, incentiva a segurança nos outros',
-  },
-  // ── GESTÃO DE PESSOAS / LIDERANÇA ─────────────────────────────────────────
-  {
-    label: 'Planeja e distribui atividades de forma equilibrada',
-    desc: 'Organiza a equipe com critérios justos e estratégicos',
-  },
-  {
-    label: 'Acompanha a execução e oferece suporte à equipe',
-    desc: 'Está presente e acessível durante a operação',
-  },
-  {
-    label: 'Gerencia conflitos na equipe de forma construtiva',
-    desc: 'Media situações de tensão com equilíbrio e justiça',
-  },
-  {
-    label: 'Desenvolve ativamente os colaboradores sob sua liderança',
-    desc: 'Investe no crescimento técnico e comportamental da equipe',
-  },
-  {
-    label: 'Cobra resultados com respeito e assertividade',
-    desc: 'Exige qualidade sem desrespeitar nem constranger a equipe',
-  },
-  {
-    label: 'Dá o exemplo comportamental para a equipe',
-    desc: 'Age da forma que espera que seus liderados ajam',
-  },
-  {
-    label: 'Toma decisões com base em dados e evidências',
-    desc: 'Não decide por impulso; busca informações antes de agir',
-  },
-  {
-    label: 'Reconhece e valoriza as boas práticas da equipe',
-    desc: 'Celebra conquistas e dá crédito a quem merece',
-  },
-  {
-    label: 'Mantém a equipe motivada mesmo em períodos de pressão',
-    desc: 'Conduz a equipe com energia positiva em momentos críticos',
-  },
-  // ── MEIO AMBIENTE / SUSTENTABILIDADE ──────────────────────────────────────
-  {
-    label: 'Descarta resíduos corretamente conforme as normas',
-    desc: 'Separa e descarta resíduos nos locais e formas adequadas',
-  },
-  {
-    label: 'Reduz o consumo de água, energia e combustível',
-    desc: 'Adota hábitos de consumo consciente no dia a dia',
-  },
-  {
-    label: 'Conhece e cumpre os procedimentos ambientais da empresa',
-    desc: 'Segue as normas ambientais internas e da legislação',
-  },
-  {
-    label: 'Demonstra atitude proativa na preservação ambiental',
-    desc: 'Vai além do exigido, sugere práticas sustentáveis',
-  },
-  {
-    label: 'Considera o impacto ambiental antes de tomar decisões',
-    desc: 'Avalia as consequências ambientais nas escolhas operacionais',
-  },
-  {
-    label: 'Orienta colegas sobre a importância das práticas ambientais',
-    desc: 'Atua como multiplicador da cultura ambiental na equipe',
-  },
+    number: 8,
+    title: 'Responsabilidade Ambiental e Práticas Sustentáveis',
+    category: 'MEIO AMBIENTE / SUSTENTABILIDADE',
+    badgeStyle: 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800',
+    items: [
+      {
+        label: 'Descarta resíduos corretamente conforme as normas',
+        desc: 'Separa e descarta resíduos nos locais e formas adequadas',
+      },
+      {
+        label: 'Reduz o consumo de água, energia e combustível',
+        desc: 'Adota hábitos de consumo consciente no dia a dia',
+      },
+      {
+        label: 'Conhece e cumpre os procedimentos ambientais da empresa',
+        desc: 'Segue as normas ambientais internas e da legislação',
+      },
+      {
+        label: 'Demonstra atitude proativa na preservação ambiental',
+        desc: 'Vai além do exigido, sugere práticas sustentáveis',
+      },
+      {
+        label: 'Considera o impacto ambiental antes de tomar decisões',
+        desc: 'Avalia as consequências ambientais nas escolhas operacionais',
+      },
+      {
+        label: 'Orienta colegas sobre a importância das práticas ambientais',
+        desc: 'Atua como multiplicador da cultura ambiental na equipe',
+      },
+    ]
+  }
 ];
+
+export const CRITERIA = CRITERIA_TOPICS.flatMap(t => t.items);
 
 const STAGES = [
   { key: 'autoavaliacao', label: 'Auto Avaliação', icon: User, description: 'O funcionário avalia a si mesmo' },
@@ -520,65 +595,84 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                   </div>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className="p-0 border-t border-border">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border bg-muted/30">
-                        <th className="text-left p-3 font-semibold text-foreground min-w-[280px]">Critério</th>
-                        {SCORE_COLUMNS.map(col => (
-                          <th key={col.value} className="p-2 text-center font-medium text-foreground min-w-[90px]">
-                            <div className="text-xs leading-tight">{col.label}</div>
-                            <div className="text-[10px] text-muted-foreground">{col.short}</div>
-                          </th>
-                        ))}
-                        <th className="p-2 text-center w-10"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {CRITERIA.map((criteria, ci) => {
-                        const currentScore = getScore(criteria.label, stage.key);
-                        return (
-                          <tr key={criteria.label} className={`border-b border-border/50 ${ci % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
-                            <td className="p-3">
-                              <span className="font-medium text-foreground">{criteria.label}</span>
-                              <p className="text-xs text-muted-foreground mt-0.5">{criteria.desc}</p>
-                            </td>
+              <AccordionContent className="p-4 border-t border-border space-y-6">
+                {CRITERIA_TOPICS.map((topic) => (
+                  <div key={topic.number} className="glass-card rounded-xl border border-border/60 overflow-hidden">
+                    {/* Header do Tópico */}
+                    <div className="p-3 border-b border-border bg-muted/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-md bg-primary text-primary-foreground font-bold text-xs flex items-center justify-center shrink-0">
+                          {topic.number}
+                        </span>
+                        <h4 className="font-bold text-foreground text-sm">
+                          {topic.number}. {topic.title}
+                        </h4>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border shrink-0 ${topic.badgeStyle}`}>
+                        {topic.category}
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border bg-muted/20">
+                            <th className="text-left p-3 font-semibold text-foreground min-w-[280px]">Critério / Comportamento Observável</th>
                             {SCORE_COLUMNS.map(col => (
-                              <td key={col.value} className="p-2 text-center">
-                                <button
-                                  disabled={stage.key === 'autoavaliacao' || isClosed}
-                                  onClick={() => setScore(criteria.label, stage.key, col.value)}
-                                  className={`w-8 h-8 rounded-full border-2 transition-all mx-auto flex items-center justify-center ${
-                                    currentScore === col.value
-                                      ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-md'
-                                      : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
-                                  } ${stage.key === 'autoavaliacao' || isClosed ? 'opacity-70 cursor-not-allowed hover:bg-transparent hover:border-muted-foreground/30' : ''}`}
-                                  title={`${col.label} ${col.short}`}
-                                >
-                                  {currentScore === col.value && (
-                                    <span className="text-xs font-bold">{col.value}</span>
-                                  )}
-                                </button>
-                              </td>
+                              <th key={col.value} className="p-2 text-center font-medium text-foreground min-w-[90px]">
+                                <div className="text-xs leading-tight">{col.label}</div>
+                                <div className="text-[10px] text-muted-foreground">{col.short}</div>
+                              </th>
                             ))}
-                            <td className="p-2 text-center">
-                              {currentScore != null && stage.key !== 'autoavaliacao' && !isClosed && (
-                                <button
-                                  onClick={() => clearScore(criteria.label, stage.key)}
-                                  className="p-1 rounded hover:bg-muted transition-colors"
-                                  title="Limpar nota"
-                                >
-                                  <RotateCcw className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
-                                </button>
-                              )}
-                            </td>
+                            <th className="p-2 text-center w-10"></th>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+                        </thead>
+                        <tbody>
+                          {topic.items.map((criteria, ci) => {
+                            const currentScore = getScore(criteria.label, stage.key);
+                            return (
+                              <tr key={criteria.label} className={`border-b border-border/50 ${ci % 2 === 0 ? 'bg-background' : 'bg-muted/10'}`}>
+                                <td className="p-3">
+                                  <span className="font-medium text-foreground">{criteria.label}</span>
+                                  <p className="text-xs text-muted-foreground mt-0.5">{criteria.desc}</p>
+                                </td>
+                                {SCORE_COLUMNS.map(col => (
+                                  <td key={col.value} className="p-2 text-center">
+                                    <button
+                                      disabled={stage.key === 'autoavaliacao' || isClosed}
+                                      onClick={() => setScore(criteria.label, stage.key, col.value)}
+                                      className={`w-8 h-8 rounded-full border-2 transition-all mx-auto flex items-center justify-center ${
+                                        currentScore === col.value
+                                          ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-md'
+                                          : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
+                                      } ${stage.key === 'autoavaliacao' || isClosed ? 'opacity-70 cursor-not-allowed hover:bg-transparent hover:border-muted-foreground/30' : ''}`}
+                                      title={`${col.label} ${col.short}`}
+                                    >
+                                      {currentScore === col.value && (
+                                        <span className="text-xs font-bold">{col.value}</span>
+                                      )}
+                                    </button>
+                                  </td>
+                                ))}
+                                <td className="p-2 text-center">
+                                  {currentScore != null && stage.key !== 'autoavaliacao' && !isClosed && (
+                                    <button
+                                      onClick={() => clearScore(criteria.label, stage.key)}
+                                      className="p-1 rounded hover:bg-muted transition-colors"
+                                      title="Limpar nota"
+                                    >
+                                      <RotateCcw className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" />
+                                    </button>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
               </AccordionContent>
             </AccordionItem>
           ))}
