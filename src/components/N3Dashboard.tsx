@@ -39,10 +39,11 @@ export interface N3Data {
 }
 
 const DEFAULT_NAMES = [
-  { nome: 'CRISTALLY NETTO', letra: 'A Noite' },
-  { nome: 'GABRIELE MONTARROYOS', letra: 'A Dia' },
-  { nome: 'NAIARA SANTOS', letra: 'B Dia' },
-  { nome: 'THIAGO GOMES', letra: 'B Noite' }
+  { nome: 'EDUARDO LIMA BOY', cargo: 'Supervisor de Campo', letra: 'ADM' },
+  { nome: 'CRISTALLY DE JESUS NETTO', cargo: 'Técnico de Segurança', letra: 'A Noite' },
+  { nome: 'GABRIELE GALDINO MONTARROYOS', cargo: 'Técnico de Segurança', letra: 'A Dia' },
+  { nome: 'NAIARA LIMA DOS SANTOS', cargo: 'Técnico de Segurança', letra: 'B Dia' },
+  { nome: 'THIAGO DIAS GOMES', cargo: 'Técnico de Segurança', letra: 'B Noite' }
 ];
 
 export function encodeN3Row(row: N3Data) {
@@ -145,17 +146,16 @@ export function decodeN3Row(dbRow: Record<string, unknown>, cargoMap: Record<str
   };
 }
 
-interface FuncItem { id: string; nome: string; cargo?: string; letra?: string; }
+interface FuncItem { id: string; nome: string; cargo?: string; letra?: string; turno?: string; }
 interface SortableRowProps {
   row: N3Data;
   idx: number;
   handleChange: (index: number, field: keyof N3Data, value: string) => void;
   handleRemoveRow: (idx: number) => void;
-  inputStyle: string;
   funcionariosList?: FuncItem[];
 }
 
-function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, funcionariosList = [] }: SortableRowProps) {
+function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList = [] }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id || `row-${idx}` });
 
   const style = {
@@ -174,29 +174,35 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
   const pctNCDisplay = `${pctNCNumber}%`;
 
   const badgeClass = pctNCNumber === 0 
-    ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' 
+    ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700' 
     : pctNCNumber <= 25 
-    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' 
+    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40' 
     : pctNCNumber <= 50 
-    ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' 
-    : 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400';
+    ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40' 
+    : 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-200 dark:border-rose-800/40';
 
-  const numInputStyle = `${inputStyle} h-8 text-xs w-14 px-1.5 text-center font-semibold text-slate-800 dark:text-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
-  const ncInputStyle = `${inputStyle} h-8 text-xs w-14 px-1.5 text-center text-rose-600 dark:text-rose-400 font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
-  const sideNumStyle = `${inputStyle} h-8 text-xs w-16 px-1.5 text-center font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
+  // Base input style
+  const baseInput = "h-8 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm transition-all focus:outline-none focus:ring-2";
+  
+  const numInputStyle = `${baseInput} w-full text-center px-1 text-blue-700 dark:text-blue-300 focus:border-blue-500 focus:ring-blue-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
+  const ncInputStyle = `${baseInput} w-full text-center px-1 text-rose-600 dark:text-rose-400 focus:border-rose-500 focus:ring-rose-500/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
+  const sideNumStyle = `${baseInput} w-full text-center px-1 text-slate-800 dark:text-slate-200 focus:border-primary focus:ring-primary/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
 
   return (
-    <TableRow ref={setNodeRef} style={style} className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors border-b border-border/50 ${isDragging ? 'shadow-lg opacity-90' : ''}`}>
-      <TableCell className="p-1.5 w-8 text-center">
+    <TableRow ref={setNodeRef} style={style} className={`group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors border-b border-slate-200 dark:border-slate-800 ${isDragging ? 'shadow-lg opacity-90' : ''}`}>
+      {/* Drag handle */}
+      <TableCell className="p-1 w-9 text-center">
         <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing hover:bg-slate-200 dark:hover:bg-slate-800 p-1 rounded-md text-slate-400 hover:text-slate-600 transition-colors inline-flex touch-none">
           <GripVertical className="w-3.5 h-3.5" />
         </div>
       </TableCell>
-      <TableCell className="p-1.5 min-w-[200px]">
+
+      {/* Nome */}
+      <TableCell className="p-1 min-w-[210px]">
         <select
           value={row.nome_email}
           onChange={(e) => handleChange(idx, 'nome_email', e.target.value)}
-          className={`flex h-8 w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${inputStyle}`}
+          className="flex h-8 w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200 shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
         >
           <option value="">Selecione o colaborador...</option>
           {funcionariosList.map((f: FuncItem) => (
@@ -207,25 +213,29 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           )}
         </select>
       </TableCell>
-      <TableCell className="p-1.5 min-w-[140px]">
+
+      {/* Cargo */}
+      <TableCell className="p-1 min-w-[150px]">
         <Input 
           value={row.cargo || ''} 
           onChange={(e) => handleChange(idx, 'cargo', e.target.value)}
-          className={`${inputStyle} h-8 text-xs`}
+          className={`${baseInput} px-2.5 text-slate-700 dark:text-slate-300 font-normal focus:border-primary focus:ring-primary/20`}
           placeholder="Cargo"
         />
       </TableCell>
-      <TableCell className="p-1.5 min-w-[75px]">
+
+      {/* Letra */}
+      <TableCell className="p-1 min-w-[80px]">
         <Input 
           value={row.letra || ''} 
           onChange={(e) => handleChange(idx, 'letra', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-full text-center font-semibold text-slate-700 dark:text-slate-300`}
+          className={`${baseInput} text-center px-1 font-bold text-slate-800 dark:text-slate-200 uppercase focus:border-primary focus:ring-primary/20`}
           placeholder="Letra"
         />
       </TableCell>
 
       {/* ── VERIFICAÇÕES POR SEMANA (S1, S2, S3, S4, S5, TOTAL) ── */}
-      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-blue-50/25 dark:bg-blue-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s1 ?? ''} 
@@ -234,7 +244,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-blue-50/25 dark:bg-blue-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s2 ?? ''} 
@@ -243,7 +253,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-blue-50/25 dark:bg-blue-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s3 ?? ''} 
@@ -252,7 +262,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-blue-50/25 dark:bg-blue-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s4 ?? ''} 
@@ -261,7 +271,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-blue-50/25 dark:bg-blue-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s5 ?? ''} 
@@ -270,14 +280,15 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[62px] bg-blue-50/40 dark:bg-blue-950/20">
-        <span className="inline-flex items-center justify-center min-w-[42px] px-2 py-1 rounded-md text-xs font-black text-blue-700 dark:text-blue-300 font-mono">
+      {/* Total Verificações */}
+      <TableCell className="p-1 text-center min-w-[62px] bg-blue-100/50 dark:bg-blue-950/40 border-r border-blue-200 dark:border-blue-800">
+        <div className="flex items-center justify-center h-8 px-2 rounded-md bg-blue-100 dark:bg-blue-900/60 text-blue-900 dark:text-blue-100 font-mono font-black text-xs shadow-inner">
           {totalVerifDisplay}
-        </span>
+        </div>
       </TableCell>
 
       {/* ── TREINAMENTOS & ASSISTÊNCIA ── */}
-      <TableCell className="p-1.5 text-center min-w-[75px]">
+      <TableCell className="p-1 text-center min-w-[75px]">
         <Input 
           type="number" min="0" 
           value={row.total_treinamentos || ''} 
@@ -286,7 +297,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1.5 text-center min-w-[75px]">
+      <TableCell className="p-1 text-center min-w-[75px]">
         <Input 
           type="number" min="0" 
           value={row.total_assistencia || ''} 
@@ -297,7 +308,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
       </TableCell>
 
       {/* ── VERIFICAÇÕES NC POR SEMANA (S1, S2, S3, S4, S5, TOTAL) ── */}
-      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-rose-50/25 dark:bg-rose-950/15 border-l border-rose-100 dark:border-rose-900/40">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s1 ?? ''} 
@@ -306,7 +317,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-rose-50/25 dark:bg-rose-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s2 ?? ''} 
@@ -315,7 +326,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-rose-50/25 dark:bg-rose-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s3 ?? ''} 
@@ -324,7 +335,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-rose-50/25 dark:bg-rose-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s4 ?? ''} 
@@ -333,7 +344,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
+      <TableCell className="p-1 text-center min-w-[54px] bg-rose-50/25 dark:bg-rose-950/15">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s5 ?? ''} 
@@ -342,21 +353,22 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, func
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center min-w-[62px] bg-rose-50/40 dark:bg-rose-950/20">
-        <span className="inline-flex items-center justify-center min-w-[42px] px-2 py-1 rounded-md text-xs font-black text-rose-700 dark:text-rose-300 font-mono">
+      {/* Total NC */}
+      <TableCell className="p-1 text-center min-w-[62px] bg-rose-100/50 dark:bg-rose-950/40 border-r border-rose-200 dark:border-rose-800">
+        <div className="flex items-center justify-center h-8 px-2 rounded-md bg-rose-100 dark:bg-rose-900/60 text-rose-900 dark:text-rose-100 font-mono font-black text-xs shadow-inner">
           {totalNCDisplay}
-        </span>
+        </div>
       </TableCell>
 
       {/* ── % NC & AÇÕES ── */}
-      <TableCell className="p-1.5 text-center min-w-[70px]">
-        <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-black ${badgeClass}`}>
+      <TableCell className="p-1 text-center min-w-[75px]">
+        <div className={`inline-flex items-center justify-center w-full h-8 px-2 rounded-md text-xs font-black shadow-sm ${badgeClass}`}>
           {pctNCDisplay}
         </div>
       </TableCell>
-      <TableCell className="p-1 text-center w-8">
-        <Button variant="ghost" size="icon" onClick={() => handleRemoveRow(idx)} className="h-7 w-7 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-colors">
-          <Trash className="w-3.5 h-3.5" />
+      <TableCell className="p-1 text-center w-9">
+        <Button variant="ghost" size="icon" onClick={() => handleRemoveRow(idx)} className="h-8 w-8 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-md transition-colors">
+          <Trash className="w-4 h-4" />
         </Button>
       </TableCell>
     </TableRow>
@@ -430,14 +442,31 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
 
   const [funcionariosList, setFuncionariosList] = useState<FuncItem[]>([]);
 
+  const findBestFuncionario = (name: string, list: FuncItem[]) => {
+    if (!name) return null;
+    const cleanName = name.toUpperCase().trim();
+    // exact match
+    const exact = list.find(f => f.nome.toUpperCase().trim() === cleanName);
+    if (exact) return exact;
+    // partial / startsWith
+    const parts = cleanName.split(' ');
+    const first = parts[0];
+    const last = parts[parts.length - 1];
+    return list.find(f => {
+      const fName = f.nome.toUpperCase().trim();
+      return fName.includes(first) && fName.includes(last);
+    });
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: emps } = await supabase.from('funcionarios').select('id, nome, cargo, letra').order('nome');
-      setFuncionariosList(emps || []);
+      const { data: emps } = await supabase.from('funcionarios').select('id, nome, cargo, letra, turno').order('nome');
+      const list = emps || [];
+      setFuncionariosList(list);
       
-      const cargoMap = (emps || []).reduce((acc: Record<string, string>, e: FuncItem) => {
-        if (e.nome) acc[e.nome.toUpperCase().trim()] = e.cargo || '';
+      const cargoMap = list.reduce((acc: Record<string, string>, e: FuncItem) => {
+        if (e.nome) acc[e.nome.toUpperCase().trim()] = (e.cargo || '').trim();
         return acc;
       }, {});
       setCargoMapState(cargoMap);
@@ -449,7 +478,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
 
       if (error) {
         console.error('Erro ao buscar n3_lancamentos. Inicializando padrão.');
-        initMockData(cargoMap);
+        initMockData(cargoMap, list);
       } else {
         const decodedAll = (allData || []).map((d: Record<string, unknown>) => decodeN3Row(d, cargoMap));
         setHistoricalData(decodedAll);
@@ -510,7 +539,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
           });
           setData(sorted);
         } else {
-          initMockData(cargoMap);
+          initMockData(cargoMap, list);
         }
       }
     } catch {
@@ -519,29 +548,36 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     setLoading(false);
   };
 
-  const initMockData = (cargoMap: Record<string, string> = {}) => {
+  const initMockData = (cargoMap: Record<string, string> = {}, list: FuncItem[] = []) => {
     setData(
-      DEFAULT_NAMES.map(colab => ({
-        id: Math.random().toString(36).substring(2, 9),
-        nome_email: colab.nome,
-        cargo: cargoMap[colab.nome.toUpperCase().trim()] || '',
-        letra: colab.letra,
-        periodo,
-        total_verificacoes: 0,
-        total_treinamentos: 0,
-        total_assistencia: 0,
-        verificacoes_nc: 0,
-        verificacoes_s1: 0,
-        verificacoes_s2: 0,
-        verificacoes_s3: 0,
-        verificacoes_s4: 0,
-        verificacoes_s5: 0,
-        verificacoes_nc_s1: 0,
-        verificacoes_nc_s2: 0,
-        verificacoes_nc_s3: 0,
-        verificacoes_nc_s4: 0,
-        verificacoes_nc_s5: 0
-      }))
+      DEFAULT_NAMES.map(colab => {
+        const found = findBestFuncionario(colab.nome, list);
+        const nomeFinal = found ? found.nome : colab.nome;
+        const cargoFinal = found?.cargo || colab.cargo || cargoMap[nomeFinal.toUpperCase().trim()] || '';
+        const letraFinal = found?.letra ? (found.turno?.toLowerCase().includes('noite') ? `${found.letra} Noite` : found.turno?.toLowerCase().includes('dia') ? `${found.letra} Dia` : found.letra) : colab.letra;
+
+        return {
+          id: Math.random().toString(36).substring(2, 9),
+          nome_email: nomeFinal,
+          cargo: cargoFinal,
+          letra: letraFinal,
+          periodo,
+          total_verificacoes: 0,
+          total_treinamentos: 0,
+          total_assistencia: 0,
+          verificacoes_nc: 0,
+          verificacoes_s1: 0,
+          verificacoes_s2: 0,
+          verificacoes_s3: 0,
+          verificacoes_s4: 0,
+          verificacoes_s5: 0,
+          verificacoes_nc_s1: 0,
+          verificacoes_nc_s2: 0,
+          verificacoes_nc_s3: 0,
+          verificacoes_nc_s4: 0,
+          verificacoes_nc_s5: 0
+        };
+      })
     );
   };
 
@@ -553,8 +589,11 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       if (field === 'nome_email') {
         const func = funcionariosList.find((f: FuncItem) => f.nome === value);
         if (func) {
-          if (!newData[index].cargo && func.cargo) newData[index].cargo = func.cargo;
-          if (!newData[index].letra && func.letra) newData[index].letra = func.letra;
+          if (func.cargo) newData[index].cargo = func.cargo;
+          if (func.letra) {
+            const turnoStr = func.turno?.toLowerCase().includes('noite') ? 'Noite' : func.turno?.toLowerCase().includes('dia') ? 'Dia' : '';
+            newData[index].letra = turnoStr ? `${func.letra} ${turnoStr}` : func.letra;
+          }
         }
       }
     } else {
@@ -685,7 +724,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
   const handleDownloadTemplate = async () => {
     const templateData = [
       {
-        'NOME-EMAIL': 'CRISTALLY NETTO',
+        'NOME-EMAIL': 'CRISTALLY DE JESUS NETTO',
         'CARGO': 'Técnico de Segurança',
         'LETRA': 'A Noite',
         'VERIF S1': 5,
@@ -852,15 +891,15 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
 
       <div className="flex flex-col gap-6">
         <div className="space-y-4">
-          <Card>
-            <CardHeader className="flex flex-col xl:flex-row items-start xl:items-center justify-between pb-4 gap-4">
+          <Card className="border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm">
+            <CardHeader className="flex flex-col xl:flex-row items-start xl:items-center justify-between pb-4 gap-4 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-800">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div>
-                  <CardTitle className="text-xl">Lançamentos N3 - CRM</CardTitle>
-                  <CardDescription>Controle semanal (S1, S2, S3, S4, S5) por colaborador</CardDescription>
+                  <CardTitle className="text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Lançamentos N3 - CRM</CardTitle>
+                  <CardDescription className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">Controle semanal detalhado (S1 a S5) por colaborador</CardDescription>
                 </div>
                 <Select value={periodo} onValueChange={setPeriodo}>
-                  <SelectTrigger className="w-[160px] bg-background">
+                  <SelectTrigger className="w-[160px] h-9 text-xs font-semibold bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 shadow-sm">
                     <SelectValue placeholder="Selecione o Mês" />
                   </SelectTrigger>
                   <SelectContent>
@@ -869,7 +908,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                       'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
                     ].map((m, i) => {
                       const val = '2026-' + (i + 1).toString().padStart(2, '0');
-                      return <SelectItem key={val} value={val}>{m} 2026</SelectItem>;
+                      return <SelectItem key={val} value={val} className="text-xs font-medium">{m} 2026</SelectItem>;
                     })}
                   </SelectContent>
                 </Select>
@@ -879,102 +918,111 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2 text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm">
+                    <Button variant="outline" size="sm" className="gap-2 text-xs h-9 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 rounded-lg shadow-sm font-semibold">
                       <MoreHorizontal className="w-4 h-4" /> Opções
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={handleDownloadTemplate} className="gap-2 text-xs cursor-pointer">
+                  <DropdownMenuContent align="end" className="w-48 shadow-xl">
+                    <DropdownMenuItem onClick={handleDownloadTemplate} className="gap-2 text-xs font-medium cursor-pointer">
                       <Download className="w-4 h-4" /> Baixar Modelo Excel
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-2 text-xs cursor-pointer">
+                    <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-2 text-xs font-medium cursor-pointer">
                       <Upload className="w-4 h-4" /> Importar Planilha
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSortByNC} className="gap-2 text-xs cursor-pointer">
+                    <DropdownMenuItem onClick={handleSortByNC} className="gap-2 text-xs font-medium cursor-pointer">
                       <BarChart3 className="w-4 h-4" /> Ordenar por Maior NC
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleClearMonth} disabled={deleting} className="gap-2 text-xs text-rose-600 focus:bg-rose-50 focus:text-rose-700 cursor-pointer">
+                    <DropdownMenuItem onClick={handleClearMonth} disabled={deleting} className="gap-2 text-xs font-bold text-rose-600 focus:bg-rose-50 focus:text-rose-700 cursor-pointer">
                       <Trash className="w-4 h-4" /> {deleting ? 'Limpando...' : 'Limpar Mês'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button onClick={handleAddRow} size="sm" variant="outline" className="gap-1 border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg shadow-sm text-xs h-8">
-                  <Plus className="w-3.5 h-3.5" /> Adicionar
+                <Button onClick={handleAddRow} size="sm" variant="outline" className="gap-1.5 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 rounded-lg shadow-sm text-xs h-9 font-semibold">
+                  <Plus className="w-4 h-4" /> Adicionar
                 </Button>
                 
-                <Button onClick={handleSave} disabled={saving || loading} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-lg transition-all hover:scale-[1.02] text-xs h-8 px-4 font-bold">
-                  <Save className="w-3.5 h-3.5" /> {saving ? 'Postando...' : 'Postar'}
+                <Button onClick={handleSave} disabled={saving || loading} size="sm" className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md shadow-emerald-500/20 border-0 rounded-lg transition-all hover:scale-[1.02] text-xs h-9 px-5 font-bold">
+                  <Save className="w-4 h-4" /> {saving ? 'Postando...' : 'Postar'}
                 </Button>
               </div>
             </CardHeader>
 
-            <CardContent>
-              <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                  <Table className="text-xs">
-                    <TableHeader className="bg-slate-100/90 dark:bg-slate-900/90">
-                      <TableRow className="border-b border-slate-200 dark:border-slate-800">
-                        <TableHead rowSpan={2} className="w-8 p-1 text-center"></TableHead>
-                        <TableHead rowSpan={2} className="min-w-[200px] p-2 font-bold text-slate-700 dark:text-slate-300">NOME</TableHead>
-                        <TableHead rowSpan={2} className="min-w-[140px] p-2 font-bold text-slate-700 dark:text-slate-300">CARGO</TableHead>
-                        <TableHead rowSpan={2} className="min-w-[75px] p-2 font-bold text-slate-700 dark:text-slate-300 text-center">LETRA</TableHead>
+                  <Table className="text-xs w-full">
+                    <TableHeader className="bg-slate-100 dark:bg-slate-800/90 select-none">
+                      {/* Top Header Group */}
+                      <TableRow className="border-b border-slate-200 dark:border-slate-700/80">
+                        <TableHead rowSpan={2} className="w-9 p-1 text-center bg-slate-100 dark:bg-slate-800/90"></TableHead>
+                        <TableHead rowSpan={2} className="min-w-[210px] p-2.5 font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] bg-slate-100 dark:bg-slate-800/90">
+                          NOME
+                        </TableHead>
+                        <TableHead rowSpan={2} className="min-w-[150px] p-2.5 font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-[11px] bg-slate-100 dark:bg-slate-800/90">
+                          CARGO
+                        </TableHead>
+                        <TableHead rowSpan={2} className="min-w-[80px] p-2.5 font-bold text-slate-700 dark:text-slate-200 text-center uppercase tracking-wider text-[11px] bg-slate-100 dark:bg-slate-800/90">
+                          LETRA
+                        </TableHead>
                         
                         {/* Grupo: VERIFICAÇÕES (S1 a S5 + TOTAL = colSpan 6) */}
-                        <TableHead colSpan={6} className="p-1.5 text-center font-black text-blue-700 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-950/40 border-x border-blue-200 dark:border-blue-800/40 uppercase tracking-wider text-[11px]">
+                        <TableHead colSpan={6} className="p-2 text-center font-black text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/60 border-x border-blue-200 dark:border-blue-800/60 uppercase tracking-wider text-[11px]">
                           VERIFICAÇÕES POR SEMANA
                         </TableHead>
 
-                        <TableHead rowSpan={2} className="min-w-[75px] p-2 font-bold text-slate-700 dark:text-slate-300 text-center">T. TREINAMENTOS</TableHead>
-                        <TableHead rowSpan={2} className="min-w-[75px] p-2 font-bold text-slate-700 dark:text-slate-300 text-center">T. ASSISTÊNCIA</TableHead>
+                        <TableHead rowSpan={2} className="min-w-[75px] p-2 font-bold text-slate-700 dark:text-slate-200 text-center uppercase tracking-wider text-[10px] leading-tight bg-slate-100 dark:bg-slate-800/90">
+                          T.<br/>TREINAMENTOS
+                        </TableHead>
+                        <TableHead rowSpan={2} className="min-w-[75px] p-2 font-bold text-slate-700 dark:text-slate-200 text-center uppercase tracking-wider text-[10px] leading-tight bg-slate-100 dark:bg-slate-800/90">
+                          T.<br/>ASSISTÊNCIA
+                        </TableHead>
 
                         {/* Grupo: VERIFICAÇÕES NC (S1 a S5 + TOTAL = colSpan 6) */}
-                        <TableHead colSpan={6} className="p-1.5 text-center font-black text-rose-700 dark:text-rose-400 bg-rose-100/60 dark:bg-rose-950/40 border-x border-rose-200 dark:border-rose-800/40 uppercase tracking-wider text-[11px]">
+                        <TableHead colSpan={6} className="p-2 text-center font-black text-rose-700 dark:text-rose-300 bg-rose-100/70 dark:bg-rose-950/60 border-x border-rose-200 dark:border-rose-800/60 uppercase tracking-wider text-[11px]">
                           VERIFICAÇÕES NC POR SEMANA
                         </TableHead>
 
-                        <TableHead rowSpan={2} className="min-w-[70px] p-2 font-bold text-slate-700 dark:text-slate-300 text-center">% NC</TableHead>
-                        <TableHead rowSpan={2} className="w-8 p-1 text-center"></TableHead>
+                        <TableHead rowSpan={2} className="min-w-[75px] p-2.5 font-bold text-slate-700 dark:text-slate-200 text-center uppercase tracking-wider text-[11px] bg-slate-100 dark:bg-slate-800/90">
+                          % NC
+                        </TableHead>
+                        <TableHead rowSpan={2} className="w-9 p-1 text-center bg-slate-100 dark:bg-slate-800/90"></TableHead>
                       </TableRow>
 
-                      <TableRow className="border-b border-slate-200 dark:border-slate-800">
+                      {/* Sub Header (S1..S5 + TOTAL) */}
+                      <TableRow className="border-b border-slate-200 dark:border-slate-700">
                         {/* Sub-colunas Verificações */}
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S1</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S2</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S3</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S4</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S5</TableHead>
-                        <TableHead className="p-1 text-center font-black text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/40 border-r border-blue-200 dark:border-blue-800 min-w-[62px]">TOTAL</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/30 min-w-[54px]">S1</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/30 min-w-[54px]">S2</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/30 min-w-[54px]">S3</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/30 min-w-[54px]">S4</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/30 min-w-[54px]">S5</TableHead>
+                        <TableHead className="p-1 text-center font-black text-blue-900 dark:text-blue-100 bg-blue-100 dark:bg-blue-900/60 border-r border-blue-200 dark:border-blue-800 min-w-[62px]">TOTAL</TableHead>
 
                         {/* Sub-colunas Verificações NC */}
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S1</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S2</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S3</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S4</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S5</TableHead>
-                        <TableHead className="p-1 text-center font-black text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-900/40 border-r border-rose-200 dark:border-rose-800 min-w-[62px]">TOTAL</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/30 border-l border-rose-100 dark:border-rose-900/40 min-w-[54px]">S1</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/30 min-w-[54px]">S2</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/30 min-w-[54px]">S3</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/30 min-w-[54px]">S4</TableHead>
+                        <TableHead className="p-1 text-center font-extrabold text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/30 min-w-[54px]">S5</TableHead>
+                        <TableHead className="p-1 text-center font-black text-rose-900 dark:text-rose-100 bg-rose-100 dark:bg-rose-900/60 border-r border-rose-200 dark:border-rose-800 min-w-[62px]">TOTAL</TableHead>
                       </TableRow>
                     </TableHeader>
 
                     <TableBody>
                       <SortableContext items={data.map(d => d.id || '')} strategy={verticalListSortingStrategy}>
-                        {data.map((row, idx) => {
-                          const inputStyle = "font-medium bg-muted/30 border-transparent hover:border-border focus:bg-background focus:border-primary rounded-lg transition-all";
-                          
-                          return (
-                            <SortableRow 
-                              key={row.id || `row-${idx}`} 
-                              row={row} 
-                              idx={idx} 
-                              handleChange={handleChange} 
-                              handleRemoveRow={handleRemoveRow} 
-                              inputStyle={inputStyle} 
-                              funcionariosList={funcionariosList}
-                            />
-                          );
-                        })}
+                        {data.map((row, idx) => (
+                          <SortableRow 
+                            key={row.id || `row-${idx}`} 
+                            row={row} 
+                            idx={idx} 
+                            handleChange={handleChange} 
+                            handleRemoveRow={handleRemoveRow} 
+                            funcionariosList={funcionariosList}
+                          />
+                        ))}
                       </SortableContext>
 
                       {/* ── ROW TOTAL GERAL NO RODAPÉ ── */}
@@ -1025,44 +1073,48 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                         const totalsBadgeClass = numPctGlobal === 0
                           ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
                           : numPctGlobal <= 25 
-                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300' 
+                          ? 'bg-emerald-600 text-white shadow-sm' 
                           : numPctGlobal <= 50 
-                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300' 
-                          : 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300';
+                          ? 'bg-amber-500 text-white shadow-sm' 
+                          : 'bg-rose-600 text-white shadow-sm';
                         
                         return (
-                          <TableRow className="bg-slate-100/95 dark:bg-slate-800/90 font-bold hover:bg-slate-100 border-t-2 border-slate-300 dark:border-slate-700">
+                          <TableRow className="bg-slate-100/90 dark:bg-slate-800/90 font-bold hover:bg-slate-100 border-t-2 border-slate-300 dark:border-slate-700">
                             <TableCell colSpan={4} className="text-right p-3 font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider text-xs">
                               TOTAL GERAL:
                             </TableCell>
 
                             {/* Totais Verificações por semana */}
-                            <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs1}</TableCell>
-                            <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs2}</TableCell>
-                            <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs3}</TableCell>
-                            <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs4}</TableCell>
-                            <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs5}</TableCell>
-                            <TableCell className="text-center p-2 font-mono bg-blue-200/60 dark:bg-blue-900/60 text-blue-950 dark:text-blue-100 font-black">
-                              {totals.totalVerif}
+                            <TableCell className="text-center p-1.5 font-mono text-blue-700 dark:text-blue-300 font-extrabold text-xs">{totals.vs1}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono text-blue-700 dark:text-blue-300 font-extrabold text-xs">{totals.vs2}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono text-blue-700 dark:text-blue-300 font-extrabold text-xs">{totals.vs3}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono text-blue-700 dark:text-blue-300 font-extrabold text-xs">{totals.vs4}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono text-blue-700 dark:text-blue-300 font-extrabold text-xs">{totals.vs5}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono bg-blue-100 dark:bg-blue-900/60 border-r border-blue-200 dark:border-blue-800">
+                              <span className="inline-flex items-center justify-center min-w-[36px] px-2 py-1 rounded bg-blue-600 text-white font-mono font-black text-xs shadow-sm">
+                                {totals.totalVerif}
+                              </span>
                             </TableCell>
 
                             {/* Totais Treinamentos & Assistência */}
-                            <TableCell className="text-center p-2 font-mono font-bold text-slate-700 dark:text-slate-300">{totals.treinamentos}</TableCell>
-                            <TableCell className="text-center p-2 font-mono font-bold text-slate-700 dark:text-slate-300">{totals.assistencia}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">{totals.treinamentos}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">{totals.assistencia}</TableCell>
 
                             {/* Totais NC por semana */}
-                            <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs1}</TableCell>
-                            <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs2}</TableCell>
-                            <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs3}</TableCell>
-                            <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs4}</TableCell>
-                            <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs5}</TableCell>
-                            <TableCell className="text-center p-2 font-mono bg-rose-200/60 dark:bg-rose-900/60 text-rose-950 dark:text-rose-100 font-black">
-                              {totals.totalNC}
+                            <TableCell className="text-center p-1.5 font-mono text-rose-700 dark:text-rose-300 font-extrabold text-xs border-l border-rose-100 dark:border-rose-900/40">{totals.ncs1}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono text-rose-700 dark:text-rose-300 font-extrabold text-xs">{totals.ncs2}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono text-rose-700 dark:text-rose-300 font-extrabold text-xs">{totals.ncs3}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono text-rose-700 dark:text-rose-300 font-extrabold text-xs">{totals.ncs4}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono text-rose-700 dark:text-rose-300 font-extrabold text-xs">{totals.ncs5}</TableCell>
+                            <TableCell className="text-center p-1.5 font-mono bg-rose-100 dark:bg-rose-900/60 border-r border-rose-200 dark:border-rose-800">
+                              <span className="inline-flex items-center justify-center min-w-[36px] px-2 py-1 rounded bg-rose-600 text-white font-mono font-black text-xs shadow-sm">
+                                {totals.totalNC}
+                              </span>
                             </TableCell>
 
                             {/* Total % NC */}
-                            <TableCell className="text-center p-2">
-                              <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-black ${totalsBadgeClass}`}>
+                            <TableCell className="text-center p-1.5">
+                              <div className={`inline-flex items-center justify-center w-full py-1 px-2 rounded-md text-xs font-black ${totalsBadgeClass}`}>
                                 {pctNcGlobal}%
                               </div>
                             </TableCell>
