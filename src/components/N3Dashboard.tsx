@@ -6,16 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash, Copy, GripVertical, MoreHorizontal } from 'lucide-react';
+import { Upload, Download, Plus, Save, Activity, Target, ShieldAlert, BarChart3, Trash, GripVertical, MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { readExcelRows, writeExcelFile } from '@/lib/excel';
 import ExpandableChart from './ExpandableChart';
-import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, Legend, LabelList } from 'recharts';
+import { BarChart, Bar, LineChart, Line, AreaChart, ReferenceLine, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 
-interface N3Data {
+export interface N3Data {
   id?: string;
   nome_email: string;
   cargo?: string;
@@ -29,10 +29,12 @@ interface N3Data {
   verificacoes_s2?: number;
   verificacoes_s3?: number;
   verificacoes_s4?: number;
+  verificacoes_s5?: number;
   verificacoes_nc_s1?: number;
   verificacoes_nc_s2?: number;
   verificacoes_nc_s3?: number;
   verificacoes_nc_s4?: number;
+  verificacoes_nc_s5?: number;
   perguntas_nc?: number;
 }
 
@@ -43,19 +45,117 @@ const DEFAULT_NAMES = [
   { nome: 'THIAGO GOMES', letra: 'B Noite' }
 ];
 
+export function encodeN3Row(row: N3Data) {
+  const s1 = Number(row.verificacoes_s1) || 0;
+  const s2 = Number(row.verificacoes_s2) || 0;
+  const s3 = Number(row.verificacoes_s3) || 0;
+  const s4 = Number(row.verificacoes_s4) || 0;
+  const s5 = Number(row.verificacoes_s5) || 0;
+
+  const ncs1 = Number(row.verificacoes_nc_s1) || 0;
+  const ncs2 = Number(row.verificacoes_nc_s2) || 0;
+  const ncs3 = Number(row.verificacoes_nc_s3) || 0;
+  const ncs4 = Number(row.verificacoes_nc_s4) || 0;
+  const ncs5 = Number(row.verificacoes_nc_s5) || 0;
+
+  const totVerif = (s1 + s2 + s3 + s4 + s5) || Number(row.total_verificacoes) || 0;
+  const totNC = (ncs1 + ncs2 + ncs3 + ncs4 + ncs5) || Number(row.verificacoes_nc) || 0;
+
+  const rawLetra = row.letra || '';
+  const cleanLetra = rawLetra.includes('::') ? rawLetra.split('::')[0].trim() : rawLetra.trim();
+  
+  const metaObj = {
+    s: [s1, s2, s3, s4, s5],
+    ncs: [ncs1, ncs2, ncs3, ncs4, ncs5],
+    cargo: row.cargo || ''
+  };
+
+  const encodedLetra = `${cleanLetra}::${JSON.stringify(metaObj)}`;
+
+  return {
+    nome_email: row.nome_email || 'SEM NOME',
+    letra: encodedLetra,
+    periodo: row.periodo,
+    total_verificacoes: totVerif,
+    total_treinamentos: Number(row.total_treinamentos) || 0,
+    total_assistencia: Number(row.total_assistencia) || 0,
+    verificacoes_nc: totNC,
+    perguntas_nc: Number(row.perguntas_nc) || 0
+  };
+}
+
+export function decodeN3Row(dbRow: Record<string, unknown>, cargoMap: Record<string, string> = {}): N3Data {
+  const rawLetra = String(dbRow.letra || '');
+  let cleanLetra = rawLetra;
+  let s1 = 0, s2 = 0, s3 = 0, s4 = 0, s5 = 0;
+  let ncs1 = 0, ncs2 = 0, ncs3 = 0, ncs4 = 0, ncs5 = 0;
+  let decodedCargo = '';
+
+  if (rawLetra.includes('::')) {
+    const parts = rawLetra.split('::');
+    cleanLetra = parts[0].trim();
+    try {
+      const meta = JSON.parse(parts.slice(1).join('::'));
+      if (Array.isArray(meta.s)) {
+        s1 = Number(meta.s[0]) || 0;
+        s2 = Number(meta.s[1]) || 0;
+        s3 = Number(meta.s[2]) || 0;
+        s4 = Number(meta.s[3]) || 0;
+        s5 = Number(meta.s[4]) || 0;
+      }
+      if (Array.isArray(meta.ncs)) {
+        ncs1 = Number(meta.ncs[0]) || 0;
+        ncs2 = Number(meta.ncs[1]) || 0;
+        ncs3 = Number(meta.ncs[2]) || 0;
+        ncs4 = Number(meta.ncs[3]) || 0;
+        ncs5 = Number(meta.ncs[4]) || 0;
+      }
+      if (meta.cargo) decodedCargo = meta.cargo;
+    } catch {
+      // ignore
+    }
+  }
+
+  const nome = String(dbRow.nome_email || '');
+  const finalCargo = String(dbRow.cargo || decodedCargo || cargoMap[nome.toUpperCase().trim()] || '');
+  const totVerif = (s1 + s2 + s3 + s4 + s5) || Number(dbRow.total_verificacoes) || 0;
+  const totNC = (ncs1 + ncs2 + ncs3 + ncs4 + ncs5) || Number(dbRow.verificacoes_nc) || 0;
+
+  return {
+    id: String(dbRow.id || Math.random().toString(36).substring(2, 9)),
+    nome_email: nome,
+    cargo: finalCargo,
+    letra: cleanLetra,
+    periodo: String(dbRow.periodo || ''),
+    total_verificacoes: totVerif,
+    total_treinamentos: Number(dbRow.total_treinamentos) || 0,
+    total_assistencia: Number(dbRow.total_assistencia) || 0,
+    verificacoes_nc: totNC,
+    verificacoes_s1: s1,
+    verificacoes_s2: s2,
+    verificacoes_s3: s3,
+    verificacoes_s4: s4,
+    verificacoes_s5: s5,
+    verificacoes_nc_s1: ncs1,
+    verificacoes_nc_s2: ncs2,
+    verificacoes_nc_s3: ncs3,
+    verificacoes_nc_s4: ncs4,
+    verificacoes_nc_s5: ncs5,
+    perguntas_nc: Number(dbRow.perguntas_nc) || 0,
+  };
+}
+
 interface FuncItem { id: string; nome: string; cargo?: string; letra?: string; }
 interface SortableRowProps {
   row: N3Data;
   idx: number;
   handleChange: (index: number, field: keyof N3Data, value: string) => void;
   handleRemoveRow: (idx: number) => void;
-  badgeClass: string;
-  pctNC: number;
   inputStyle: string;
   funcionariosList?: FuncItem[];
 }
 
-function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctNC, inputStyle, funcionariosList = [] }: SortableRowProps) {
+function SortableRow({ row, idx, handleChange, handleRemoveRow, inputStyle, funcionariosList = [] }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: row.id || `row-${idx}` });
 
   const style = {
@@ -64,15 +164,26 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
     ...(isDragging ? { position: 'relative' as const, zIndex: 50, backgroundColor: 'var(--background)' } : {}),
   };
 
-  const calculatedTotalVerif = (Number(row.verificacoes_s1) || 0) + (Number(row.verificacoes_s2) || 0) + (Number(row.verificacoes_s3) || 0) + (Number(row.verificacoes_s4) || 0);
-  const totalVerifDisplay = (row.verificacoes_s1 !== undefined || row.verificacoes_s2 !== undefined || row.verificacoes_s3 !== undefined || row.verificacoes_s4 !== undefined)
-    ? calculatedTotalVerif
-    : (Number(row.total_verificacoes) || 0);
+  const calculatedTotalVerif = (Number(row.verificacoes_s1) || 0) + (Number(row.verificacoes_s2) || 0) + (Number(row.verificacoes_s3) || 0) + (Number(row.verificacoes_s4) || 0) + (Number(row.verificacoes_s5) || 0);
+  const totalVerifDisplay = calculatedTotalVerif || (Number(row.total_verificacoes) || 0);
 
-  const calculatedTotalNC = (Number(row.verificacoes_nc_s1) || 0) + (Number(row.verificacoes_nc_s2) || 0) + (Number(row.verificacoes_nc_s3) || 0) + (Number(row.verificacoes_nc_s4) || 0);
-  const totalNCDisplay = (row.verificacoes_nc_s1 !== undefined || row.verificacoes_nc_s2 !== undefined || row.verificacoes_nc_s3 !== undefined || row.verificacoes_nc_s4 !== undefined)
-    ? calculatedTotalNC
-    : (Number(row.verificacoes_nc) || 0);
+  const calculatedTotalNC = (Number(row.verificacoes_nc_s1) || 0) + (Number(row.verificacoes_nc_s2) || 0) + (Number(row.verificacoes_nc_s3) || 0) + (Number(row.verificacoes_nc_s4) || 0) + (Number(row.verificacoes_nc_s5) || 0);
+  const totalNCDisplay = calculatedTotalNC || (Number(row.verificacoes_nc) || 0);
+
+  const pctNCNumber = totalVerifDisplay > 0 ? Number(((totalNCDisplay / totalVerifDisplay) * 100).toFixed(1)) : 0;
+  const pctNCDisplay = `${pctNCNumber}%`;
+
+  const badgeClass = pctNCNumber === 0 
+    ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' 
+    : pctNCNumber <= 25 
+    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' 
+    : pctNCNumber <= 50 
+    ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' 
+    : 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400';
+
+  const numInputStyle = `${inputStyle} h-8 text-xs w-14 px-1.5 text-center font-semibold text-slate-800 dark:text-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
+  const ncInputStyle = `${inputStyle} h-8 text-xs w-14 px-1.5 text-center text-rose-600 dark:text-rose-400 font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
+  const sideNumStyle = `${inputStyle} h-8 text-xs w-16 px-1.5 text-center font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
 
   return (
     <TableRow ref={setNodeRef} style={style} className={`group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors border-b border-border/50 ${isDragging ? 'shadow-lg opacity-90' : ''}`}>
@@ -81,7 +192,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
           <GripVertical className="w-3.5 h-3.5" />
         </div>
       </TableCell>
-      <TableCell className="p-1.5 min-w-[170px]">
+      <TableCell className="p-1.5 min-w-[200px]">
         <select
           value={row.nome_email}
           onChange={(e) => handleChange(idx, 'nome_email', e.target.value)}
@@ -96,7 +207,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
           )}
         </select>
       </TableCell>
-      <TableCell className="p-1.5">
+      <TableCell className="p-1.5 min-w-[140px]">
         <Input 
           value={row.cargo || ''} 
           onChange={(e) => handleChange(idx, 'cargo', e.target.value)}
@@ -104,126 +215,146 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, badgeClass, pctN
           placeholder="Cargo"
         />
       </TableCell>
-      <TableCell className="p-1.5">
+      <TableCell className="p-1.5 min-w-[75px]">
         <Input 
           value={row.letra || ''} 
           onChange={(e) => handleChange(idx, 'letra', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-20 text-center font-semibold text-slate-700 dark:text-slate-300`}
+          className={`${inputStyle} h-8 text-xs w-full text-center font-semibold text-slate-700 dark:text-slate-300`}
           placeholder="Letra"
         />
       </TableCell>
 
-      {/* ── VERIFICAÇÕES POR SEMANA (S1, S2, S3, S4, TOTAL) ── */}
-      <TableCell className="p-1 bg-blue-50/20 dark:bg-blue-950/10">
+      {/* ── VERIFICAÇÕES POR SEMANA (S1, S2, S3, S4, S5, TOTAL) ── */}
+      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s1 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s1', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-12 text-center`}
+          className={numInputStyle}
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 bg-blue-50/20 dark:bg-blue-950/10">
+      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s2 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s2', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-12 text-center`}
+          className={numInputStyle}
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 bg-blue-50/20 dark:bg-blue-950/10">
+      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s3 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s3', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-12 text-center`}
+          className={numInputStyle}
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 bg-blue-50/20 dark:bg-blue-950/10">
+      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_s4 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s4', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-12 text-center`}
+          className={numInputStyle}
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center bg-blue-50/40 dark:bg-blue-950/20">
-        <span className="inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-black text-blue-700 dark:text-blue-300 font-mono">
+      <TableCell className="p-1 text-center min-w-[58px] bg-blue-50/20 dark:bg-blue-950/10">
+        <Input 
+          type="number" min="0" 
+          value={row.verificacoes_s5 ?? ''} 
+          onChange={(e) => handleChange(idx, 'verificacoes_s5', e.target.value)}
+          className={numInputStyle}
+          placeholder="0"
+        />
+      </TableCell>
+      <TableCell className="p-1 text-center min-w-[62px] bg-blue-50/40 dark:bg-blue-950/20">
+        <span className="inline-flex items-center justify-center min-w-[42px] px-2 py-1 rounded-md text-xs font-black text-blue-700 dark:text-blue-300 font-mono">
           {totalVerifDisplay}
         </span>
       </TableCell>
 
       {/* ── TREINAMENTOS & ASSISTÊNCIA ── */}
-      <TableCell className="p-1.5">
+      <TableCell className="p-1.5 text-center min-w-[75px]">
         <Input 
           type="number" min="0" 
           value={row.total_treinamentos || ''} 
           onChange={(e) => handleChange(idx, 'total_treinamentos', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-16 text-center`}
+          className={sideNumStyle}
+          placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1.5">
+      <TableCell className="p-1.5 text-center min-w-[75px]">
         <Input 
           type="number" min="0" 
           value={row.total_assistencia || ''} 
           onChange={(e) => handleChange(idx, 'total_assistencia', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-16 text-center`}
+          className={sideNumStyle}
+          placeholder="0"
         />
       </TableCell>
 
-      {/* ── VERIFICAÇÕES NC POR SEMANA (S1, S2, S3, S4, TOTAL) ── */}
-      <TableCell className="p-1 bg-rose-50/20 dark:bg-rose-950/10">
+      {/* ── VERIFICAÇÕES NC POR SEMANA (S1, S2, S3, S4, S5, TOTAL) ── */}
+      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s1 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s1', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-12 text-center text-rose-600 dark:text-rose-400 font-semibold`}
+          className={ncInputStyle}
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 bg-rose-50/20 dark:bg-rose-950/10">
+      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s2 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s2', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-12 text-center text-rose-600 dark:text-rose-400 font-semibold`}
+          className={ncInputStyle}
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 bg-rose-50/20 dark:bg-rose-950/10">
+      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s3 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s3', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-12 text-center text-rose-600 dark:text-rose-400 font-semibold`}
+          className={ncInputStyle}
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 bg-rose-50/20 dark:bg-rose-950/10">
+      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
         <Input 
           type="number" min="0" 
           value={row.verificacoes_nc_s4 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s4', e.target.value)}
-          className={`${inputStyle} h-8 text-xs w-12 text-center text-rose-600 dark:text-rose-400 font-semibold`}
+          className={ncInputStyle}
           placeholder="0"
         />
       </TableCell>
-      <TableCell className="p-1 text-center bg-rose-50/40 dark:bg-rose-950/20">
-        <span className={`inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold ${badgeClass}`}>
+      <TableCell className="p-1 text-center min-w-[58px] bg-rose-50/20 dark:bg-rose-950/10">
+        <Input 
+          type="number" min="0" 
+          value={row.verificacoes_nc_s5 ?? ''} 
+          onChange={(e) => handleChange(idx, 'verificacoes_nc_s5', e.target.value)}
+          className={ncInputStyle}
+          placeholder="0"
+        />
+      </TableCell>
+      <TableCell className="p-1 text-center min-w-[62px] bg-rose-50/40 dark:bg-rose-950/20">
+        <span className="inline-flex items-center justify-center min-w-[42px] px-2 py-1 rounded-md text-xs font-black text-rose-700 dark:text-rose-300 font-mono">
           {totalNCDisplay}
         </span>
       </TableCell>
 
       {/* ── % NC & AÇÕES ── */}
-      <TableCell className="p-1.5 text-center">
-        <div className={`inline-flex items-center justify-center px-2 py-0.5 rounded-full text-xs font-extrabold ${badgeClass}`}>
-          {pctNC}%
+      <TableCell className="p-1.5 text-center min-w-[70px]">
+        <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-black ${badgeClass}`}>
+          {pctNCDisplay}
         </div>
       </TableCell>
-      <TableCell className="p-1 text-center">
+      <TableCell className="p-1 text-center w-8">
         <Button variant="ghost" size="icon" onClick={() => handleRemoveRow(idx)} className="h-7 w-7 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full transition-colors">
           <Trash className="w-3.5 h-3.5" />
         </Button>
@@ -237,14 +368,6 @@ interface N3DashboardProps {
 }
 
 export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
-  const getMeta = (cargo?: string) => {
-    if (!cargo) return 40;
-    const c = cargo.toLowerCase();
-    if (c.includes('técnico de segurança')) return 45;
-    if (c.includes('supervisor de campo')) return 20;
-    if (c.includes('gerente')) return 10;
-    return 40;
-  };
   const [data, setData] = useState<N3Data[]>([]);
   const [historicalData, setHistoricalData] = useState<N3Data[]>([]);
   const [cargoMapState, setCargoMapState] = useState<Record<string, string>>({});
@@ -272,8 +395,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
 
   const handleSortByNC = () => {
     const sorted = [...data].sort((a: N3Data, b: N3Data) => {
-      const ncA = (Number(a.verificacoes_nc_s1) || 0) + (Number(a.verificacoes_nc_s2) || 0) + (Number(a.verificacoes_nc_s3) || 0) + (Number(a.verificacoes_nc_s4) || 0) || Number(a.verificacoes_nc || 0);
-      const ncB = (Number(b.verificacoes_nc_s1) || 0) + (Number(b.verificacoes_nc_s2) || 0) + (Number(b.verificacoes_nc_s3) || 0) + (Number(b.verificacoes_nc_s4) || 0) || Number(b.verificacoes_nc || 0);
+      const ncA = (Number(a.verificacoes_nc_s1) || 0) + (Number(a.verificacoes_nc_s2) || 0) + (Number(a.verificacoes_nc_s3) || 0) + (Number(a.verificacoes_nc_s4) || 0) + (Number(a.verificacoes_nc_s5) || 0) || Number(a.verificacoes_nc || 0);
+      const ncB = (Number(b.verificacoes_nc_s1) || 0) + (Number(b.verificacoes_nc_s2) || 0) + (Number(b.verificacoes_nc_s3) || 0) + (Number(b.verificacoes_nc_s4) || 0) + (Number(b.verificacoes_nc_s5) || 0) || Number(b.verificacoes_nc || 0);
       const diff = ncB - ncA;
       return diff !== 0 ? diff : (a.nome_email || '').localeCompare(b.nome_email || '');
     });
@@ -325,19 +448,15 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         .order('periodo', { ascending: true });
 
       if (error) {
-        console.error('Erro ou tabela n3 não existe. Inicializando dados locais.');
+        console.error('Erro ao buscar n3_lancamentos. Inicializando padrão.');
         initMockData(cargoMap);
       } else {
-        const allDataWithCargo = (allData || []).map((d: N3Data & { cargo?: string; nome_email: string }) => ({
-          ...d,
-          cargo: d.cargo || cargoMap[(d.nome_email || '').toUpperCase().trim()] || ''
-        }));
-
-        setHistoricalData(allDataWithCargo);
+        const decodedAll = (allData || []).map((d: Record<string, unknown>) => decodeN3Row(d, cargoMap));
+        setHistoricalData(decodedAll);
         
-        let currentPeriodData = [];
+        let currentPeriodData: N3Data[] = [];
         if (periodo === 'all') {
-          const aggregated = allDataWithCargo.reduce((acc: Record<string, N3Data>, curr: N3Data) => {
+          const aggregated = decodedAll.reduce((acc: Record<string, N3Data>, curr: N3Data) => {
             const key = curr.nome_email;
             if (!acc[key]) {
               acc[key] = {
@@ -352,10 +471,12 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                 verificacoes_s2: 0,
                 verificacoes_s3: 0,
                 verificacoes_s4: 0,
+                verificacoes_s5: 0,
                 verificacoes_nc_s1: 0,
                 verificacoes_nc_s2: 0,
                 verificacoes_nc_s3: 0,
                 verificacoes_nc_s4: 0,
+                verificacoes_nc_s5: 0,
                 perguntas_nc: 0
               };
             }
@@ -367,30 +488,32 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
             acc[key].verificacoes_s2 = (acc[key].verificacoes_s2 || 0) + Number(curr.verificacoes_s2 || 0);
             acc[key].verificacoes_s3 = (acc[key].verificacoes_s3 || 0) + Number(curr.verificacoes_s3 || 0);
             acc[key].verificacoes_s4 = (acc[key].verificacoes_s4 || 0) + Number(curr.verificacoes_s4 || 0);
+            acc[key].verificacoes_s5 = (acc[key].verificacoes_s5 || 0) + Number(curr.verificacoes_s5 || 0);
             acc[key].verificacoes_nc_s1 = (acc[key].verificacoes_nc_s1 || 0) + Number(curr.verificacoes_nc_s1 || 0);
             acc[key].verificacoes_nc_s2 = (acc[key].verificacoes_nc_s2 || 0) + Number(curr.verificacoes_nc_s2 || 0);
             acc[key].verificacoes_nc_s3 = (acc[key].verificacoes_nc_s3 || 0) + Number(curr.verificacoes_nc_s3 || 0);
             acc[key].verificacoes_nc_s4 = (acc[key].verificacoes_nc_s4 || 0) + Number(curr.verificacoes_nc_s4 || 0);
+            acc[key].verificacoes_nc_s5 = (acc[key].verificacoes_nc_s5 || 0) + Number(curr.verificacoes_nc_s5 || 0);
             return acc;
           }, {});
           currentPeriodData = Object.values(aggregated);
         } else {
-          currentPeriodData = allDataWithCargo.filter((d: N3Data) => d.periodo === periodo);
+          currentPeriodData = decodedAll.filter((d: N3Data) => d.periodo === periodo);
         }
 
         if (currentPeriodData.length > 0) {
           const sorted = currentPeriodData.sort((a: N3Data, b: N3Data) => {
-            const ncA = (Number(a.verificacoes_nc_s1) || 0) + (Number(a.verificacoes_nc_s2) || 0) + (Number(a.verificacoes_nc_s3) || 0) + (Number(a.verificacoes_nc_s4) || 0) || Number(a.verificacoes_nc || 0);
-            const ncB = (Number(b.verificacoes_nc_s1) || 0) + (Number(b.verificacoes_nc_s2) || 0) + (Number(b.verificacoes_nc_s3) || 0) + (Number(b.verificacoes_nc_s4) || 0) || Number(b.verificacoes_nc || 0);
+            const ncA = (Number(a.verificacoes_nc_s1) || 0) + (Number(a.verificacoes_nc_s2) || 0) + (Number(a.verificacoes_nc_s3) || 0) + (Number(a.verificacoes_nc_s4) || 0) + (Number(a.verificacoes_nc_s5) || 0) || Number(a.verificacoes_nc || 0);
+            const ncB = (Number(b.verificacoes_nc_s1) || 0) + (Number(b.verificacoes_nc_s2) || 0) + (Number(b.verificacoes_nc_s3) || 0) + (Number(b.verificacoes_nc_s4) || 0) + (Number(b.verificacoes_nc_s5) || 0) || Number(b.verificacoes_nc || 0);
             const diff = ncB - ncA;
             return diff !== 0 ? diff : (a.nome_email || '').localeCompare(b.nome_email || '');
           });
-          setData(sorted.map((d: N3Data) => ({ ...d, id: (d as { id?: string }).id || Math.random().toString(36).substring(2, 9) })));
+          setData(sorted);
         } else {
-          setData([]);
+          initMockData(cargoMap);
         }
       }
-    } catch (e) {
+    } catch {
       initMockData();
     }
     setLoading(false);
@@ -412,10 +535,12 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         verificacoes_s2: 0,
         verificacoes_s3: 0,
         verificacoes_s4: 0,
+        verificacoes_s5: 0,
         verificacoes_nc_s1: 0,
         verificacoes_nc_s2: 0,
         verificacoes_nc_s3: 0,
-        verificacoes_nc_s4: 0
+        verificacoes_nc_s4: 0,
+        verificacoes_nc_s5: 0
       }))
     );
   };
@@ -433,19 +558,13 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         }
       }
     } else {
-      const numVal = Number(value) || 0;
+      const numVal = value === '' ? 0 : Number(value) || 0;
       newData[index] = { ...newData[index], [field]: numVal };
 
-      // Recalculate totals if weekly fields updated
-      if (['verificacoes_s1', 'verificacoes_s2', 'verificacoes_s3', 'verificacoes_s4'].includes(field)) {
-        const row = newData[index];
-        row.total_verificacoes = (Number(row.verificacoes_s1) || 0) + (Number(row.verificacoes_s2) || 0) + (Number(row.verificacoes_s3) || 0) + (Number(row.verificacoes_s4) || 0);
-      }
-
-      if (['verificacoes_nc_s1', 'verificacoes_nc_s2', 'verificacoes_nc_s3', 'verificacoes_nc_s4'].includes(field)) {
-        const row = newData[index];
-        row.verificacoes_nc = (Number(row.verificacoes_nc_s1) || 0) + (Number(row.verificacoes_nc_s2) || 0) + (Number(row.verificacoes_nc_s3) || 0) + (Number(row.verificacoes_nc_s4) || 0);
-      }
+      // Recalculate row totals
+      const row = newData[index];
+      row.total_verificacoes = (Number(row.verificacoes_s1) || 0) + (Number(row.verificacoes_s2) || 0) + (Number(row.verificacoes_s3) || 0) + (Number(row.verificacoes_s4) || 0) + (Number(row.verificacoes_s5) || 0);
+      row.verificacoes_nc = (Number(row.verificacoes_nc_s1) || 0) + (Number(row.verificacoes_nc_s2) || 0) + (Number(row.verificacoes_nc_s3) || 0) + (Number(row.verificacoes_nc_s4) || 0) + (Number(row.verificacoes_nc_s5) || 0);
     }
     setData(newData);
   };
@@ -454,6 +573,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     setData([...data, {
       id: Math.random().toString(36).substring(2, 9),
       nome_email: '',
+      cargo: '',
       letra: '',
       periodo,
       total_verificacoes: 0,
@@ -464,10 +584,12 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       verificacoes_s2: 0,
       verificacoes_s3: 0,
       verificacoes_s4: 0,
+      verificacoes_s5: 0,
       verificacoes_nc_s1: 0,
       verificacoes_nc_s2: 0,
       verificacoes_nc_s3: 0,
-      verificacoes_nc_s4: 0
+      verificacoes_nc_s4: 0,
+      verificacoes_nc_s5: 0
     }]);
   };
 
@@ -478,42 +600,20 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
   };
 
   const handleSave = async () => {
+    if (periodo === 'all') {
+      toast.error('Selecione um mês específico para postar os dados.');
+      return;
+    }
     setSaving(true);
     try {
       await supabase.from('n3_lancamentos').delete().eq('periodo', periodo);
       
-      const insertPayload = data.map(d => {
-        const totVerif = (d.verificacoes_s1 !== undefined || d.verificacoes_s2 !== undefined || d.verificacoes_s3 !== undefined || d.verificacoes_s4 !== undefined)
-          ? ((Number(d.verificacoes_s1) || 0) + (Number(d.verificacoes_s2) || 0) + (Number(d.verificacoes_s3) || 0) + (Number(d.verificacoes_s4) || 0))
-          : (Number(d.total_verificacoes) || 0);
-
-        const totNC = (d.verificacoes_nc_s1 !== undefined || d.verificacoes_nc_s2 !== undefined || d.verificacoes_nc_s3 !== undefined || d.verificacoes_nc_s4 !== undefined)
-          ? ((Number(d.verificacoes_nc_s1) || 0) + (Number(d.verificacoes_nc_s2) || 0) + (Number(d.verificacoes_nc_s3) || 0) + (Number(d.verificacoes_nc_s4) || 0))
-          : (Number(d.verificacoes_nc) || 0);
-
-        return {
-          nome_email: d.nome_email || 'SEM NOME',
-          letra: d.letra || '',
-          periodo: d.periodo,
-          total_verificacoes: totVerif,
-          total_treinamentos: d.total_treinamentos || 0,
-          total_assistencia: d.total_assistencia || 0,
-          verificacoes_nc: totNC,
-          verificacoes_s1: d.verificacoes_s1 || 0,
-          verificacoes_s2: d.verificacoes_s2 || 0,
-          verificacoes_s3: d.verificacoes_s3 || 0,
-          verificacoes_s4: d.verificacoes_s4 || 0,
-          verificacoes_nc_s1: d.verificacoes_nc_s1 || 0,
-          verificacoes_nc_s2: d.verificacoes_nc_s2 || 0,
-          verificacoes_nc_s3: d.verificacoes_nc_s3 || 0,
-          verificacoes_nc_s4: d.verificacoes_nc_s4 || 0,
-        };
-      });
+      const insertPayload = data.map(d => encodeN3Row(d));
 
       const { error } = await supabase.from('n3_lancamentos').insert(insertPayload);
 
       if (error) throw error;
-      toast.success('Dados salvos com sucesso!');
+      toast.success('Lançamentos N3 postados com sucesso!');
       fetchData(); 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -531,21 +631,24 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       const rawData = await readExcelRows(ab);
 
       const importedData: N3Data[] = rawData.map((row: Record<string, unknown>) => {
-        const nome = (row['NOME-EMAIL'] || row['Nome'] || '') as string;
+        const nome = (row['NOME-EMAIL'] || row['Nome'] || row['NOME'] || '') as string;
         const vs1 = Number(row['VERIF S1'] || row['S1 Verificacoes'] || row['S1'] || 0);
         const vs2 = Number(row['VERIF S2'] || row['S2 Verificacoes'] || row['S2'] || 0);
         const vs3 = Number(row['VERIF S3'] || row['S3 Verificacoes'] || row['S3'] || 0);
         const vs4 = Number(row['VERIF S4'] || row['S4 Verificacoes'] || row['S4'] || 0);
+        const vs5 = Number(row['VERIF S5'] || row['S5 Verificacoes'] || row['S5'] || 0);
 
         const ncs1 = Number(row['NC S1'] || row['S1 NC'] || 0);
         const ncs2 = Number(row['NC S2'] || row['S2 NC'] || 0);
         const ncs3 = Number(row['NC S3'] || row['S3 NC'] || 0);
         const ncs4 = Number(row['NC S4'] || row['S4 NC'] || 0);
+        const ncs5 = Number(row['NC S5'] || row['S5 NC'] || 0);
 
-        const totVerif = (vs1 + vs2 + vs3 + vs4) || Number(row['TOTAL VERIFICAÇÕES'] || row['Total Verificações'] || 0);
-        const totNC = (ncs1 + ncs2 + ncs3 + ncs4) || Number(row['VERIFICAÇÕES NÃO CONFORMES'] || row['Verificações NC'] || 0);
+        const totVerif = (vs1 + vs2 + vs3 + vs4 + vs5) || Number(row['TOTAL VERIFICAÇÕES'] || row['Total Verificações'] || 0);
+        const totNC = (ncs1 + ncs2 + ncs3 + ncs4 + ncs5) || Number(row['VERIFICAÇÕES NÃO CONFORMES'] || row['Verificações NC'] || 0);
 
         return {
+          id: Math.random().toString(36).substring(2, 9),
           nome_email: nome,
           cargo: (row['CARGO'] || row['Cargo'] || cargoMapState[nome.toUpperCase().trim()] || '') as string,
           letra: (row['LETRA'] || row['Letra'] || '') as string,
@@ -558,10 +661,12 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
           verificacoes_s2: vs2,
           verificacoes_s3: vs3,
           verificacoes_s4: vs4,
+          verificacoes_s5: vs5,
           verificacoes_nc_s1: ncs1,
           verificacoes_nc_s2: ncs2,
           verificacoes_nc_s3: ncs3,
           verificacoes_nc_s4: ncs4,
+          verificacoes_nc_s5: ncs5,
         };
       });
 
@@ -571,7 +676,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       } else {
         toast.error('Planilha vazia ou formato inválido.');
       }
-    } catch (err) {
+    } catch {
       toast.error('Erro ao ler a planilha.');
     }
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -581,17 +686,20 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     const templateData = [
       {
         'NOME-EMAIL': 'CRISTALLY NETTO',
+        'CARGO': 'Técnico de Segurança',
         'LETRA': 'A Noite',
-        'VERIF S1': 1,
-        'VERIF S2': 0,
-        'VERIF S3': 0,
-        'VERIF S4': 0,
+        'VERIF S1': 5,
+        'VERIF S2': 5,
+        'VERIF S3': 5,
+        'VERIF S4': 5,
+        'VERIF S5': 0,
         'TOTAL TREINAMENTOS': 1,
         'TOTAL ASSISTÊNCIA': 0,
         'NC S1': 1,
         'NC S2': 0,
         'NC S3': 0,
-        'NC S4': 0,
+        'NC S4': 1,
+        'NC S5': 0,
       }
     ];
     await writeExcelFile(templateData as Record<string, unknown>[], 'Modelo_Importacao_N3_Semanal.xlsx', 'N3_Template');
@@ -613,8 +721,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
     };
 
     filteredHistoricalData.forEach(d => {
-      const totVerif = (Number(d.verificacoes_s1) || 0) + (Number(d.verificacoes_s2) || 0) + (Number(d.verificacoes_s3) || 0) + (Number(d.verificacoes_s4) || 0) || Number(d.total_verificacoes || 0);
-      const totNc = (Number(d.verificacoes_nc_s1) || 0) + (Number(d.verificacoes_nc_s2) || 0) + (Number(d.verificacoes_nc_s3) || 0) + (Number(d.verificacoes_nc_s4) || 0) || Number(d.verificacoes_nc || 0);
+      const totVerif = (Number(d.verificacoes_s1) || 0) + (Number(d.verificacoes_s2) || 0) + (Number(d.verificacoes_s3) || 0) + (Number(d.verificacoes_s4) || 0) + (Number(d.verificacoes_s5) || 0) || Number(d.total_verificacoes || 0);
+      const totNc = (Number(d.verificacoes_nc_s1) || 0) + (Number(d.verificacoes_nc_s2) || 0) + (Number(d.verificacoes_nc_s3) || 0) + (Number(d.verificacoes_nc_s4) || 0) + (Number(d.verificacoes_nc_s5) || 0) || Number(d.verificacoes_nc || 0);
       totais.verificacoes += totVerif;
       totais.treinamentos += Number(d.total_treinamentos || 0);
       totais.assistencia += Number(d.total_assistencia || 0);
@@ -632,8 +740,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       if (!acc[name]) {
         acc[name] = { name, Verificações: 0, Treinamentos: 0, 'Não Conformes': 0 };
       }
-      const totVerif = (Number(curr.verificacoes_s1) || 0) + (Number(curr.verificacoes_s2) || 0) + (Number(curr.verificacoes_s3) || 0) + (Number(curr.verificacoes_s4) || 0) || Number(curr.total_verificacoes || 0);
-      const totNc = (Number(curr.verificacoes_nc_s1) || 0) + (Number(curr.verificacoes_nc_s2) || 0) + (Number(curr.verificacoes_nc_s3) || 0) + (Number(curr.verificacoes_nc_s4) || 0) || Number(curr.verificacoes_nc || 0);
+      const totVerif = (Number(curr.verificacoes_s1) || 0) + (Number(curr.verificacoes_s2) || 0) + (Number(curr.verificacoes_s3) || 0) + (Number(curr.verificacoes_s4) || 0) + (Number(curr.verificacoes_s5) || 0) || Number(curr.total_verificacoes || 0);
+      const totNc = (Number(curr.verificacoes_nc_s1) || 0) + (Number(curr.verificacoes_nc_s2) || 0) + (Number(curr.verificacoes_nc_s3) || 0) + (Number(curr.verificacoes_nc_s4) || 0) + (Number(curr.verificacoes_nc_s5) || 0) || Number(curr.verificacoes_nc || 0);
 
       acc[name].Verificações += totVerif;
       acc[name].Treinamentos += Number(curr.total_treinamentos || 0);
@@ -648,8 +756,8 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
       if (!acc[curr.periodo]) {
         acc[curr.periodo] = { periodo: curr.periodo, 'Total Verificações': 0, 'Total Treinamentos': 0, 'Total Não Conformes': 0 };
       }
-      const totVerif = (Number(curr.verificacoes_s1) || 0) + (Number(curr.verificacoes_s2) || 0) + (Number(curr.verificacoes_s3) || 0) + (Number(curr.verificacoes_s4) || 0) || Number(curr.total_verificacoes || 0);
-      const totNc = (Number(curr.verificacoes_nc_s1) || 0) + (Number(curr.verificacoes_nc_s2) || 0) + (Number(curr.verificacoes_nc_s3) || 0) + (Number(curr.verificacoes_nc_s4) || 0) || Number(curr.verificacoes_nc || 0);
+      const totVerif = (Number(curr.verificacoes_s1) || 0) + (Number(curr.verificacoes_s2) || 0) + (Number(curr.verificacoes_s3) || 0) + (Number(curr.verificacoes_s4) || 0) + (Number(curr.verificacoes_s5) || 0) || Number(curr.total_verificacoes || 0);
+      const totNc = (Number(curr.verificacoes_nc_s1) || 0) + (Number(curr.verificacoes_nc_s2) || 0) + (Number(curr.verificacoes_nc_s3) || 0) + (Number(curr.verificacoes_nc_s4) || 0) + (Number(curr.verificacoes_nc_s5) || 0) || Number(curr.verificacoes_nc || 0);
 
       (acc[curr.periodo]['Total Verificações'] as number) += totVerif;
       (acc[curr.periodo]['Total Treinamentos'] as number) += Number(curr.total_treinamentos || 0);
@@ -674,7 +782,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
         });
       }
       const name = curr.nome_email.split(' ')[0] || 'Novo';
-      const totNc = (Number(curr.verificacoes_nc_s1) || 0) + (Number(curr.verificacoes_nc_s2) || 0) + (Number(curr.verificacoes_nc_s3) || 0) + (Number(curr.verificacoes_nc_s4) || 0) || Number(curr.verificacoes_nc || 0);
+      const totNc = (Number(curr.verificacoes_nc_s1) || 0) + (Number(curr.verificacoes_nc_s2) || 0) + (Number(curr.verificacoes_nc_s3) || 0) + (Number(curr.verificacoes_nc_s4) || 0) + (Number(curr.verificacoes_nc_s5) || 0) || Number(curr.verificacoes_nc || 0);
       (acc[curr.periodo][name] as number) += totNc;
       return acc;
     }, {} as Record<string, Record<string, number | string>>);
@@ -749,7 +857,7 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div>
                   <CardTitle className="text-xl">Lançamentos N3 - CRM</CardTitle>
-                  <CardDescription>Controle semanal (S1, S2, S3, S4) por colaborador</CardDescription>
+                  <CardDescription>Controle semanal (S1, S2, S3, S4, S5) por colaborador</CardDescription>
                 </div>
                 <Select value={periodo} onValueChange={setPeriodo}>
                   <SelectTrigger className="w-[160px] bg-background">
@@ -797,75 +905,63 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                   <Plus className="w-3.5 h-3.5" /> Adicionar
                 </Button>
                 
-                <Button onClick={handleSave} disabled={saving} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-lg transition-all hover:scale-[1.02] text-xs h-8 px-4">
+                <Button onClick={handleSave} disabled={saving || loading} size="sm" className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0 rounded-lg transition-all hover:scale-[1.02] text-xs h-8 px-4 font-bold">
                   <Save className="w-3.5 h-3.5" /> {saving ? 'Postando...' : 'Postar'}
                 </Button>
               </div>
             </CardHeader>
 
             <CardContent>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <Table className="text-xs">
-                    <TableHeader className="bg-slate-100/80 dark:bg-slate-900/80">
+                    <TableHeader className="bg-slate-100/90 dark:bg-slate-900/90">
                       <TableRow className="border-b border-slate-200 dark:border-slate-800">
                         <TableHead rowSpan={2} className="w-8 p-1 text-center"></TableHead>
-                        <TableHead rowSpan={2} className="min-w-[170px] p-2 font-bold text-slate-700 dark:text-slate-300">NOME</TableHead>
-                        <TableHead rowSpan={2} className="p-2 font-bold text-slate-700 dark:text-slate-300">CARGO</TableHead>
-                        <TableHead rowSpan={2} className="p-2 font-bold text-slate-700 dark:text-slate-300 text-center">LETRA</TableHead>
+                        <TableHead rowSpan={2} className="min-w-[200px] p-2 font-bold text-slate-700 dark:text-slate-300">NOME</TableHead>
+                        <TableHead rowSpan={2} className="min-w-[140px] p-2 font-bold text-slate-700 dark:text-slate-300">CARGO</TableHead>
+                        <TableHead rowSpan={2} className="min-w-[75px] p-2 font-bold text-slate-700 dark:text-slate-300 text-center">LETRA</TableHead>
                         
-                        {/* Grupo: VERIFICAÇÕES */}
-                        <TableHead colSpan={5} className="p-1.5 text-center font-black text-blue-700 dark:text-blue-400 bg-blue-100/50 dark:bg-blue-950/40 border-x border-blue-200 dark:border-blue-800/40 uppercase tracking-wider text-[11px]">
+                        {/* Grupo: VERIFICAÇÕES (S1 a S5 + TOTAL = colSpan 6) */}
+                        <TableHead colSpan={6} className="p-1.5 text-center font-black text-blue-700 dark:text-blue-400 bg-blue-100/60 dark:bg-blue-950/40 border-x border-blue-200 dark:border-blue-800/40 uppercase tracking-wider text-[11px]">
                           VERIFICAÇÕES POR SEMANA
                         </TableHead>
 
-                        <TableHead rowSpan={2} className="p-2 font-bold text-slate-700 dark:text-slate-300 text-center">T. TREINAMENTOS</TableHead>
-                        <TableHead rowSpan={2} className="p-2 font-bold text-slate-700 dark:text-slate-300 text-center">T. ASSISTÊNCIA</TableHead>
+                        <TableHead rowSpan={2} className="min-w-[75px] p-2 font-bold text-slate-700 dark:text-slate-300 text-center">T. TREINAMENTOS</TableHead>
+                        <TableHead rowSpan={2} className="min-w-[75px] p-2 font-bold text-slate-700 dark:text-slate-300 text-center">T. ASSISTÊNCIA</TableHead>
 
-                        {/* Grupo: VERIFICAÇÕES NC */}
-                        <TableHead colSpan={5} className="p-1.5 text-center font-black text-rose-700 dark:text-rose-400 bg-rose-100/50 dark:bg-rose-950/40 border-x border-rose-200 dark:border-rose-800/40 uppercase tracking-wider text-[11px]">
+                        {/* Grupo: VERIFICAÇÕES NC (S1 a S5 + TOTAL = colSpan 6) */}
+                        <TableHead colSpan={6} className="p-1.5 text-center font-black text-rose-700 dark:text-rose-400 bg-rose-100/60 dark:bg-rose-950/40 border-x border-rose-200 dark:border-rose-800/40 uppercase tracking-wider text-[11px]">
                           VERIFICAÇÕES NC POR SEMANA
                         </TableHead>
 
-                        <TableHead rowSpan={2} className="p-2 font-bold text-slate-700 dark:text-slate-300 text-center">% NC</TableHead>
+                        <TableHead rowSpan={2} className="min-w-[70px] p-2 font-bold text-slate-700 dark:text-slate-300 text-center">% NC</TableHead>
                         <TableHead rowSpan={2} className="w-8 p-1 text-center"></TableHead>
                       </TableRow>
 
                       <TableRow className="border-b border-slate-200 dark:border-slate-800">
                         {/* Sub-colunas Verificações */}
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20">S1</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20">S2</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20">S3</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20">S4</TableHead>
-                        <TableHead className="p-1 text-center font-black text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/40 border-r border-blue-200 dark:border-blue-800">TOTAL</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S1</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S2</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S3</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S4</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/20 min-w-[58px]">S5</TableHead>
+                        <TableHead className="p-1 text-center font-black text-blue-800 dark:text-blue-200 bg-blue-100 dark:bg-blue-900/40 border-r border-blue-200 dark:border-blue-800 min-w-[62px]">TOTAL</TableHead>
 
                         {/* Sub-colunas Verificações NC */}
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20">S1</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20">S2</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20">S3</TableHead>
-                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20">S4</TableHead>
-                        <TableHead className="p-1 text-center font-black text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-900/40 border-r border-rose-200 dark:border-rose-800">TOTAL</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S1</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S2</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S3</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S4</TableHead>
+                        <TableHead className="p-1 text-center font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/20 min-w-[58px]">S5</TableHead>
+                        <TableHead className="p-1 text-center font-black text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-900/40 border-r border-rose-200 dark:border-rose-800 min-w-[62px]">TOTAL</TableHead>
                       </TableRow>
                     </TableHeader>
 
                     <TableBody>
                       <SortableContext items={data.map(d => d.id || '')} strategy={verticalListSortingStrategy}>
                         {data.map((row, idx) => {
-                          const meta = getMeta(row.cargo);
-
-                          const totVerif = (Number(row.verificacoes_s1) || 0) + (Number(row.verificacoes_s2) || 0) + (Number(row.verificacoes_s3) || 0) + (Number(row.verificacoes_s4) || 0) || Number(row.total_verificacoes || 0);
-                          const totNC = (Number(row.verificacoes_nc_s1) || 0) + (Number(row.verificacoes_nc_s2) || 0) + (Number(row.verificacoes_nc_s3) || 0) + (Number(row.verificacoes_nc_s4) || 0) || Number(row.verificacoes_nc || 0);
-
-                          const maxScore = meta * 2;
-                          const validTot = Math.min(totVerif, meta);
-                          const validNc = Math.min(totNC, meta);
-                          const pctNC = Number((((validTot + validNc) / maxScore) * 100).toFixed(0));
-                          
-                          const isCritical = Number(pctNC) < 70;
-                          const isWarning = Number(pctNC) >= 70 && Number(pctNC) < 100;
-                          const badgeClass = isCritical ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : isWarning ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400';
-                          
-                          const inputStyle = "h-8 font-medium bg-muted/30 border-transparent hover:border-border focus:bg-background focus:border-primary rounded-lg transition-all text-xs";
+                          const inputStyle = "font-medium bg-muted/30 border-transparent hover:border-border focus:bg-background focus:border-primary rounded-lg transition-all";
                           
                           return (
                             <SortableRow 
@@ -874,8 +970,6 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                               idx={idx} 
                               handleChange={handleChange} 
                               handleRemoveRow={handleRemoveRow} 
-                              badgeClass={badgeClass} 
-                              pctNC={pctNC} 
                               inputStyle={inputStyle} 
                               funcionariosList={funcionariosList}
                             />
@@ -892,19 +986,22 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                           const vs2 = Number(curr.verificacoes_s2) || 0;
                           const vs3 = Number(curr.verificacoes_s3) || 0;
                           const vs4 = Number(curr.verificacoes_s4) || 0;
-                          const totV = (vs1 + vs2 + vs3 + vs4) || Number(curr.total_verificacoes || 0);
+                          const vs5 = Number(curr.verificacoes_s5) || 0;
+                          const totV = (vs1 + vs2 + vs3 + vs4 + vs5) || Number(curr.total_verificacoes || 0);
 
                           const ncs1 = Number(curr.verificacoes_nc_s1) || 0;
                           const ncs2 = Number(curr.verificacoes_nc_s2) || 0;
                           const ncs3 = Number(curr.verificacoes_nc_s3) || 0;
                           const ncs4 = Number(curr.verificacoes_nc_s4) || 0;
-                          const totN = (ncs1 + ncs2 + ncs3 + ncs4) || Number(curr.verificacoes_nc || 0);
+                          const ncs5 = Number(curr.verificacoes_nc_s5) || 0;
+                          const totN = (ncs1 + ncs2 + ncs3 + ncs4 + ncs5) || Number(curr.verificacoes_nc || 0);
 
                           return {
                             vs1: acc.vs1 + vs1,
                             vs2: acc.vs2 + vs2,
                             vs3: acc.vs3 + vs3,
                             vs4: acc.vs4 + vs4,
+                            vs5: acc.vs5 + vs5,
                             totalVerif: acc.totalVerif + totV,
 
                             treinamentos: acc.treinamentos + Number(curr.total_treinamentos || 0),
@@ -914,15 +1011,27 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                             ncs2: acc.ncs2 + ncs2,
                             ncs3: acc.ncs3 + ncs3,
                             ncs4: acc.ncs4 + ncs4,
+                            ncs5: acc.ncs5 + ncs5,
                             totalNC: acc.totalNC + totN,
                           };
-                        }, { vs1: 0, vs2: 0, vs3: 0, vs4: 0, totalVerif: 0, treinamentos: 0, assistencia: 0, ncs1: 0, ncs2: 0, ncs3: 0, ncs4: 0, totalNC: 0 });
+                        }, { 
+                          vs1: 0, vs2: 0, vs3: 0, vs4: 0, vs5: 0, totalVerif: 0, 
+                          treinamentos: 0, assistencia: 0, 
+                          ncs1: 0, ncs2: 0, ncs3: 0, ncs4: 0, ncs5: 0, totalNC: 0 
+                        });
 
                         const pctNcGlobal = totals.totalVerif > 0 ? ((totals.totalNC / totals.totalVerif) * 100).toFixed(1) : "0.0";
-                        const totalsBadgeClass = Number(pctNcGlobal) < 50 ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400' : Number(pctNcGlobal) < 80 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400';
+                        const numPctGlobal = Number(pctNcGlobal);
+                        const totalsBadgeClass = numPctGlobal === 0
+                          ? 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                          : numPctGlobal <= 25 
+                          ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300' 
+                          : numPctGlobal <= 50 
+                          ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300' 
+                          : 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300';
                         
                         return (
-                          <TableRow className="bg-slate-100/90 dark:bg-slate-800/80 font-bold hover:bg-slate-100 border-t-2 border-slate-300 dark:border-slate-700">
+                          <TableRow className="bg-slate-100/95 dark:bg-slate-800/90 font-bold hover:bg-slate-100 border-t-2 border-slate-300 dark:border-slate-700">
                             <TableCell colSpan={4} className="text-right p-3 font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider text-xs">
                               TOTAL GERAL:
                             </TableCell>
@@ -932,26 +1041,28 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                             <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs2}</TableCell>
                             <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs3}</TableCell>
                             <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs4}</TableCell>
-                            <TableCell className="text-center p-2 font-mono bg-blue-200/50 dark:bg-blue-900/60 text-blue-900 dark:text-blue-100 font-black">
+                            <TableCell className="text-center p-2 font-mono text-blue-700 dark:text-blue-300 font-extrabold">{totals.vs5}</TableCell>
+                            <TableCell className="text-center p-2 font-mono bg-blue-200/60 dark:bg-blue-900/60 text-blue-950 dark:text-blue-100 font-black">
                               {totals.totalVerif}
                             </TableCell>
 
                             {/* Totais Treinamentos & Assistência */}
-                            <TableCell className="text-center p-2 font-mono">{totals.treinamentos}</TableCell>
-                            <TableCell className="text-center p-2 font-mono">{totals.assistencia}</TableCell>
+                            <TableCell className="text-center p-2 font-mono font-bold text-slate-700 dark:text-slate-300">{totals.treinamentos}</TableCell>
+                            <TableCell className="text-center p-2 font-mono font-bold text-slate-700 dark:text-slate-300">{totals.assistencia}</TableCell>
 
                             {/* Totais NC por semana */}
                             <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs1}</TableCell>
                             <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs2}</TableCell>
                             <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs3}</TableCell>
                             <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs4}</TableCell>
-                            <TableCell className="text-center p-2 font-mono bg-rose-200/50 dark:bg-rose-900/60 text-rose-900 dark:text-rose-100 font-black">
+                            <TableCell className="text-center p-2 font-mono text-rose-700 dark:text-rose-300 font-extrabold">{totals.ncs5}</TableCell>
+                            <TableCell className="text-center p-2 font-mono bg-rose-200/60 dark:bg-rose-900/60 text-rose-950 dark:text-rose-100 font-black">
                               {totals.totalNC}
                             </TableCell>
 
                             {/* Total % NC */}
                             <TableCell className="text-center p-2">
-                              <div className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-black ${totalsBadgeClass}`}>
+                              <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-black ${totalsBadgeClass}`}>
                                 {pctNcGlobal}%
                               </div>
                             </TableCell>
@@ -1007,9 +1118,9 @@ export default function N3Dashboard({ globalPeriod }: N3DashboardProps) {
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                     </linearGradient>
-                    <linearGradient id="colorTrein" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <linearGradient id="colorNC" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="opacity-10" />
