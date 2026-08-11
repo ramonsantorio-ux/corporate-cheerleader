@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { statusLabels, statusColors, priorityLabels, priorityColors, FeedbackStatus, FeedbackPriority } from '@/lib/feedbackData';
 import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
+import PotencialSection from '@/components/potencial/PotencialSection';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
@@ -617,11 +618,12 @@ export default function FuncionarioProfile() {
       </motion.div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
           <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
           <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Feedbacks</TabsTrigger>
           <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil Psicométrico</TabsTrigger>
           <TabsTrigger value="fit-cultural" className="py-2.5 rounded-lg text-sm font-medium">Fit Cultural</TabsTrigger>
+          <TabsTrigger value="potencial" className="py-2.5 rounded-lg text-sm font-medium border-indigo-500/30 text-indigo-600 dark:text-indigo-400 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-600">Potencial</TabsTrigger>
           <TabsTrigger value="nine-box" className="py-2.5 rounded-lg text-sm font-medium">Nine Box</TabsTrigger>
           <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">Dossiê (RH)</TabsTrigger>
         </TabsList>
@@ -777,6 +779,12 @@ export default function FuncionarioProfile() {
         <TabsContent value="fit-cultural" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
           <div className="glass-card rounded-xl p-6 shadow-sm border-t-4 border-t-chart-2">
               <FitCulturalSection employeeId={func.id} employeeName={func.nome} onCloseTab={() => handleTabChange('nine-box')} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="potencial" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
+          <div className="glass-card rounded-xl p-6 shadow-sm border-t-4 border-t-indigo-500">
+              <PotencialSection employeeId={func.id} employeeName={func.nome} onCloseTab={() => handleTabChange('nine-box')} onUpdate={refreshFunc} />
           </div>
         </TabsContent>
 

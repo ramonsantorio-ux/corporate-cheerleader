@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Target, TrendingUp, CheckCircle2, History, Plus, ShieldAlert } from 'lucide-react';
+import { Target, TrendingUp, CheckCircle2, History, Plus, ShieldAlert, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -88,10 +88,38 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
     }
   }, [employeeId, desempenho]);
 
+  const [suggestedDes, setSuggestedDes] = useState<string | null>(null);
+  const [suggestedPot, setSuggestedPot] = useState<string | null>(null);
+  const [desScoreAvg, setDesScoreAvg] = useState<string | null>(null);
+  const [potScoreAvg, setPotScoreAvg] = useState<string | null>(null);
+
+  const fetchSuggestions = useCallback(async () => {
+    if (!employeeId) return;
+    const { data } = await supabase.from('fit_cultural').select('criteria, stage, score').eq('employee_id', employeeId);
+    if (data && data.length > 0) {
+      // 1. Desempenho (Fit Cultural) - stages not starting with potencial_
+      const fitScores = data.filter(d => !d.stage?.startsWith('potencial_') && d.score != null);
+      if (fitScores.length > 0) {
+        const avg = fitScores.reduce((a, b) => a + (b.score || 0), 0) / fitScores.length;
+        setDesScoreAvg(avg.toFixed(2));
+        setSuggestedDes(avg >= 3.8 ? 'Alto' : avg >= 2.8 ? 'Médio' : 'Baixo');
+      }
+
+      // 2. Potencial - stages starting with potencial_
+      const potScores = data.filter(d => d.stage?.startsWith('potencial_') && d.score != null);
+      if (potScores.length > 0) {
+        const avg = potScores.reduce((a, b) => a + (b.score || 0), 0) / potScores.length;
+        setPotScoreAvg(avg.toFixed(2));
+        setSuggestedPot(avg >= 3.8 ? 'Alto' : avg >= 2.8 ? 'Médio' : 'Baixo');
+      }
+    }
+  }, [employeeId]);
+
   useEffect(() => {
     fetchCycles();
     fetchHistorico();
-  }, [employeeId, fetchCycles, fetchHistorico]);
+    fetchSuggestions();
+  }, [employeeId, fetchCycles, fetchHistorico, fetchSuggestions]);
 
   async function handleSave() {
     if (activeTab === 'tradicional' && (!desempenho || !potencial)) {
@@ -241,6 +269,36 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
         </TabsList>
 
         <TabsContent value="tradicional">
+          {/* Smart Recommendation Banner */}
+          {(suggestedDes || suggestedPot) && viewMode === 'nova' && (
+            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/30">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                    Recomendação Automática das Avaliações
+                  </h4>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {suggestedDes ? <>Fit Cultural (Desempenho): <strong className="text-foreground">{suggestedDes} ({desScoreAvg}/5)</strong></> : 'Fit Cultural: Pendente'}
+                    {' • '}
+                    {suggestedPot ? <>Potencial: <strong className="text-foreground">{suggestedPot} ({potScoreAvg}/5)</strong></> : 'Potencial: Pendente'}
+                  </p>
+                </div>
+              </div>
+              {suggestedDes && suggestedPot && (
+                <Button
+                  size="sm"
+                  onClick={() => { setDesempenho(suggestedDes); setPotencial(suggestedPot); }}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-8 shadow-sm shrink-0"
+                >
+                  <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Aplicar {suggestedDes} x {suggestedPot}
+                </Button>
+              )}
+            </div>
+          )}
+
           {viewMode === 'nova' ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
               {/* Box Selector */}

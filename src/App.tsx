@@ -12,6 +12,7 @@ import FeedbackDetail from "./pages/FeedbackDetail";
 import Configuracoes from "./pages/Configuracoes";
 import Desempenho from "./pages/Desempenho";
 import AutoAvaliacaoFit from "./pages/AutoAvaliacaoFit";
+import AutoAvaliacaoPotencial from "./pages/AutoAvaliacaoPotencial";
 import Admin from "./pages/Admin";
 import CadastroMetas from "./pages/CadastroMetas";
 import Login from "./pages/Login";
@@ -158,6 +159,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/autoavaliacao-fit-cultural" element={<AutoAvaliacaoFit />} />
+            <Route path="/autoavaliacao-potencial" element={<AutoAvaliacaoPotencial />} />
             <Route path="/assessment/:type" element={<AssessmentHub />} />
             <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
             <Route path="/*" element={<ProtectedRoutes />} />
