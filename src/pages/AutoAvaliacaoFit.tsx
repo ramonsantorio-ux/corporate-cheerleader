@@ -35,16 +35,12 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
         desc: 'Age como se a empresa fosse sua, vai além do mínimo exigido',
       },
       {
-        label: 'Coopera com pares e colegas de equipe',
-        desc: 'Ajuda outros setores sem ser solicitado quando necessário',
+        label: 'Demonstra preocupação com a performance de outras áreas e coopera com pares e colegas de equipe',
+        desc: 'Ajuda outros setores sem ser solicitado quando necessário, entende o impacto do seu trabalho no resultado geral da empresa',
       },
       {
-        label: 'Demonstra preocupação com a performance de outras áreas',
-        desc: 'Entende o impacto do seu trabalho no resultado geral da empresa',
-      },
-      {
-        label: 'Propõe soluções quando identifica problemas',
-        desc: 'Não apenas aponta problemas, mas sugere melhorias',
+        label: 'Propõe soluções alinhadas com os propósitos da empresa',
+        desc: 'Ao identificar o problema, avalia os investimentos e retornos da empresa e traz soluções. Não apenas aponta problemas, mas sugere melhorias',
       },
     ]
   },
@@ -55,20 +51,12 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
     badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200',
     items: [
       {
-        label: 'Compartilha conhecimento com a equipe espontaneamente',
-        desc: 'Repassa aprendizados, técnicas e boas práticas sem ser solicitado',
+        label: 'Compartilha conhecimento com a equipe espontaneamente e realiza feedbacks construtivos aos colegas',
+        desc: 'Repassa aprendizados, técnicas e boas práticas sem ser solicitado. Aponta pontos de melhoria de forma respeitosa e objetiva',
       },
       {
-        label: 'Realiza feedbacks construtivos aos colegas',
-        desc: 'Aponta pontos de melhoria de forma respeitosa e objetiva',
-      },
-      {
-        label: 'Apoia novos colaboradores na integração',
-        desc: 'Auxilia quem está aprendendo sem demonstrar impaciência',
-      },
-      {
-        label: 'Estimula o crescimento dos colegas',
-        desc: 'Incentiva a participação, autonomia e desenvolvimento dos pares',
+        label: 'Estimula o crescimento dos colegas e apoia novos colaboradores na integração',
+        desc: 'Incentiva a participação, autonomia e desenvolvimento dos pares. Contribui no aprendizado da equipe',
       },
     ]
   },
@@ -79,24 +67,16 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
     badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200',
     items: [
       {
-        label: 'Mantém comunicação respeitosa com todos',
-        desc: 'Usa linguagem adequada, tom respeitoso e ouve o outro',
+        label: 'Mantém comunicação respeitosa com todos e respeita as diferenças (gênero, etnia, cultura, religião)',
+        desc: 'Usa linguagem adequada, tom respeitoso e ouve o outro. Não pratica e não compactua com discriminação de qualquer natureza',
       },
       {
         label: 'Pratica diálogo aberto e transparente',
         desc: 'Expõe opiniões com clareza, sem fofoca ou duplicidade',
       },
       {
-        label: 'Respeita as diferenças (gênero, etnia, cultura, religião)',
-        desc: 'Não pratica e não compactua com discriminação de qualquer natureza',
-      },
-      {
         label: 'Resolve conflitos de forma construtiva',
         desc: 'Busca entendimento, não agrava situações de tensão',
-      },
-      {
-        label: 'Trata todos com igualdade, independente do cargo',
-        desc: 'Não age de forma diferente com superiores e subordinados',
       },
     ]
   },
@@ -107,36 +87,28 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
     badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200',
     items: [
       {
-        label: 'Evita desperdício de materiais e insumos',
-        desc: 'Utiliza apenas o necessário e cuida dos recursos disponíveis',
+        label: 'Cuida dos patrimônios e equipamentos da empresa, evitando desperdício de materiais e insumos',
+        desc: 'Utiliza apenas o necessário e cuida dos recursos disponíveis. Zeloso com ferramentas, veículos, instalações e sistemas',
       },
       {
-        label: 'Cuida dos patrimônios e equipamentos da empresa',
-        desc: 'Zeloso com ferramentas, veículos, instalações e sistemas',
-      },
-      {
-        label: 'Age com honestidade e transparência',
+        label: 'Age com honestidade, ética e transparência',
         desc: 'Não omite informações relevantes, age de forma íntegra',
       },
       {
-        label: 'Não compactua com corrupção ou uso indevido de recursos',
-        desc: 'Reporta irregularidades que presencia',
-      },
-      {
-        label: 'Atua junto aos subordinados quanto ao zelo pelos recursos e à atuação com ética',
-        desc: 'Orienta e cobra da equipe o uso correto dos recursos e a conduta ética no dia a dia',
+        label: 'Desenvolve ferramentas, campanhas, redução de custos e inovações para a empresa',
+        desc: 'Propõe e implementa iniciativas que geram valor e otimização de recursos para a organização',
       },
     ]
   },
   {
     number: 5,
-    title: 'Alinhamento com os 4 C’s e Desenvolvimento Contínuo',
+    title: 'Alinhamento com os 4 C\'s e Desenvolvimento Contínuo',
     category: 'UNIVERSAL',
     badgeStyle: 'bg-blue-100 text-blue-700 border-blue-200',
     items: [
       {
-        label: 'É pontual e cumpre os horários estabelecidos',
-        desc: 'Chega no horário, avisa antecipadamente ausências e atrasos',
+        label: 'Está disponível em caso de necessidade ou eventualidade da empresa',
+        desc: 'Demonstra flexibilidade e comprometimento quando a empresa precisa',
       },
       {
         label: 'Entrega as demandas no prazo combinado',
@@ -144,25 +116,21 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
       },
       {
         label: 'Assume responsabilidade pelos próprios erros',
-        desc: 'Não terceiriza a culpa, busca corrigir e aprender',
+        desc: 'Não terceiriza a culpa, assume falhas e busca corrigir e aprender',
       },
       {
         label: 'Busca capacitações e treinamentos voluntariamente',
         desc: 'Realiza cursos, seminários e especializações por iniciativa própria',
       },
       {
-        label: 'Aplica no dia a dia os conhecimentos adquiridos',
-        desc: 'Coloca em prática o que aprende nos treinamentos',
-      },
-      {
-        label: 'Contribui para o desenvolvimento sustentável do negócio',
-        desc: 'Considera o impacto em comunidade, parceiros e sociedade nas suas ações',
+        label: 'Possui postura e respeito com os demais',
+        desc: 'Alinhado com as diretrizes e cultura da empresa',
       },
     ]
   },
   {
     number: 6,
-    title: 'Comportamento Seguro e Cultura de Prevenção',
+    title: 'Saúde, Segurança e Meio Ambiente',
     category: 'SEGURANÇA DO TRABALHO',
     badgeStyle: 'bg-amber-100 text-amber-800 border-amber-300',
     items: [
@@ -175,7 +143,7 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
         desc: 'Não ignora situações de risco, comunica ao responsável',
       },
       {
-        label: 'Conhece e segue os procedimentos de emergência',
+        label: 'Conhece e segue os procedimentos relacionados à SSMA',
         desc: 'Sabe como agir em casos de acidente, incêndio ou evacuação',
       },
       {
@@ -183,8 +151,12 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
         desc: 'Pratica a organização como hábito, não como obrigação pontual',
       },
       {
-        label: 'Dá o exemplo em comportamentos seguros para os colegas',
+        label: 'Estimula e propõe práticas de segurança no dia a dia junto às equipes',
         desc: 'Lidera pelo exemplo, incentiva a segurança nos outros',
+      },
+      {
+        label: 'Considera o impacto ambiental nas suas decisões e demonstra atitude proativa na preservação ambiental',
+        desc: 'Vai além do exigido, sugere práticas sustentáveis. Avalia as consequências ambientais nas escolhas operacionais',
       },
     ]
   },
@@ -195,12 +167,8 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
     badgeStyle: 'bg-purple-100 text-purple-800 border-purple-300',
     items: [
       {
-        label: 'Planeja e distribui atividades de forma equilibrada',
-        desc: 'Organiza a equipe com critérios justos e estratégicos',
-      },
-      {
-        label: 'Acompanha a execução e oferece suporte à equipe',
-        desc: 'Está presente e acessível durante a operação',
+        label: 'Planeja e distribui atividades de forma equilibrada, acompanhando a execução e oferecendo suporte à equipe',
+        desc: 'Organiza a equipe com critérios justos e estratégicos. Está presente e acessível durante a operação',
       },
       {
         label: 'Gerencia conflitos na equipe de forma construtiva',
@@ -211,14 +179,6 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
         desc: 'Investe no crescimento técnico e comportamental da equipe',
       },
       {
-        label: 'Cobra resultados com respeito e assertividade',
-        desc: 'Exige qualidade sem desrespeitar nem constranger a equipe',
-      },
-      {
-        label: 'Dá o exemplo comportamental para a equipe',
-        desc: 'Age da forma que espera que seus liderados ajam',
-      },
-      {
         label: 'Toma decisões com base em dados e evidências',
         desc: 'Não decide por impulso; busca informações antes de agir',
       },
@@ -227,40 +187,8 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
         desc: 'Celebra conquistas e dá crédito a quem merece',
       },
       {
-        label: 'Mantém a equipe motivada mesmo em períodos de pressão',
+        label: 'Mantém a equipe motivada mesmo em períodos de desafios',
         desc: 'Conduz a equipe com energia positiva em momentos críticos',
-      },
-    ]
-  },
-  {
-    number: 8,
-    title: 'Responsabilidade Ambiental e Práticas Sustentáveis',
-    category: 'MEIO AMBIENTE / SUSTENTABILIDADE',
-    badgeStyle: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    items: [
-      {
-        label: 'Descarta resíduos corretamente conforme as normas',
-        desc: 'Separa e descarta resíduos nos locais e formas adequadas',
-      },
-      {
-        label: 'Reduz o consumo de água, energia e combustível',
-        desc: 'Adota hábitos de consumo consciente no dia a dia',
-      },
-      {
-        label: 'Conhece e cumpre os procedimentos ambientais da empresa',
-        desc: 'Segue as normas ambientais internas e da legislação',
-      },
-      {
-        label: 'Demonstra atitude proativa na preservação ambiental',
-        desc: 'Vai além do exigido, sugere práticas sustentáveis',
-      },
-      {
-        label: 'Considera o impacto ambiental antes de tomar decisões',
-        desc: 'Avalia as consequências ambientais nas escolhas operacionais',
-      },
-      {
-        label: 'Orienta colegas sobre a importância das práticas ambientais',
-        desc: 'Atua como multiplicador da cultura ambiental na equipe',
       },
     ]
   }
