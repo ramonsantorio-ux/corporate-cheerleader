@@ -240,6 +240,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_s1 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s1', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={numInputStyle}
           placeholder="0"
         />
@@ -249,6 +250,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_s2 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s2', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={numInputStyle}
           placeholder="0"
         />
@@ -258,6 +260,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_s3 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s3', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={numInputStyle}
           placeholder="0"
         />
@@ -267,6 +270,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_s4 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s4', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={numInputStyle}
           placeholder="0"
         />
@@ -276,6 +280,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_s5 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_s5', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={numInputStyle}
           placeholder="0"
         />
@@ -293,6 +298,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.total_treinamentos || ''} 
           onChange={(e) => handleChange(idx, 'total_treinamentos', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={sideNumStyle}
           placeholder="0"
         />
@@ -302,6 +308,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.total_assistencia || ''} 
           onChange={(e) => handleChange(idx, 'total_assistencia', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={sideNumStyle}
           placeholder="0"
         />
@@ -313,6 +320,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_nc_s1 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s1', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={ncInputStyle}
           placeholder="0"
         />
@@ -322,6 +330,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_nc_s2 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s2', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={ncInputStyle}
           placeholder="0"
         />
@@ -331,6 +340,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_nc_s3 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s3', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={ncInputStyle}
           placeholder="0"
         />
@@ -340,6 +350,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_nc_s4 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s4', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={ncInputStyle}
           placeholder="0"
         />
@@ -349,6 +360,7 @@ function SortableRow({ row, idx, handleChange, handleRemoveRow, funcionariosList
           type="number" min="0" 
           value={row.verificacoes_nc_s5 ?? ''} 
           onChange={(e) => handleChange(idx, 'verificacoes_nc_s5', e.target.value)}
+          onFocus={(e) => e.target.select()}
           className={ncInputStyle}
           placeholder="0"
         />
