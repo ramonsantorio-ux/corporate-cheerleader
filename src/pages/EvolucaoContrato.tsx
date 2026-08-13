@@ -641,11 +641,11 @@ export default function EvolucaoContrato() {
   const [period, setPeriod] = useState<PeriodRange>(() => {
     const end = new Date();
     const start = new Date();
-    start.setFullYear(start.getFullYear() - 1);
+    start.setFullYear(start.getFullYear() - 2);
     return {
       start: start.toISOString().split('T')[0],
       end: end.toISOString().split('T')[0],
-      label: 'Últimos 12 meses'
+      label: 'Últimos 24 meses'
     };
   });
   const [activeTab, setActiveTab] = useState('visao_executiva');
@@ -755,7 +755,14 @@ export default function EvolucaoContrato() {
 
   // Derivations for charts and KPIs
   const chartData = useMemo(() => {
-    return medicoes.map(m => {
+    const sortedMedicoes = [...medicoes].sort((a, b) => {
+      const [aName, aYear] = a.mes.split('/');
+      const [bName, bYear] = b.mes.split('/');
+      const aDate = new Date(Number(aYear), monthMap[aName] ?? 0, 1);
+      const bDate = new Date(Number(bYear), monthMap[bName] ?? 0, 1);
+      return aDate.getTime() - bDate.getTime();
+    });
+    return sortedMedicoes.map(m => {
       const globais = notificacoesGlobais.filter(ng => isDateInMedicaoMonth(ng.dataStr, m.mes));
       const globaisNotifs = globais.filter(ng => ng.tipo === 'Notificação' || !ng.tipo).map(ng => ({ 
         motivo: `${ng.motivo} (Ref: ${ng.local})`,
@@ -830,12 +837,20 @@ export default function EvolucaoContrato() {
     const pStart = new Date(period.start + 'T00:00:00');
     const pEnd = new Date(period.end + 'T23:59:59');
 
-    return chartData.filter(m => {
-      const [mName, mYear] = m.mes.split('/');
-      const mIndex = monthMap[mName as keyof typeof monthMap] || 0;
-      const mDate = new Date(Number(mYear), mIndex, 20);
-      return mDate >= pStart && mDate <= pEnd;
-    });
+    return chartData
+      .filter(m => {
+        const [mName, mYear] = m.mes.split('/');
+        const mIndex = monthMap[mName as keyof typeof monthMap] || 0;
+        const mDate = new Date(Number(mYear), mIndex, 20);
+        return mDate >= pStart && mDate <= pEnd;
+      })
+      .sort((a, b) => {
+        const [aName, aYear] = a.mes.split('/');
+        const [bName, bYear] = b.mes.split('/');
+        const aDate = new Date(Number(aYear), monthMap[aName as keyof typeof monthMap] ?? 0, 1);
+        const bDate = new Date(Number(bYear), monthMap[bName as keyof typeof monthMap] ?? 0, 1);
+        return aDate.getTime() - bDate.getTime();
+      });
   }, [chartData, period]);
 
   const filteredPortoMinerio = useMemo(() => {
