@@ -362,21 +362,32 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     fetchData();
   }
 
-  function getStageAvg(stage: string): string {
-    const stageScores = currentCycleScores.filter(s => s.stage === stage && s.score != null);
-    if (stageScores.length === 0) return '—';
-    const avg = stageScores.reduce((sum, s) => sum + (s.score ?? 0), 0) / stageScores.length;
-    return avg.toFixed(1);
-  }
-
-  function getTopicAvg(topic: CriteriaTopic, stage: string): string {
+  // Média de um tópico específico em uma etapa (retorna number | null)
+  function getTopicAvgNum(topic: CriteriaTopic, stage: string): number | null {
     const labels = topic.items.map(i => i.label);
     const topicScores = currentCycleScores.filter(
       s => s.stage === stage && s.score != null && labels.includes(s.criteria)
     );
-    if (topicScores.length === 0) return '—';
-    const avg = topicScores.reduce((sum, s) => sum + (s.score ?? 0), 0) / topicScores.length;
-    return avg.toFixed(1);
+    if (topicScores.length === 0) return null;
+    return topicScores.reduce((sum, s) => sum + (s.score ?? 0), 0) / topicScores.length;
+  }
+
+  // Média por tópico formatada para exibir no header
+  function getTopicAvg(topic: CriteriaTopic, stage: string): string {
+    const avg = getTopicAvgNum(topic, stage);
+    return avg !== null ? avg.toFixed(1) : '—';
+  }
+
+  // Média geral da etapa = média das médias dos tópicos (peso igual para cada tópico)
+  // Somente tópicos com pelo menos 1 nota respondida entram no cálculo
+  function getStageAvg(stage: string): string {
+    const topicAvgs = CRITERIA_TOPICS
+      .map(topic => getTopicAvgNum(topic, stage))
+      .filter((avg): avg is number => avg !== null);
+
+    if (topicAvgs.length === 0) return '—';
+    const stageAvg = topicAvgs.reduce((sum, avg) => sum + avg, 0) / topicAvgs.length;
+    return stageAvg.toFixed(1);
   }
 
   async function handleClose() {
