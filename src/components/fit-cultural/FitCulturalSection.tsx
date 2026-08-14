@@ -28,7 +28,7 @@ export interface CriterionItem {
 export interface CriteriaTopic {
   number: number;
   title: string;
-  category: 'UNIVERSAL' | 'SEGURANÇA DO TRABALHO' | 'LIDERANÇA / SUPERVISÃO' | 'MEIO AMBIENTE / SUSTENTABILIDADE';
+  category: 'UNIVERSAL' | 'SEGURANÇA DO TRABALHO' | 'LIDERANÇA / SUPERVISÃO' | 'MEIO AMBIENTE / SUSTENTABILIDADE' | 'GESTÃO DA QUALIDADE';
   badgeStyle: string;
   items: CriterionItem[];
 }
@@ -199,6 +199,30 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
       {
         label: 'Mantém a equipe motivada mesmo em períodos de desafios',
         desc: 'Conduz a equipe com energia positiva em momentos críticos',
+      },
+    ]
+  },
+  {
+    number: 8,
+    title: 'Gestão da Qualidade',
+    category: 'GESTÃO DA QUALIDADE',
+    badgeStyle: 'bg-teal-100 text-teal-800 border-teal-300 dark:bg-teal-950 dark:text-teal-300 dark:border-teal-800',
+    items: [
+      {
+        label: 'Participa ativamente das reuniões de ISO quando solicitado',
+        desc: 'Engaja-se nas reuniões do sistema de gestão da qualidade, contribuindo com informações e sugestões',
+      },
+      {
+        label: 'Cumpre com os prazos das entregas solicitadas',
+        desc: 'Planeja e organiza suas atividades para atender aos prazos estabelecidos, comunicando antecipadamente eventuais riscos',
+      },
+      {
+        label: 'Realiza as entregas com qualidade',
+        desc: 'Executa suas tarefas com atenção, precisão e cuidado, garantindo que o resultado atenda aos padrões esperados',
+      },
+      {
+        label: 'Respeita procedimentos e entende a importância da padronização',
+        desc: 'Segue os procedimentos estabelecidos e reconhece que a padronização é fundamental para a consistência e melhoria contínua dos processos',
       },
     ]
   }
