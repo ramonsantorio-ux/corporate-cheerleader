@@ -430,8 +430,8 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
   }, [cycles, allScores, chartPeriod]);
 
   const SCORE_COLUMNS = [
-    { value: 1, label: 'Muito abaixo', short: '(1)' },
-    { value: 2, label: 'Abaixo', short: '(2)' },
+    { value: 1, label: 'Muito abaixo do esperado', short: '(1)' },
+    { value: 2, label: 'Abaixo do esperado', short: '(2)' },
     { value: 3, label: 'Dentro do esperado', short: '(3)' },
     { value: 4, label: 'Acima do esperado', short: '(4)' },
     { value: 5, label: 'Muito acima do esperado', short: '(5)' },

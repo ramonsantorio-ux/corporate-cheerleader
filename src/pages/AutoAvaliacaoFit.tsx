@@ -230,8 +230,8 @@ export default function AutoAvaliacaoFit() {
   const [selectedCycle, setSelectedCycle] = useState('');
   
   const SCORE_COLUMNS = [
-    { value: 1, label: 'Muito abaixo', short: '(1)' },
-    { value: 2, label: 'Abaixo', short: '(2)' },
+    { value: 1, label: 'Muito abaixo do esperado', short: '(1)' },
+    { value: 2, label: 'Abaixo do esperado', short: '(2)' },
     { value: 3, label: 'Dentro do esperado', short: '(3)' },
     { value: 4, label: 'Acima do esperado', short: '(4)' },
     { value: 5, label: 'Muito acima do esperado', short: '(5)' },
@@ -381,11 +381,11 @@ export default function AutoAvaliacaoFit() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         <tr>
-                          <td className="py-2 px-3 font-medium whitespace-nowrap">Muito abaixo (1)</td>
+                          <td className="py-2 px-3 font-medium whitespace-nowrap">Muito abaixo do esperado (1)</td>
                           <td className="py-2 px-3">O comportamento esperado praticamente não é demonstrado, sendo necessária uma melhoria imediata.</td>
                         </tr>
                         <tr>
-                          <td className="py-2 px-3 font-medium whitespace-nowrap">Abaixo (2)</td>
+                          <td className="py-2 px-3 font-medium whitespace-nowrap">Abaixo do esperado (2)</td>
                           <td className="py-2 px-3">O comportamento é apresentado apenas em algumas situações, porém ainda necessita de evolução.</td>
                         </tr>
                         <tr>
@@ -393,11 +393,11 @@ export default function AutoAvaliacaoFit() {
                           <td className="py-2 px-3">O colaborador atende às expectativas para a função, demonstrando o comportamento de forma consistente.</td>
                         </tr>
                         <tr>
-                          <td className="py-2 px-3 font-medium whitespace-nowrap">Acima (4)</td>
+                          <td className="py-2 px-3 font-medium whitespace-nowrap">Acima do esperado (4)</td>
                           <td className="py-2 px-3">O comportamento é demonstrado com frequência, servindo como exemplo positivo para a equipe.</td>
                         </tr>
                         <tr>
-                          <td className="py-2 px-3 font-medium whitespace-nowrap">Muito acima (5)</td>
+                          <td className="py-2 px-3 font-medium whitespace-nowrap">Muito acima do esperado (5)</td>
                           <td className="py-2 px-3">O colaborador é uma referência no critério avaliado, superando constantemente as expectativas.</td>
                         </tr>
                       </tbody>
