@@ -369,6 +369,16 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     return avg.toFixed(1);
   }
 
+  function getTopicAvg(topic: CriteriaTopic, stage: string): string {
+    const labels = topic.items.map(i => i.label);
+    const topicScores = currentCycleScores.filter(
+      s => s.stage === stage && s.score != null && labels.includes(s.criteria)
+    );
+    if (topicScores.length === 0) return '—';
+    const avg = topicScores.reduce((sum, s) => sum + (s.score ?? 0), 0) / topicScores.length;
+    return avg.toFixed(1);
+  }
+
   async function handleClose() {
     if (!activeCycleId || !user) return;
     setClosing(true);
@@ -560,9 +570,21 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                           {topic.number}. {topic.title}
                         </h4>
                       </div>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border shrink-0 ${topic.badgeStyle}`}>
-                        {topic.category}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {/* Média do tópico */}
+                        {(() => {
+                          const avg = getTopicAvg(topic, stage.key);
+                          return avg !== '—' ? (
+                            <div className="flex flex-col items-center bg-primary/10 border border-primary/20 rounded-lg px-3 py-1">
+                              <span className="text-sm font-bold text-primary leading-none">{avg}</span>
+                              <span className="text-[9px] text-primary/70 font-medium mt-0.5">média</span>
+                            </div>
+                          ) : null;
+                        })()}
+                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${topic.badgeStyle}`}>
+                          {topic.category}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="overflow-x-auto">
