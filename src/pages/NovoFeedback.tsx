@@ -10,7 +10,7 @@ import { FastInput } from '@/components/ui/fast-input';
 import { FastTextarea } from '@/components/ui/fast-textarea';
 export default function NovoFeedback() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userDepartment, isDepartmentLocked } = useAuth();
   const [funcionarios, setFuncionarios] = useState<string[]>([]);
   const [gestorName, setGestorName] = useState('');
   const [form, setForm] = useState({
@@ -18,14 +18,18 @@ export default function NovoFeedback() {
     descricao: '',
     setor: 'contrato_porto' as FeedbackSetor,
     prioridade: 'media' as FeedbackPriority,
-    departamento: '',
+    departamento: userDepartment || '',
     funcionario: '',
     pontos_positivos: '',
     pontos_melhoria: '',
   });
 
   useEffect(() => {
-    supabase.from('funcionarios').select('nome').then(({ data }) => {
+    let query = supabase.from('funcionarios').select('nome, departamento');
+    if (isDepartmentLocked && userDepartment) {
+      query = query.eq('departamento', userDepartment);
+    }
+    query.then(({ data }) => {
       if (data) setFuncionarios(data.map(f => f.nome));
     });
     // Get logged user name for gestor field
@@ -34,7 +38,7 @@ export default function NovoFeedback() {
         if (data) setGestorName(data.full_name || user.email || '');
       });
     }
-  }, [user]);
+  }, [user, isDepartmentLocked, userDepartment]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, User, ChevronDown, ChevronRight, Briefcase, Info, RefreshCw, X, GripHorizontal } from 'lucide-react';
+import { Loader2, User, ChevronDown, ChevronRight, Briefcase, Info, RefreshCw, X, GripHorizontal, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
+import { DEPARTAMENTOS } from '@/lib/departments';
 import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -24,21 +27,34 @@ interface TreeNode extends Funcionario {
 }
 
 export default function Organograma() {
+  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [tree, setTree] = useState<TreeNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<Funcionario | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [deptFilter, setDeptFilter] = useState<string>('todos');
+
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
+
+  const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
 
   const buildTree = useCallback((data: Funcionario[]) => {
+    const filteredData = activeDept === 'todos' ? data : data.filter(f => f.departamento === activeDept);
     const map = new Map<string, TreeNode>();
     const roots: TreeNode[] = [];
 
-    data.forEach(f => {
+    filteredData.forEach(f => {
       map.set(f.id, { ...f, children: [] });
     });
 
-    data.forEach(f => {
+    filteredData.forEach(f => {
       const node = map.get(f.id)!;
       if (f.encarregado_id && map.has(f.encarregado_id)) {
         map.get(f.encarregado_id)!.children.push(node);
@@ -48,14 +64,20 @@ export default function Organograma() {
     });
 
     setTree(roots);
-  }, []);
+  }, [activeDept]);
 
   const fetchFuncionarios = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from('funcionarios')
       .select('id, nome, cargo, departamento, encarregado_id, foto_url')
       .order('nome');
+
+    if (isDepartmentLocked && userDepartment) {
+      query = query.eq('departamento', userDepartment);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       toast.error('Erro ao buscar funcionários');
@@ -63,10 +85,11 @@ export default function Organograma() {
       return;
     }
 
-    setFuncionarios(data || []);
-    buildTree(data || []);
+    const funcs = data || [];
+    setFuncionarios(funcs);
+    buildTree(funcs);
     setLoading(false);
-  }, [buildTree]);
+  }, [buildTree, isDepartmentLocked, userDepartment]);
 
   useEffect(() => {
     fetchFuncionarios();
@@ -253,12 +276,32 @@ export default function Organograma() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Organograma Interativo</h1>
           <p className="text-muted-foreground mt-1">Visualize e edite a hierarquia da empresa. Use a alça lateral (6 pontinhos) de um funcionário para arrastá-lo sobre outro gestor.</p>
         </div>
-        <Button variant="outline" onClick={fetchFuncionarios}><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
+        <div className="flex items-center gap-2">
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
+              <Building2 className="w-4 h-4" />
+              <span>{userDepartment}</span>
+            </div>
+          ) : (
+            <Select value={deptFilter} onValueChange={(v) => { setDeptFilter(v); }}>
+              <SelectTrigger className="w-48 h-9 text-xs">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button variant="outline" size="sm" onClick={fetchFuncionarios}><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">

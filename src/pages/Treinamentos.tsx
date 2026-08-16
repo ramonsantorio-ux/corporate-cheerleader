@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { useNavigate } from 'react-router-dom';
-import { Users, FileText, CheckCircle2, Search, Link, Brain, BarChart2, Shield, User, ChevronRight, GraduationCap, ClipboardList, TrendingUp, Award, Star, Plus, ExternalLink, ChevronDown } from 'lucide-react';
+import { Users, FileText, CheckCircle2, Search, Link, Brain, BarChart2, Shield, User, ChevronRight, GraduationCap, ClipboardList, TrendingUp, Award, Star, Plus, ExternalLink, ChevronDown, Building2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,6 +11,8 @@ import { DiscReport, MbtiReport, BigFiveReport, discDescriptions } from '@/compo
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { DEPARTAMENTOS } from '@/lib/departments';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -115,8 +117,19 @@ function getDiscLetter(discData: any): string | null {
 
 export default function Treinamentos() {
   const navigate = useNavigate();
+  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
   const { canCreate, canEdit, canDelete } = usePermissions();
-  type Employee = { id: string; nome: string; cargo: string; foto_url?: string };
+  const [deptFilter, setDeptFilter] = useState<string>('todos');
+
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
+
+  type Employee = { id: string; nome: string; cargo: string; departamento?: string; foto_url?: string };
   type AssessmentResult = { id: string; user_id: string; type: string; result_data: unknown; created_at: string };
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [assessmentsData, setAssessmentsData] = useState<AssessmentResult[]>([]);
@@ -137,15 +150,17 @@ export default function Treinamentos() {
     toast({ title: 'Link copiado!', description: `Envie este link para o colaborador responder o teste.` });
   };
 
+  const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
+
   const fetchData = async () => {
     try {
-      const { data: emps, error } = await supabase.from('funcionarios').select('id, nome, cargo, foto_url').order('nome');
+      const { data: emps, error } = await supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url').order('nome');
       
-      let employeesList = emps;
+      let rawList = emps as Employee[];
       
       // Fallback para mock data se o banco estiver vazio
-      if (!employeesList || employeesList.length === 0) {
-        employeesList = [
+      if (!rawList || rawList.length === 0) {
+        rawList = [
           { id: 'mock-1', nome: 'Eduardo Silva', cargo: 'Analista Sênior', departamento: 'TI', foto_url: '' },
           { id: 'mock-2', nome: 'Ramon Leonard', cargo: 'Diretor', departamento: 'Diretoria', foto_url: '' },
           { id: 'mock-3', nome: 'Mariana Costa', cargo: 'Gerente de Projetos', departamento: 'Projetos', foto_url: '' }
@@ -159,12 +174,8 @@ export default function Treinamentos() {
       const { data: assessments } = await supabase.from('assessment_results').select('id, user_id, type, result_data, created_at');
       setAssessmentsData(assessments || []);
       
-      const enriched = (employeesList || []).map(f => {
-        return {
-          ...f,
-        };
-      });
-      setEmployees(enriched);
+      const filteredList = activeDept === 'todos' ? rawList : rawList.filter(f => f.departamento === activeDept);
+      setEmployees(filteredList);
     } catch (err) {
       console.error("Fatal error in fetchData:", err);
     }
@@ -257,7 +268,7 @@ export default function Treinamentos() {
   return (
     <div className="space-y-6">
       {/* Header estilo Painel do Gestor */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between gap-4">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Talentos & Comportamento</p>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -265,9 +276,30 @@ export default function Treinamentos() {
           </h1>
         </div>
         
-        <Button variant="outline" onClick={() => setLinkDialogOpen(true)}>
-          <Link className="w-4 h-4 mr-2" /> Gerar Link Colaborador
-        </Button>
+        <div className="flex items-center gap-2">
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
+              <Building2 className="w-4 h-4" />
+              <span>{userDepartment}</span>
+            </div>
+          ) : (
+            <Select value={deptFilter} onValueChange={(v) => setDeptFilter(v)}>
+              <SelectTrigger className="w-44 h-9 text-xs">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <Button variant="outline" size="sm" onClick={() => setLinkDialogOpen(true)}>
+            <Link className="w-4 h-4 mr-2" /> Gerar Link Colaborador
+          </Button>
+        </div>
       </motion.div>
 
       <Tabs defaultValue="assessments" className="w-full mt-4">

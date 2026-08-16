@@ -41,7 +41,7 @@ serve(async (req) => {
       });
     }
 
-    const { action, user_id, email, full_name, password } = await req.json();
+    const { action, user_id, email, full_name, password, departamento } = await req.json();
 
     if (action === 'list_users') {
       const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
@@ -64,6 +64,7 @@ serve(async (req) => {
           full_name: p.full_name,
           role: userRoles?.[0]?.role || 'user',
           profile_id: userRoles?.[0]?.profile_id || null,
+          departamento: (authUser?.user_metadata?.departamento as string) || (p as any)?.departamento || null,
           banned: isBanned,
         };
       }) || [];
@@ -74,10 +75,16 @@ serve(async (req) => {
     }
 
     if (action === 'update') {
-      // Update user email and profile name
+      // Update user email and profile name and department
       const updates: any = {};
       if (email) updates.email = email;
-      if (full_name) updates.user_metadata = { full_name };
+      
+      const userMetaUpdates: any = {};
+      if (full_name !== undefined) userMetaUpdates.full_name = full_name;
+      if (departamento !== undefined) userMetaUpdates.departamento = departamento;
+      if (Object.keys(userMetaUpdates).length > 0) {
+        updates.user_metadata = userMetaUpdates;
+      }
 
       if (Object.keys(updates).length > 0) {
         const { error } = await supabaseAdmin.auth.admin.updateUserById(user_id, updates);
@@ -85,10 +92,13 @@ serve(async (req) => {
       }
 
       if (full_name) {
-        await supabaseAdmin.from('profiles').update({ full_name }).eq('id', user_id);
+        try { await supabaseAdmin.from('profiles').update({ full_name }).eq('id', user_id); } catch (_) {}
       }
       if (email) {
-        await supabaseAdmin.from('profiles').update({ email }).eq('id', user_id);
+        try { await supabaseAdmin.from('profiles').update({ email }).eq('id', user_id); } catch (_) {}
+      }
+      if (departamento !== undefined) {
+        try { await supabaseAdmin.from('profiles').update({ departamento }).eq('id', user_id); } catch (_) {}
       }
 
       return new Response(JSON.stringify({ success: true }), {

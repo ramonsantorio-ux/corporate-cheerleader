@@ -15,6 +15,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { DEPARTAMENTOS } from '@/lib/departments';
+import { Building2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
 
 interface Competency {
@@ -31,7 +34,7 @@ interface Cycle {
 }
 
 interface Funcionario {
-  id: string; nome: string; cargo: string;
+  id: string; nome: string; cargo: string; departamento: string;
 }
 
 interface Evaluation {
@@ -62,6 +65,17 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export default function Competencias() {
   const { canCreate, canEdit, canDelete } = usePermissions();
+  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const [deptFilter, setDeptFilter] = useState<string>('todos');
+
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
+
   const [competencies, setCompetencies] = useState<Competency[]>([]);
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -94,12 +108,19 @@ export default function Competencias() {
     Promise.all([
       fetchCompetencies(),
       fetchCycles(),
-      supabase.from('funcionarios').select('id, nome, cargo').then(({ data }) => { if (data) setFuncionarios(data as Funcionario[]); }),
+      supabase.from('funcionarios').select('id, nome, cargo, departamento').then(({ data }) => {
+        if (data) {
+          const raw = data as Funcionario[];
+          const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
+          const filtered = activeDept === 'todos' ? raw : raw.filter(f => f.departamento === activeDept);
+          setFuncionarios(filtered);
+        }
+      }),
       supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at').then(({ data }) => { if (data) setEvaluations(data as Evaluation[]); }),
       supabase.from('evaluation_cycles').select('id, end_date').then(({ data }) => { if (data) setEvalCycles(data as EvaluationCycle[]); }),
       supabase.from('fit_cultural').select('employee_id, stage').then(({ data }) => { if (data) setFitCulturalAnswers(data as { employee_id: string; stage: string }[]); }),
     ]);
-  }, []);
+  }, [deptFilter, isDepartmentLocked, userDepartment]);
 
   async function fetchCompetencies() {
     const { data } = await supabase.from('competencies').select('*').order('created_at', { ascending: false });
@@ -236,18 +257,37 @@ export default function Competencias() {
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Fit Cultural</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerencie competências e avalie o fit cultural da equipe</p>
+          <h1 className="text-2xl font-bold text-foreground">Fit Cultural por Setor</h1>
+          <p className="text-muted-foreground text-sm mt-1">Gerencie competências e avalie o fit cultural da equipe por departamento</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
+              <Building2 className="w-4 h-4" />
+              <span>{userDepartment}</span>
+            </div>
+          ) : (
+            <Select value={deptFilter} onValueChange={(v) => setDeptFilter(v)}>
+              <SelectTrigger className="w-44 h-9 text-xs">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           {!selectedEvalEmployee && (
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => setLinkDialogOpen(true)}>
+              <Button variant="outline" size="sm" onClick={() => setLinkDialogOpen(true)}>
                 Gerar Link Colaborador
               </Button>
-              <Button variant="secondary" onClick={() => setEvalDialogOpen(true)} className="bg-primary/10 text-primary hover:bg-primary/20">
+              <Button variant="secondary" size="sm" onClick={() => setEvalDialogOpen(true)} className="bg-primary/10 text-primary hover:bg-primary/20">
                 <Target className="w-4 h-4 mr-2" /> Avaliar Colaborador
               </Button>
             </div>

@@ -16,6 +16,9 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { DEPARTAMENTOS } from '@/lib/departments';
+import { Building2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, AreaChart, Area, CartesianGrid, RadialBarChart, RadialBar, Legend } from 'recharts';
 
 const departamentos = Object.entries(setorLabels) as [FeedbackSetor, string][];
@@ -77,8 +80,18 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export default function Feedbacks() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
   const { canCreate, canEdit, canDelete } = usePermissions();
+  const [deptFilter, setDeptFilter] = useState<string>('todos');
+
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
+
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | 'todos'>('todos');
@@ -90,22 +103,28 @@ export default function Feedbacks() {
   const [createOpen, setCreateOpen] = useState(false);
   const [period, setPeriod] = useState<PeriodRange>(getPortoPeriod(0));
 
-  const [funcionariosFull, setFuncionariosFull] = useState<{ id: string; nome: string; cargo: string }[]>([]);
+  const [funcionariosFull, setFuncionariosFull] = useState<{ id: string; nome: string; cargo: string; departamento?: string }[]>([]);
   const [funcionarios, setFuncionarios] = useState<string[]>([]);
   const [gestorName, setGestorName] = useState('');
   const [expandedFbCargo, setExpandedFbCargo] = useState<string | null>(null);
+
+  const initialDept = (isDepartmentLocked && userDepartment) ? userDepartment : '';
   const [form, setForm] = useState({
     titulo: '', descricao: '', setor: 'contrato_porto' as FeedbackSetor,
-    prioridade: 'media' as FeedbackPriority, departamento: '', funcionario: '',
+    prioridade: 'media' as FeedbackPriority, departamento: initialDept, funcionario: '',
     pontos_positivos: '', pontos_melhoria: '',
   });
 
+  const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
+
   useEffect(() => {
     fetchFeedbacks();
-    supabase.from('funcionarios').select('id, nome, cargo').then(({ data }) => {
+    supabase.from('funcionarios').select('id, nome, cargo, departamento').then(({ data }) => {
       if (data) {
-        setFuncionariosFull(data as { id: string; nome: string; cargo: string }[]);
-        setFuncionarios(data.map(f => f.nome));
+        const raw = data as { id: string; nome: string; cargo: string; departamento: string }[];
+        const filteredFuncs = activeDept === 'todos' ? raw : raw.filter(f => f.departamento === activeDept);
+        setFuncionariosFull(filteredFuncs);
+        setFuncionarios(filteredFuncs.map(f => f.nome));
       }
     });
     if (user?.id) {
@@ -113,33 +132,40 @@ export default function Feedbacks() {
         if (data) setGestorName(data.full_name || user.email || '');
       });
     }
-  }, [user]);
+  }, [user, deptFilter, isDepartmentLocked, userDepartment]);
 
   async function fetchFeedbacks() {
     const { data } = await supabase.from('feedbacks').select('*').order('criado_em', { ascending: false });
     if (data) {
-      setFeedbacks(data.map(row => ({
+      const allRows = data.map(row => ({
         id: row.id, titulo: row.titulo, descricao: row.descricao,
         setor: row.setor as FeedbackSetor, prioridade: row.prioridade as FeedbackPriority,
         status: row.status as FeedbackStatus, autor: row.autor, departamento: row.departamento,
         criadoEm: new Date(row.criado_em).toISOString().split('T')[0],
         atualizadoEm: new Date(row.atualizado_em).toISOString().split('T')[0],
         votos: row.votos, comentarios: row.comentarios,
-      })));
+      }));
+
+      if (activeDept !== 'todos') {
+        setFeedbacks(allRows.filter(r => r.departamento === activeDept || (r.setor && r.setor.replace(/_/g, ' ').toLowerCase().includes(activeDept.toLowerCase()))));
+      } else {
+        setFeedbacks(allRows);
+      }
     }
   }
 
   async function handleCreateFeedback(e: React.FormEvent) {
     e.preventDefault();
+    const finalDept = (isDepartmentLocked && userDepartment) ? userDepartment : form.departamento;
     if (!form.titulo.trim() || !form.descricao.trim() || !form.funcionario) {
       toast.error('Preencha todos os campos obrigatórios.');
       return;
     }
     const { error } = await supabase.from('feedbacks').insert({
       titulo: form.titulo, descricao: form.descricao, setor: form.setor,
-      prioridade: form.prioridade, autor: form.funcionario, departamento: form.departamento,
+      prioridade: form.prioridade, autor: form.funcionario, departamento: finalDept,
       pontos_positivos: form.pontos_positivos, pontos_melhoria: form.pontos_melhoria,
-      observacoes: form.departamento, gestor: gestorName,
+      observacoes: finalDept, gestor: gestorName,
     });
     if (error) { toast.error('Erro ao enviar feedback.'); return; }
 
@@ -148,7 +174,7 @@ export default function Feedbacks() {
       await supabase.from('funcionarios').update({ feedbacks_recebidos: funcData.feedbacks_recebidos + 1 }).eq('id', funcData.id);
     }
     toast.success('Feedback enviado com sucesso!');
-    setForm({ titulo: '', descricao: '', setor: 'contrato_porto', prioridade: 'media', departamento: '', funcionario: '', pontos_positivos: '', pontos_melhoria: '' });
+    setForm({ titulo: '', descricao: '', setor: 'contrato_porto', prioridade: 'media', departamento: initialDept, funcionario: '', pontos_positivos: '', pontos_melhoria: '' });
     setCreateOpen(false);
     fetchFeedbacks();
   }
@@ -299,12 +325,32 @@ export default function Feedbacks() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Gestão de Feedbacks</h1>
           <p className="text-muted-foreground text-sm mt-1">Painel analítico de acompanhamento e resolução</p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}><Plus className="w-4 h-4 mr-2" />Novo Feedback</Button>
+        <div className="flex items-center gap-2">
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
+              <Building2 className="w-4 h-4" />
+              <span>{userDepartment}</span>
+            </div>
+          ) : (
+            <Select value={deptFilter} onValueChange={(v) => setDeptFilter(v)}>
+              <SelectTrigger className="w-44 h-9 text-xs">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button onClick={() => setCreateOpen(true)} size="sm"><Plus className="w-4 h-4 mr-2" />Novo Feedback</Button>
+        </div>
       </motion.div>
 
       <PeriodFilter value={period} onChange={setPeriod} />

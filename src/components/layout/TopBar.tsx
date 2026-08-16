@@ -1,6 +1,8 @@
-import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock, Moon, Sun, LogOut, User, Settings } from 'lucide-react';
+import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock, Moon, Sun, LogOut, User, Settings, Building2 } from 'lucide-react';
 import busatoGlobo from '@/assets/busato-globo.png';
 import { useTheme } from '@/components/ThemeProvider';
+import { DEPARTAMENTOS } from '@/lib/departments';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -33,8 +35,7 @@ export default function TopBar() {
       return saved ? new Set(JSON.parse(saved)) : new Set();
     } catch { return new Set(); }
   });
-  const { theme, setTheme } = useTheme();
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, userDepartment, effectiveDepartment, isDepartmentLocked, setEffectiveDepartment, signOut } = useAuth();
   
   let userName = 'Usuário';
   if (user?.user_metadata?.full_name && typeof user.user_metadata.full_name === 'string') {
@@ -176,7 +177,30 @@ export default function TopBar() {
         />
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Indicador / Seletor de Departamento */}
+        {isAdmin ? (
+          <div className="hidden sm:flex items-center gap-1.5 bg-background/60 border border-border/80 rounded-lg px-2 py-1 shadow-sm">
+            <Building2 className="w-3.5 h-3.5 text-primary" />
+            <Select value={effectiveDepartment || 'all'} onValueChange={(v) => setEffectiveDepartment(v === 'all' ? null : v)}>
+              <SelectTrigger className="h-7 text-xs border-none bg-transparent shadow-none px-1.5 focus:ring-0 focus:ring-offset-0">
+                <SelectValue placeholder="Todos os Setores" />
+              </SelectTrigger>
+              <SelectContent align="end">
+                <SelectItem value="all">🌐 Todos os Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : userDepartment ? (
+          <div className="hidden sm:flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary font-medium text-xs rounded-lg px-2.5 py-1.5 shadow-sm">
+            <Building2 className="w-3.5 h-3.5" />
+            <span>{userDepartment}</span>
+          </div>
+        ) : null}
+
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="p-2 rounded-lg hover:bg-muted transition-colors"
@@ -248,6 +272,15 @@ export default function TopBar() {
                 <p className="text-xs leading-none text-muted-foreground truncate">
                   {user?.email}
                 </p>
+                {userDepartment ? (
+                  <p className="text-[11px] font-medium text-primary mt-1 flex items-center gap-1">
+                    <Building2 className="w-3 h-3" /> {userDepartment}
+                  </p>
+                ) : isAdmin ? (
+                  <p className="text-[11px] font-medium text-muted-foreground mt-1 flex items-center gap-1">
+                    🌐 Acesso Geral (Admin)
+                  </p>
+                ) : null}
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

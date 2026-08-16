@@ -17,6 +17,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { toast } from 'sonner';
 import { PAGES, PAGE_GROUPS } from '@/lib/permissions';
 import { logAudit } from '@/lib/audit';
+import { DEPARTAMENTOS } from '@/lib/departments';
 
 interface UserWithRole {
   id: string;
@@ -25,6 +26,7 @@ interface UserWithRole {
   role: string;
   banned: boolean;
   profile_id: string | null;
+  departamento: string | null;
 }
 
 export default function Admin() {
@@ -32,7 +34,7 @@ export default function Admin() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newUser, setNewUser] = useState({ email: '', password: '', full_name: '', profile_id: '' });
+  const [newUser, setNewUser] = useState({ email: '', password: '', full_name: '', profile_id: '', departamento: '' });
   const [accessProfiles, setAccessProfiles] = useState<{id: string, name: string}[]>([]);
 
   const [creating, setCreating] = useState(false);
@@ -44,6 +46,7 @@ export default function Admin() {
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editProfileId, setEditProfileId] = useState<string>('');
+  const [editDepartamento, setEditDepartamento] = useState<string>('');
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Change password dialog
@@ -106,6 +109,7 @@ export default function Admin() {
         .filter(p => p.full_name !== '__DELETED__')
         .map(p => {
           const roleRow = allRoles?.find(r => r.user_id === p.id);
+          const savedDept = localStorage.getItem(`user_dept_${p.id}`);
           return {
             id: p.id,
             email: p.email,
@@ -113,6 +117,7 @@ export default function Admin() {
             role: roleRow?.role || 'user',
             banned: bannedUserIds.has(p.id),
             profile_id: roleRow?.profile_id || null,
+            departamento: (p as any).departamento || savedDept || null,
           };
         });
       setUsers(usersWithRoles);
@@ -173,13 +178,16 @@ export default function Admin() {
         email: newUser.email,
         password: newUser.password,
         full_name: newUser.full_name,
+        departamento: newUser.departamento || null,
       });
 
       toast.success('Usuário criado com sucesso!');
-      setNewUser({ email: '', password: '', full_name: '', profile_id: '' });
-      setDialogOpen(false);
       const userId = user.user_id;
       if (userId) {
+          if (newUser.departamento) {
+            localStorage.setItem(`user_dept_${userId}`, newUser.departamento);
+            try { await supabase.from('profiles').update({ departamento: newUser.departamento }).eq('id', userId); } catch (_) {}
+          }
           if (!newUser.profile_id) {
             const defaultPerms = PAGES.map(p => ({
               user_id: userId,
@@ -196,9 +204,11 @@ export default function Admin() {
           await logAudit({
             action: 'user_created',
             record_id: userId,
-            new_data: { email: newUser.email, full_name: newUser.full_name, profile_id: newUser.profile_id || null },
+            new_data: { email: newUser.email, full_name: newUser.full_name, profile_id: newUser.profile_id || null, departamento: newUser.departamento || null },
           });
         }
+        setNewUser({ email: '', password: '', full_name: '', profile_id: '', departamento: '' });
+        setDialogOpen(false);
         fetchUsers();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erro inesperado';
@@ -258,15 +268,30 @@ export default function Admin() {
     setEditName(user.full_name);
     setEditEmail(user.email);
     setEditProfileId(user.profile_id || '');
+    setEditDepartamento(user.departamento || '');
   }
 
   async function saveEditUser() {
     if (!editUserDialog) return;
     setSavingEdit(true);
     try {
-      const oldData = { email: editUserDialog.email, full_name: editUserDialog.full_name, profile_id: editUserDialog.profile_id };
+      const oldData = { email: editUserDialog.email, full_name: editUserDialog.full_name, profile_id: editUserDialog.profile_id, departamento: editUserDialog.departamento };
 
-      await adminAuthRequest('manage', { action: 'update', user_id: editUserDialog.id, email: editEmail, full_name: editName });
+      await adminAuthRequest('manage', {
+        action: 'update',
+        user_id: editUserDialog.id,
+        email: editEmail,
+        full_name: editName,
+        departamento: editDepartamento || null,
+      });
+
+      if (editDepartamento) {
+        localStorage.setItem(`user_dept_${editUserDialog.id}`, editDepartamento);
+        try { await supabase.from('profiles').update({ departamento: editDepartamento }).eq('id', editUserDialog.id); } catch (_) {}
+      } else {
+        localStorage.removeItem(`user_dept_${editUserDialog.id}`);
+        try { await supabase.from('profiles').update({ departamento: null }).eq('id', editUserDialog.id); } catch (_) {}
+      }
 
       const { data: roleData } = await supabase.from('user_roles').select('*').eq('user_id', editUserDialog.id).maybeSingle();
       if (roleData) {
@@ -279,7 +304,7 @@ export default function Admin() {
         action: 'user_updated',
         record_id: editUserDialog.id,
         old_data: oldData,
-        new_data: { email: editEmail, full_name: editName, profile_id: editProfileId || null },
+        new_data: { email: editEmail, full_name: editName, profile_id: editProfileId || null, departamento: editDepartamento || null },
       });
 
       toast.success('Usuário atualizado com sucesso!');
@@ -422,6 +447,21 @@ export default function Admin() {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label>Departamento / Setor</Label>
+                <Select value={newUser.departamento || 'all'} onValueChange={(v) => setNewUser({...newUser, departamento: v === 'all' ? '' : v})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o departamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos / Acesso Global (Diretoria/Admin)</SelectItem>
+                    {DEPARTAMENTOS.map(d => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground">Usuários com departamento específico só visualizam dados do próprio setor.</p>
+              </div>
+              <div className="space-y-2">
                 <Label>Senha</Label>
                 <div className="relative">
                   <FastInput type={showPassword ? "text" : "password"} value={newUser.password} onValueChange={v => setNewUser({ ...newUser, password: v })} placeholder="Mínimo 6 caracteres" />
@@ -479,6 +519,15 @@ export default function Admin() {
                       {accessProfiles.find(p => p.id === u.profile_id)?.name || 'Perfil'}
                     </span>
                   )}
+                  {u.departamento ? (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      🏢 {u.departamento}
+                    </span>
+                  ) : (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-slate-500/10 text-slate-600 dark:text-slate-400">
+                      🌐 Acesso Global
+                    </span>
+                  )}
                   {u.banned && (
                     <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-destructive/15 text-destructive flex items-center gap-1">
                       <Ban className="w-3 h-3" /> Bloqueado
@@ -521,9 +570,10 @@ export default function Admin() {
                       <Ban className="w-4 h-4 mr-2" /> Bloquear Usuário
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={() => setDeleteUser(u)}
-                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    className="text-destructive focus:bg-destructive/10 focus:text-destructive font-medium"
                   >
                     <Trash2 className="w-4 h-4 mr-2" /> Excluir Conta
                   </DropdownMenuItem>
@@ -536,7 +586,7 @@ export default function Admin() {
 
       {/* Permissions dialog */}
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Permissões Individuais — {editingUser?.full_name}</DialogTitle>
           </DialogHeader>
@@ -639,6 +689,21 @@ export default function Admin() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Departamento / Setor</Label>
+              <Select value={editDepartamento || 'all'} onValueChange={(v) => setEditDepartamento(v === 'all' ? '' : v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o departamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos / Acesso Global (Diretoria/Admin)</SelectItem>
+                  {DEPARTAMENTOS.map(d => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">Usuários com departamento específico só visualizam dados do próprio setor.</p>
             </div>
             <Button onClick={saveEditUser} className="w-full" disabled={savingEdit}>
               {savingEdit ? 'Salvando...' : 'Salvar Alterações'}

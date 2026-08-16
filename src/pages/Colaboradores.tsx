@@ -16,6 +16,9 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { DEPARTAMENTOS } from '@/lib/departments';
+import { Building2 } from 'lucide-react';
 
 interface Funcionario {
   id: string; nome: string; email: string; departamento: string; cargo: string;
@@ -25,7 +28,7 @@ interface Funcionario {
   foto_url: string; turno: string; letra: string; encarregado_id: string | null;
 }
 
-const departamentos = ['Contrato Porto', 'Contrato Usina', 'Frotas', 'Medição', 'Segurança', 'CCO', 'CCM', 'Manutenção', 'RH', 'Financeiro'];
+const departamentos = DEPARTAMENTOS;
 const escolaridades = ['Ensino Fundamental', 'Ensino Médio', 'Ensino Superior Cursando', 'Ensino Superior Completo', 'Pós-Graduação', 'Mestrado', 'Doutorado'];
 const TURNOS = [
   { value: 'dia_a', label: 'Dia A' }, { value: 'dia_b', label: 'Dia B' },
@@ -43,10 +46,20 @@ function letraFromTurno(turno: string): string {
 export default function Colaboradores() {
   const navigate = useNavigate();
   const { canCreate, canEdit, canDelete } = usePermissions();
+  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
   const [turnoFilter, setTurnoFilter] = useState('todos');
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
+
+  // Sincroniza filtro se houver departamento travado ou efetivo
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
 
   // Reset página ao mudar filtros
   useEffect(() => { setCurrentPage(1); }, [search, deptFilter, turnoFilter]);
@@ -64,7 +77,8 @@ export default function Colaboradores() {
   const PAGE_SIZE = 20;
   const [currentPage, setCurrentPage] = useState(1);
 
-  const emptyForm = { nome: '', email: '', cargo: '', departamento: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: 'none' };
+  const initialDept = (isDepartmentLocked && userDepartment) ? userDepartment : '';
+  const emptyForm = { nome: '', email: '', cargo: '', departamento: initialDept, data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: 'none' };
   const [newData, setNewData] = useState(emptyForm);
   const [editData, setEditData] = useState({ id: '', foto_url: '', ...emptyForm });
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
@@ -83,14 +97,20 @@ export default function Colaboradores() {
 
   async function fetchFuncionarios(silent = false) {
     if (!silent) setLoading(true);
-    const { data, error } = await supabase.from('funcionarios').select('*').order('nome');
+    let query = supabase.from('funcionarios').select('*').order('nome');
+    if (isDepartmentLocked && userDepartment) {
+      query = query.eq('departamento', userDepartment);
+    }
+    const { data, error } = await query;
     if (!error && data) setFuncionarios(data as Funcionario[]);
     if (!silent) setLoading(false);
   }
 
+  const activeDeptFilter = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
+
   const filtered = funcionarios.filter((f) => {
     const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
-    const matchDept = deptFilter === 'todos' || f.departamento === deptFilter;
+    const matchDept = activeDeptFilter === 'todos' || f.departamento === activeDeptFilter;
     const matchTurno = turnoFilter === 'todos' || f.turno === turnoFilter;
     return matchSearch && matchDept && matchTurno;
   });
@@ -287,7 +307,18 @@ export default function Colaboradores() {
         <div className="space-y-2"><Label>E-mail</Label><FastInput value={data.email} onValueChange={v => setData({ ...data, email: v })} placeholder="email@empresa.com" type="email" /></div>
         <div className="space-y-2">
           <Label>Departamento</Label>
-          <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent></Select>
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-2 p-2.5 bg-muted/60 border border-border rounded-lg text-sm font-medium">
+              <Building2 className="w-4 h-4 text-primary" />
+              <span>{userDepartment}</span>
+              <span className="text-[11px] text-muted-foreground ml-auto">(Seu departamento)</span>
+            </div>
+          ) : (
+            <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}>
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+            </Select>
+          )}
         </div>
         <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
           <Label className="text-sm font-semibold">Turno / Escala</Label>
@@ -324,10 +355,17 @@ export default function Colaboradores() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Buscar por nome ou cargo..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Select value={deptFilter} onValueChange={setDeptFilter}>
-          <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Departamento" /></SelectTrigger>
-          <SelectContent><SelectItem value="todos">Todos</SelectItem>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-        </Select>
+        {isDepartmentLocked && userDepartment ? (
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
+            <Building2 className="w-4 h-4" />
+            <span>{userDepartment}</span>
+          </div>
+        ) : (
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-full sm:w-44"><SelectValue placeholder="Departamento" /></SelectTrigger>
+            <SelectContent><SelectItem value="todos">Todos Departamentos</SelectItem>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+          </Select>
+        )}
         <Select value={turnoFilter} onValueChange={setTurnoFilter}>
           <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Turno/Escala" /></SelectTrigger>
           <SelectContent>

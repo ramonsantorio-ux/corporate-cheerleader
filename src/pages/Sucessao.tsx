@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { DEPARTAMENTOS } from "@/lib/departments";
+import { Building2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const matrixBoxes = [
   // Top Row (Potencial Alto)
@@ -19,27 +23,42 @@ const matrixBoxes = [
 ];
 
 export default function Sucessao() {
-  const [employees, setEmployees] = useState<{ name: string, role: string, perf: string, pot: string }[]>([]);
+  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const [deptFilter, setDeptFilter] = useState<string>('todos');
+
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
+
+  const [employees, setEmployees] = useState<{ name: string, role: string, perf: string, pot: string, departamento: string }[]>([]);
   const [selectedBox, setSelectedBox] = useState<{ box: typeof matrixBoxes[0], emps: typeof employees } | null>(null);
+
+  const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
 
   useEffect(() => {
     async function fetchData() {
-      const { data } = await supabase.from('funcionarios').select('nome, cargo, nine_box_desempenho, nine_box_potencial');
+      const { data } = await supabase.from('funcionarios').select('nome, cargo, departamento, nine_box_desempenho, nine_box_potencial');
       if (data) {
-        // TODO: We can probably fetch eligible_roles from cycle, but here we just show all who have nine box set.
-        const mapped = data
+        const raw = data
           .filter(e => e.nine_box_desempenho && e.nine_box_potencial)
           .map(e => ({
             name: e.nome,
             role: e.cargo,
+            departamento: e.departamento,
             perf: e.nine_box_desempenho as string,
             pot: e.nine_box_potencial as string
           }));
-        setEmployees(mapped);
+
+        const filtered = activeDept === 'todos' ? raw : raw.filter(e => e.departamento === activeDept);
+        setEmployees(filtered);
       }
     }
     fetchData();
-  }, []);
+  }, [deptFilter, isDepartmentLocked, userDepartment]);
 
   const handleBoxClick = (box: typeof matrixBoxes[0], emps: typeof employees) => {
     setSelectedBox({ box, emps });
@@ -47,12 +66,32 @@ export default function Sucessao() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Plano de Sucessão (Matriz 9-Box)</h1>
           <p className="text-muted-foreground text-sm mt-1">
             Avaliação estratégica de talentos baseada em Desempenho e Potencial
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
+              <Building2 className="w-4 h-4" />
+              <span>{userDepartment}</span>
+            </div>
+          ) : (
+            <Select value={deptFilter} onValueChange={(v) => setDeptFilter(v)}>
+              <SelectTrigger className="w-44 h-9 text-xs">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 

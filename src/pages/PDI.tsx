@@ -11,6 +11,9 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { DEPARTAMENTOS } from '@/lib/departments';
+import { Building2 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface PDI {
@@ -98,6 +101,18 @@ interface PDIPageProps {
 }
 
 export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogClose }: PDIPageProps = {}) {
+  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const [deptFilter, setDeptFilter] = useState<string>('todos');
+  const [funcionarios, setFuncionarios] = useState<{ id: string; nome: string; departamento: string }[]>([]);
+
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
+
   const [pdis, setPdis] = useState<PDI[]>([]);
   const [actions, setActions] = useState<Record<string, PDIAction[]>>({});
   const [checkins, setCheckins] = useState<Record<string, PDICheckin[]>>({});
@@ -113,8 +128,16 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
   const { toast } = useToast();
 
   useEffect(() => {
-    Promise.all([fetchPDIs(), fetchCycles(), fetchCompetencies()]);
+    supabase.from('funcionarios').select('id, nome, departamento').then(({ data }) => {
+      if (data) setFuncionarios(data as { id: string; nome: string; departamento: string }[]);
+    });
   }, []);
+
+  const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
+
+  useEffect(() => {
+    Promise.all([fetchPDIs(), fetchCycles(), fetchCompetencies()]);
+  }, [deptFilter, isDepartmentLocked, userDepartment, funcionarios]);
 
   useEffect(() => {
     if (autoOpenDialog && initialEmployeeName) {
@@ -133,8 +156,16 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
   async function fetchPDIs() {
     const { data } = await supabase.from('pdis').select('*').order('created_at', { ascending: false });
     if (data) {
-      setPdis(data as PDI[]);
-      const ids = (data as PDI[]).map(p => p.id);
+      const allPdis = data as PDI[];
+      const filteredPdis = (activeDept === 'todos' || funcionarios.length === 0)
+        ? allPdis
+        : allPdis.filter(p => {
+            const f = funcionarios.find(emp => emp.nome.toLowerCase() === p.employee_name.toLowerCase());
+            return f ? f.departamento === activeDept : true;
+          });
+
+      setPdis(filteredPdis);
+      const ids = filteredPdis.map(p => p.id);
       if (ids.length > 0) {
         const [{ data: actionsData }, { data: checkinsData }] = await Promise.all([
           supabase.from('pdi_actions').select('*').in('pdi_id', ids),
@@ -158,6 +189,9 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
           });
           setCheckins(grouped);
         }
+      } else {
+        setActions({});
+        setCheckins({});
       }
     }
     setLoading(false);
@@ -337,30 +371,63 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
 
   return (
     <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">PDI - Plano de Desenvolvimento Individual</h1>
           <p className="text-muted-foreground text-sm mt-1">Acompanhamento contínuo e desenvolvimento 70:20:10</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"><Plus className="w-4 h-4 mr-2" /> Novo PDI</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>Criar PDI</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div>
-                <Label>Ciclo</Label>
-                <Select value={pdiForm.cycle_id} onValueChange={v => setPdiForm({ ...pdiForm, cycle_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                  <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div><Label>Colaborador</Label><FastInput value={pdiForm.employee_name} onValueChange={v => setPdiForm(f => ({ ...f, employee_name: v }))} placeholder="Nome do colaborador" /></div>
-              <Button onClick={createPDI} className="w-full">Criar PDI</Button>
+        <div className="flex items-center gap-2">
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
+              <Building2 className="w-4 h-4" />
+              <span>{userDepartment}</span>
             </div>
-          </DialogContent>
-        </Dialog>
+          ) : (
+            <Select value={deptFilter} onValueChange={(v) => setDeptFilter(v)}>
+              <SelectTrigger className="w-44 h-9 text-xs">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          <Dialog open={dialogOpen} onOpenChange={handleOpenChange}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md" size="sm"><Plus className="w-4 h-4 mr-2" /> Novo PDI</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Criar PDI</DialogTitle></DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div>
+                  <Label>Ciclo</Label>
+                  <Select value={pdiForm.cycle_id} onValueChange={v => setPdiForm({ ...pdiForm, cycle_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent>{cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Colaborador</Label>
+                  <Select value={pdiForm.employee_name} onValueChange={v => setPdiForm(f => ({ ...f, employee_name: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o colaborador" /></SelectTrigger>
+                    <SelectContent>
+                      {funcionarios
+                        .filter(f => activeDept === 'todos' || f.departamento === activeDept)
+                        .map(f => (
+                          <SelectItem key={f.id} value={f.nome}>{f.nome}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={createPDI} className="w-full">Criar PDI</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </motion.div>
       
       {/* Dashboard KPI's */}

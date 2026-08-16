@@ -26,6 +26,9 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { DEPARTAMENTOS } from '@/lib/departments';
+import { Building2 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Attendance {
@@ -85,6 +88,17 @@ function formatDate(d: string | null) {
 // ─── Main Component ─────────────────────────────────────────────────────────
 export default function PontoFerias() {
   const { canCreate, canEdit, canDelete } = usePermissions();
+  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const [deptFilter, setDeptFilter] = useState<string>('todos');
+
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
+
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [vacations, setVacations] = useState<VacationRecord[]>([]);
   const [overtimes, setOvertimes] = useState<OvertimeRecord[]>([]);
@@ -127,7 +141,7 @@ export default function PontoFerias() {
   });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { fetchAll(); }, [period]);
+  useEffect(() => { fetchAll(); }, [period, deptFilter, userDepartment, isDepartmentLocked]);
 
   // ─── Leader alert popups ──────────────────────────────────────────────
   useEffect(() => {
@@ -175,27 +189,30 @@ export default function PontoFerias() {
       supabase.from('funcionarios').select('id, nome, turno, letra, cargo, departamento, foto_url').order('nome'),
       supabase.from('employee_warnings').select('*').order('date', { ascending: false }),
     ]);
-    const funcs = (fRes.data || []) as Func[];
+    const rawFuncs = (fRes.data || []) as Func[];
+    const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
+    const funcs = activeDept === 'todos' ? rawFuncs : rawFuncs.filter(f => f.departamento === activeDept);
     setFuncionarios(funcs);
+    const deptEmpIds = new Set(funcs.map(f => f.id));
     const nameMap = Object.fromEntries(funcs.map(f => [f.id, f]));
 
     // Migrate old 'falta' status to 'falta_injustificada' in display
-    setAttendance((attRes.data || []).map((a) => ({
+    setAttendance((attRes.data || []).filter(a => deptEmpIds.has(a.employee_id)).map((a) => ({
       ...a,
       status: a.status === 'falta' ? 'falta_injustificada' : a.status,
       employee_name: nameMap[a.employee_id]?.nome || 'Desconhecido',
       turno: nameMap[a.employee_id]?.turno, letra: nameMap[a.employee_id]?.letra,
       cargo: nameMap[a.employee_id]?.cargo,
     })));
-    setVacations((vacRes.data || []).map((v) => ({
+    setVacations((vacRes.data || []).filter(v => deptEmpIds.has(v.employee_id)).map((v) => ({
       ...v, employee_name: nameMap[v.employee_id]?.nome || 'Desconhecido',
       turno: nameMap[v.employee_id]?.turno, letra: nameMap[v.employee_id]?.letra,
       cargo: nameMap[v.employee_id]?.cargo,
     })));
-    setOvertimes((ovtRes.data || []).map((o) => ({
+    setOvertimes((ovtRes.data || []).filter(o => deptEmpIds.has(o.employee_id)).map((o) => ({
       ...o, employee_name: nameMap[o.employee_id]?.nome || 'Desconhecido',
     })));
-    setWarnings((warnRes.data || []).map((w) => ({
+    setWarnings((warnRes.data || []).filter(w => deptEmpIds.has(w.employee_id)).map((w) => ({
       ...w, employee_name: nameMap[w.employee_id]?.nome || 'Desconhecido',
     })));
     setLoading(false);
@@ -762,6 +779,25 @@ export default function PontoFerias() {
           <p className="text-muted-foreground text-sm mt-1 ml-11">Painel de controle operacional centralizado</p>
         </div>
         <div className="flex gap-2 flex-wrap items-center">
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap shadow-sm">
+              <Building2 className="w-4 h-4" />
+              <span>{userDepartment}</span>
+            </div>
+          ) : (
+            <Select value={deptFilter} onValueChange={(v) => { setDeptFilter(v); }}>
+              <SelectTrigger className="w-44 h-8 text-xs bg-background/90 border-border/70 shadow-sm">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="sm" className="shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95"><Plus className="w-4 h-4 mr-2" />Registrar</Button>

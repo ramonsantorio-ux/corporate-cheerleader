@@ -8,12 +8,19 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  userDepartment: string | null;
+  effectiveDepartment: string | null;
+  isDepartmentLocked: boolean;
+  setEffectiveDepartment: (dept: string | null) => void;
   permissions: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
-  user: null, session: null, loading: true, isAdmin: false, permissions: {},
+  user: null, session: null, loading: true, isAdmin: false,
+  userDepartment: null, effectiveDepartment: null, isDepartmentLocked: false,
+  setEffectiveDepartment: () => {},
+  permissions: {},
   signOut: async () => {},
 });
 
@@ -24,6 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userDepartment, setUserDepartment] = useState<string | null>(null);
+  const [effectiveDepartment, setEffectiveDepartment] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>>({});
 
   useEffect(() => {
@@ -37,10 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (pendingTimer !== null) clearTimeout(pendingTimer);
         pendingTimer = setTimeout(() => {
           pendingTimer = null;
-          fetchRoleAndPermissions(session.user.id);
+          fetchRoleAndPermissions(session.user);
         }, 0);
       } else {
         setIsAdmin(false);
+        setUserDepartment(null);
+        setEffectiveDepartment(null);
         setPermissions({});
         setLoading(false);
       }
@@ -50,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRoleAndPermissions(session.user.id);
+        fetchRoleAndPermissions(session.user);
       } else {
         setLoading(false);
       }
@@ -62,10 +73,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  async function fetchRoleAndPermissions(userId: string) {
+  async function fetchRoleAndPermissions(authUser: User) {
+    const userId = authUser.id;
     const { data: rolesData } = await supabase.from('user_roles').select('role, profile_id').eq('user_id', userId);
     const roles = rolesData?.map((r: { role: string; profile_id?: string }) => r.role) ?? [];
-    setIsAdmin(roles.includes('admin'));
+    const isUserAdmin = roles.includes('admin');
+    setIsAdmin(isUserAdmin);
+
+    // Identifica departamento do usuário
+    let dept: string | null = (authUser.user_metadata?.departamento as string) || null;
+
+    if (!dept) {
+      // Tenta buscar no perfil
+      try {
+        const { data: prof } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+        if (prof && (prof as Record<string, unknown>).departamento) {
+          dept = (prof as Record<string, unknown>).departamento as string;
+        }
+      } catch {
+        // ignora se coluna nao existir
+      }
+    }
+
+    if (!dept && authUser.email) {
+      // Tenta vincular com funcionário com mesmo email
+      const { data: func } = await supabase.from('funcionarios').select('departamento').eq('email', authUser.email).maybeSingle();
+      if (func?.departamento) {
+        dept = func.departamento;
+      }
+    }
+
+    // Se ainda assim não encontrou e houver no localStorage
+    if (!dept) {
+      const saved = localStorage.getItem(`user_dept_${userId}`);
+      if (saved) dept = saved;
+    }
+
+    setUserDepartment(dept);
+    setEffectiveDepartment(dept || null);
 
     const profileId = rolesData?.[0]?.profile_id;
     const permsMap: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }> = {};
@@ -122,8 +167,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }
 
+  const isDepartmentLocked = !isAdmin && !!userDepartment;
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, permissions, signOut }}>
+    <AuthContext.Provider value={{
+      user, session, loading, isAdmin,
+      userDepartment, effectiveDepartment, isDepartmentLocked,
+      setEffectiveDepartment,
+      permissions, signOut
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -11,6 +11,10 @@ import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { DEPARTAMENTOS } from '@/lib/departments';
+import { Building2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, Cell } from 'recharts';
@@ -55,6 +59,17 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export default function Desempenho() {
   const { canCreate, canEdit, canDelete } = usePermissions();
+  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const [deptFilter, setDeptFilter] = useState<string>('todos');
+
+  useEffect(() => {
+    if (isDepartmentLocked && userDepartment) {
+      setDeptFilter(userDepartment);
+    } else if (effectiveDepartment) {
+      setDeptFilter(effectiveDepartment);
+    }
+  }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
+
   const [cycles, setCycles] = useState<EvaluationCycle[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -76,6 +91,8 @@ export default function Desempenho() {
     setSearchParams({ tab: value }, { replace: true });
   }
 
+  const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
+
   useEffect(() => {
     Promise.all([
       supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false }),
@@ -83,11 +100,15 @@ export default function Desempenho() {
       supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at'),
     ]).then(([cyclesRes, funcRes, evalRes]) => {
       if (cyclesRes.data) setCycles(cyclesRes.data as EvaluationCycle[]);
-      if (funcRes.data) setFuncionarios(funcRes.data as Funcionario[]);
+      if (funcRes.data) {
+        const raw = funcRes.data as Funcionario[];
+        const filtered = activeDept === 'todos' ? raw : raw.filter(f => f.departamento === activeDept);
+        setFuncionarios(filtered);
+      }
       if (evalRes.data) setEvaluations(evalRes.data as Evaluation[]);
       setLoading(false);
     });
-  }, []);
+  }, [deptFilter, isDepartmentLocked, userDepartment]);
 
   async function createCycle() {
     if (!newCycle.name || !newCycle.start_date || !newCycle.end_date) {
@@ -172,12 +193,31 @@ export default function Desempenho() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-1">Liderança & Gestão</p>
           <h1 className="text-2xl font-bold text-foreground">Painel do Gestor</h1>
         </div>
-
+        <div className="flex items-center gap-2">
+          {isDepartmentLocked && userDepartment ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
+              <Building2 className="w-4 h-4" />
+              <span>{userDepartment}</span>
+            </div>
+          ) : (
+            <Select value={deptFilter} onValueChange={(v) => setDeptFilter(v)}>
+              <SelectTrigger className="w-44 h-9 text-xs">
+                <SelectValue placeholder="Departamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos Departamentos</SelectItem>
+                {DEPARTAMENTOS.map(d => (
+                  <SelectItem key={d} value={d}>🏢 {d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </motion.div>
 
       {/* Tabs */}

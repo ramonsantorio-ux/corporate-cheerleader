@@ -42,14 +42,14 @@ serve(async (req) => {
       });
     }
 
-    const { email, password, full_name } = await req.json();
+    const { email, password, full_name, departamento } = await req.json();
 
     // Create user with admin API
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
-      user_metadata: { full_name },
+      user_metadata: { full_name, departamento: departamento || null },
     });
 
     if (error) {

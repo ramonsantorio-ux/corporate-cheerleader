@@ -10,6 +10,8 @@ import { FastInput } from '@/components/ui/fast-input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/contexts/AuthContext';
+import { AccessDenied } from '@/components/auth/PageGuard';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -564,8 +566,14 @@ export default function FuncionarioProfile() {
     toast({ title: 'Dossiê completo exportado com sucesso!' });
   }
 
+  const { userDepartment, isDepartmentLocked } = useAuth();
+
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
   if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
+
+  if (isDepartmentLocked && userDepartment && func.departamento !== userDepartment) {
+    return <AccessDenied />;
+  }
 
   const turnoDisplay = func.turno ? (turnoLabels[func.turno] || func.turno) : null;
 
