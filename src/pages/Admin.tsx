@@ -189,13 +189,20 @@ export default function Admin() {
             try { await supabase.from('profiles').update({ departamento: newUser.departamento }).eq('id', userId); } catch (_) {}
           }
           if (!newUser.profile_id) {
+            const isDeptAccount = !!newUser.departamento;
+            const deptAllowedKeys = [
+              'colaboradores', 'organograma', 'ausencias',
+              'desempenho', 'feedbacks', 'novo_feedback',
+              'treinamentos', 'disc', 'mbti', 'bigfive',
+              'configuracoes'
+            ];
             const defaultPerms = PAGES.map(p => ({
               user_id: userId,
               page: p.key,
-              can_view: false,
-              can_create: false,
-              can_edit: false,
-              can_delete: false,
+              can_view: isDeptAccount ? deptAllowedKeys.includes(p.key) : false,
+              can_create: isDeptAccount ? deptAllowedKeys.includes(p.key) : false,
+              can_edit: isDeptAccount ? deptAllowedKeys.includes(p.key) : false,
+              can_delete: isDeptAccount ? deptAllowedKeys.includes(p.key) : false,
             }));
             await supabase.from('user_permissions').insert(defaultPerms);
           }

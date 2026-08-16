@@ -21,6 +21,7 @@ const PAGE_ROUTE_MAP: { key: string; path: string }[] = [
 
 export function AccessDenied() {
   const navigate = useNavigate();
+  const { canView } = usePermissions();
   return (
     <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-6 space-y-4">
       <div className="p-4 bg-destructive/10 text-destructive rounded-full">
@@ -31,8 +32,8 @@ export function AccessDenied() {
         Seu perfil de acesso não possui permissão para visualizar este módulo ou página.
         Se você acredita que isto é um erro, solicite a liberação de acesso ao Administrador do sistema.
       </p>
-      <Button onClick={() => navigate('/')} variant="outline" className="gap-2">
-        <Home className="w-4 h-4" /> Voltar para a Página Inicial
+      <Button onClick={() => navigate(canView('dashboard') ? '/' : '/colaboradores')} variant="outline" className="gap-2">
+        <Home className="w-4 h-4" /> Voltar para o Início
       </Button>
     </div>
   );

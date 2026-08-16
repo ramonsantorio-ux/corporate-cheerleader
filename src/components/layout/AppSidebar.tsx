@@ -63,9 +63,9 @@ const navGroups: NavGroup[] = [
 export default function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { isAdmin, permissions, signOut } = useAuth();
+  const { isAdmin, isDepartmentLocked, permissions, signOut } = useAuth();
 
-  const baseGroups = isAdmin
+  let baseGroups = isAdmin
     ? [
         ...navGroups.slice(0, -1),
         {
@@ -78,10 +78,19 @@ export default function AppSidebar() {
       ]
     : navGroups;
 
+  if (isDepartmentLocked) {
+    // Para contas de departamento, remove o módulo Operações e Visão Geral
+    baseGroups = baseGroups.filter(g => g.label !== 'Operações' && g.label !== 'Visão Geral');
+  }
+
   const allGroups = baseGroups.map(group => ({
     ...group,
     items: group.items.filter(item => {
       if (isAdmin) return true;
+      if (isDepartmentLocked) {
+        const allowedKeys = ['colaboradores', 'organograma', 'ausencias', 'desempenho', 'treinamentos', 'configuracoes'];
+        return allowedKeys.includes(item.key);
+      }
       return permissions[item.key]?.can_view === true;
     })
   })).filter(group => group.items.length > 0);

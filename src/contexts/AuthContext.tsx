@@ -159,6 +159,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     }
 
+    // Se o usuário pertencer a um departamento específico (não-admin)
+    if (dept && !isUserAdmin) {
+      const deptPagesAllowed = [
+        'colaboradores', 'organograma', 'ausencias',
+        'desempenho', 'feedbacks', 'novo_feedback',
+        'treinamentos', 'disc', 'mbti', 'bigfive',
+        'configuracoes'
+      ];
+      const deptPagesBlocked = ['dashboard', 'eventos', 'evolucao', 'notificacoes', 'admin'];
+
+      deptPagesAllowed.forEach(page => {
+        permsMap[page] = { can_view: true, can_create: true, can_edit: true, can_delete: true };
+      });
+      deptPagesBlocked.forEach(page => {
+        permsMap[page] = { can_view: false, can_create: false, can_edit: false, can_delete: false };
+      });
+    }
+
     setPermissions(permsMap);
     setLoading(false);
   }
