@@ -35,6 +35,7 @@ export default function TopBar() {
       return saved ? new Set(JSON.parse(saved)) : new Set();
     } catch { return new Set(); }
   });
+  const { theme, setTheme } = useTheme();
   const { user, isAdmin, userDepartment, effectiveDepartment, isDepartmentLocked, setEffectiveDepartment, signOut } = useAuth();
   
   let userName = 'Usuário';
