@@ -295,6 +295,24 @@ export default function Admin() {
       if (editDepartamento) {
         localStorage.setItem(`user_dept_${editUserDialog.id}`, editDepartamento);
         try { await supabase.from('profiles').update({ departamento: editDepartamento }).eq('id', editUserDialog.id); } catch (_) {}
+
+        // Atualiza permissões padrão do usuário para o conjunto do departamento
+        const deptAllowedKeys = [
+          'colaboradores', 'organograma', 'ausencias',
+          'desempenho', 'feedbacks', 'novo_feedback',
+          'treinamentos', 'disc', 'mbti', 'bigfive',
+          'configuracoes'
+        ];
+        const updatedPerms = PAGES.map(p => ({
+          user_id: editUserDialog.id,
+          page: p.key,
+          can_view: deptAllowedKeys.includes(p.key),
+          can_create: deptAllowedKeys.includes(p.key),
+          can_edit: deptAllowedKeys.includes(p.key),
+          can_delete: deptAllowedKeys.includes(p.key),
+        }));
+        await supabase.from('user_permissions').delete().eq('user_id', editUserDialog.id).neq('page', 'banned');
+        await supabase.from('user_permissions').insert(updatedPerms);
       } else {
         localStorage.removeItem(`user_dept_${editUserDialog.id}`);
         try { await supabase.from('profiles').update({ departamento: null }).eq('id', editUserDialog.id); } catch (_) {}
