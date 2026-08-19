@@ -267,15 +267,54 @@ export default function MetasBusato() {
       return acc;
     }, {});
 
+    const parseRowB = (row: DbRowB, counts: { acima: number; aceitavel: number; abaixo: number }) => {
+      const rawInd = row.indicador || '';
+      const parts = rawInd.split('|');
+      const metaName = parts[0].trim();
+      const ind = metaName.toLowerCase();
+      const dbStatus = parts[1] ? parts[1].trim() : 'Dentro Esperado (Aceitável)';
+
+      const rawCat = parts[2] ? parts[2].trim() : '';
+      let guessedCategoria = (rawCat && isNaN(Number(rawCat))) ? rawCat : '';
+      if (!guessedCategoria) {
+        if (ind.includes('aderência')) guessedCategoria = 'Aderência';
+        else if (ind.includes('eventuais')) guessedCategoria = 'Outros';
+        else if (ind.includes('preventivas')) guessedCategoria = 'Manutenção';
+        else if (ind.includes('eventos')) guessedCategoria = 'Segurança';
+        else if (ind.includes('custo')) guessedCategoria = 'Custo';
+        else if (ind.includes('turnover')) guessedCategoria = 'RH';
+      }
+
+      const dbAlcBruto = parts[3] ? parts[3].trim() : '';
+      const dbOrdem = parts[4] ? parseInt(parts[4].trim(), 10) : 999;
+      const alc = row.alcancado || 0;
+      const ref = row.referencia || 1;
+      const status = dbStatus;
+      let score = 90;
+
+      if (status === 'Muito Acima do Esperado') score = 130;
+      else if (status === 'Acima do Esperado') score = 110;
+      else if (status === 'Dentro Esperado (Aceitável)') score = 90;
+      else if (status === 'Abaixo do Esperado') score = 70;
+      else if (status === 'Muito Abaixo do Esperado') score = 50;
+
+      if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
+      else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
+      else counts.abaixo++;
+
+      return {
+        id: row.id, setor: row.setor,
+        meta: metaName, categoria: guessedCategoria,
+        ref, alcBruto: dbAlcBruto, alc, status, score,
+        ordem: isNaN(dbOrdem) ? 999 : dbOrdem
+      };
+    };
+
     Object.keys(grouped).forEach(m => {
       const metasMes = grouped[m];
       const counts = { acima: 0, aceitavel: 0, abaixo: 0 };
-      
-      const totalWeight = 0;
-      const weightedSum = 0;
-      
       let globalScore = 0;
-      let globalId = null;
+      let globalId: string | null = null;
 
       const metasFormatadas = metasMes.filter((row: DbRowB) => {
         if (row.indicador === '__ATINGIMENTO_GLOBAL__') {
@@ -284,69 +323,46 @@ export default function MetasBusato() {
           return false;
         }
         return true;
-      }).map((row: DbRowB) => {
-        const rawInd = row.indicador || '';
-        const parts = rawInd.split('|');
-        const metaName = parts[0].trim();
-        const ind = metaName.toLowerCase();
-        const dbStatus = parts[1] ? parts[1].trim() : 'Dentro Esperado (Aceitável)';
-        
-        const rawCat = parts[2] ? parts[2].trim() : '';
-        let guessedCategoria = (rawCat && isNaN(Number(rawCat))) ? rawCat : '';
-        if (!guessedCategoria) {
-          if (ind.includes('aderência')) guessedCategoria = 'Aderência';
-          else if (ind.includes('eventuais')) guessedCategoria = 'Outros';
-          else if (ind.includes('preventivas')) guessedCategoria = 'Manutenção';
-          else if (ind.includes('eventos')) guessedCategoria = 'Segurança';
-          else if (ind.includes('custo')) guessedCategoria = 'Custo';
-          else if (ind.includes('turnover')) guessedCategoria = 'RH';
-        }
-
-        const dbAlcBruto = parts[3] ? parts[3].trim() : '';
-        const dbOrdem = parts[4] ? parseInt(parts[4].trim(), 10) : 999;
-        
-        const alc = row.alcancado || 0;
-        const ref = row.referencia || 1;
-        
-        const status = dbStatus;
-        let score = 90;
-
-        if (status === 'Muito Acima do Esperado') score = 130;
-        else if (status === 'Acima do Esperado') score = 110;
-        else if (status === 'Dentro Esperado (Aceitável)') score = 90;
-        else if (status === 'Abaixo do Esperado') score = 70;
-        else if (status === 'Muito Abaixo do Esperado') score = 50;
-
-        if (status === 'Muito Acima do Esperado' || status === 'Acima do Esperado') counts.acima++;
-        else if (status === 'Dentro Esperado (Aceitável)') counts.aceitavel++;
-        else counts.abaixo++;
-
-        return {
-          id: row.id, setor: row.setor,
-          meta: metaName,
-          categoria: guessedCategoria,
-          ref: ref,
-          alcBruto: dbAlcBruto,
-          alc: alc,
-          status: status,
-          score: score,
-          ordem: isNaN(dbOrdem) ? 999 : dbOrdem
-        };
-      });
+      }).map((row: DbRowB) => parseRowB(row, counts));
 
       metasFormatadas.sort((a: MetaItemB, b: MetaItemB) => {
         if (a.ordem !== b.ordem) return a.ordem - b.ordem;
         return a.meta.localeCompare(b.meta);
       });
 
+      const somaPesos = metasFormatadas.reduce((sum: number, item: MetaItemB) => sum + (Number(item.alc) || 0), 0);
+      const atingidoMes = (somaPesos > 0) ? somaPesos : globalScore;
+
       result[m] = {
-        atingido: globalScore,
-        globalId: globalId,
-        gap: 100 - globalScore,
-        counts: counts,
+        atingido: atingidoMes,
+        globalId,
+        gap: Math.max(0, 100 - atingidoMes),
+        counts,
+        // Se não há metas individuais cadastradas, deixar vazio para resolver abaixo
         metas: metasFormatadas
       };
     });
+
+    // Para meses sem metas individuais cadastradas, copiar as definições do mês anterior mais recente
+    // Isso garante que ao trocar para um mês novo, Meta/Categoria/Referência apareçam pré-preenchidas
+    for (let i = 1; i < MESES.length; i++) {
+      const mes = MESES[i];
+      const mesAnterior = MESES[i - 1];
+      if (result[mes] && result[mes].metas.length === 0 && result[mesAnterior]?.metas.length > 0) {
+        // Copia as definições do mês anterior zerando os valores alcançados
+        result[mes] = {
+          ...result[mes],
+          metas: result[mesAnterior].metas.map((m, idx) => ({
+            ...m,
+            id: `default-${mes}-${idx}`,
+            alc: 0,
+            alcBruto: '',
+            status: 'Dentro Esperado (Aceitável)',
+            score: 90,
+          }))
+        };
+      }
+    }
 
     return result;
   }, [dbData]);

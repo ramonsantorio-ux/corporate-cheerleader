@@ -344,14 +344,36 @@ export default function MetasPorto() {
         return a.meta.localeCompare(b.meta);
       });
 
+      const somaPesos = metasFormatadas.reduce((sum: number, item: MetaItem) => sum + (Number(item.alc) || 0), 0);
+      const atingidoMes = (somaPesos > 0) ? somaPesos : globalScore;
+
       result[m] = {
-        atingido: globalScore,
+        atingido: atingidoMes,
         globalId: globalId,
-        gap: 100 - globalScore,
+        gap: Math.max(0, 100 - atingidoMes),
         counts: counts,
         metas: metasFormatadas
       };
     });
+
+    // Para meses sem metas individuais cadastradas, copiar as definições do mês anterior mais recente
+    // Isso garante que ao trocar para um mês novo, Meta/Categoria/Referência apareçam pré-preenchidas
+    for (let i = 1; i < MESES.length; i++) {
+      const mes = MESES[i];
+      const mesAnterior = MESES[i - 1];
+      if (result[mes] && result[mes].metas.length === 0 && result[mesAnterior]?.metas.length > 0) {
+        result[mes] = {
+          ...result[mes],
+          metas: result[mesAnterior].metas.map((m, idx) => ({
+            ...m,
+            id: `default-${mes}-${idx}`,
+            alc: 0,
+            alcBruto: '',
+            status: 'Dentro Esperado (Aceitável)',
+          }))
+        };
+      }
+    }
 
     return result;
   }, [dbData]);
