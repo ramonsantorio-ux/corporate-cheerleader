@@ -651,7 +651,8 @@ export default function Eventos() {
         materialCount++;
       }
 
-      if (ev.involved_name) {
+      // Conta apenas eventos materiais no gráfico de reincidência (exclui médicos)
+      if (cat !== 'Médico' && ev.involved_name) {
         byPerson[ev.involved_name] = (byPerson[ev.involved_name] || 0) + 1;
       }
 
@@ -1944,13 +1945,13 @@ export default function Eventos() {
               <div className="h-[400px]">
                 <ExpandableChart title="Colaboradores com Maior Reincidência">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={analytics.topPeople} layout="vertical" margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                  <BarChart data={analytics.topPeople} layout="vertical" margin={{ top: 5, right: 50, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" horizontal={false} />
-                      <XAxis type="number" tick={{ fontSize: 11 }} />
-                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={150} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={170} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" name="Eventos" fill="#3b82f6" radius={[0, 4, 4, 0]} onClick={(data) => handleChartClick(data, 'person')} className="cursor-pointer hover:opacity-80 transition-opacity">
-                        <LabelList dataKey="value" position="right" style={{ fontSize: '11px', fontWeight: 'bold' }} />
+                      <Bar dataKey="value" name="Eventos Materiais" fill="#3b82f6" radius={[0, 4, 4, 0]} onClick={(data) => handleChartClick(data, 'person')} className="cursor-pointer hover:opacity-80 transition-opacity">
+                        <LabelList dataKey="value" position="right" style={{ fontSize: '12px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
