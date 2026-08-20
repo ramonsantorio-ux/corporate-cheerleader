@@ -26,6 +26,7 @@ import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/p
 import { DiscReport, MbtiReport, BigFiveReport } from '@/components/ExecutiveReports';
 import Organograma from './Organograma';
 import NineBoxSection from '@/components/nine-box/NineBoxSection';
+import PDIProfileTab from '@/components/profile/PDIProfileTab';
 
 interface Funcionario {
   id: string; nome: string; cargo: string; departamento: string; foto_url: string;
@@ -633,7 +634,7 @@ export default function FuncionarioProfile() {
           <TabsTrigger value="fit-cultural" className="py-2.5 rounded-lg text-sm font-medium">Fit Cultural</TabsTrigger>
           <TabsTrigger value="potencial" className="py-2.5 rounded-lg text-sm font-medium border-indigo-500/30 text-indigo-600 dark:text-indigo-400 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-600">Potencial</TabsTrigger>
           <TabsTrigger value="nine-box" className="py-2.5 rounded-lg text-sm font-medium">Nine Box</TabsTrigger>
-          <TabsTrigger value="dossie" className="py-2.5 rounded-lg text-sm font-medium border-orange-500/30 text-orange-600 data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-600">Dossiê (RH)</TabsTrigger>
+          <TabsTrigger value="pdi" className="py-2.5 rounded-lg text-sm font-medium border-emerald-500/30 text-emerald-600 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-600">PDI</TabsTrigger>
         </TabsList>
 
         <TabsContent value="visao-geral" className="space-y-6 mt-4">
@@ -808,248 +809,13 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
-        {/* ═══ DOSSIÊ (RH) TAB (Histórico Disciplinar e Assiduidade) ═══ */}
-        <TabsContent value="dossie" className="space-y-6 mt-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 glass-card rounded-xl p-6 border-l-4 border-l-orange-500">
-            <div>
-              <h2 className="text-xl font-bold flex items-center gap-2"><FileText className="w-6 h-6 text-orange-500" /> Dossiê Funcional (RH)</h2>
-              <p className="text-sm text-muted-foreground">Histórico completo de assiduidade, ocorrências, advertências e documentações para uso estratégico.</p>
-            </div>
-          </div>
-
-          {isOnVacation && vacationInfo && (
-            <div className="flex items-center gap-3 rounded-lg p-4 border bg-teal-500/5 border-teal-500/20">
-              <Sun className="w-5 h-5 text-teal-500" />
-              <div>
-                <p className="font-semibold text-sm">Colaborador em Férias</p>
-                <p className="text-xs text-muted-foreground">Período: {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')} a {new Date(vacationInfo.end_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
-              </div>
-            </div>
+        {/* ═══ PDI TAB ═══ */}
+        <TabsContent value="pdi" className="mt-4">
+          {func && (
+            <PDIProfileTab employeeName={func.nome} employeeId={func.id} />
           )}
-          {vacationSoon && vacationInfo && (
-            <div className="flex items-center gap-3 rounded-lg p-4 border bg-warning/5 border-warning/20">
-              <CalendarDays className="w-5 h-5 text-warning" />
-              <div>
-                <p className="font-semibold text-sm">Férias Programadas</p>
-                <p className="text-xs text-muted-foreground">Início em {new Date(vacationInfo.start_date! + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
-              </div>
-            </div>
-          )}
-
-
-
-          <div className="glass-card rounded-xl p-5">
-            <h3 className="font-semibold flex items-center gap-2 mb-3"><Shield className="w-5 h-5 text-primary" />Controle de Horas Extras</h3>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Extras no período atual</span>
-                  <span className={`font-bold ${extrasCount >= 3 ? 'text-destructive' : ''}`}>{extrasCount}/3 {extrasCount >= 3 ? 'â›” BLOQUEADO' : ''}</span>
-                </div>
-                <Progress value={Math.min((extrasCount / 3) * 100, 100)} className={`h-3 ${extrasCount >= 3 ? '[&>div]:bg-destructive' : extrasCount >= 2 ? '[&>div]:bg-warning' : '[&>div]:bg-success'}`} />
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-card rounded-xl p-5">
-            <h3 className="font-semibold flex items-center gap-2 mb-4"><Clock className="w-5 h-5 text-primary" />Resumo de Ocorrências</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {Object.entries(attendanceStatusLabels).filter(([key]) => (attendanceStats[key] || 0) > 0).map(([key, label]) => (
-                <div key={key} className={`rounded-lg p-3 text-center ${attendanceStatusColors[key] || 'bg-muted text-muted-foreground'}`}>
-                  <p className="text-xl font-bold">{attendanceStats[key]}</p>
-                  <p className="text-[10px] font-medium uppercase tracking-wider">{label}</p>
-                </div>
-              ))}
-              {Object.keys(attendanceStats).length === 0 && (
-                <p className="col-span-full text-sm text-muted-foreground text-center py-4">Nenhuma ocorrência registrada</p>
-              )}
-            </div>
-          </div>
-
-          <div className="glass-card rounded-xl p-5">
-            <h3 className="font-semibold flex items-center gap-2 mb-4"><Sun className="w-5 h-5 text-primary" />Informações de Férias</h3>
-            {vacationInfo ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div><p className="text-muted-foreground text-xs">Dias Programados</p><p className="font-semibold">{vacationInfo.days_count} dias</p></div>
-                <div><p className="text-muted-foreground text-xs">Mês Programado</p><p className="font-semibold">{vacationInfo.scheduled_month || '—'}</p></div>
-                <div><p className="text-muted-foreground text-xs">Início</p><p className="font-semibold">{vacationInfo.start_date ? new Date(vacationInfo.start_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p></div>
-                <div><p className="text-muted-foreground text-xs">Fim</p><p className="font-semibold">{vacationInfo.end_date ? new Date(vacationInfo.end_date + 'T00:00:00').toLocaleDateString('pt-BR') : '—'}</p></div>
-                {vacationInfo.remaining_days != null && (
-                  <div><p className="text-muted-foreground text-xs">Dias Restantes</p><p className="font-semibold">{vacationInfo.remaining_days}</p></div>
-                )}
-                {vacationInfo.observation && (
-                  <div className="col-span-2"><p className="text-muted-foreground text-xs">Observação</p><p className="font-semibold">{vacationInfo.observation}</p></div>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Nenhum registro de férias cadastrado.</p>
-            )}
-          </div>
-
-          <div className="glass-card rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-border bg-primary/5">
-              <h4 className="text-sm font-bold flex items-center gap-2"><Calendar className="w-4 h-4" />Histórico de Registros (últimos 100)</h4>
-            </div>
-            {attendanceRecords.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Nenhum registro de ponto encontrado.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="bg-muted/30 border-b border-border">
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Status</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
-                  </tr></thead>
-                  <tbody>
-                    {attendanceRecords.slice(0, 30).map((a, i) => (
-                      <tr key={a.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
-                        <td className="px-4 py-2 text-xs">{new Date(a.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                        <td className="px-4 py-2">
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${attendanceStatusColors[a.status] || attendanceStatusColors[a.status === 'falta' ? 'falta_injustificada' : a.status] || 'bg-muted text-muted-foreground'}`}>
-                            {attendanceStatusLabels[a.status] || a.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2 text-xs text-muted-foreground">{a.observation || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* â”€â”€ Desvios e Advertências â”€â”€ */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold flex items-center gap-2"><ShieldAlert className="w-5 h-5 text-destructive" />Desvios e Advertências</h3>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { label: 'Faltas Injust.', value: attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length, color: 'bg-destructive/10 text-destructive' },
-              { label: 'Faltas Just.', value: attendanceRecords.filter(a => a.status === 'falta_justificada').length, color: 'bg-warning/10 text-warning' },
-              { label: 'Atestados', value: attendanceRecords.filter(a => a.status === 'atestado').length, color: 'bg-blue-500/10 text-blue-600' },
-              { label: 'Advertências', value: employeeWarnings.length, color: 'bg-red-600/10 text-red-600' },
-            ].map(d => (
-              <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
-                <p className="text-3xl font-bold">{d.value}</p>
-                <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="glass-card rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-border bg-destructive/5">
-              <h4 className="text-sm font-bold flex items-center gap-2"><ShieldAlert className="w-4 h-4 text-destructive" />Histórico de Advertências ({employeeWarnings.length})</h4>
-            </div>
-            {employeeWarnings.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8">Nenhuma advertência registrada</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead><tr className="bg-muted/30 border-b border-border">
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Motivo</th>
-                    <th className="text-center px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Aplicada</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Observação</th>
-                  </tr></thead>
-                  <tbody>
-                    {employeeWarnings.map((w, i) => (
-                      <tr key={w.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
-                        <td className="px-4 py-2 text-xs">{new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                        <td className="px-4 py-2 text-xs">{w.reason}</td>
-                        <td className="px-4 py-2 text-center">
-                          {w.applied ? (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">APLICADA</span>
-                          ) : (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-warning/10 text-warning">PENDENTE</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-xs text-muted-foreground">{w.observation || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-lg p-4 border border-orange-500/20 bg-orange-500/5">
-            <p className="text-xs text-orange-700 font-medium">
-              ⚠️ <strong>Nota:</strong> Faltas Injustificadas NÃO contemplam banco de horas. Este relatório é anexado à ficha do colaborador para envio ao RH no momento do desligamento.
-            </p>
-          </div>
-          
-          <div className="border-t border-border/50 pt-6 mt-6">
-            <h3 className="text-lg font-bold flex items-center gap-2 mb-4"><AlertTriangle className="w-5 h-5 text-warning" />Eventos Registrados ({employeeEvents.length})</h3>
-            
-            {employeeEvents.length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum evento registrado para este colaborador.</div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                  {(() => {
-                    const medical = employeeEvents.filter(e => e.location?.toUpperCase().includes('ATENDIMENTO MÃ‰DICO') || e.location?.toUpperCase().includes('PROBLEMA PARTICULAR')).length;
-                    const operational = employeeEvents.length - medical;
-                    const years = new Set(employeeEvents.map(e => e.event_date.slice(0, 4)));
-                    return [
-                      { label: 'Total Eventos', value: employeeEvents.length, color: 'bg-warning/10 text-warning' },
-                      { label: 'Operacionais', value: operational, color: 'bg-destructive/10 text-destructive' },
-                      { label: 'Médicos/Pessoais', value: medical, color: 'bg-blue-500/10 text-blue-600' },
-                      { label: 'Anos c/ Registro', value: years.size, color: 'bg-primary/10 text-primary' },
-                    ];
-                  })().map(d => (
-                    <div key={d.label} className={`rounded-xl p-4 text-center ${d.color}`}>
-                      <p className="text-3xl font-bold">{d.value}</p>
-                      <p className="text-[10px] font-medium uppercase tracking-wider mt-1">{d.label}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="glass-card rounded-xl overflow-hidden">
-                  <div className="p-4 border-b border-border bg-warning/5">
-                    <h4 className="text-sm font-bold flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-warning" />Histórico de Eventos</h4>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead><tr className="bg-muted/30 border-b border-border">
-                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Data</th>
-                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Descrição</th>
-                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Local</th>
-                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Equipamento</th>
-                        <th className="text-left px-4 py-2.5 font-semibold text-[10px] uppercase tracking-wider text-muted-foreground">Turno</th>
-                      </tr></thead>
-                      <tbody>
-                        {employeeEvents.map((ev, i) => (
-                          <tr key={ev.id} className={`border-b border-border/50 ${i % 2 === 0 ? 'bg-card' : 'bg-muted/5'}`}>
-                            <td className="px-4 py-2 text-xs whitespace-nowrap">{new Date(ev.event_date + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                            <td className="px-4 py-2 text-xs max-w-[300px]">{ev.description}</td>
-                            <td className="px-4 py-2 text-xs">{ev.location || '—'}</td>
-                            <td className="px-4 py-2 text-xs">{ev.equipment || '—'}</td>
-                            <td className="px-4 py-2 text-xs">{ev.shift || '—'}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-          <div className="border-t border-border/50 pt-6 mt-6">
-            <h3 className="text-lg font-bold flex items-center gap-2 mb-4"><FileText className="w-5 h-5 text-primary" />Documentação Anexada</h3>
-            {documents.length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum documento anexado ao prontuário.</div>
-            ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{documents.map(doc => (
-                <div key={doc.id} className="glass-card rounded-xl p-4 flex items-center gap-3">
-                  <FileText className="w-8 h-8 text-primary flex-shrink-0" />
-                  <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{doc.file_name}</p><p className="text-xs text-muted-foreground">{doc.document_type} Â· {new Date(doc.created_at).toLocaleDateString('pt-BR')}</p></div>
-                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-muted"><ExternalLink className="w-4 h-4 text-muted-foreground" /></a>
-                </div>
-              ))}</div>
-            )}
-          </div>
         </TabsContent>
+
       </Tabs>
 
       <Dialog open={goalDialogOpen} onOpenChange={setGoalDialogOpen}>
