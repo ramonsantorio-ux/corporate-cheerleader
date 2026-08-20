@@ -844,46 +844,16 @@ export default function Eventos() {
     })();
 
     const consolidations = (() => {
-      let latestDate = new Date();
-      if (historicalEvolution.length > 0) {
-        const dates = historicalEvolution
-          .filter(ev => {
-            const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
-            const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
-            return cat === 'Material' && ev.event_date;
-          })
-          .map(ev => new Date(ev.event_date).getTime())
-          .filter(t => !isNaN(t));
-        
-        if (dates.length > 0) {
-          latestDate = new Date(Math.max(...dates));
-        }
-      }
-
-      const currentYear = latestDate.getFullYear();
-      const currentMonth = latestDate.getMonth();
-      const currentQuarter = Math.floor(currentMonth / 3);
-      const currentSemester = Math.floor(currentMonth / 6);
-
-      const currentQuarterStartMonth = currentQuarter * 3;
-      const prevQuarterStartMonth = currentQuarter === 0 ? 9 : (currentQuarter - 1) * 3;
-      const prevQuarterYear = currentQuarter === 0 ? currentYear - 1 : currentYear;
-      
-      const prevSemesterStartMonth = currentSemester === 0 ? 6 : 0;
-      const prevSemesterYear = currentSemester === 0 ? currentYear - 1 : currentYear;
-
-      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-      const prevMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-
-      let mensalCount = 0; let prevMensalCount = 0;
-      let trimestralCount = 0; let prevTrimestralCount = 0;
-      let semestralCount = 0; let prevSemestralCount = 0;
+      // Conta total de eventos materiais e o número de períodos distintos no histórico
+      const monthsSet = new Set<string>();
+      const quartersSet = new Set<string>();
+      const semestersSet = new Set<string>();
+      let totalMaterial = 0;
 
       historicalEvolution.forEach(ev => {
         const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
         const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
 
-        // Inclui todos os eventos materiais, mesmo sem turno preenchido
         if (cat === 'Material' && ev.event_date) {
           let shift = 'Sem Turno';
           if (ev.shift && ev.shift.trim()) {
@@ -898,35 +868,81 @@ export default function Eventos() {
             const dateParts = ev.event_date.split('T')[0].split('-');
             if (dateParts.length >= 2) {
               const evYear = parseInt(dateParts[0]);
-              const evMonth = parseInt(dateParts[1]) - 1; // 0-indexed para comparação
+              const evMonth = parseInt(dateParts[1]) - 1; // 0-indexed
 
               if (!isNaN(evYear) && !isNaN(evMonth)) {
-                // Mensal
-                if (evYear === currentYear && evMonth === currentMonth) mensalCount++;
-                else if (evYear === prevMonthYear && evMonth === prevMonth) prevMensalCount++;
+                totalMaterial++;
 
-                // Trimestral
-                if (evYear === currentYear && evMonth >= currentQuarterStartMonth && evMonth < currentQuarterStartMonth + 3) trimestralCount++;
-                else if (evYear === prevQuarterYear && evMonth >= prevQuarterStartMonth && evMonth < prevQuarterStartMonth + 3) prevTrimestralCount++;
-
-                // Semestral
-                if (evYear === currentYear && evMonth >= currentSemester * 6 && evMonth < (currentSemester * 6) + 6) semestralCount++;
-                else if (evYear === prevSemesterYear && evMonth >= prevSemesterStartMonth && evMonth < prevSemesterStartMonth + 6) prevSemestralCount++;
+                // Registra períodos distintos
+                monthsSet.add(`${evYear}-${evMonth}`);
+                quartersSet.add(`${evYear}-Q${Math.floor(evMonth / 3)}`);
+                semestersSet.add(`${evYear}-S${Math.floor(evMonth / 6)}`);
               }
             }
           }
         }
       });
 
+      const nMonths = Math.max(monthsSet.size, 1);
+      const nQuarters = Math.max(quartersSet.size, 1);
+      const nSemesters = Math.max(semestersSet.size, 1);
+
+      // Médias por período
+      const avgMensal = Math.round(totalMaterial / nMonths);
+      const avgTrimestral = Math.round(totalMaterial / nQuarters);
+      const avgSemestral = Math.round(totalMaterial / nSemesters);
+
+      // Para a variação: compara a média da primeira metade vs segunda metade dos meses
+      // Isso indica tendência histórica (subindo ou caindo?)
+      const sortedMonths = Array.from(monthsSet).sort();
+      const mid = Math.ceil(sortedMonths.length / 2);
+      const firstHalfMonths = new Set(sortedMonths.slice(0, mid));
+      const secondHalfMonths = new Set(sortedMonths.slice(mid));
+
+      let firstHalfTotal = 0; let secondHalfTotal = 0;
+
+      historicalEvolution.forEach(ev => {
+        const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
+        const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
+
+        if (cat === 'Material' && ev.event_date) {
+          let shift = 'Sem Turno';
+          if (ev.shift && ev.shift.trim()) {
+            shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
+            if (shift.includes('A Dia')) shift = 'A Dia';
+            else if (shift.includes('A Noite')) shift = 'A Noite';
+            else if (shift.includes('B Dia')) shift = 'B Dia';
+            else if (shift.includes('B Noite')) shift = 'B Noite';
+          }
+          if (evolutionLetra !== 'all' && evolutionLetra !== shift) return;
+
+          const dateParts = ev.event_date.split('T')[0].split('-');
+          if (dateParts.length >= 2) {
+            const evYear = parseInt(dateParts[0]);
+            const evMonth = parseInt(dateParts[1]) - 1;
+            if (!isNaN(evYear) && !isNaN(evMonth)) {
+              const key = `${evYear}-${evMonth}`;
+              if (firstHalfMonths.has(key)) firstHalfTotal++;
+              else if (secondHalfMonths.has(key)) secondHalfTotal++;
+            }
+          }
+        }
+      });
+
+      const avgFirst = firstHalfMonths.size > 0 ? Math.round(firstHalfTotal / firstHalfMonths.size) : 0;
+      const avgSecond = secondHalfMonths.size > 0 ? Math.round(secondHalfTotal / Math.max(secondHalfMonths.size, 1)) : 0;
+
       const calcTrend = (curr: number, prev: number) => {
         if (prev === 0) return curr > 0 ? 100 : 0;
         return Math.round(((curr - prev) / prev) * 100);
       };
 
+      const trendMensal = calcTrend(avgSecond, avgFirst);
+
       return {
-        mensal: { current: mensalCount, prev: prevMensalCount, trend: calcTrend(mensalCount, prevMensalCount) },
-        trimestral: { current: trimestralCount, prev: prevTrimestralCount, trend: calcTrend(trimestralCount, prevTrimestralCount) },
-        semestral: { current: semestralCount, prev: prevSemestralCount, trend: calcTrend(semestralCount, prevSemestralCount) }
+        mensal:     { current: avgMensal,     prev: nMonths,     trend: trendMensal,   label: 'eventos/mês',     detail: `${nMonths} mes${nMonths !== 1 ? 'es' : ''} no histórico` },
+        trimestral: { current: avgTrimestral,  prev: nQuarters,   trend: trendMensal,   label: 'eventos/trim.',    detail: `${nQuarters} trim. no histórico` },
+        semestral:  { current: avgSemestral,   prev: nSemesters,  trend: trendMensal,   label: 'eventos/sem.',     detail: `${nSemesters} sem. no histórico` },
       };
     })();
 
@@ -1581,10 +1597,10 @@ export default function Eventos() {
                     className={`cursor-pointer rounded-xl p-4 border relative overflow-hidden group hover:shadow-md transition-all ${evolutionPeriod === 'mensal' ? 'bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/50 ring-1 ring-blue-500/20' : 'bg-muted/30 border-border hover:bg-blue-500/5'}`}
                   >
                     <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><Calendar className={`w-24 h-24 -mt-4 -mr-4 ${evolutionPeriod === 'mensal' ? 'text-blue-500' : 'text-muted-foreground'}`} /></div>
-                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'mensal' ? 'text-blue-600/80' : 'text-muted-foreground'}`}>Consolidação Mensal</p>
+                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'mensal' ? 'text-blue-600/80' : 'text-muted-foreground'}`}>Média Mensal</p>
                     <div className="flex items-end gap-2">
                       <span className={`text-3xl font-black tracking-tight ${evolutionPeriod === 'mensal' ? 'text-blue-600' : 'text-foreground'}`}>{analytics.consolidations.mensal.current}</span>
-                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
+                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos/mês</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-xs font-medium">
                       <div className="flex items-center gap-1.5">
@@ -1595,9 +1611,9 @@ export default function Eventos() {
                         ) : (
                           <span className="text-muted-foreground bg-muted px-1.5 py-0.5 rounded">— 0%</span>
                         )}
-                        <span className="text-muted-foreground/70">vs mês ant.</span>
+                        <span className="text-muted-foreground/70">tend. hist.</span>
                       </div>
-                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'mensal' ? 'text-blue-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.mensal.prev} ant.</span>
+                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'mensal' ? 'text-blue-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.mensal.detail}</span>
                     </div>
                   </div>
 
@@ -1607,10 +1623,10 @@ export default function Eventos() {
                     className={`cursor-pointer rounded-xl p-4 border relative overflow-hidden group hover:shadow-md transition-all ${evolutionPeriod === 'trimestral' ? 'bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 border-indigo-500/50 ring-1 ring-indigo-500/20' : 'bg-muted/30 border-border hover:bg-indigo-500/5'}`}
                   >
                     <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><BarChart3 className={`w-24 h-24 -mt-4 -mr-4 ${evolutionPeriod === 'trimestral' ? 'text-indigo-500' : 'text-muted-foreground'}`} /></div>
-                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'trimestral' ? 'text-indigo-600/80' : 'text-muted-foreground'}`}>Consolidação Trimestral</p>
+                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'trimestral' ? 'text-indigo-600/80' : 'text-muted-foreground'}`}>Média Trimestral</p>
                     <div className="flex items-end gap-2">
                       <span className={`text-3xl font-black tracking-tight ${evolutionPeriod === 'trimestral' ? 'text-indigo-600' : 'text-foreground'}`}>{analytics.consolidations.trimestral.current}</span>
-                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
+                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos/trim.</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-xs font-medium">
                       <div className="flex items-center gap-1.5">
@@ -1621,9 +1637,9 @@ export default function Eventos() {
                         ) : (
                           <span className="text-muted-foreground bg-muted px-1.5 py-0.5 rounded">— 0%</span>
                         )}
-                        <span className="text-muted-foreground/70">vs tri. ant.</span>
+                        <span className="text-muted-foreground/70">tend. hist.</span>
                       </div>
-                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'trimestral' ? 'text-indigo-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.trimestral.prev} ant.</span>
+                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'trimestral' ? 'text-indigo-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.trimestral.detail}</span>
                     </div>
                   </div>
 
@@ -1633,10 +1649,10 @@ export default function Eventos() {
                     className={`cursor-pointer rounded-xl p-4 border relative overflow-hidden group hover:shadow-md transition-all ${evolutionPeriod === 'semestral' ? 'bg-gradient-to-br from-violet-500/10 to-violet-600/5 border-violet-500/50 ring-1 ring-violet-500/20' : 'bg-muted/30 border-border hover:bg-violet-500/5'}`}
                   >
                     <div className="absolute right-0 top-0 opacity-10 group-hover:opacity-20 transition-opacity"><Activity className={`w-24 h-24 -mt-4 -mr-4 ${evolutionPeriod === 'semestral' ? 'text-violet-500' : 'text-muted-foreground'}`} /></div>
-                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'semestral' ? 'text-violet-600/80' : 'text-muted-foreground'}`}>Consolidação Semestral</p>
+                    <p className={`text-[11px] font-bold mb-1 uppercase tracking-wider ${evolutionPeriod === 'semestral' ? 'text-violet-600/80' : 'text-muted-foreground'}`}>Média Semestral</p>
                     <div className="flex items-end gap-2">
                       <span className={`text-3xl font-black tracking-tight ${evolutionPeriod === 'semestral' ? 'text-violet-600' : 'text-foreground'}`}>{analytics.consolidations.semestral.current}</span>
-                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos</span>
+                      <span className="text-xs font-semibold text-muted-foreground pb-1.5 uppercase">eventos/sem.</span>
                     </div>
                     <div className="mt-3 flex items-center justify-between text-xs font-medium">
                       <div className="flex items-center gap-1.5">
@@ -1647,9 +1663,9 @@ export default function Eventos() {
                         ) : (
                           <span className="text-muted-foreground bg-muted px-1.5 py-0.5 rounded">— 0%</span>
                         )}
-                        <span className="text-muted-foreground/70">vs sem. ant.</span>
+                        <span className="text-muted-foreground/70">tend. hist.</span>
                       </div>
-                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'semestral' ? 'text-violet-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.semestral.prev} ant.</span>
+                      <span className={`text-[10px] font-bold ${evolutionPeriod === 'semestral' ? 'text-violet-600/40' : 'text-muted-foreground/40'}`}>{analytics.consolidations.semestral.detail}</span>
                     </div>
                   </div>
                 </div>
