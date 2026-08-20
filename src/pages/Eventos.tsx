@@ -375,6 +375,7 @@ export default function Eventos() {
     setDialogOpen(false);
     openCreateModal();
     fetchEvents();
+    fetchHistoricalEvolution();
   }
 
   async function confirmDelete() {
@@ -384,6 +385,7 @@ export default function Eventos() {
     toast.success('Evento removido');
     setDeleteEvent(null);
     fetchEvents();
+    fetchHistoricalEvolution();
   }
 
   async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
@@ -754,13 +756,17 @@ export default function Eventos() {
         if (cat !== 'Material') return;
         if (typeFilter !== 'all' && typeFilter !== cat) return;
 
-        if (ev.event_date && ev.shift) {
-          let shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
-          if (shift.includes('A Dia')) shift = 'A Dia';
-          else if (shift.includes('A Noite')) shift = 'A Noite';
-          else if (shift.includes('B Dia')) shift = 'B Dia';
-          else if (shift.includes('B Noite')) shift = 'B Noite';
-          
+        if (ev.event_date) {
+          // Se não tem turno, agrupa como 'Sem Turno' em vez de ignorar
+          let shift = 'Sem Turno';
+          if (ev.shift && ev.shift.trim()) {
+            shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
+            if (shift.includes('A Dia')) shift = 'A Dia';
+            else if (shift.includes('A Noite')) shift = 'A Noite';
+            else if (shift.includes('B Dia')) shift = 'B Dia';
+            else if (shift.includes('B Noite')) shift = 'B Noite';
+          }
+
           letrasSet.add(shift);
 
           // Extrai ano e mês diretamente da string (YYYY-MM-DD) sem sofrer alteração de fuso horário
@@ -855,30 +861,36 @@ export default function Eventos() {
         const isMedical = ev.location?.toUpperCase().includes('ATENDIMENTO MÉDICO') || ev.location?.toUpperCase().includes('PROBLEMA PARTICULAR') || ev.atendimento_medico || ev.atestado || ev.afastamento || !!ev.cid || ev.categoria_evento === 'Médico';
         const cat = ev.categoria_evento || (isMedical ? 'Médico' : 'Material');
 
-        if (cat === 'Material' && ev.event_date && ev.shift) {
-          let shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
-          if (shift.includes('A Dia')) shift = 'A Dia';
-          else if (shift.includes('A Noite')) shift = 'A Noite';
-          else if (shift.includes('B Dia')) shift = 'B Dia';
-          else if (shift.includes('B Noite')) shift = 'B Noite';
-          
+        // Inclui todos os eventos materiais, mesmo sem turno preenchido
+        if (cat === 'Material' && ev.event_date) {
+          let shift = 'Sem Turno';
+          if (ev.shift && ev.shift.trim()) {
+            shift = ev.shift.trim().replace(/\s*-\s*/g, ' - ').toLowerCase().replace(/\b[a-z]/g, char => char.toUpperCase()).replace('Adm', 'ADM');
+            if (shift.includes('A Dia')) shift = 'A Dia';
+            else if (shift.includes('A Noite')) shift = 'A Noite';
+            else if (shift.includes('B Dia')) shift = 'B Dia';
+            else if (shift.includes('B Noite')) shift = 'B Noite';
+          }
+
           if (evolutionLetra === 'all' || evolutionLetra === shift) {
-            const evDate = new Date(ev.event_date);
-            if (!isNaN(evDate.getTime())) {
-              const evYear = evDate.getFullYear();
-              const evMonth = evDate.getMonth();
+            const dateParts = ev.event_date.split('T')[0].split('-');
+            if (dateParts.length >= 2) {
+              const evYear = parseInt(dateParts[0]);
+              const evMonth = parseInt(dateParts[1]) - 1; // 0-indexed para comparação
 
-              // Mensal
-              if (evYear === currentYear && evMonth === currentMonth) mensalCount++;
-              else if (evYear === prevMonthYear && evMonth === prevMonth) prevMensalCount++;
+              if (!isNaN(evYear) && !isNaN(evMonth)) {
+                // Mensal
+                if (evYear === currentYear && evMonth === currentMonth) mensalCount++;
+                else if (evYear === prevMonthYear && evMonth === prevMonth) prevMensalCount++;
 
-              // Trimestral
-              if (evYear === currentYear && evMonth >= currentQuarterStartMonth && evMonth < currentQuarterStartMonth + 3) trimestralCount++;
-              else if (evYear === prevQuarterYear && evMonth >= prevQuarterStartMonth && evMonth < prevQuarterStartMonth + 3) prevTrimestralCount++;
+                // Trimestral
+                if (evYear === currentYear && evMonth >= currentQuarterStartMonth && evMonth < currentQuarterStartMonth + 3) trimestralCount++;
+                else if (evYear === prevQuarterYear && evMonth >= prevQuarterStartMonth && evMonth < prevQuarterStartMonth + 3) prevTrimestralCount++;
 
-              // Semestral
-              if (evYear === currentYear && evMonth >= currentSemester * 6 && evMonth < (currentSemester * 6) + 6) semestralCount++;
-              else if (evYear === prevSemesterYear && evMonth >= prevSemesterStartMonth && evMonth < prevSemesterStartMonth + 6) prevSemestralCount++;
+                // Semestral
+                if (evYear === currentYear && evMonth >= currentSemester * 6 && evMonth < (currentSemester * 6) + 6) semestralCount++;
+                else if (evYear === prevSemesterYear && evMonth >= prevSemesterStartMonth && evMonth < prevSemesterStartMonth + 6) prevSemestralCount++;
+              }
             }
           }
         }
