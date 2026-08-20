@@ -586,7 +586,9 @@ export default function Eventos() {
         const byMonth: Record<string, number> = {};
     const byEquipment: Record<string, number> = {};
     const byLocation: Record<string, number> = {};
-    const byPerson: Record<string, number> = {};
+    const byPersonMaterial: Record<string, number> = {};
+    const byPersonMedico: Record<string, number> = {};
+    const byPersonMeioAmbiente: Record<string, number> = {};
     const byDayOfWeek: Record<string, number> = {};
     const byYear: Record<string, number> = {};
     const byTipoAcidente: Record<string, number> = {};
@@ -651,9 +653,15 @@ export default function Eventos() {
         materialCount++;
       }
 
-      // Conta apenas eventos materiais no gráfico de reincidência (exclui médicos)
-      if (cat !== 'Médico' && ev.involved_name) {
-        byPerson[ev.involved_name] = (byPerson[ev.involved_name] || 0) + 1;
+      // Acumula por pessoa separado por categoria (para o gráfico empilhado)
+      if (ev.involved_name) {
+        if (cat === 'Médico') {
+          byPersonMedico[ev.involved_name] = (byPersonMedico[ev.involved_name] || 0) + 1;
+        } else if (cat === 'Meio Ambiente') {
+          byPersonMeioAmbiente[ev.involved_name] = (byPersonMeioAmbiente[ev.involved_name] || 0) + 1;
+        } else {
+          byPersonMaterial[ev.involved_name] = (byPersonMaterial[ev.involved_name] || 0) + 1;
+        }
       }
 
       if (cat !== 'Médico' && ev.day_of_week) {
@@ -696,9 +704,22 @@ export default function Eventos() {
       .sort(([, a], [, b]) => b - a).slice(0, 8)
       .map(([name, value]) => ({ name: name.length > 20 ? name.slice(0, 20) + '...' : name, value }));
 
-    const topPeople = Object.entries(byPerson)
-      .sort(([, a], [, b]) => b - a).slice(0, 10)
-      .map(([name, value]) => ({ name, value }));
+    // Merge das 3 categorias por pessoa, ordenado por total decrescente
+    const allPeople = new Set([
+      ...Object.keys(byPersonMaterial),
+      ...Object.keys(byPersonMedico),
+      ...Object.keys(byPersonMeioAmbiente)
+    ]);
+    const topPeople = Array.from(allPeople)
+      .map(name => ({
+        name,
+        Material: byPersonMaterial[name] || 0,
+        Médico: byPersonMedico[name] || 0,
+        'Meio Ambiente': byPersonMeioAmbiente[name] || 0,
+        total: (byPersonMaterial[name] || 0) + (byPersonMedico[name] || 0) + (byPersonMeioAmbiente[name] || 0),
+      }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 12);
 
     const dayOfWeekOrder = ['segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado', 'domingo'];
     const dayData = dayOfWeekOrder.map(d => ({
@@ -1933,25 +1954,51 @@ export default function Eventos() {
           </div>
         </TabsContent>
 
-        {/* 4. COLABORADORES */}
         <TabsContent value="colaboradores" className="mt-0 focus-visible:outline-none focus-visible:ring-0">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <User className="w-4 h-4 text-[#3b82f6]" /> Colaboradores com Maior Reincidência de Eventos
               </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">Todos os tipos de evento por colaborador no período selecionado</p>
             </CardHeader>
             <CardContent>
-              <div className="h-[400px]">
+              <div className="flex items-center gap-6 mb-4">
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-[#3b82f6]" /><span className="text-xs text-muted-foreground font-medium">Material</span></div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-[#ef4444]" /><span className="text-xs text-muted-foreground font-medium">Médico</span></div>
+                <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-sm bg-[#10b981]" /><span className="text-xs text-muted-foreground font-medium">Meio Ambiente</span></div>
+              </div>
+              <div className="h-[480px]">
                 <ExpandableChart title="Colaboradores com Maior Reincidência">
                   <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.topPeople} layout="vertical" margin={{ top: 5, right: 50, left: 0, bottom: 5 }}>
+                    <BarChart data={analytics.topPeople} layout="vertical" margin={{ top: 5, right: 55, left: 0, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(215, 20%, 88%)" horizontal={false} />
                       <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
                       <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={170} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="value" name="Eventos Materiais" fill="#3b82f6" radius={[0, 4, 4, 0]} onClick={(data) => handleChartClick(data, 'person')} className="cursor-pointer hover:opacity-80 transition-opacity">
-                        <LabelList dataKey="value" position="right" style={{ fontSize: '12px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }} />
+                      <Tooltip
+                        content={(props) => {
+                          if (!props.active || !props.payload?.length) return null;
+                          const data = props.payload[0]?.payload;
+                          const total = (data?.Material || 0) + (data?.Médico || 0) + (data?.['Meio Ambiente'] || 0);
+                          return (
+                            <div className="bg-card border border-border rounded-lg shadow-lg p-3 text-xs">
+                              <p className="font-bold text-foreground mb-2">{props.label}</p>
+                              {(data?.Material > 0) && <p style={{ color: '#3b82f6' }} className="font-medium">Material: {data.Material}</p>}
+                              {(data?.Médico > 0) && <p style={{ color: '#ef4444' }} className="font-medium">Médico: {data.Médico}</p>}
+                              {(data?.['Meio Ambiente'] > 0) && <p style={{ color: '#10b981' }} className="font-medium">Meio Ambiente: {data['Meio Ambiente']}</p>}
+                              <p className="text-muted-foreground mt-1 border-t border-border pt-1">Total: <strong>{total}</strong></p>
+                            </div>
+                          );
+                        }}
+                      />
+                      <Bar dataKey="Material" name="Material" stackId="a" fill="#3b82f6" onClick={(data) => handleChartClick(data, 'person')} className="cursor-pointer">
+                        <LabelList dataKey="Material" position="insideRight" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#fff' }} formatter={(v: number) => v > 0 ? v : ''} />
+                      </Bar>
+                      <Bar dataKey="Médico" name="Médico" stackId="a" fill="#ef4444" onClick={(data) => handleChartClick(data, 'person')} className="cursor-pointer">
+                        <LabelList dataKey="Médico" position="insideRight" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#fff' }} formatter={(v: number) => v > 0 ? v : ''} />
+                      </Bar>
+                      <Bar dataKey="Meio Ambiente" name="Meio Ambiente" stackId="a" fill="#10b981" radius={[0, 4, 4, 0]} onClick={(data) => handleChartClick(data, 'person')} className="cursor-pointer">
+                        <LabelList dataKey="total" position="right" style={{ fontSize: '12px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
