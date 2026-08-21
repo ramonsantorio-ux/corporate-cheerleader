@@ -749,6 +749,11 @@ export default function Eventos() {
       .sort(([, a], [, b]) => b - a)
       .map(([name, value]) => ({ name: name.replace(' (TPM)', ''), value }));
 
+    const topAreasBase = Object.entries(byArea)
+      .filter(([name]) => name.includes('Base') || name.includes('Apoio'))
+      .sort(([, a], [, b]) => b - a)
+      .map(([name, value]) => ({ name: name.replace(' (Apoio)', ''), value }));
+
     const yearData = Object.entries(byYear).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, eventos: count }));
 
     const topTipos = Object.entries(byTipoAcidente).map(([name, value]) => ({ name, value }));
@@ -966,7 +971,7 @@ export default function Eventos() {
     })();
 
     return { 
-      topLocations, topAreasMinerio, topAreasTpm, topEquipment, topPeople, dayData, monthTrend, yearData, 
+      topLocations, topAreasMinerio, topAreasTpm, topAreasBase, topEquipment, topPeople, dayData, monthTrend, yearData, 
       materialCount, meioAmbienteCount, medicoCount, total: filtered.length,
       topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
       byLetra, letraData, hourlyData, daysWithoutAccident,
@@ -1103,6 +1108,10 @@ export default function Eventos() {
                         <SelectItem value="Pátios (TPM)">Pátios</SelectItem>
                         <SelectItem value="Silo (TPM)">Silo</SelectItem>
                         <SelectItem value="Píer (TPM)">Píer</SelectItem>
+                      </SelectGroup>
+                      <SelectGroup className="mt-2">
+                        <SelectLabel className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Apoio / Geral</SelectLabel>
+                        <SelectItem value="Base (Apoio)">Base</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -1609,8 +1618,8 @@ export default function Eventos() {
             </Card>
           </div>
 
-          {/* Mapas de Calor por Área (Minério e TPM - Contrato Porto) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Mapas de Calor por Área (Minério, TPM e Apoio/Base - Contrato Porto) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* Mapa de Calor - Minério */}
             <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-3 border-b border-border/50 bg-primary/5">
@@ -1703,6 +1712,66 @@ export default function Eventos() {
                   return (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {analytics.topAreasTpm.map((area, i) => {
+                        const ratio = maxVal > 0 ? area.value / maxVal : 0;
+                        const pct = total > 0 ? ((area.value / total) * 100).toFixed(1) : '0';
+                        const heat = getHeat(ratio);
+                        return (
+                          <div key={i} className={`rounded-xl border-2 p-3.5 ${heat.bg} transition-all hover:shadow-md`}>
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className={`w-2.5 h-2.5 rounded-full ${heat.dot} flex-shrink-0`} />
+                                <span className={`text-xs font-bold leading-tight truncate ${heat.text}`}>{area.name}</span>
+                              </div>
+                              <span className={`text-lg font-black ${heat.text} flex-shrink-0 leading-none`}>{area.value}</span>
+                            </div>
+                            <div className="w-full bg-white/60 rounded-full h-1.5 mb-2 overflow-hidden">
+                              <div className={`h-1.5 rounded-full transition-all duration-700 ${heat.bar}`} style={{ width: `${Math.max(ratio * 100, 5)}%` }} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className={`text-[10px] font-bold ${heat.text} opacity-80`}>{pct}%</span>
+                              <span className={`text-[10px] font-semibold ${heat.text} opacity-60`}>{heat.label}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
+            {/* Mapa de Calor - Apoio / Base */}
+            <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300">
+              <CardHeader className="pb-3 border-b border-border/50 bg-emerald-500/5">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-bold flex items-center gap-2 text-emerald-700">
+                    <MapPin className="w-4 h-4 text-emerald-600" /> Mapa de Calor — Apoio / Base
+                  </CardTitle>
+                  <span className="text-xs text-emerald-700 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                    {analytics.topAreasBase.reduce((s, a) => s + a.value, 0)} eventos
+                  </span>
+                </div>
+                <CardDescription className="text-xs mt-1">Base Busato / Instalações de Apoio</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {analytics.topAreasBase.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    <MapPin className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                    <p className="font-medium">Nenhum evento registrado na Base.</p>
+                  </div>
+                ) : (() => {
+                  const maxVal = Math.max(...analytics.topAreasBase.map(a => a.value));
+                  const total = analytics.topAreasBase.reduce((s, a) => s + a.value, 0);
+                  const getHeat = (ratio: number) => {
+                    if (ratio >= 0.85) return { bg: 'bg-red-50 border-red-200', text: 'text-red-700', bar: 'bg-red-500', dot: 'bg-red-500', label: '🔴 Crítico' };
+                    if (ratio >= 0.60) return { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-700', bar: 'bg-orange-500', dot: 'bg-orange-500', label: '🟠 Alto' };
+                    if (ratio >= 0.35) return { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', bar: 'bg-amber-500', dot: 'bg-amber-500', label: '🟡 Médio' };
+                    if (ratio >= 0.15) return { bg: 'bg-cyan-50 border-cyan-200', text: 'text-cyan-700', bar: 'bg-cyan-500', dot: 'bg-cyan-400', label: '🔵 Baixo' };
+                    return { bg: 'bg-slate-50 border-slate-200', text: 'text-slate-600', bar: 'bg-slate-400', dot: 'bg-slate-400', label: '⚪ Mínimo' };
+                  };
+                  return (
+                    <div className="grid grid-cols-1 gap-3">
+                      {analytics.topAreasBase.map((area, i) => {
                         const ratio = maxVal > 0 ? area.value / maxVal : 0;
                         const pct = total > 0 ? ((area.value / total) * 100).toFixed(1) : '0';
                         const heat = getHeat(ratio);
@@ -2430,7 +2499,8 @@ export default function Eventos() {
                 <div><Label className="text-muted-foreground">Envolvido</Label><p className="font-medium">{detailEvent.involved_name}</p></div>
                 <div><Label className="text-muted-foreground">Equipamento</Label><p className="font-medium">{detailEvent.equipment || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Placa/TAG</Label><p className="font-medium">{detailEvent.plate_tag || '—'}</p></div>
-                <div><Label className="text-muted-foreground">Local</Label><p className="font-medium">{detailEvent.location || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Área</Label><p className="font-medium font-bold text-orange-600">{detailEvent.area || '—'}</p></div>
+                <div><Label className="text-muted-foreground">Local Específico</Label><p className="font-medium">{detailEvent.location || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Tipo</Label><p className="font-medium">{detailEvent.tipo_acidente || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Agente da Lesão</Label><p className="font-medium">{detailEvent.agente_lesao || '—'}</p></div>
                 <div><Label className="text-muted-foreground">Parte do Corpo</Label><p className="font-medium">{detailEvent.parte_corpo || '—'}</p></div>
