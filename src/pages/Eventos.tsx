@@ -1084,11 +1084,6 @@ export default function Eventos() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Local</Label>
-                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P - Próximo ao terminal" />
-                </div>
-
-                <div className="space-y-2">
                   <Label className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-orange-500" /> Área *</Label>
                   <Select value={newEvent.area} onValueChange={v => setNewEvent(p => ({ ...p, area: v }))}>
                     <SelectTrigger className={`${!newEvent.area ? 'border-orange-400/50 focus:ring-orange-400' : ''}`}>
@@ -1113,6 +1108,11 @@ export default function Eventos() {
                   </Select>
                 </div>
 
+                <div className="space-y-2">
+                  <Label>Local Específico</Label>
+                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P - Próximo ao terminal" />
+                </div>
+
                 {(newEvent.shift === 'A Dia' || newEvent.shift === 'B Dia') ? (
                   <>
                     <div className="space-y-2">
@@ -1125,7 +1125,7 @@ export default function Eventos() {
                     </div>
                   </>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <Label>Encarregado</Label>
                     <FastInput value={newEvent.supervisor1} onValueChange={v => setNewEvent(p => ({ ...p, supervisor1: v, supervisor2: '' }))} placeholder="Nome do Encarregado" />
                   </div>
