@@ -496,7 +496,7 @@ export default function PDIProfileTab({ employeeName }: Props) {
                 </Select>
               </div>
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {PDI_COMPETENCY_TRACKS.find(t => t.id === selectedTrack)?.suggestions.map((s, i) => {
+                {(PDI_COMPETENCY_TRACKS.find(t => t.id === selectedTrack)?.actions ?? []).map((s, i) => {
                   const cl = categoryLabels[s.category] || categoryLabels['70_experience'];
                   return (
                     <div key={i} className={`p-3 rounded-xl border cursor-pointer hover:shadow-md transition-all ${cl.bg}`} onClick={() => applyTemplate(s)}>
