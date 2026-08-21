@@ -51,6 +51,7 @@ interface EventRow {
   tecnico_seguranca?: string;
   categoria_evento?: string;
   encaminhamento_medico?: string;
+  area?: string;
   created_at: string;
 }
 
@@ -120,7 +121,7 @@ export default function Eventos() {
     location: '', contract: 'PORTO', equipment: '', plate_tag: '',
     shift: '', supervisor1: '', supervisor2: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
     cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '',
-    categoria_evento: 'Material', encaminhamento_medico: ''
+    categoria_evento: 'Material', encaminhamento_medico: '', area: ''
   });
 
   const openCreateModal = () => {
@@ -130,7 +131,7 @@ export default function Eventos() {
       location: '', contract: 'PORTO', equipment: '', plate_tag: '',
       shift: '', supervisor1: '', supervisor2: '', involved_name: '', tipo_acidente: '', agente_lesao: '', parte_corpo: '', genero_envolvido: '', custo: 0,
       cid: '', atestado: false, afastamento: false, danos_materiais: false, atendimento_medico: false, tecnico_seguranca: '',
-      categoria_evento: 'Material', encaminhamento_medico: ''
+      categoria_evento: 'Material', encaminhamento_medico: '', area: ''
     });
   };
 
@@ -173,7 +174,8 @@ export default function Eventos() {
       atendimento_medico: ev.atendimento_medico || false,
       tecnico_seguranca: ev.tecnico_seguranca || '',
       categoria_evento: ev.categoria_evento || 'Material',
-      encaminhamento_medico: ev.encaminhamento_medico || ''
+      encaminhamento_medico: ev.encaminhamento_medico || '',
+      area: ev.area || ''
     });
     setDialogOpen(true);
   };
@@ -342,7 +344,8 @@ export default function Eventos() {
       custo: eventToSave.custo,
       tecnico_seguranca: eventToSave.tecnico_seguranca,
       categoria_evento: eventToSave.categoria_evento,
-      encaminhamento_medico: eventToSave.encaminhamento_medico
+      encaminhamento_medico: eventToSave.encaminhamento_medico,
+      area: eventToSave.area
     };
     delete eventToSave.cid;
     delete eventToSave.atestado;
@@ -357,6 +360,7 @@ export default function Eventos() {
     delete eventToSave.tecnico_seguranca;
     delete eventToSave.categoria_evento;
     delete eventToSave.encaminhamento_medico;
+    delete eventToSave.area;
 
     const cleanDesc = (eventToSave.description || '').split('||EXTRA||')[0].trim();
     eventToSave.description = cleanDesc + " ||EXTRA||" + JSON.stringify(extraData);
@@ -599,6 +603,7 @@ export default function Eventos() {
     const byLetra: Record<string, number> = {};
     const byCid: Record<string, number> = {};
     const byAtestado: Record<string, number> = {};
+    const byArea: Record<string, number> = {};
     let afastamentoCom = 0;
     let afastamentoSem = 0;
     let danosCom = 0;
@@ -692,6 +697,10 @@ export default function Eventos() {
           }
         }
       }
+      if (ev.area) {
+        byArea[ev.area] = (byArea[ev.area] || 0) + 1;
+      }
+
     }
 
     const monthTrend = Object.entries(byMonth).sort(([a], [b]) => a.localeCompare(b)).map(([month, count]) => {
@@ -729,6 +738,9 @@ export default function Eventos() {
 
     const topLocations = Object.entries(byLocation)
       .sort(([, a], [, b]) => b - a).slice(0, 6)
+      .map(([name, value]) => ({ name, value }));
+    const topAreas = Object.entries(byArea)
+      .sort(([, a], [, b]) => b - a)
       .map(([name, value]) => ({ name, value }));
     const yearData = Object.entries(byYear).sort(([a], [b]) => a.localeCompare(b)).map(([year, count]) => ({ year, eventos: count }));
 
@@ -947,7 +959,7 @@ export default function Eventos() {
     })();
 
     return { 
-      monthTrend, topEquipment, topPeople, dayData, topLocations, yearData, 
+      topLocations, topAreas, topEquipment, topPeople, dayData, monthTrend, yearData, 
       materialCount, meioAmbienteCount, medicoCount, total: filtered.length,
       topTipos, topAgentes, topPartes, byGenero, byTurno, turnoData,
       byLetra, letraData, hourlyData, daysWithoutAccident,
@@ -1066,7 +1078,32 @@ export default function Eventos() {
 
                 <div className="space-y-2">
                   <Label>Local</Label>
-                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P" />
+                  <FastInput value={newEvent.location} onValueChange={v => setNewEvent(p => ({ ...p, location: v }))} placeholder="Ex: PÁTIO P - Próximo ao terminal" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-orange-500" /> Área *</Label>
+                  <Select value={newEvent.area} onValueChange={v => setNewEvent(p => ({ ...p, area: v }))}>
+                    <SelectTrigger className={`${!newEvent.area ? 'border-orange-400/50 focus:ring-orange-400' : ''}`}>
+                      <SelectValue placeholder="Selecione a área de ocorrência" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pátio de Carvão">Pátio de Carvão</SelectItem>
+                      <SelectItem value="Terminal Marítimo">Terminal Marítimo</SelectItem>
+                      <SelectItem value="Píer 01">Píer 01</SelectItem>
+                      <SelectItem value="Píer 02">Píer 02</SelectItem>
+                      <SelectItem value="Pátio C - TPM">Pátio C - TPM</SelectItem>
+                      <SelectItem value="Pátio P">Pátio P</SelectItem>
+                      <SelectItem value="Rota AMT">Rota AMT</SelectItem>
+                      <SelectItem value="Portaria / Acesso">Portaria / Acesso</SelectItem>
+                      <SelectItem value="Oficina / Manutenção">Oficina / Manutenção</SelectItem>
+                      <SelectItem value="Área Administrativa">Área Administrativa</SelectItem>
+                      <SelectItem value="Rua da Moega">Rua da Moega</SelectItem>
+                      <SelectItem value="Baia 01">Baia 01</SelectItem>
+                      <SelectItem value="Via Interna">Via Interna</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {(newEvent.shift === 'A Dia' || newEvent.shift === 'B Dia') ? (
@@ -1564,6 +1601,87 @@ export default function Eventos() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Mapa de Calor de Áreas */}
+          <Card className="shadow-sm border-border hover:shadow-lg transition-all duration-300 mb-6">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-orange-500" /> Mapa de Calor por Área
+                </CardTitle>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-md">
+                  {analytics.topAreas.length} área{analytics.topAreas.length !== 1 ? 's' : ''} com eventos
+                </span>
+              </div>
+              <CardDescription className="text-xs mt-1">Distribuição de eventos por área — cores indicam intensidade de ocorrências</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {analytics.topAreas.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground text-sm">
+                  <MapPin className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                  <p className="font-medium">Nenhum evento com área cadastrada no período.</p>
+                  <p className="text-xs mt-1 opacity-70">Preencha o campo Área ao registrar novos eventos.</p>
+                </div>
+              ) : (() => {
+                const maxVal = Math.max(...analytics.topAreas.map(a => a.value));
+                const total = analytics.topAreas.reduce((s, a) => s + a.value, 0);
+                const getHeat = (ratio: number) => {
+                  if (ratio >= 0.85) return { bg: 'bg-red-50 border-red-200',    text: 'text-red-700',    bar: 'bg-red-500',    dot: 'bg-red-500',    label: '🔴 Crítico' };
+                  if (ratio >= 0.60) return { bg: 'bg-orange-50 border-orange-200', text: 'text-orange-700', bar: 'bg-orange-500', dot: 'bg-orange-500', label: '🟠 Alto' };
+                  if (ratio >= 0.35) return { bg: 'bg-amber-50 border-amber-200',  text: 'text-amber-700',  bar: 'bg-amber-500',  dot: 'bg-amber-500',  label: '🟡 Médio' };
+                  if (ratio >= 0.15) return { bg: 'bg-cyan-50 border-cyan-200',    text: 'text-cyan-700',   bar: 'bg-cyan-500',   dot: 'bg-cyan-400',   label: '🔵 Baixo' };
+                  return                     { bg: 'bg-slate-50 border-slate-200', text: 'text-slate-600',  bar: 'bg-slate-400',  dot: 'bg-slate-400',  label: '⚪ Mínimo' };
+                };
+                return (
+                  <div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {analytics.topAreas.map((area, i) => {
+                        const ratio = area.value / maxVal;
+                        const pct = ((area.value / total) * 100).toFixed(1);
+                        const heat = getHeat(ratio);
+                        return (
+                          <div key={i} className={`rounded-xl border-2 p-4 ${heat.bg} transition-all hover:shadow-md`}>
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className={`w-2.5 h-2.5 rounded-full ${heat.dot} flex-shrink-0`} />
+                                <span className={`text-sm font-bold leading-tight truncate ${heat.text}`}>{area.name}</span>
+                              </div>
+                              <span className={`text-xl font-black ${heat.text} flex-shrink-0 leading-none`}>{area.value}</span>
+                            </div>
+                            <div className="w-full bg-white/60 rounded-full h-2 mb-2 overflow-hidden">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-700 ${heat.bar}`}
+                                style={{ width: `${Math.max(ratio * 100, 5)}%` }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className={`text-[10px] font-bold ${heat.text} opacity-80`}>{pct}% dos eventos</span>
+                              <span className={`text-[10px] font-semibold ${heat.text} opacity-60`}>{heat.label}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center gap-4 mt-4 pt-3 border-t border-border flex-wrap">
+                      <span className="text-xs text-muted-foreground font-medium">Intensidade:</span>
+                      {[
+                        { dot: 'bg-slate-400', label: 'Mínimo' },
+                        { dot: 'bg-cyan-400',  label: 'Baixo' },
+                        { dot: 'bg-amber-500', label: 'Médio' },
+                        { dot: 'bg-orange-500',label: 'Alto' },
+                        { dot: 'bg-red-500',   label: 'Crítico' },
+                      ].map(h => (
+                        <div key={h.label} className="flex items-center gap-1.5">
+                          <div className={`w-3 h-3 rounded-full ${h.dot}`} />
+                          <span className="text-xs text-muted-foreground">{h.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
 
           <div className="grid grid-cols-1 mb-6">
             <Card className="border-t-4 border-t-primary shadow-sm hover:shadow-md transition-shadow">
