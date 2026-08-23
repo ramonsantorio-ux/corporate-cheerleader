@@ -464,7 +464,7 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
       const tempoEmpresa = getTempoEmpresa(func.data_admissao);
       const infoBody = [
         ['Nome Completo', (func.nome || '—').toUpperCase(), 'Matrícula / ID', (func.id || '').slice(0, 8).toUpperCase()],
-        ['Cargo / Função', func.cargo || '—', 'Departamento / Contrato', func.departamento || '—'],
+        ['Cargo / Função', func.cargo || '—', 'Departamento / Vinculação', (func as unknown as { contrato_vinculado?: string }).contrato_vinculado ? `${func.departamento || '—'} (Vinculado: ${(func as unknown as { contrato_vinculado?: string }).contrato_vinculado})` : (func.departamento || '—')],
         ['Data de Admissão', func.data_admissao ? new Date(func.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—', 'Tempo de Empresa', tempoEmpresa],
         ['E-mail Corporativo', func.email || 'Não informado', 'Escolaridade / Turno', `${func.escolaridade || '—'} | ${func.turno || '—'}`],
       ];

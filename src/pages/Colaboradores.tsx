@@ -22,6 +22,7 @@ import { Building2 } from 'lucide-react';
 
 interface Funcionario {
   id: string; nome: string; email: string; departamento: string; cargo: string;
+  contrato_vinculado?: string;
   data_admissao: string; escolaridade: string; graduacao: string;
   pos_graduacao: boolean; pos_graduacao_tipo: string;
   feedbacks_recebidos: number; feedbacks_resolvidos: number;
@@ -46,7 +47,7 @@ function letraFromTurno(turno: string): string {
 export default function Colaboradores() {
   const navigate = useNavigate();
   const { canCreate, canEdit, canDelete } = usePermissions();
-  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const { userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
   const [turnoFilter, setTurnoFilter] = useState('todos');
@@ -78,7 +79,7 @@ export default function Colaboradores() {
   const [currentPage, setCurrentPage] = useState(1);
 
   const initialDept = (isDepartmentLocked && userDepartment) ? userDepartment : '';
-  const emptyForm = { nome: '', email: '', cargo: '', departamento: initialDept, data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: 'none' };
+  const emptyForm = { nome: '', email: '', cargo: '', departamento: initialDept, contrato_vinculado: '', data_admissao: '', escolaridade: '', graduacao: '', pos_graduacao: false, pos_graduacao_tipo: '', turno: '', letra: '', encarregado_id: 'none' };
   const [newData, setNewData] = useState(emptyForm);
   const [editData, setEditData] = useState({ id: '', foto_url: '', ...emptyForm });
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
@@ -97,20 +98,22 @@ export default function Colaboradores() {
 
   async function fetchFuncionarios(silent = false) {
     if (!silent) setLoading(true);
-    let query = supabase.from('funcionarios').select('*').order('nome');
-    if (isDepartmentLocked && userDepartment) {
-      query = query.eq('departamento', userDepartment);
-    }
-    const { data, error } = await query;
+    const { data, error } = await supabase.from('funcionarios').select('*').order('nome');
     if (!error && data) setFuncionarios(data as Funcionario[]);
     if (!silent) setLoading(false);
   }
 
-  const activeDeptFilter = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
-
   const filtered = funcionarios.filter((f) => {
     const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
-    const matchDept = activeDeptFilter === 'todos' || f.departamento === activeDeptFilter;
+    
+    // Filtragem por departamento travado ou selecionado
+    let matchDept = true;
+    if (isDepartmentLocked && userDepartments.length > 0) {
+      matchDept = userDepartments.includes(f.departamento) || (!!f.contrato_vinculado && userDepartments.includes(f.contrato_vinculado));
+    } else if (deptFilter !== 'todos') {
+      matchDept = f.departamento === deptFilter || f.contrato_vinculado === deptFilter;
+    }
+
     const matchTurno = turnoFilter === 'todos' || f.turno === turnoFilter;
     return matchSearch && matchDept && matchTurno;
   });
@@ -232,7 +235,7 @@ export default function Colaboradores() {
     setUploading(true);
     let foto_url = '';
     try { if (newPhotoFile) foto_url = await uploadPhoto(newPhotoFile); } catch { toast.error('Erro ao enviar foto'); setUploading(false); return; }
-    const insertData: Record<string, unknown> = { nome: newData.nome, email: newData.email, cargo: newData.cargo, departamento: newData.departamento, escolaridade: newData.escolaridade, graduacao: newData.graduacao, pos_graduacao: newData.pos_graduacao, pos_graduacao_tipo: newData.pos_graduacao_tipo, turno: newData.turno, letra: newData.letra, foto_url };
+    const insertData: Record<string, unknown> = { nome: newData.nome, email: newData.email, cargo: newData.cargo, departamento: newData.departamento, contrato_vinculado: newData.contrato_vinculado || null, escolaridade: newData.escolaridade, graduacao: newData.graduacao, pos_graduacao: newData.pos_graduacao, pos_graduacao_tipo: newData.pos_graduacao_tipo, turno: newData.turno, letra: newData.letra, foto_url };
     if (newData.data_admissao) insertData.data_admissao = newData.data_admissao;
     if (newData.encarregado_id && newData.encarregado_id !== 'none') insertData.encarregado_id = newData.encarregado_id;
     const { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
@@ -250,7 +253,7 @@ export default function Colaboradores() {
 
   function openEdit(f: Funcionario) {
     if (!canEdit('colaboradores')) { toast.error('Você não tem permissão para editar colaboradores.'); return; }
-    setEditData({ id: f.id, nome: f.nome, email: f.email || '', cargo: f.cargo, departamento: f.departamento, foto_url: f.foto_url || '', data_admissao: f.data_admissao || '', escolaridade: f.escolaridade || '', graduacao: f.graduacao || '', pos_graduacao: f.pos_graduacao || false, pos_graduacao_tipo: f.pos_graduacao_tipo || '', turno: f.turno || '', letra: f.letra || '', encarregado_id: f.encarregado_id || 'none' });
+    setEditData({ id: f.id, nome: f.nome, email: f.email || '', cargo: f.cargo, departamento: f.departamento, contrato_vinculado: f.contrato_vinculado || '', foto_url: f.foto_url || '', data_admissao: f.data_admissao || '', escolaridade: f.escolaridade || '', graduacao: f.graduacao || '', pos_graduacao: f.pos_graduacao || false, pos_graduacao_tipo: f.pos_graduacao_tipo || '', turno: f.turno || '', letra: f.letra || '', encarregado_id: f.encarregado_id || 'none' });
     setEditPhotoFile(null); setEditPhotoPreview(f.foto_url || ''); setEditDocFiles([]); setEditOpen(true);
   }
 
@@ -260,7 +263,7 @@ export default function Colaboradores() {
     setUploading(true);
     let foto_url = editData.foto_url;
     try { if (editPhotoFile) foto_url = await uploadPhoto(editPhotoFile); } catch { toast.error('Erro foto'); setUploading(false); return; }
-    const updateData: Record<string, unknown> = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id && editData.encarregado_id !== 'none' ? editData.encarregado_id : null, foto_url };
+    const updateData: Record<string, unknown> = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, contrato_vinculado: editData.contrato_vinculado || null, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id && editData.encarregado_id !== 'none' ? editData.encarregado_id : null, foto_url };
     if (editData.data_admissao) updateData.data_admissao = editData.data_admissao;
     const { error } = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
     if (editDocFiles.length > 0) {
@@ -319,6 +322,17 @@ export default function Colaboradores() {
               <SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
             </Select>
           )}
+        </div>
+        <div className="space-y-2">
+          <Label>Contrato / Vinculação Responsável (Opcional)</Label>
+          <Select value={data.contrato_vinculado || 'none'} onValueChange={v => setData({ ...data, contrato_vinculado: v === 'none' ? '' : v })}>
+            <SelectTrigger><SelectValue placeholder="Selecione caso responda a outro contrato" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nenhum (Mesmo do Departamento)</SelectItem>
+              {departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <p className="text-[11px] text-muted-foreground">Ex: Pertence à Medição, mas responde/está vinculado ao Contrato Porto.</p>
         </div>
         <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
           <Label className="text-sm font-semibold">Turno / Escala</Label>
@@ -477,6 +491,11 @@ export default function Colaboradores() {
                   
                   <div className="flex flex-wrap justify-center gap-1.5 mt-3">
                     <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{f.departamento}</span>
+                    {f.contrato_vinculado && (
+                      <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20" title={`Vinculado ao ${f.contrato_vinculado}`}>
+                        📍 Vinculado: {f.contrato_vinculado}
+                      </span>
+                    )}
                     {turnoLabel && <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-chart-3/10 text-chart-3">{turnoLabel}</span>}
                   </div>
                 </div>

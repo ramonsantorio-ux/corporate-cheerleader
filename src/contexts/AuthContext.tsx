@@ -9,17 +9,20 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   userDepartment: string | null;
+  userDepartments: string[];
   effectiveDepartment: string | null;
   isDepartmentLocked: boolean;
   setEffectiveDepartment: (dept: string | null) => void;
+  hasAccessToDept: (deptName?: string | null) => boolean;
   permissions: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null, session: null, loading: true, isAdmin: false,
-  userDepartment: null, effectiveDepartment: null, isDepartmentLocked: false,
+  userDepartment: null, userDepartments: [], effectiveDepartment: null, isDepartmentLocked: false,
   setEffectiveDepartment: () => {},
+  hasAccessToDept: () => true,
   permissions: {},
   signOut: async () => {},
 });
@@ -32,6 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userDepartment, setUserDepartment] = useState<string | null>(null);
+  const [userDepartments, setUserDepartments] = useState<string[]>([]);
   const [effectiveDepartment, setEffectiveDepartment] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>>({});
 
@@ -109,8 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (saved) dept = saved;
     }
 
+    let deptsList: string[] = [];
+    if (dept && dept !== 'all' && dept !== 'todos') {
+      deptsList = dept.split(',').map(d => d.trim()).filter(Boolean);
+    }
+
     setUserDepartment(dept);
-    setEffectiveDepartment(dept || null);
+    setUserDepartments(deptsList);
+    setEffectiveDepartment(deptsList[0] || dept || null);
 
     const profileId = rolesData?.[0]?.profile_id;
     const permsMap: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }> = {};
@@ -185,13 +195,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }
 
+  function hasAccessToDept(deptName?: string | null): boolean {
+    if (isAdmin || userDepartments.length === 0 || !userDepartment) return true;
+    if (!deptName) return true;
+    return userDepartments.includes(deptName);
+  }
+
   const isDepartmentLocked = !isAdmin && !!userDepartment;
 
   return (
     <AuthContext.Provider value={{
       user, session, loading, isAdmin,
-      userDepartment, effectiveDepartment, isDepartmentLocked,
-      setEffectiveDepartment,
+      userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked,
+      setEffectiveDepartment, hasAccessToDept,
       permissions, signOut
     }}>
       {children}

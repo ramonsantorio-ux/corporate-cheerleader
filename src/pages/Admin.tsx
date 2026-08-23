@@ -471,20 +471,54 @@ export default function Admin() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Departamento / Setor</Label>
-                <Select value={newUser.departamento || 'all'} onValueChange={(v) => setNewUser({...newUser, departamento: v === 'all' ? '' : v})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o departamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos / Acesso Global (Diretoria/Admin)</SelectItem>
-                    {DEPARTAMENTOS.map(d => (
-                      <SelectItem key={d} value={d}>{d}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-[11px] text-muted-foreground">Usuários com departamento específico só visualizam dados do próprio setor.</p>
+              <div className="space-y-2 border border-border/80 rounded-xl p-3.5 bg-muted/20">
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Departamentos & Setores de Acesso</Label>
+                  {newUser.departamento && newUser.departamento !== 'all' && (
+                    <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                      {newUser.departamento.split(',').filter(Boolean).length} setor(es)
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border/60 cursor-pointer hover:bg-muted/40 transition-colors">
+                    <Checkbox
+                      checked={!newUser.departamento || newUser.departamento === 'all'}
+                      onCheckedChange={(checked) => {
+                        setNewUser({ ...newUser, departamento: checked ? '' : DEPARTAMENTOS[0] });
+                      }}
+                    />
+                    <span className="text-xs font-bold text-foreground">🌐 Todos / Acesso Global (Diretoria/Admin/Gerente Geral)</span>
+                  </label>
+
+                  {newUser.departamento !== '' && newUser.departamento !== 'all' && (
+                    <div className="grid grid-cols-2 gap-1.5 pt-1.5 max-h-48 overflow-y-auto pr-1">
+                      {DEPARTAMENTOS.map(d => {
+                        const selectedList = (newUser.departamento || '').split(',').map(s => s.trim()).filter(Boolean);
+                        const isChecked = selectedList.includes(d);
+                        return (
+                          <label key={d} className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer transition-colors ${isChecked ? 'bg-primary/10 border-primary/40 font-semibold text-primary' : 'bg-background border-border/60 hover:bg-muted/30 text-muted-foreground'}`}>
+                            <Checkbox
+                              checked={isChecked}
+                              onCheckedChange={(checked) => {
+                                let newList: string[];
+                                if (checked) {
+                                  newList = [...selectedList, d];
+                                } else {
+                                  newList = selectedList.filter(item => item !== d);
+                                }
+                                setNewUser({ ...newUser, departamento: newList.join(', ') });
+                              }}
+                            />
+                            <span className="truncate">{d}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">Selecione múltiplos setores para gestores responsáveis por mais de um contrato.</p>
               </div>
               <div className="space-y-2">
                 <Label>Senha</Label>
@@ -545,9 +579,11 @@ export default function Admin() {
                     </span>
                   )}
                   {u.departamento ? (
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                      🏢 {u.departamento}
-                    </span>
+                    u.departamento.split(',').map(d => d.trim()).filter(Boolean).map(d => (
+                      <span key={d} className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        📍 {d}
+                      </span>
+                    ))
                   ) : (
                     <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-slate-500/10 text-slate-600 dark:text-slate-400">
                       🌐 Acesso Global
@@ -715,20 +751,54 @@ export default function Admin() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Departamento / Setor</Label>
-              <Select value={editDepartamento || 'all'} onValueChange={(v) => setEditDepartamento(v === 'all' ? '' : v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o departamento" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos / Acesso Global (Diretoria/Admin)</SelectItem>
-                  {DEPARTAMENTOS.map(d => (
-                    <SelectItem key={d} value={d}>{d}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-[11px] text-muted-foreground">Usuários com departamento específico só visualizam dados do próprio setor.</p>
+            <div className="space-y-2 border border-border/80 rounded-xl p-3.5 bg-muted/20">
+              <div className="flex items-center justify-between mb-1">
+                <Label className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Departamentos & Setores de Acesso</Label>
+                {editDepartamento && editDepartamento !== 'all' && (
+                  <span className="text-[10px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                    {editDepartamento.split(',').filter(Boolean).length} setor(es)
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 p-2 rounded-lg bg-background border border-border/60 cursor-pointer hover:bg-muted/40 transition-colors">
+                  <Checkbox
+                    checked={!editDepartamento || editDepartamento === 'all'}
+                    onCheckedChange={(checked) => {
+                      setEditDepartamento(checked ? '' : DEPARTAMENTOS[0]);
+                    }}
+                  />
+                  <span className="text-xs font-bold text-foreground">🌐 Todos / Acesso Global (Diretoria/Admin/Gerente Geral)</span>
+                </label>
+
+                {editDepartamento !== '' && editDepartamento !== 'all' && (
+                  <div className="grid grid-cols-2 gap-1.5 pt-1.5 max-h-48 overflow-y-auto pr-1">
+                    {DEPARTAMENTOS.map(d => {
+                      const selectedList = (editDepartamento || '').split(',').map(s => s.trim()).filter(Boolean);
+                      const isChecked = selectedList.includes(d);
+                      return (
+                        <label key={d} className={`flex items-center gap-2 p-2 rounded-lg border text-xs cursor-pointer transition-colors ${isChecked ? 'bg-primary/10 border-primary/40 font-semibold text-primary' : 'bg-background border-border/60 hover:bg-muted/30 text-muted-foreground'}`}>
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              let newList: string[];
+                              if (checked) {
+                                newList = [...selectedList, d];
+                              } else {
+                                newList = selectedList.filter(item => item !== d);
+                              }
+                              setEditDepartamento(newList.join(', '));
+                            }}
+                          />
+                          <span className="truncate">{d}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">Selecione múltiplos setores para gestores responsáveis por mais de um contrato.</p>
             </div>
             <Button onClick={saveEditUser} className="w-full" disabled={savingEdit}>
               {savingEdit ? 'Salvando...' : 'Salvar Alterações'}
