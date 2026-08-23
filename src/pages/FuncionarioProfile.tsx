@@ -458,16 +458,15 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
 
       y += 18;
 
-      // ─── 1. DADOS CADASTRAIS & PERFORMANCE ───
+      // ─── 1. DADOS CADASTRAIS & ESTRUTURA ORGANIZACIONAL ───
       y = drawSectionHeadingLocal('1. DADOS CADASTRAIS E ESTRUTURA ORGANIZACIONAL', y);
 
       const tempoEmpresa = getTempoEmpresa(func.data_admissao);
       const infoBody = [
-        ['Nome Completo', (func.nome || '—').toUpperCase(), 'Fit Cultural Score', func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente'],
-        ['Cargo / Função', func.cargo || '—', 'Nine Box (Desempenho)', func.nine_box_desempenho || 'Não Avaliado'],
-        ['Departamento / Contrato', func.departamento || '—', 'Nine Box (Potencial)', func.nine_box_potencial || 'Não Avaliado'],
-        ['E-mail Corporativo', func.email || 'Não informado', 'Escola / Turno', `${func.escolaridade || '—'} | ${func.turno || '—'}`],
+        ['Nome Completo', (func.nome || '—').toUpperCase(), 'Matrícula / ID', (func.id || '').slice(0, 8).toUpperCase()],
+        ['Cargo / Função', func.cargo || '—', 'Departamento / Contrato', func.departamento || '—'],
         ['Data de Admissão', func.data_admissao ? new Date(func.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—', 'Tempo de Empresa', tempoEmpresa],
+        ['E-mail Corporativo', func.email || 'Não informado', 'Escolaridade / Turno', `${func.escolaridade || '—'} | ${func.turno || '—'}`],
       ];
 
       autoTable(doc, {
@@ -476,24 +475,58 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
         theme: 'plain',
         styles: { fontSize: 8, cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 } },
         columnStyles: { 
-          0: { fontStyle: 'bold', cellWidth: 40 }, 
-          1: { cellWidth: 50 },
-          2: { fontStyle: 'bold', cellWidth: 40 }, 
-          3: { cellWidth: 50 }
+          0: { fontStyle: 'bold', cellWidth: 38 }, 
+          1: { cellWidth: 52 },
+          2: { fontStyle: 'bold', cellWidth: 38 }, 
+          3: { cellWidth: 52 }
         },
         margin: { left: margin, right: margin },
       });
 
       y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 40;
 
-      // ─── 2. MAPEAMENTO PSICOMÉTRICO E AVALIAÇÕES ───
+      // ─── DASHBOARD DE RESUMO EXECUTIVO (KPIS) ───
+      y = checkPageBreak(y, 25);
+      const cardWidth = (pageWidth - margin * 2 - 9) / 4;
+      const cardHeight = 16;
+      
+      const kpis = [
+        { label: 'SCORE FIT CULTURAL', value: func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente', color: [59, 130, 187] as [number, number, number] },
+        { label: 'NINE BOX ATUAL', value: func.nine_box_desempenho ? `${func.nine_box_desempenho} / ${func.nine_box_potencial || ''}` : 'Não Avaliado', color: [42, 90, 140] as [number, number, number] },
+        { label: 'STATUS DO PDI', value: pdisList.length > 0 ? `${pdisList.length} Plano(s)` : 'Sem PDI', color: [58, 79, 122] as [number, number, number] },
+        { label: 'PRONTUÁRIO / DESVIOS', value: `${(employeeWarnings || []).filter(w => w.applied).length} Adv. Aplicadas`, color: (employeeWarnings || []).filter(w => w.applied).length > 0 ? [217, 83, 79] as [number, number, number] : [40, 167, 69] as [number, number, number] },
+      ];
+
+      kpis.forEach((kpi, index) => {
+        const xPos = margin + index * (cardWidth + 3);
+        doc.setFillColor(248, 250, 252);
+        doc.setDrawColor(220, 226, 235);
+        doc.roundedRect(xPos, y, cardWidth, cardHeight, 1.5, 1.5, 'FD');
+
+        doc.setFillColor(...kpi.color);
+        doc.rect(xPos, y, cardWidth, 2, 'F');
+
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(100, 110, 120);
+        doc.text(kpi.label, xPos + 4, y + 6);
+
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(30, 40, 50);
+        doc.text(kpi.value, xPos + 4, y + 12);
+      });
+
+      y += cardHeight + 10;
+
+      // ─── 2. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL ───
       y = checkPageBreak(y, 35);
       y = drawSectionHeadingLocal('2. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL', y);
 
       const tests = [
-        ['DISC (Comportamento)', discResult ? `Perfil Predominante: ${discResult.profile_name || 'Concluído'}` : 'Não realizado'],
-        ['MBTI (Personalidade)', mbtiResult ? `Tipo Cognitivo: ${mbtiResult.mbti_type || 'Concluído'}` : 'Não realizado'],
-        ['Big Five (Fatores)', bigFiveResult ? 'Avaliação registrada com sucesso no sistema' : 'Não realizado'],
+        ['DISC (Perfil Comportamental)', discResult ? `Perfil Predominante: ${discResult.profile_name || 'Concluído'}` : 'Não realizado'],
+        ['MBTI (Tipo Cognitivo)', mbtiResult ? `Tipo: ${mbtiResult.mbti_type || 'Concluído'}` : 'Não realizado'],
+        ['Big Five (5 Fatores)', bigFiveResult ? 'Avaliação de Fatores Concluída e Registrada' : 'Não realizado'],
       ];
 
       autoTable(doc, {
@@ -501,34 +534,41 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
         body: tests,
         theme: 'plain',
         styles: { fontSize: 8, cellPadding: 3 },
-        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45 } },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 48 } },
         margin: { left: margin, right: margin },
       });
 
       y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
 
-      // ─── 3. PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI) ───
+      // ─── 3. PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI) E AÇÕES ───
       y = checkPageBreak(y, 35);
-      y = drawSectionHeadingLocal(`3. PLANOS DE DESENVOLVIMENTO INDIVIDUAL - PDI (${pdisList.length})`, y);
+      y = drawSectionHeadingLocal(`3. PLANOS DE DESENVOLVIMENTO INDIVIDUAL - PDI E METAS (${pdisList.length})`, y);
 
       if (pdisList.length > 0) {
-        const pdiRows = pdisList.map((p, idx) => {
-          const totalActions = p.pdi_actions?.length || 0;
-          const doneActions = p.pdi_actions?.filter(a => a.status === 'completed')?.length || 0;
+        const pdiRows: string[][] = [];
+        pdisList.forEach((p, idx) => {
           const statusMap: Record<string, string> = { pending: 'Pendente', in_progress: 'Em Andamento', completed: 'Concluído' };
-          return [
-            `PDI #${idx + 1}`,
-            statusMap[p.status] || p.status,
-            `${doneActions} de ${totalActions} concluídas`,
-            new Date(p.created_at).toLocaleDateString('pt-BR')
-          ];
+          pdiRows.push([
+            `PDI #${idx + 1} (${statusMap[p.status] || p.status})`,
+            `Criado em: ${new Date(p.created_at).toLocaleDateString('pt-BR')}`,
+            `${p.pdi_actions?.length || 0} meta(s) cadastrada(s)`
+          ]);
+
+          (p.pdi_actions || []).forEach((act, aIdx) => {
+            const actStatusMap: Record<string, string> = { pending: 'Pendente', in_progress: 'Em Andamento', completed: 'Concluído' };
+            pdiRows.push([
+              `   └ Meta ${aIdx + 1}: ${act.description}`,
+              `Status: ${actStatusMap[act.status] || act.status}`,
+              'Ação de Desenvolvimento'
+            ]);
+          });
         });
 
         autoTable(doc, {
           startY: y,
-          head: [['Plano', 'Status', 'Metas / Ações Atingidas', 'Data de Criação']],
+          head: [['Plano / Meta de Desenvolvimento', 'Situação', 'Tipo / Detalhes']],
           body: pdiRows,
-          styles: { fontSize: 8, cellPadding: 3 },
+          styles: { fontSize: 8, cellPadding: 2.5 },
           headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
           alternateRowStyles: { fillColor: blueLt },
           margin: { left: margin, right: margin },
@@ -581,7 +621,7 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
         startY: y,
         head: [['Indicador de Gestão', 'Quantidade Registrada', 'Situação / Impacto']],
         body: [
-          ['Faltas Injustificadas', String(faltasInj), faltasInj > 0 ? 'Atenção Requerida' : 'Regular'],
+          ['Faltas Injustificadas', String(faltasInj), faltasInj > 0 ? 'Atenção Requerida (Prontuário)' : 'Regular'],
           ['Faltas Justificadas / Atestados Médicos', String(faltasJust + atestados), 'Acompanhado por RH'],
           ['Advertências Disciplinares Aplicadas', String(advApplied), advApplied > 0 ? 'Registrado em Prontuário' : 'Sem ocorrências'],
           ['Eventos Operacionais de SSMA', String((employeeEvents || []).length), (employeeEvents || []).length > 0 ? 'Registrado' : 'Sem registros'],
@@ -637,11 +677,6 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
           margin: { left: margin, right: margin },
         });
         y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
-      } else {
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'italic');
-        doc.text('Nenhum feedback registrado no período.', margin, y);
-        y += 10;
       }
 
       // ─── 8. ASSINATURAS INSTITUCIONAIS ───
