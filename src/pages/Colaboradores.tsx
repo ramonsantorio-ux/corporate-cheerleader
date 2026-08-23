@@ -294,60 +294,137 @@ export default function Colaboradores() {
 
   function renderFormFields(data: typeof newData, setData: (d: typeof newData) => void, docs: File[], setDocs: React.Dispatch<React.SetStateAction<File[]>>, docRef: React.RefObject<HTMLInputElement>) {
     return (
-      <>
-        <div className="space-y-2"><Label>Nome completo</Label><FastInput value={data.nome} onValueChange={v => setData({ ...data, nome: v })} placeholder="Nome do funcionário" /></div>
-        <div className="space-y-2"><Label>Data de Admissão</Label><Input type="date" value={data.data_admissao} onChange={e => setData({ ...data, data_admissao: e.target.value })} /></div>
-        <div className="space-y-2">
-          <Label>Escolaridade</Label>
-          <Select value={data.escolaridade} onValueChange={v => setData({ ...data, escolaridade: v })}><SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger><SelectContent>{escolaridades.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select>
-        </div>
-        <div className="space-y-2"><Label>Graduação</Label><FastInput value={data.graduacao} onValueChange={v => setData({ ...data, graduacao: v })} placeholder="Ex: Engenharia Civil" /></div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between"><Label>Possui Pós-Graduação?</Label><Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} /></div>
-          {data.pos_graduacao && <FastInput value={data.pos_graduacao_tipo} onValueChange={v => setData({ ...data, pos_graduacao_tipo: v })} placeholder="Qual pós-graduação?" className="mt-2" />}
-        </div>
-        <div className="space-y-2"><Label>Cargo</Label><FastInput value={data.cargo} onValueChange={v => setData({ ...data, cargo: v })} placeholder="Cargo" /></div>
-        <div className="space-y-2"><Label>E-mail</Label><FastInput value={data.email} onValueChange={v => setData({ ...data, email: v })} placeholder="email@empresa.com" type="email" /></div>
-        <div className="space-y-2">
-          <Label>Departamento</Label>
-          {isDepartmentLocked && userDepartment ? (
-            <div className="flex items-center gap-2 p-2.5 bg-muted/60 border border-border rounded-lg text-sm font-medium">
-              <Building2 className="w-4 h-4 text-primary" />
-              <span>{userDepartment}</span>
-              <span className="text-[11px] text-muted-foreground ml-auto">(Seu departamento)</span>
+      <div className="space-y-5">
+        {/* BLOCO 1: DADOS CADASTRAIS & CONTRATUAIS */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-primary border-b border-border pb-1">
+            1. Dados Pessoais & Alocação
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-xs font-semibold">Nome Completo *</Label>
+              <FastInput value={data.nome} onValueChange={v => setData({ ...data, nome: v })} placeholder="Nome completo do colaborador" />
             </div>
-          ) : (
-            <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-            </Select>
-          )}
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">E-mail Corporativo / Pessoal</Label>
+              <FastInput value={data.email} onValueChange={v => setData({ ...data, email: v })} placeholder="email@empresa.com" type="email" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Data de Admissão</Label>
+              <Input type="date" value={data.data_admissao} onChange={e => setData({ ...data, data_admissao: e.target.value })} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Cargo / Função *</Label>
+              <FastInput value={data.cargo} onValueChange={v => setData({ ...data, cargo: v })} placeholder="Ex: Encarregado Operacional" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Departamento Principal *</Label>
+              {isDepartmentLocked && userDepartment ? (
+                <div className="flex items-center gap-2 p-2 bg-muted/60 border border-border rounded-lg text-xs font-medium">
+                  <Building2 className="w-4 h-4 text-primary" />
+                  <span>{userDepartment}</span>
+                </div>
+              ) : (
+                <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}>
+                  <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
+                  <SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                </Select>
+              )}
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2 bg-muted/30 p-3 rounded-xl border border-border/60">
+              <Label className="text-xs font-semibold">Contrato / Vinculação Responsável (Opcional)</Label>
+              <Select value={data.contrato_vinculado || 'none'} onValueChange={v => setData({ ...data, contrato_vinculado: v === 'none' ? '' : v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione caso responda a outro contrato" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum (Mesmo do Departamento Principal)</SelectItem>
+                  {departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Utilize se o colaborador pertence a uma área (ex: Medição), mas está vinculado a outro contrato (ex: Contrato Porto).
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label>Contrato / Vinculação Responsável (Opcional)</Label>
-          <Select value={data.contrato_vinculado || 'none'} onValueChange={v => setData({ ...data, contrato_vinculado: v === 'none' ? '' : v })}>
-            <SelectTrigger><SelectValue placeholder="Selecione caso responda a outro contrato" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">Nenhum (Mesmo do Departamento)</SelectItem>
-              {departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <p className="text-[11px] text-muted-foreground">Ex: Pertence à Medição, mas responde/está vinculado ao Contrato Porto.</p>
+
+        {/* BLOCO 2: ESCALA & TURNO OPERACIONAL */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-primary border-b border-border pb-1">
+            2. Escala & Turno Operacional
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Turno / Escala</Label>
+              <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v, letra: letraFromTurno(v) })}>
+                <SelectTrigger><SelectValue placeholder="Selecione a escala" /></SelectTrigger>
+                <SelectContent>{TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
-        <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
-          <Label className="text-sm font-semibold">Turno / Escala</Label>
-          <Select value={data.turno} onValueChange={v => setData({ ...data, turno: v, letra: letraFromTurno(v) })}><SelectTrigger><SelectValue placeholder="Selecione o turno" /></SelectTrigger><SelectContent>{TURNOS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
-          
+
+        {/* BLOCO 3: FORMAÇÃO & ESCOLARIDADE */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-primary border-b border-border pb-1">
+            3. Formação Acadêmica
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Escolaridade</Label>
+              <Select value={data.escolaridade} onValueChange={v => setData({ ...data, escolaridade: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione escolaridade" /></SelectTrigger>
+                <SelectContent>{escolaridades.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Graduação / Curso</Label>
+              <FastInput value={data.graduacao} onValueChange={v => setData({ ...data, graduacao: v })} placeholder="Ex: Engenharia Civil" />
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2 flex flex-col gap-2 bg-muted/20 p-3 rounded-xl border border-border/60">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold">Possui Pós-Graduação / Especialização?</Label>
+                <Switch checked={data.pos_graduacao} onCheckedChange={v => setData({ ...data, pos_graduacao: v, pos_graduacao_tipo: v ? data.pos_graduacao_tipo : '' })} />
+              </div>
+              {data.pos_graduacao && (
+                <FastInput value={data.pos_graduacao_tipo} onValueChange={v => setData({ ...data, pos_graduacao_tipo: v })} placeholder="Nome do curso de pós-graduação" className="mt-1" />
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* BLOCO 4: DOCUMENTOS COMPLEMENTARES */}
         {cargoNeedsDocs(data.cargo) && (
-          <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
-            <Label className="flex items-center gap-2"><FileUp className="w-4 h-4 text-primary" />Documentos</Label>
+          <div className="space-y-2 p-3.5 rounded-xl bg-muted/40 border border-border">
+            <Label className="flex items-center gap-2 text-xs font-bold uppercase text-foreground">
+              <FileUp className="w-4 h-4 text-primary" /> Anexos de Habilitação / Documentos
+            </Label>
             <input ref={docRef} type="file" accept=".pdf,image/*" multiple className="hidden" onChange={e => handleDocFilesChange(e, docs === editDocFiles)} />
-            <Button type="button" variant="outline" size="sm" onClick={() => docRef.current?.click()} className="w-full"><FileUp className="w-4 h-4 mr-2" />Anexar</Button>
-            {docs.length > 0 && <div className="space-y-1 mt-2">{docs.map((f, i) => <div key={i} className="flex items-center gap-2 text-sm p-1.5 bg-background rounded"><FileText className="w-4 h-4 text-muted-foreground" /><span className="truncate flex-1">{f.name}</span><button onClick={() => { const u = [...docs]; u.splice(i, 1); setDocs(u); }} className="text-destructive"><X className="w-3 h-3" /></button></div>)}</div>}
+            <Button type="button" variant="outline" size="sm" onClick={() => docRef.current?.click()} className="w-full">
+              <FileUp className="w-4 h-4 mr-2" /> Anexar Documentos
+            </Button>
+            {docs.length > 0 && (
+              <div className="space-y-1 mt-2">
+                {docs.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs p-1.5 bg-background rounded border border-border/60">
+                    <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="truncate flex-1">{f.name}</span>
+                    <button onClick={() => { const u = [...docs]; u.splice(i, 1); setDocs(u); }} className="text-destructive">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
-      </>
+      </div>
     );
   }
 
@@ -396,19 +473,34 @@ export default function Colaboradores() {
         {canCreate('colaboradores') && (
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" />Novo Funcionário</Button></DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>Cadastrar Funcionário</DialogTitle></DialogHeader>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold">Cadastrar Novo Funcionário</DialogTitle>
+              </DialogHeader>
               <div className="space-y-4 pt-2">
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex items-center gap-4 bg-muted/30 p-3 rounded-xl border border-border/60">
                   <input ref={newFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) { setNewPhotoFile(file); setNewPhotoPreview(URL.createObjectURL(file)); }}} />
                   {newPhotoPreview ? (
-                    <div className="relative"><img src={newPhotoPreview} alt="Preview" className="w-20 h-20 rounded-full object-cover border-2 border-primary/20" /><button onClick={() => { setNewPhotoFile(null); setNewPhotoPreview(''); }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"><X className="w-3 h-3" /></button></div>
+                    <div className="relative">
+                      <img src={newPhotoPreview} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-primary/20" />
+                      <button onClick={() => { setNewPhotoFile(null); setNewPhotoPreview(''); }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
                   ) : (
-                    <button onClick={() => newFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
+                    <button onClick={() => newFileRef.current?.click()} className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 text-primary transition-colors">
+                      <Camera className="w-6 h-6" />
+                    </button>
                   )}
+                  <div>
+                    <h5 className="font-semibold text-sm text-foreground">Foto do Perfil (Opcional)</h5>
+                    <p className="text-xs text-muted-foreground">Clique no círculo para selecionar a foto de identificação do colaborador</p>
+                  </div>
                 </div>
                 {renderFormFields(newData, setNewData, docFiles, setDocFiles, docFileRef as React.RefObject<HTMLInputElement>)}
-                <Button className="w-full" onClick={handleCreate} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Cadastrar</Button>
+                <Button className="w-full py-5 font-bold" onClick={handleCreate} disabled={uploading}>
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Cadastrar Colaborador
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -564,19 +656,34 @@ export default function Colaboradores() {
 
       {/* Edit dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Editar Funcionário</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Editar Dados do Funcionário</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-4 bg-muted/30 p-3 rounded-xl border border-border/60">
               <input ref={editFileRef} type="file" accept="image/*" className="hidden" onChange={e => { const file = e.target.files?.[0]; if (file) { setEditPhotoFile(file); setEditPhotoPreview(URL.createObjectURL(file)); }}} />
               {editPhotoPreview ? (
-                <div className="relative"><img src={editPhotoPreview} alt="Preview" className="w-20 h-20 rounded-full object-cover border-2 border-primary/20" /><button onClick={() => { setEditPhotoFile(null); setEditPhotoPreview(''); setEditData({ ...editData, foto_url: '' }); }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"><X className="w-3 h-3" /></button></div>
+                <div className="relative">
+                  <img src={editPhotoPreview} alt="Preview" className="w-16 h-16 rounded-full object-cover border-2 border-primary/20" />
+                  <button onClick={() => { setEditPhotoFile(null); setEditPhotoPreview(''); setEditData({ ...editData, foto_url: '' }); }} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
               ) : (
-                <button onClick={() => editFileRef.current?.click()} className="w-20 h-20 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"><Camera className="w-6 h-6 text-muted-foreground" /></button>
+                <button onClick={() => editFileRef.current?.click()} className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 text-primary transition-colors">
+                  <Camera className="w-6 h-6" />
+                </button>
               )}
+              <div>
+                <h5 className="font-semibold text-sm text-foreground">Foto do Perfil</h5>
+                <p className="text-xs text-muted-foreground">Clique na foto para atualizar a imagem de identificação do colaborador</p>
+              </div>
             </div>
             {renderFormFields(editData, setEditData as (v: typeof editData | ((p: typeof editData) => typeof editData)) => void, editDocFiles, setEditDocFiles, editDocFileRef as React.RefObject<HTMLInputElement>)}
-            <Button className="w-full" onClick={handleEdit} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Salvar Alterações</Button>
+            <Button className="w-full py-5 font-bold" onClick={handleEdit} disabled={uploading}>
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}Salvar Alterações
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
