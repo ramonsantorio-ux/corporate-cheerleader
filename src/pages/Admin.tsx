@@ -131,7 +131,17 @@ export default function Admin() {
 
   useEffect(() => {
     if (isAdmin) {
-      supabase.from('access_profiles').select('id, name').then(({data}) => setAccessProfiles(data || []));
+      supabase.from('access_profiles').select('id, name').then(({ data }) => {
+        if (!data) return;
+        const map = new Map<string, { id: string; name: string }>();
+        data.forEach(p => {
+          const cleanName = (p.name || '').trim();
+          if (cleanName && !map.has(cleanName)) {
+            map.set(cleanName, { id: p.id, name: cleanName });
+          }
+        });
+        setAccessProfiles(Array.from(map.values()));
+      });
     }
   }, [isAdmin]);
 
