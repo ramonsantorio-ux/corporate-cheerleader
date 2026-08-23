@@ -48,7 +48,7 @@ function letraFromTurno(turno: string): string {
 export default function Colaboradores() {
   const navigate = useNavigate();
   const { canCreate, canEdit, canDelete } = usePermissions();
-  const { userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const { userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked, isAdmin, canViewHierarchy } = useAuth();
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('todos');
   const [turnoFilter, setTurnoFilter] = useState('todos');
