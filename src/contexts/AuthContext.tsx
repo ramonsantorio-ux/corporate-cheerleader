@@ -90,12 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isUserAdmin = roles.includes('admin');
     setIsAdmin(isUserAdmin);
 
-    // Identifica departamento do usuário
-    // Identifica o cargo do usuário logado
+    // Identifica departamento e cargo do usuário
+    let dept: string | null = (authUser.user_metadata?.departamento as string) || null;
     let cargo: string | null = (authUser.user_metadata?.cargo as string) || null;
-    if (!cargo && authUser.email) {
+
+    if (authUser.email) {
       const { data: func } = await supabase.from('funcionarios').select('departamento, cargo').eq('email', authUser.email).maybeSingle();
-      if (func?.cargo) cargo = func.cargo;
+      if (func?.cargo && !cargo) cargo = func.cargo;
       if (func?.departamento && !dept) dept = func.departamento;
     }
 
