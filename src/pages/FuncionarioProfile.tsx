@@ -351,9 +351,21 @@ export default function FuncionarioProfile() {
 
   async function exportFullProfileReport() {
     if (!func) return;
-    toast({ title: 'Gerando PDF consolidado...', description: 'Aguarde um momento enquanto os dados são reunidos.' });
+    toast({ title: 'Gerando PDF do Dossiê...', description: 'Aguarde um momento enquanto reunimos todas as informações do colaborador.' });
     
     const logoBase64 = await getBusatoLogoBase64();
+
+    // Buscar dados adicionais para o dossiê (PDI, Fit Cultural, Historico de 9-Box)
+    const [pdisRes, fitRes, nineBoxRes] = await Promise.all([
+      supabase.from('pdis').select('*, pdi_actions(*)').eq('employee_id', func.id),
+      supabase.from('fit_cultural').select('*').eq('employee_id', func.id),
+      supabase.from('nine_box_historico').select('*').eq('employee_id', func.id).order('created_at', { ascending: false }),
+    ]);
+
+    const pdisList = (pdisRes.data || []) as unknown as { id: string; status: string; created_at: string; pdi_actions?: { description: string; status: string }[] }[];
+    const fitList = (fitRes.data || []) as unknown as { criteria: string; score: number }[];
+    const nineBoxHist = (nineBoxRes.data || []) as unknown as { cycle: string; desempenho: string; potencial: string; created_at: string }[];
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -362,7 +374,7 @@ export default function FuncionarioProfile() {
     const margin = 14;
 
     function drawHeader() {
-      drawBusatoHeader(doc, logoBase64, { pageWidth });
+      drawBusatoHeader(doc, logoBase64, 'DOSSIÊ COMPLETO DE GESTÃO DE PESSOAS', 'Relatório Consolidado do Colaborador', { pageWidth });
       doc.setTextColor(0, 0, 0);
     }
 
@@ -387,97 +399,158 @@ export default function FuncionarioProfile() {
       if (y + needed > pageHeight - 25) {
         doc.addPage();
         drawHeader();
-        return 38;
+        return 75;
       }
       return y;
     }
 
     // ─── START DOC ───
     drawHeader();
-    let y = 36;
+    let y = 75;
 
-    // Title
+    // Subcabeçalho Dossiê ID
     doc.setFillColor(250, 250, 250);
     doc.setDrawColor(220, 220, 220);
-    doc.roundedRect(margin, y, pageWidth - margin * 2, 16, 2, 2, 'FD');
-    doc.setFontSize(12);
+    doc.roundedRect(margin, y, pageWidth - margin * 2, 14, 2, 2, 'FD');
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(30, 30, 30);
-    doc.text('DOSSIÊ COMPLETO DO COLABORADOR', margin + 6, y + 7);
-    doc.setFontSize(9);
+    doc.text(`COLABORADOR: ${func.nome.toUpperCase()}`, margin + 6, y + 6);
+    doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} | Matrícula: ${func.id.slice(0, 8).toUpperCase()}`, margin + 6, y + 13);
+    doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')} | ID / Matrícula: ${func.id.slice(0, 8).toUpperCase()} | Cargo: ${func.cargo}`, margin + 6, y + 11);
     doc.setTextColor(0, 0, 0);
 
-    y = y + 20;
+    y += 18;
 
-    // ─── DADOS CADASTRAIS & PERFORMANCE ───
-    y = drawSectionHeadingLocal('DADOS CADASTRAIS E PERFORMANCE', y);
+    // ─── 1. DADOS CADASTRAIS & PERFORMANCE ───
+    y = drawSectionHeadingLocal('1. DADOS CADASTRAIS E ESTRUTURA ORGANIZACIONAL', y);
 
+    const tempoEmpresa = getTempoEmpresa(func.data_admissao);
     const infoBody = [
-      ['Nome Completo', func.nome.toUpperCase(), 'Fit Cultural', func.fit_cultural ? `${func.fit_cultural}%` : 'Não Avaliado'],
-      ['Cargo', func.cargo, 'Nine Box (Desemp.)', func.nine_box_desempenho || 'Não Avaliado'],
-      ['Departamento', func.departamento, 'Nine Box (Potenc.)', func.nine_box_potencial || 'Não Avaliado'],
-      ['E-mail', func.email || '—', 'Turno', func.turno],
-      ['Data de Admissão', func.data_admissao ? new Date(func.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—', 'Escolaridade', func.escolaridade || '—'],
+      ['Nome Completo', func.nome.toUpperCase(), 'Fit Cultural Score', func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente'],
+      ['Cargo / Função', func.cargo, 'Nine Box (Desempenho)', func.nine_box_desempenho || 'Não Avaliado'],
+      ['Departamento / Contrato', func.departamento, 'Nine Box (Potencial)', func.nine_box_potencial || 'Não Avaliado'],
+      ['E-mail Corporativo', func.email || 'Não informado', 'Escola / Turno', `${func.escolaridade || '—'} | ${func.turno || '—'}`],
+      ['Data de Admissão', func.data_admissao ? new Date(func.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—', 'Tempo de Empresa', tempoEmpresa],
     ];
 
     autoTable(doc, {
       startY: y,
       body: infoBody,
       theme: 'plain',
-      styles: { fontSize: 8, cellPadding: { top: 2, bottom: 2, left: 4, right: 4 } },
+      styles: { fontSize: 8, cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 } },
       columnStyles: { 
-        0: { fontStyle: 'bold', cellWidth: 35 }, 
-        1: { cellWidth: 55 },
-        2: { fontStyle: 'bold', cellWidth: 35 }, 
-        3: { cellWidth: 55 }
+        0: { fontStyle: 'bold', cellWidth: 40 }, 
+        1: { cellWidth: 50 },
+        2: { fontStyle: 'bold', cellWidth: 40 }, 
+        3: { cellWidth: 50 }
       },
       margin: { left: margin, right: margin },
     });
 
     y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 40;
 
-    // ─── PERFIL PSICOMÉTRICO ───
-    y = checkPageBreak(y, 30);
-    y = drawSectionHeadingLocal('PERFIL PSICOMÉTRICO', y);
+    // ─── 2. MAPEAMENTO PSICOMÉTRICO E AVALIAÇÕES ───
+    y = checkPageBreak(y, 35);
+    y = drawSectionHeadingLocal('2. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL', y);
 
     const tests = [
-      ['DISC', discResult ? `Perfil Predominante: ${discResult.profile_name || 'Concluído'}` : 'Não realizado'],
-      ['MBTI', mbtiResult ? `Tipo: ${mbtiResult.mbti_type || 'Concluído'}` : 'Não realizado'],
-      ['Big Five', bigFiveResult ? 'Avaliação concluída e registrada no sistema' : 'Não realizado'],
+      ['DISC (Comportamento)', discResult ? `Perfil Predominante: ${discResult.profile_name || 'Concluído'}` : 'Não realizado'],
+      ['MBTI (Personalidade)', mbtiResult ? `Tipo Cognitivo: ${mbtiResult.mbti_type || 'Concluído'}` : 'Não realizado'],
+      ['Big Five (Fatores)', bigFiveResult ? 'Avaliação registrada com sucesso no sistema' : 'Não realizado'],
     ];
 
     autoTable(doc, {
       startY: y,
       body: tests,
       theme: 'plain',
-      styles: { fontSize: 8, cellPadding: 2 },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 35 } },
+      styles: { fontSize: 8, cellPadding: 3 },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45 } },
       margin: { left: margin, right: margin },
     });
 
-    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 20;
+    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
 
-    // ─── RESUMO DE OCORRÊNCIAS ───
+    // ─── 3. PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI) ───
+    y = checkPageBreak(y, 35);
+    y = drawSectionHeadingLocal(`3. PLANOS DE DESENVOLVIMENTO INDIVIDUAL - PDI (${pdisList.length})`, y);
+
+    if (pdisList.length > 0) {
+      const pdiRows = pdisList.map((p, idx) => {
+        const totalActions = p.pdi_actions?.length || 0;
+        const doneActions = p.pdi_actions?.filter(a => a.status === 'completed')?.length || 0;
+        const statusMap: Record<string, string> = { pending: 'Pendente', in_progress: 'Em Andamento', completed: 'Concluído' };
+        return [
+          `PDI #${idx + 1}`,
+          statusMap[p.status] || p.status,
+          `${doneActions} de ${totalActions} concluídas`,
+          new Date(p.created_at).toLocaleDateString('pt-BR')
+        ];
+      });
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Plano', 'Status', 'Metas / Ações Atingidas', 'Data de Criação']],
+        body: pdiRows,
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
+    } else {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Nenhum Plano de Desenvolvimento Individual registrado para este colaborador.', margin, y);
+      y += 10;
+    }
+
+    // ─── 4. HISTÓRICO DE AVALIAÇÕES NINE BOX ───
+    y = checkPageBreak(y, 35);
+    y = drawSectionHeadingLocal(`4. HISTÓRICO DE AVALIAÇÕES NINE BOX (${nineBoxHist.length})`, y);
+
+    if (nineBoxHist.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Ciclo de Avaliação', 'Desempenho (Entrega)', 'Potencial', 'Data do Registro']],
+        body: nineBoxHist.map(n => [
+          n.cycle,
+          n.desempenho,
+          n.potencial,
+          new Date(n.created_at).toLocaleDateString('pt-BR')
+        ]),
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
+    } else {
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Nenhum registro histórico de Nine Box anterior.', margin, y);
+      y += 10;
+    }
+
+    // ─── 5. RESUMO DE OCORRÊNCIAS & ABSENTEÍSMO ───
     const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
     const faltasJust = attendanceRecords.filter(a => a.status === 'falta_justificada').length;
     const atestados = attendanceRecords.filter(a => a.status === 'atestado').length;
-    const hrsNeg = faltasInj + faltasJust + atestados;
     const advApplied = employeeWarnings.filter(w => w.applied).length;
 
     y = checkPageBreak(y, 40);
-    y = drawSectionHeadingLocal('RESUMO DE OCORRÊNCIAS DISCIPLINARES', y);
+    y = drawSectionHeadingLocal('5. INDICADORES DE ABSENTEÍSMO E DESVIOS OPERACIONAIS', y);
 
     autoTable(doc, {
       startY: y,
-      head: [['Indicador', 'Quantidade']],
+      head: [['Indicador de Gestão', 'Quantidade Registrada', 'Situação / Impacto']],
       body: [
-        ['Faltas Injustificadas', String(faltasInj)],
-        ['Faltas Justificadas / Atestados', String(faltasJust + atestados)],
-        ['Advertências Aplicadas', String(advApplied)],
-        ['Total de Eventos Registrados', String(employeeEvents.length)],
+        ['Faltas Injustificadas', String(faltasInj), faltasInj > 0 ? 'Atenção Requerida' : 'Regular'],
+        ['Faltas Justificadas / Atestados Médicos', String(faltasJust + atestados), 'Acompanhado por RH'],
+        ['Advertências Disciplinares Aplicadas', String(advApplied), advApplied > 0 ? 'Registrado em Prontuário' : 'Sem ocorrências'],
+        ['Eventos Operacionais de SSMA', String(employeeEvents.length), employeeEvents.length > 0 ? 'Registrado' : 'Sem registros'],
       ],
       styles: { fontSize: 8, cellPadding: 3 },
       headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
@@ -485,43 +558,16 @@ export default function FuncionarioProfile() {
       margin: { left: margin, right: margin },
     });
 
-    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 40;
+    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 35;
 
-    // ─── FEEDBACKS ───
-    y = checkPageBreak(y, 40);
-    y = drawSectionHeadingLocal(`FEEDBACKS (${employeeFeedbacks.length})`, y);
-
-    if (employeeFeedbacks.length > 0) {
-      autoTable(doc, {
-        startY: y,
-        head: [['Data', 'Título', 'Gestor', 'Status']],
-        body: employeeFeedbacks.slice(0, 15).map(f => [
-          new Date(f.criado_em).toLocaleDateString('pt-BR'),
-          f.titulo.length > 50 ? f.titulo.substring(0, 47) + '...' : f.titulo,
-          f.gestor || '—',
-          statusLabels[f.status as FeedbackStatus] || f.status
-        ]),
-        styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: blueLt },
-        margin: { left: margin, right: margin },
-      });
-      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 20;
-    } else {
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Nenhum feedback registrado.', margin, y);
-      y += 8;
-    }
-
-    // ─── HISTÓRICO DE ADVERTÊNCIAS E EVENTOS ───
-    y = checkPageBreak(y, 40);
-    y = drawSectionHeadingLocal(`HISTÓRICO DE ADVERTÊNCIAS E DESVIOS GRAVES`, y);
-
+    // ─── 6. REGISTRO DE ADVERTÊNCIAS E OCORRÊNCIAS ───
     if (employeeWarnings.length > 0) {
+      y = checkPageBreak(y, 35);
+      y = drawSectionHeadingLocal(`6. DETALHAMENTO DE ADVERTÊNCIAS (${employeeWarnings.length})`, y);
+
       autoTable(doc, {
         startY: y,
-        head: [['Data', 'Motivo', 'Aplicada', 'Observação']],
+        head: [['Data', 'Motivo da Ocorrência', 'Aplicada', 'Observações / Tratativa']],
         body: employeeWarnings.map(w => [
           new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'),
           w.reason,
@@ -533,37 +579,65 @@ export default function FuncionarioProfile() {
         alternateRowStyles: { fillColor: blueLt },
         margin: { left: margin, right: margin },
       });
-      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 20;
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
+    }
+
+    // ─── 7. FEEDBACKS REGISTRADOS ───
+    y = checkPageBreak(y, 40);
+    y = drawSectionHeadingLocal(`7. HISTÓRICO DE FEEDBACKS (${employeeFeedbacks.length})`, y);
+
+    if (employeeFeedbacks.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Data', 'Título do Feedback', 'Gestor / Responsável', 'Status']],
+        body: employeeFeedbacks.slice(0, 15).map(f => [
+          new Date(f.criado_em).toLocaleDateString('pt-BR'),
+          f.titulo.length > 45 ? f.titulo.substring(0, 42) + '...' : f.titulo,
+          f.gestor || '—',
+          statusLabels[f.status as FeedbackStatus] || f.status
+        ]),
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: blueLt },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
     } else {
       doc.setFontSize(8);
       doc.setFont('helvetica', 'italic');
-      doc.text('Nenhuma advertência registrada.', margin, y);
-      y += 8;
+      doc.text('Nenhum feedback registrado no período.', margin, y);
+      y += 10;
     }
 
-    // ─── ASSINATURAS ───
-    y = checkPageBreak(y, 40);
-    y = y + 20;
-    doc.setDrawColor(0);
+    // ─── 8. ASSINATURAS INSTITUCIONAIS ───
+    y = checkPageBreak(y, 45);
+    y = y + 25;
+    doc.setDrawColor(180, 180, 180);
     doc.line(margin + 10, y, 85, y);
     doc.line(pageWidth / 2 + 10, y, pageWidth - margin - 10, y);
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Assinatura do Colaborador', margin + 25, y + 5);
-    doc.text('Assinatura do Gestor/RH', pageWidth / 2 + 25, y + 5);
 
-    // ─── FOOTER on all pages ───
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(50, 50, 50);
+    doc.text(func.nome.toUpperCase(), margin + 15, y + 5);
+    doc.text('DIREÇÃO DE RH / LIDERANÇA RESPONSÁVEL', pageWidth / 2 + 15, y + 5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text('Assinatura do Colaborador', margin + 22, y + 9);
+    doc.text('Busato Contratos - Gestão de Pessoas', pageWidth / 2 + 22, y + 9);
+
+    // ─── FOOTER & HEADERS EM TODAS AS PÁGINAS ───
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       drawFooter(i, pageCount);
-      // Re-draw header on pages 2+ (page 1 already has it)
       if (i > 1) drawHeader();
     }
 
-    doc.save(`Dossie_Completo_${func.nome.replace(/\s+/g, '_')}.pdf`);
-    toast({ title: 'Dossiê completo exportado com sucesso!' });
+    doc.save(`Dossie_Executivo_${func.nome.replace(/\s+/g, '_')}.pdf`);
+    toast({ title: 'Dossiê Executivo Exportado!', description: 'O relatório em PDF de alto padrão foi gerado com sucesso.' });
   }
 
   const { userDepartment, isDepartmentLocked } = useAuth();
