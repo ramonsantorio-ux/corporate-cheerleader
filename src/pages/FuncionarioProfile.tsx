@@ -314,13 +314,17 @@ export default function FuncionarioProfile() {
 
   const pendencias = useMemo(() => {
     const items: string[] = [];
+    if (!discResult) items.push('Teste DISC não realizado');
+    if (!mbtiResult) items.push('Teste MBTI não realizado');
+    if (!bigFiveResult) items.push('Teste Big Five não realizado');
+    if (scoreFit === 0) items.push('Avaliação de Fit Cultural pendente');
     if (func && func.feedbacks_recebidos > func.feedbacks_resolvidos) items.push(`${func.feedbacks_recebidos - func.feedbacks_resolvidos} feedback(s) pendente(s)`);
     const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
     if (faltasInj > 0) items.push(`${faltasInj} falta(s) injustificada(s)`);
     if (employeeWarnings.length > 0) items.push(`${employeeWarnings.length} advertência(s) registrada(s)`);
     if (employeeEvents.length > 0) items.push(`${employeeEvents.length} evento(s) registrado(s)`);
     return items;
-  }, [func, attendanceRecords, employeeWarnings, employeeEvents]);
+  }, [discResult, mbtiResult, bigFiveResult, scoreFit, func, attendanceRecords, employeeWarnings, employeeEvents]);
 
   const fixEncoding = (str: string) => str.replace(/Ã£/g, 'ã').replace(/Ã§/g, 'ç').replace(/Ãµ/g, 'õ').replace(/Ã¡/g, 'á').replace(/Ã©/g, 'é').replace(/Ã³/g, 'ó').replace(/Ãº/g, 'ú').replace(/Ã­/g, 'í').replace(/Ãª/g, 'ê').replace(/Ã´/g, 'ô').replace(/Ã‡/g, 'Ç').replace(/Ãƒ/g, 'Ã').replace(/Ã‰/g, 'É').replace(/Ã“/g, 'Ó').replace(/Ãš/g, 'Ú').replace(/Ã‚/g, 'Â').replace(/ÃŠ/g, 'Ê').replace(/ Eventuãis/g, ' Eventuais').replace(/Ã /g, 'à');
   const pieData = goals.map(g => ({ name: fixEncoding(g.descricao || ''), value: g.peso }));
