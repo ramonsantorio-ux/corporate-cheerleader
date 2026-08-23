@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { useNavigate } from 'react-router-dom';
-import { Users, FileText, CheckCircle2, Search, Link, Brain, BarChart2, Shield, User, ChevronRight, GraduationCap, ClipboardList, TrendingUp, Award, Star, Plus, ExternalLink, ChevronDown, Building2 } from 'lucide-react';
+import { Users, FileText, CheckCircle2, Search, Link, Brain, BarChart2, Shield, User, ChevronRight, GraduationCap, ClipboardList, TrendingUp, Award, Star, Plus, ExternalLink, ChevronDown, Building2, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { HierarchyPanel } from '@/components/hierarchy/HierarchyPanel';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -310,6 +311,9 @@ export default function Treinamentos() {
           <TabsTrigger value="equipe" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap px-3 py-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
             Mapeamento da Equipe
           </TabsTrigger>
+          <TabsTrigger value="hierarquia" className="flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap px-3 py-2 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm transition-all">
+            <Crown className="w-4 h-4 text-amber-500" /> Matriz de Hierarquia
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="assessments" className="space-y-6 outline-none">
@@ -343,6 +347,10 @@ export default function Treinamentos() {
           );
         })}
       </div>
+      </TabsContent>
+
+      <TabsContent value="hierarquia" className="outline-none">
+        <HierarchyPanel />
       </TabsContent>
 
       <TabsContent value="equipe" className="space-y-6 outline-none">

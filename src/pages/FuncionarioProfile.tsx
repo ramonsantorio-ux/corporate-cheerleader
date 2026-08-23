@@ -23,6 +23,7 @@ import PotencialSection from '@/components/potencial/PotencialSection';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
+import { HierarchyBadge } from '@/components/hierarchy/HierarchyBadge';
 import { DiscReport, MbtiReport, BigFiveReport } from '@/components/ExecutiveReports';
 import Organograma from './Organograma';
 import NineBoxSection from '@/components/nine-box/NineBoxSection';
@@ -754,8 +755,11 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
           
           <div className="flex-1 space-y-3">
             <div>
-              <h2 className="text-3xl font-black text-foreground tracking-tight">{func.nome}</h2>
-              <p className="text-lg text-primary font-medium">{func.cargo} <span className="text-muted-foreground font-normal mx-2">•</span> {func.departamento}</p>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-3xl font-black text-foreground tracking-tight">{func.nome}</h2>
+                <HierarchyBadge cargo={func.cargo} className="text-sm py-1 px-3" />
+              </div>
+              <p className="text-lg text-primary font-medium mt-1">{func.cargo} <span className="text-muted-foreground font-normal mx-2">•</span> {func.departamento}</p>
             </div>
             
             <div className="flex flex-wrap gap-2 pt-1">

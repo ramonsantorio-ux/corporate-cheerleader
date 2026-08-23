@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import DiscTest from './DiscTest';
 import MbtiTest from './MbtiTest';
 import IntegrityTest from './IntegrityTest';
+import { getHierarchyLevel, getHierarchyName } from '@/lib/hierarchy';
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 //  DISC – 30 perguntas
@@ -595,11 +596,22 @@ export default function AssessmentHub() {
       )}
 
       <div className="glass-card rounded-xl p-4">
-        <label className="text-sm font-semibold mb-2 block">Funcionário Avaliado:</label>
+        <label className="text-sm font-semibold mb-2 flex items-center justify-between">
+          <span>Funcionário Avaliado:</span>
+          {selectedEmpId && (
+            <span className="text-xs font-semibold text-primary">
+              Nível #{getHierarchyLevel(employees.find(e => e.id === selectedEmpId)?.cargo)}: {getHierarchyName(employees.find(e => e.id === selectedEmpId)?.cargo)}
+            </span>
+          )}
+        </label>
         <select className="w-full bg-background border border-input rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           value={selectedEmpId} onChange={e => setSelectedEmpId(e.target.value)} disabled={!!id}>
-          <option value="" disabled>Selecione...</option>
-          {employees.map(e => <option key={e.id} value={e.id}>{e.nome} — {e.cargo}</option>)}
+          <option value="" disabled>Selecione o colaborador...</option>
+          {employees.map(e => (
+            <option key={e.id} value={e.id}>
+              {e.nome} — {e.cargo} [Nível #{getHierarchyLevel(e.cargo)}: {getHierarchyName(e.cargo)}]
+            </option>
+          ))}
         </select>
       </div>
 

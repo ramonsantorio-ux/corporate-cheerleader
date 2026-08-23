@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEPARTAMENTOS } from '@/lib/departments';
+import { HierarchyBadge } from '@/components/hierarchy/HierarchyBadge';
 import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -222,6 +223,9 @@ export default function Organograma() {
               <div className="flex-1 min-w-0">
                 <h4 className="text-xs font-semibold truncate text-foreground">{node.nome}</h4>
                 <p className="text-[10px] text-muted-foreground truncate">{node.cargo}</p>
+                <div className="mt-0.5">
+                  <HierarchyBadge cargo={node.cargo} showLevelNumber={false} className="text-[9px] py-0 px-1.5" />
+                </div>
               </div>
               
               {node.children.length > 0 && (

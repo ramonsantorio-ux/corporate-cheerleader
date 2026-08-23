@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/contexts/AuthContext';
 import { DEPARTAMENTOS } from '@/lib/departments';
+import { HierarchyBadge } from '@/components/hierarchy/HierarchyBadge';
 import { Building2 } from 'lucide-react';
 
 interface Funcionario {
@@ -582,6 +583,7 @@ export default function Colaboradores() {
                   </div>
                   
                   <div className="flex flex-wrap justify-center gap-1.5 mt-3">
+                    <HierarchyBadge cargo={f.cargo} />
                     <span className="inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{f.departamento}</span>
                     {f.contrato_vinculado && (
                       <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20" title={`Vinculado ao ${f.contrato_vinculado}`}>
