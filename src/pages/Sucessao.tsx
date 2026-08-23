@@ -33,7 +33,7 @@ interface EmployeeNineBox {
 }
 
 export default function Sucessao() {
-  const { userDepartment, effectiveDepartment, isDepartmentLocked } = useAuth();
+  const { userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked, canViewHierarchy } = useAuth();
   const [deptFilter, setDeptFilter] = useState<string>('todos');
 
   useEffect(() => {
@@ -57,6 +57,7 @@ export default function Sucessao() {
       if (funcData) {
         const raw = funcData
           .filter(e => e.nine_box_desempenho && e.nine_box_potencial)
+          .filter(e => canViewHierarchy(e.cargo)) // Restrição por hierarquia
           .map(e => {
             const empHist = (histData || []).filter(h => h.employee_id === e.id);
             return {
@@ -70,12 +71,18 @@ export default function Sucessao() {
             };
           });
 
-        const filtered = activeDept === 'todos' ? raw : raw.filter(e => e.departamento === activeDept);
+        let filtered = raw;
+        if (isDepartmentLocked && userDepartments.length > 0) {
+          filtered = raw.filter(e => userDepartments.includes(e.departamento));
+        } else if (activeDept !== 'todos') {
+          filtered = raw.filter(e => e.departamento === activeDept);
+        }
+
         setEmployees(filtered);
       }
     }
     fetchData();
-  }, [deptFilter, isDepartmentLocked, userDepartment]);
+  }, [deptFilter, isDepartmentLocked, userDepartment, userDepartments, canViewHierarchy]);
 
   const handleBoxClick = (box: typeof matrixBoxes[0], emps: EmployeeNineBox[]) => {
     setSelectedBox({ box, emps });
