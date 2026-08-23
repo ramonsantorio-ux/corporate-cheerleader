@@ -1642,41 +1642,43 @@ export default function Eventos() {
                 ) : (() => {
                   const MINERIO_COLORS = ['#0284c7', '#0d9488', '#f59e0b', '#ef4444', '#8b5cf6'];
                   return (
-                    <div>
-                      <div className="h-[220px] relative">
-                        <ExpandableChart title="Ocorrências em Minério">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                              <Pie
-                                data={analytics.topAreasMinerio}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                innerRadius="55%"
-                                outerRadius="80%"
-                                paddingAngle={4}
-                                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                                labelLine={false}
-                              >
-                                {analytics.topAreasMinerio.map((entry, i) => (
-                                  <Cell key={i} fill={MINERIO_COLORS[i % MINERIO_COLORS.length]} stroke="transparent" className="hover:opacity-80 transition-opacity" />
-                                ))}
-                              </Pie>
-                              <Tooltip content={<CustomTooltip />} />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </ExpandableChart>
-                      </div>
-                      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-2 pt-3 border-t border-border">
-                        {analytics.topAreasMinerio.map((area, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-xs font-semibold">
-                            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: MINERIO_COLORS[i % MINERIO_COLORS.length] }} />
-                            <span className="text-muted-foreground uppercase text-[11px]">{area.name}</span>
-                            <span className="text-foreground font-bold">({area.value})</span>
+                    <div className="h-[270px] relative">
+                      <ExpandableChart title="Minério — Locais de Ocorrência" description={`Total de ${analytics.topAreasMinerio.reduce((s, a) => s + a.value, 0)} eventos registrados nas áreas de Minério.`}>
+                        <div className="w-full h-full flex flex-col justify-between">
+                          <div className="flex-1 w-full min-h-[190px] relative">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                                <Pie
+                                  data={analytics.topAreasMinerio}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius="55%"
+                                  outerRadius="80%"
+                                  paddingAngle={4}
+                                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                                  labelLine={false}
+                                >
+                                  {analytics.topAreasMinerio.map((entry, i) => (
+                                    <Cell key={i} fill={MINERIO_COLORS[i % MINERIO_COLORS.length]} stroke="transparent" className="hover:opacity-80 transition-opacity" />
+                                  ))}
+                                </Pie>
+                                <Tooltip content={<CustomTooltip />} />
+                              </PieChart>
+                            </ResponsiveContainer>
                           </div>
-                        ))}
-                      </div>
+                          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-3 border-t border-border shrink-0">
+                            {analytics.topAreasMinerio.map((area, i) => (
+                              <div key={i} className="flex items-center gap-1.5 text-xs font-semibold">
+                                <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: MINERIO_COLORS[i % MINERIO_COLORS.length] }} />
+                                <span className="text-muted-foreground uppercase text-[11px]">{area.name}</span>
+                                <span className="text-foreground font-bold">({area.value})</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </ExpandableChart>
                     </div>
                   );
                 })()}
@@ -1705,41 +1707,43 @@ export default function Eventos() {
                 ) : (() => {
                   const TPM_COLORS = ['#ef4444', '#0284c7', '#0d9488', '#f59e0b'];
                   return (
-                    <div>
-                      <div className="h-[220px] relative">
-                        <ExpandableChart title="Ocorrências em TPM">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                              <Pie
-                                data={analytics.topAreasTpm}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                innerRadius="55%"
-                                outerRadius="80%"
-                                paddingAngle={4}
-                                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                                labelLine={false}
-                              >
-                                {analytics.topAreasTpm.map((entry, i) => (
-                                  <Cell key={i} fill={TPM_COLORS[i % TPM_COLORS.length]} stroke="transparent" className="hover:opacity-80 transition-opacity" />
-                                ))}
-                              </Pie>
-                              <Tooltip content={<CustomTooltip />} />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </ExpandableChart>
-                      </div>
-                      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-2 pt-3 border-t border-border">
-                        {analytics.topAreasTpm.map((area, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-xs font-semibold">
-                            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: TPM_COLORS[i % TPM_COLORS.length] }} />
-                            <span className="text-muted-foreground uppercase text-[11px]">{area.name}</span>
-                            <span className="text-foreground font-bold">({area.value})</span>
+                    <div className="h-[270px] relative">
+                      <ExpandableChart title="TPM — Locais de Ocorrência" description={`Total de ${analytics.topAreasTpm.reduce((s, a) => s + a.value, 0)} eventos registrados nas áreas da TPM.`}>
+                        <div className="w-full h-full flex flex-col justify-between">
+                          <div className="flex-1 w-full min-h-[190px] relative">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                                <Pie
+                                  data={analytics.topAreasTpm}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius="55%"
+                                  outerRadius="80%"
+                                  paddingAngle={4}
+                                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                                  labelLine={false}
+                                >
+                                  {analytics.topAreasTpm.map((entry, i) => (
+                                    <Cell key={i} fill={TPM_COLORS[i % TPM_COLORS.length]} stroke="transparent" className="hover:opacity-80 transition-opacity" />
+                                  ))}
+                                </Pie>
+                                <Tooltip content={<CustomTooltip />} />
+                              </PieChart>
+                            </ResponsiveContainer>
                           </div>
-                        ))}
-                      </div>
+                          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-3 border-t border-border shrink-0">
+                            {analytics.topAreasTpm.map((area, i) => (
+                              <div key={i} className="flex items-center gap-1.5 text-xs font-semibold">
+                                <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: TPM_COLORS[i % TPM_COLORS.length] }} />
+                                <span className="text-muted-foreground uppercase text-[11px]">{area.name}</span>
+                                <span className="text-foreground font-bold">({area.value})</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </ExpandableChart>
                     </div>
                   );
                 })()}
@@ -1768,41 +1772,43 @@ export default function Eventos() {
                 ) : (() => {
                   const BASE_COLORS = ['#ef4444', '#10b981', '#6366f1'];
                   return (
-                    <div>
-                      <div className="h-[220px] relative">
-                        <ExpandableChart title="Ocorrências em Base/Apoio">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                              <Pie
-                                data={analytics.topAreasBase}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
-                                innerRadius="55%"
-                                outerRadius="80%"
-                                paddingAngle={4}
-                                label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                                labelLine={false}
-                              >
-                                {analytics.topAreasBase.map((entry, i) => (
-                                  <Cell key={i} fill={BASE_COLORS[i % BASE_COLORS.length]} stroke="transparent" className="hover:opacity-80 transition-opacity" />
-                                ))}
-                              </Pie>
-                              <Tooltip content={<CustomTooltip />} />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </ExpandableChart>
-                      </div>
-                      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-2 pt-3 border-t border-border">
-                        {analytics.topAreasBase.map((area, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-xs font-semibold">
-                            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: BASE_COLORS[i % BASE_COLORS.length] }} />
-                            <span className="text-muted-foreground uppercase text-[11px]">{area.name}</span>
-                            <span className="text-foreground font-bold">({area.value})</span>
+                    <div className="h-[270px] relative">
+                      <ExpandableChart title="Base — Locais de Ocorrência" description={`Total de ${analytics.topAreasBase.reduce((s, a) => s + a.value, 0)} eventos registrados nas instalações de Apoio/Base.`}>
+                        <div className="w-full h-full flex flex-col justify-between">
+                          <div className="flex-1 w-full min-h-[190px] relative">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                                <Pie
+                                  data={analytics.topAreasBase}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius="55%"
+                                  outerRadius="80%"
+                                  paddingAngle={4}
+                                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                                  labelLine={false}
+                                >
+                                  {analytics.topAreasBase.map((entry, i) => (
+                                    <Cell key={i} fill={BASE_COLORS[i % BASE_COLORS.length]} stroke="transparent" className="hover:opacity-80 transition-opacity" />
+                                  ))}
+                                </Pie>
+                                <Tooltip content={<CustomTooltip />} />
+                              </PieChart>
+                            </ResponsiveContainer>
                           </div>
-                        ))}
-                      </div>
+                          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 pt-3 border-t border-border shrink-0">
+                            {analytics.topAreasBase.map((area, i) => (
+                              <div key={i} className="flex items-center gap-1.5 text-xs font-semibold">
+                                <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: BASE_COLORS[i % BASE_COLORS.length] }} />
+                                <span className="text-muted-foreground uppercase text-[11px]">{area.name}</span>
+                                <span className="text-foreground font-bold">({area.value})</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </ExpandableChart>
                     </div>
                   );
                 })()}
