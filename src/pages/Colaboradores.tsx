@@ -232,24 +232,56 @@ export default function Colaboradores() {
 
   async function handleCreate() {
     if (!canCreate('colaboradores')) { toast.error('Você não tem permissão para cadastrar colaboradores.'); return; }
-    if (!newData.nome || !newData.cargo || !newData.departamento) { toast.error('Preencha campos obrigatórios'); return; }
+    if (!newData.nome || !newData.cargo || !newData.departamento) { toast.error('Preencha campos obrigatórios (*)'); return; }
     setUploading(true);
     let foto_url = '';
     try { if (newPhotoFile) foto_url = await uploadPhoto(newPhotoFile); } catch { toast.error('Erro ao enviar foto'); setUploading(false); return; }
-    const insertData: Record<string, unknown> = { nome: newData.nome, email: newData.email, cargo: newData.cargo, departamento: newData.departamento, contrato_vinculado: newData.contrato_vinculado || null, escolaridade: newData.escolaridade, graduacao: newData.graduacao, pos_graduacao: newData.pos_graduacao, pos_graduacao_tipo: newData.pos_graduacao_tipo, turno: newData.turno, letra: newData.letra, foto_url };
+    
+    const insertData: Record<string, unknown> = { 
+      nome: newData.nome, 
+      email: newData.email, 
+      cargo: newData.cargo, 
+      departamento: newData.departamento, 
+      escolaridade: newData.escolaridade, 
+      graduacao: newData.graduacao, 
+      pos_graduacao: newData.pos_graduacao, 
+      pos_graduacao_tipo: newData.pos_graduacao_tipo, 
+      turno: newData.turno, 
+      letra: newData.letra, 
+      foto_url 
+    };
+    if (newData.contrato_vinculado) insertData.contrato_vinculado = newData.contrato_vinculado;
     if (newData.data_admissao) insertData.data_admissao = newData.data_admissao;
     if (newData.encarregado_id && newData.encarregado_id !== 'none') insertData.encarregado_id = newData.encarregado_id;
-    const { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
-    if (error) { toast.error('Erro ao cadastrar'); setUploading(false); return; }
+
+    let { data: inserted, error } = await supabase.from('funcionarios').insert(insertData).select().single();
+
+    // Fallback: se a coluna contrato_vinculado ainda não existir no schema do Supabase, remove a propriedade e repete a inserção
+    if (error && (error.code === 'PGRST204' || error.message?.includes('contrato_vinculado'))) {
+      delete insertData.contrato_vinculado;
+      const res = await supabase.from('funcionarios').insert(insertData).select().single();
+      inserted = res.data;
+      error = res.error;
+    }
+
+    if (error) { 
+      toast.error('Erro ao cadastrar: ' + (error.message || 'Verifique os dados.')); 
+      setUploading(false); 
+      return; 
+    }
+
     if (docFiles.length > 0 && inserted) {
       for (const file of docFiles) {
-        try { const { url, name } = await uploadDocument(file); await supabase.from('employee_documents').insert({ employee_id: inserted.id, file_url: url, file_name: name, document_type: 'habilitacao' }); } catch {
+        try { 
+          const { url, name } = await uploadDocument(file); 
+          await supabase.from('employee_documents').insert({ employee_id: inserted.id, file_url: url, file_name: name, document_type: 'habilitacao' }); 
+        } catch {
           // Falha ao fazer upload de um documento individual — ignorada para não bloquear o cadastro
         }
       }
     }
     setUploading(false); setNewData(emptyForm); setNewPhotoFile(null); setNewPhotoPreview(''); setDocFiles([]); setCreateOpen(false);
-    toast.success('Funcionário cadastrado!'); fetchFuncionarios(true);
+    toast.success('Funcionário cadastrado com sucesso!'); fetchFuncionarios(true);
   }
 
   function openEdit(f: Funcionario) {
@@ -260,23 +292,50 @@ export default function Colaboradores() {
 
   async function handleEdit() {
     if (!canEdit('colaboradores')) { toast.error('Você não tem permissão para editar colaboradores.'); return; }
-    if (!editData.nome || !editData.cargo || !editData.departamento) { toast.error('Preencha campos obrigatórios'); return; }
+    if (!editData.nome || !editData.cargo || !editData.departamento) { toast.error('Preencha campos obrigatórios (*)'); return; }
     setUploading(true);
     let foto_url = editData.foto_url;
     try { if (editPhotoFile) foto_url = await uploadPhoto(editPhotoFile); } catch { toast.error('Erro foto'); setUploading(false); return; }
-    const updateData: Record<string, unknown> = { nome: editData.nome, email: editData.email, cargo: editData.cargo, departamento: editData.departamento, contrato_vinculado: editData.contrato_vinculado || null, escolaridade: editData.escolaridade, graduacao: editData.graduacao, pos_graduacao: editData.pos_graduacao, pos_graduacao_tipo: editData.pos_graduacao_tipo, turno: editData.turno, letra: editData.letra, encarregado_id: editData.encarregado_id && editData.encarregado_id !== 'none' ? editData.encarregado_id : null, foto_url };
+
+    const updateData: Record<string, unknown> = { 
+      nome: editData.nome, 
+      email: editData.email, 
+      cargo: editData.cargo, 
+      departamento: editData.departamento, 
+      escolaridade: editData.escolaridade, 
+      graduacao: editData.graduacao, 
+      pos_graduacao: editData.pos_graduacao, 
+      pos_graduacao_tipo: editData.pos_graduacao_tipo, 
+      turno: editData.turno, 
+      letra: editData.letra, 
+      encarregado_id: editData.encarregado_id && editData.encarregado_id !== 'none' ? editData.encarregado_id : null, 
+      foto_url 
+    };
+    if (editData.contrato_vinculado) updateData.contrato_vinculado = editData.contrato_vinculado;
     if (editData.data_admissao) updateData.data_admissao = editData.data_admissao;
-    const { error } = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
+
+    let { error } = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
+
+    // Fallback: se a coluna contrato_vinculado não existir no schema do Supabase, remove a propriedade e repete a atualização
+    if (error && (error.code === 'PGRST204' || error.message?.includes('contrato_vinculado'))) {
+      delete updateData.contrato_vinculado;
+      const res = await supabase.from('funcionarios').update(updateData).eq('id', editData.id);
+      error = res.error;
+    }
+
     if (editDocFiles.length > 0) {
       for (const file of editDocFiles) {
-        try { const { url, name } = await uploadDocument(file); await supabase.from('employee_documents').insert({ employee_id: editData.id, file_url: url, file_name: name, document_type: 'habilitacao' }); } catch {
+        try { 
+          const { url, name } = await uploadDocument(file); 
+          await supabase.from('employee_documents').insert({ employee_id: editData.id, file_url: url, file_name: name, document_type: 'habilitacao' }); 
+        } catch {
           // Falha ao fazer upload de um documento individual — ignorada para não bloquear a atualização
         }
       }
     }
     setUploading(false);
-    if (error) { toast.error('Erro ao atualizar'); return; }
-    setEditOpen(false); toast.success('Funcionário atualizado!'); fetchFuncionarios(true);
+    if (error) { toast.error('Erro ao atualizar: ' + (error.message || 'Verifique os dados.')); return; }
+    setEditOpen(false); toast.success('Funcionário atualizado com sucesso!'); fetchFuncionarios(true);
   }
 
   async function handleDelete() {
