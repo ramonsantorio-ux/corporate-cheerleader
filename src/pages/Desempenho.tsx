@@ -184,10 +184,10 @@ export default function Desempenho() {
   const tabs = [
     { value: 'visao-geral', label: 'Visão da Equipe', icon: Activity },
     { value: 'ciclos', label: 'Ciclos & Avaliações', icon: Calendar },
-    { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
-    { value: 'pdi', label: 'PDI', icon: ClipboardList },
     { value: 'sucessao', label: 'Nine Box', icon: TrendingUp },
+    { value: 'feedbacks', label: 'Feedback', icon: List },
+    { value: 'pdi', label: 'PDI', icon: ClipboardList },
   ];
 
   return (
