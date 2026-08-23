@@ -1,4 +1,8 @@
-import { getHierarchyLevel, canViewOrApplyTargetAssessment } from '@/lib/hierarchy';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User, Session } from '@supabase/supabase-js';
+import { canViewOrApplyTargetAssessment } from '@/lib/hierarchy';
 
 interface AuthContextType {
   user: User | null;
