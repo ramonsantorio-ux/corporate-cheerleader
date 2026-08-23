@@ -349,295 +349,336 @@ export default function FuncionarioProfile() {
 
 
 
+function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
+  if (!dataAdmissao) return 'Não informada';
+  try {
+    const start = new Date(dataAdmissao.includes('T') ? dataAdmissao : dataAdmissao + 'T00:00:00');
+    if (isNaN(start.getTime())) return 'Não informada';
+    const now = new Date();
+    let years = now.getFullYear() - start.getFullYear();
+    let months = now.getMonth() - start.getMonth();
+    if (months < 0) {
+      years--;
+      months += 12;
+    }
+    if (years === 0 && months === 0) return 'Menos de 1 mês';
+    const parts = [];
+    if (years > 0) parts.push(`${years} ${years === 1 ? 'ano' : 'anos'}`);
+    if (months > 0) parts.push(`${months} ${months === 1 ? 'mês' : 'meses'}`);
+    return parts.join(' e ');
+  } catch {
+    return 'Não informada';
+  }
+}
+
   async function exportFullProfileReport() {
     if (!func) return;
     toast({ title: 'Gerando PDF do Dossiê...', description: 'Aguarde um momento enquanto reunimos todas as informações do colaborador.' });
     
-    const logoBase64 = await getBusatoLogoBase64();
+    try {
+      const logoBase64 = await getBusatoLogoBase64();
 
-    // Buscar dados adicionais para o dossiê (PDI, Fit Cultural, Historico de 9-Box)
-    const [pdisRes, fitRes, nineBoxRes] = await Promise.all([
-      supabase.from('pdis').select('*, pdi_actions(*)').eq('employee_id', func.id),
-      supabase.from('fit_cultural').select('*').eq('employee_id', func.id),
-      supabase.from('nine_box_historico').select('*').eq('employee_id', func.id).order('created_at', { ascending: false }),
-    ]);
+      // Buscar dados adicionais para o dossiê com tratamento individual resiliente
+      const pdisRes = await supabase.from('pdis').select('*').eq('employee_id', func.id);
+      const fitRes = await supabase.from('fit_cultural').select('*').eq('employee_id', func.id);
+      const nineBoxRes = await supabase.from('nine_box_historico').select('*').eq('employee_id', func.id).order('created_at', { ascending: false });
 
-    const pdisList = (pdisRes.data || []) as unknown as { id: string; status: string; created_at: string; pdi_actions?: { description: string; status: string }[] }[];
-    const fitList = (fitRes.data || []) as unknown as { criteria: string; score: number }[];
-    const nineBoxHist = (nineBoxRes.data || []) as unknown as { cycle: string; desempenho: string; potencial: string; created_at: string }[];
+      const pdisData = pdisRes.data || [];
+      const fitList = fitRes.data || [];
+      const nineBoxHist = (nineBoxRes.data || []) as unknown as { cycle: string; desempenho: string; potencial: string; created_at: string }[];
 
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const blue: [number, number, number] = [59, 130, 187];
-    const blueLt: [number, number, number] = [232, 241, 250];
-    const margin = 14;
+      // Buscar ações dos PDIs separadamente se houver PDIs
+      let pdiActions: { pdi_id: string; description: string; status: string }[] = [];
+      if (pdisData.length > 0) {
+        const pdiIds = pdisData.map(p => p.id);
+        const { data: actData } = await supabase.from('pdi_actions').select('*').in('pdi_id', pdiIds);
+        if (actData) pdiActions = actData as unknown as { pdi_id: string; description: string; status: string }[];
+      }
 
-    function drawHeader() {
-      drawBusatoHeader(doc, logoBase64, 'DOSSIÊ COMPLETO DE GESTÃO DE PESSOAS', 'Relatório Consolidado do Colaborador', { pageWidth });
-      doc.setTextColor(0, 0, 0);
-    }
+      const pdisList = pdisData.map(p => ({
+        ...p,
+        pdi_actions: pdiActions.filter(a => a.pdi_id === p.id)
+      }));
 
-    function drawFooter(pageNum: number, totalPages: number) {
-      drawBusatoFooter(doc, pageNum, { pageWidth, pageHeight });
-    }
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const blue: [number, number, number] = [59, 130, 187];
+      const blueLt: [number, number, number] = [232, 241, 250];
+      const margin = 14;
 
-    function drawSectionHeadingLocal(title: string, yPos: number) {
-      doc.setFillColor(...blueLt);
-      doc.rect(margin, yPos, pageWidth - margin * 2, 8, 'F');
-      doc.setFillColor(...blue);
-      doc.rect(margin, yPos, 3, 8, 'F');
-      doc.setTextColor(...blue);
+      function drawHeader() {
+        drawBusatoHeader(doc, logoBase64, 'DOSSIÊ COMPLETO DE GESTÃO DE PESSOAS', 'Relatório Consolidado do Colaborador', { pageWidth });
+        doc.setTextColor(0, 0, 0);
+      }
+
+      function drawFooter(pageNum: number, totalPages: number) {
+        drawBusatoFooter(doc, pageNum, { pageWidth, pageHeight });
+      }
+
+      function drawSectionHeadingLocal(title: string, yPos: number) {
+        doc.setFillColor(...blueLt);
+        doc.rect(margin, yPos, pageWidth - margin * 2, 8, 'F');
+        doc.setFillColor(...blue);
+        doc.rect(margin, yPos, 3, 8, 'F');
+        doc.setTextColor(...blue);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(title, margin + 7, yPos + 6);
+        doc.setTextColor(0, 0, 0);
+        return yPos + 12;
+      }
+
+      function checkPageBreak(y: number, needed: number): number {
+        if (y + needed > pageHeight - 25) {
+          doc.addPage();
+          drawHeader();
+          return 75;
+        }
+        return y;
+      }
+
+      // ─── START DOC ───
+      drawHeader();
+      let y = 75;
+
+      // Subcabeçalho Dossiê ID
+      doc.setFillColor(250, 250, 250);
+      doc.setDrawColor(220, 220, 220);
+      doc.roundedRect(margin, y, pageWidth - margin * 2, 14, 2, 2, 'FD');
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.text(title, margin + 7, yPos + 6);
+      doc.setTextColor(30, 30, 30);
+      doc.text(`COLABORADOR: ${(func.nome || 'NÃO INFORMADO').toUpperCase()}`, margin + 6, y + 6);
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')} | ID / Matrícula: ${(func.id || '').slice(0, 8).toUpperCase()} | Cargo: ${func.cargo || '—'}`, margin + 6, y + 11);
       doc.setTextColor(0, 0, 0);
-      return yPos + 12;
-    }
 
-    function checkPageBreak(y: number, needed: number): number {
-      if (y + needed > pageHeight - 25) {
-        doc.addPage();
-        drawHeader();
-        return 75;
-      }
-      return y;
-    }
+      y += 18;
 
-    // ─── START DOC ───
-    drawHeader();
-    let y = 75;
+      // ─── 1. DADOS CADASTRAIS & PERFORMANCE ───
+      y = drawSectionHeadingLocal('1. DADOS CADASTRAIS E ESTRUTURA ORGANIZACIONAL', y);
 
-    // Subcabeçalho Dossiê ID
-    doc.setFillColor(250, 250, 250);
-    doc.setDrawColor(220, 220, 220);
-    doc.roundedRect(margin, y, pageWidth - margin * 2, 14, 2, 2, 'FD');
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(30, 30, 30);
-    doc.text(`COLABORADOR: ${func.nome.toUpperCase()}`, margin + 6, y + 6);
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')} | ID / Matrícula: ${func.id.slice(0, 8).toUpperCase()} | Cargo: ${func.cargo}`, margin + 6, y + 11);
-    doc.setTextColor(0, 0, 0);
-
-    y += 18;
-
-    // ─── 1. DADOS CADASTRAIS & PERFORMANCE ───
-    y = drawSectionHeadingLocal('1. DADOS CADASTRAIS E ESTRUTURA ORGANIZACIONAL', y);
-
-    const tempoEmpresa = getTempoEmpresa(func.data_admissao);
-    const infoBody = [
-      ['Nome Completo', func.nome.toUpperCase(), 'Fit Cultural Score', func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente'],
-      ['Cargo / Função', func.cargo, 'Nine Box (Desempenho)', func.nine_box_desempenho || 'Não Avaliado'],
-      ['Departamento / Contrato', func.departamento, 'Nine Box (Potencial)', func.nine_box_potencial || 'Não Avaliado'],
-      ['E-mail Corporativo', func.email || 'Não informado', 'Escola / Turno', `${func.escolaridade || '—'} | ${func.turno || '—'}`],
-      ['Data de Admissão', func.data_admissao ? new Date(func.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—', 'Tempo de Empresa', tempoEmpresa],
-    ];
-
-    autoTable(doc, {
-      startY: y,
-      body: infoBody,
-      theme: 'plain',
-      styles: { fontSize: 8, cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 } },
-      columnStyles: { 
-        0: { fontStyle: 'bold', cellWidth: 40 }, 
-        1: { cellWidth: 50 },
-        2: { fontStyle: 'bold', cellWidth: 40 }, 
-        3: { cellWidth: 50 }
-      },
-      margin: { left: margin, right: margin },
-    });
-
-    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 40;
-
-    // ─── 2. MAPEAMENTO PSICOMÉTRICO E AVALIAÇÕES ───
-    y = checkPageBreak(y, 35);
-    y = drawSectionHeadingLocal('2. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL', y);
-
-    const tests = [
-      ['DISC (Comportamento)', discResult ? `Perfil Predominante: ${discResult.profile_name || 'Concluído'}` : 'Não realizado'],
-      ['MBTI (Personalidade)', mbtiResult ? `Tipo Cognitivo: ${mbtiResult.mbti_type || 'Concluído'}` : 'Não realizado'],
-      ['Big Five (Fatores)', bigFiveResult ? 'Avaliação registrada com sucesso no sistema' : 'Não realizado'],
-    ];
-
-    autoTable(doc, {
-      startY: y,
-      body: tests,
-      theme: 'plain',
-      styles: { fontSize: 8, cellPadding: 3 },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45 } },
-      margin: { left: margin, right: margin },
-    });
-
-    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
-
-    // ─── 3. PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI) ───
-    y = checkPageBreak(y, 35);
-    y = drawSectionHeadingLocal(`3. PLANOS DE DESENVOLVIMENTO INDIVIDUAL - PDI (${pdisList.length})`, y);
-
-    if (pdisList.length > 0) {
-      const pdiRows = pdisList.map((p, idx) => {
-        const totalActions = p.pdi_actions?.length || 0;
-        const doneActions = p.pdi_actions?.filter(a => a.status === 'completed')?.length || 0;
-        const statusMap: Record<string, string> = { pending: 'Pendente', in_progress: 'Em Andamento', completed: 'Concluído' };
-        return [
-          `PDI #${idx + 1}`,
-          statusMap[p.status] || p.status,
-          `${doneActions} de ${totalActions} concluídas`,
-          new Date(p.created_at).toLocaleDateString('pt-BR')
-        ];
-      });
+      const tempoEmpresa = getTempoEmpresa(func.data_admissao);
+      const infoBody = [
+        ['Nome Completo', (func.nome || '—').toUpperCase(), 'Fit Cultural Score', func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente'],
+        ['Cargo / Função', func.cargo || '—', 'Nine Box (Desempenho)', func.nine_box_desempenho || 'Não Avaliado'],
+        ['Departamento / Contrato', func.departamento || '—', 'Nine Box (Potencial)', func.nine_box_potencial || 'Não Avaliado'],
+        ['E-mail Corporativo', func.email || 'Não informado', 'Escola / Turno', `${func.escolaridade || '—'} | ${func.turno || '—'}`],
+        ['Data de Admissão', func.data_admissao ? new Date(func.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR') : '—', 'Tempo de Empresa', tempoEmpresa],
+      ];
 
       autoTable(doc, {
         startY: y,
-        head: [['Plano', 'Status', 'Metas / Ações Atingidas', 'Data de Criação']],
-        body: pdiRows,
-        styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: blueLt },
+        body: infoBody,
+        theme: 'plain',
+        styles: { fontSize: 8, cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 } },
+        columnStyles: { 
+          0: { fontStyle: 'bold', cellWidth: 40 }, 
+          1: { cellWidth: 50 },
+          2: { fontStyle: 'bold', cellWidth: 40 }, 
+          3: { cellWidth: 50 }
+        },
         margin: { left: margin, right: margin },
       });
-      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
-    } else {
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Nenhum Plano de Desenvolvimento Individual registrado para este colaborador.', margin, y);
-      y += 10;
-    }
 
-    // ─── 4. HISTÓRICO DE AVALIAÇÕES NINE BOX ───
-    y = checkPageBreak(y, 35);
-    y = drawSectionHeadingLocal(`4. HISTÓRICO DE AVALIAÇÕES NINE BOX (${nineBoxHist.length})`, y);
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 40;
 
-    if (nineBoxHist.length > 0) {
-      autoTable(doc, {
-        startY: y,
-        head: [['Ciclo de Avaliação', 'Desempenho (Entrega)', 'Potencial', 'Data do Registro']],
-        body: nineBoxHist.map(n => [
-          n.cycle,
-          n.desempenho,
-          n.potencial,
-          new Date(n.created_at).toLocaleDateString('pt-BR')
-        ]),
-        styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: blueLt },
-        margin: { left: margin, right: margin },
-      });
-      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
-    } else {
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Nenhum registro histórico de Nine Box anterior.', margin, y);
-      y += 10;
-    }
-
-    // ─── 5. RESUMO DE OCORRÊNCIAS & ABSENTEÍSMO ───
-    const faltasInj = attendanceRecords.filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
-    const faltasJust = attendanceRecords.filter(a => a.status === 'falta_justificada').length;
-    const atestados = attendanceRecords.filter(a => a.status === 'atestado').length;
-    const advApplied = employeeWarnings.filter(w => w.applied).length;
-
-    y = checkPageBreak(y, 40);
-    y = drawSectionHeadingLocal('5. INDICADORES DE ABSENTEÍSMO E DESVIOS OPERACIONAIS', y);
-
-    autoTable(doc, {
-      startY: y,
-      head: [['Indicador de Gestão', 'Quantidade Registrada', 'Situação / Impacto']],
-      body: [
-        ['Faltas Injustificadas', String(faltasInj), faltasInj > 0 ? 'Atenção Requerida' : 'Regular'],
-        ['Faltas Justificadas / Atestados Médicos', String(faltasJust + atestados), 'Acompanhado por RH'],
-        ['Advertências Disciplinares Aplicadas', String(advApplied), advApplied > 0 ? 'Registrado em Prontuário' : 'Sem ocorrências'],
-        ['Eventos Operacionais de SSMA', String(employeeEvents.length), employeeEvents.length > 0 ? 'Registrado' : 'Sem registros'],
-      ],
-      styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
-      alternateRowStyles: { fillColor: blueLt },
-      margin: { left: margin, right: margin },
-    });
-
-    y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 35;
-
-    // ─── 6. REGISTRO DE ADVERTÊNCIAS E OCORRÊNCIAS ───
-    if (employeeWarnings.length > 0) {
+      // ─── 2. MAPEAMENTO PSICOMÉTRICO E AVALIAÇÕES ───
       y = checkPageBreak(y, 35);
-      y = drawSectionHeadingLocal(`6. DETALHAMENTO DE ADVERTÊNCIAS (${employeeWarnings.length})`, y);
+      y = drawSectionHeadingLocal('2. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL', y);
+
+      const tests = [
+        ['DISC (Comportamento)', discResult ? `Perfil Predominante: ${discResult.profile_name || 'Concluído'}` : 'Não realizado'],
+        ['MBTI (Personalidade)', mbtiResult ? `Tipo Cognitivo: ${mbtiResult.mbti_type || 'Concluído'}` : 'Não realizado'],
+        ['Big Five (Fatores)', bigFiveResult ? 'Avaliação registrada com sucesso no sistema' : 'Não realizado'],
+      ];
 
       autoTable(doc, {
         startY: y,
-        head: [['Data', 'Motivo da Ocorrência', 'Aplicada', 'Observações / Tratativa']],
-        body: employeeWarnings.map(w => [
-          new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR'),
-          w.reason,
-          w.applied ? 'SIM' : 'NÃO',
-          w.observation || '—',
-        ]),
+        body: tests,
+        theme: 'plain',
+        styles: { fontSize: 8, cellPadding: 3 },
+        columnStyles: { 0: { fontStyle: 'bold', cellWidth: 45 } },
+        margin: { left: margin, right: margin },
+      });
+
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
+
+      // ─── 3. PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI) ───
+      y = checkPageBreak(y, 35);
+      y = drawSectionHeadingLocal(`3. PLANOS DE DESENVOLVIMENTO INDIVIDUAL - PDI (${pdisList.length})`, y);
+
+      if (pdisList.length > 0) {
+        const pdiRows = pdisList.map((p, idx) => {
+          const totalActions = p.pdi_actions?.length || 0;
+          const doneActions = p.pdi_actions?.filter(a => a.status === 'completed')?.length || 0;
+          const statusMap: Record<string, string> = { pending: 'Pendente', in_progress: 'Em Andamento', completed: 'Concluído' };
+          return [
+            `PDI #${idx + 1}`,
+            statusMap[p.status] || p.status,
+            `${doneActions} de ${totalActions} concluídas`,
+            new Date(p.created_at).toLocaleDateString('pt-BR')
+          ];
+        });
+
+        autoTable(doc, {
+          startY: y,
+          head: [['Plano', 'Status', 'Metas / Ações Atingidas', 'Data de Criação']],
+          body: pdiRows,
+          styles: { fontSize: 8, cellPadding: 3 },
+          headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: blueLt },
+          margin: { left: margin, right: margin },
+        });
+        y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
+      } else {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Nenhum Plano de Desenvolvimento Individual registrado para este colaborador.', margin, y);
+        y += 10;
+      }
+
+      // ─── 4. HISTÓRICO DE AVALIAÇÕES NINE BOX ───
+      y = checkPageBreak(y, 35);
+      y = drawSectionHeadingLocal(`4. HISTÓRICO DE AVALIAÇÕES NINE BOX (${nineBoxHist.length})`, y);
+
+      if (nineBoxHist.length > 0) {
+        autoTable(doc, {
+          startY: y,
+          head: [['Ciclo de Avaliação', 'Desempenho (Entrega)', 'Potencial', 'Data do Registro']],
+          body: nineBoxHist.map(n => [
+            n.cycle || '—',
+            n.desempenho || '—',
+            n.potencial || '—',
+            n.created_at ? new Date(n.created_at).toLocaleDateString('pt-BR') : '—'
+          ]),
+          styles: { fontSize: 8, cellPadding: 3 },
+          headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: blueLt },
+          margin: { left: margin, right: margin },
+        });
+        y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
+      } else {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Nenhum registro histórico de Nine Box anterior.', margin, y);
+        y += 10;
+      }
+
+      // ─── 5. RESUMO DE OCORRÊNCIAS & ABSENTEÍSMO ───
+      const faltasInj = (attendanceRecords || []).filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
+      const faltasJust = (attendanceRecords || []).filter(a => a.status === 'falta_justificada').length;
+      const atestados = (attendanceRecords || []).filter(a => a.status === 'atestado').length;
+      const advApplied = (employeeWarnings || []).filter(w => w.applied).length;
+
+      y = checkPageBreak(y, 40);
+      y = drawSectionHeadingLocal('5. INDICADORES DE ABSENTEÍSMO E DESVIOS OPERACIONAIS', y);
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Indicador de Gestão', 'Quantidade Registrada', 'Situação / Impacto']],
+        body: [
+          ['Faltas Injustificadas', String(faltasInj), faltasInj > 0 ? 'Atenção Requerida' : 'Regular'],
+          ['Faltas Justificadas / Atestados Médicos', String(faltasJust + atestados), 'Acompanhado por RH'],
+          ['Advertências Disciplinares Aplicadas', String(advApplied), advApplied > 0 ? 'Registrado em Prontuário' : 'Sem ocorrências'],
+          ['Eventos Operacionais de SSMA', String((employeeEvents || []).length), (employeeEvents || []).length > 0 ? 'Registrado' : 'Sem registros'],
+        ],
         styles: { fontSize: 8, cellPadding: 3 },
         headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
         alternateRowStyles: { fillColor: blueLt },
         margin: { left: margin, right: margin },
       });
-      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
-    }
 
-    // ─── 7. FEEDBACKS REGISTRADOS ───
-    y = checkPageBreak(y, 40);
-    y = drawSectionHeadingLocal(`7. HISTÓRICO DE FEEDBACKS (${employeeFeedbacks.length})`, y);
+      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 35;
 
-    if (employeeFeedbacks.length > 0) {
-      autoTable(doc, {
-        startY: y,
-        head: [['Data', 'Título do Feedback', 'Gestor / Responsável', 'Status']],
-        body: employeeFeedbacks.slice(0, 15).map(f => [
-          new Date(f.criado_em).toLocaleDateString('pt-BR'),
-          f.titulo.length > 45 ? f.titulo.substring(0, 42) + '...' : f.titulo,
-          f.gestor || '—',
-          statusLabels[f.status as FeedbackStatus] || f.status
-        ]),
-        styles: { fontSize: 8, cellPadding: 3 },
-        headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: blueLt },
-        margin: { left: margin, right: margin },
-      });
-      y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
-    } else {
+      // ─── 6. REGISTRO DE ADVERTÊNCIAS E OCORRÊNCIAS ───
+      if ((employeeWarnings || []).length > 0) {
+        y = checkPageBreak(y, 35);
+        y = drawSectionHeadingLocal(`6. DETALHAMENTO DE ADVERTÊNCIAS (${employeeWarnings.length})`, y);
+
+        autoTable(doc, {
+          startY: y,
+          head: [['Data', 'Motivo da Ocorrência', 'Aplicada', 'Observações / Tratativa']],
+          body: employeeWarnings.map(w => [
+            w.date ? new Date(w.date + 'T00:00:00').toLocaleDateString('pt-BR') : '—',
+            w.reason || '—',
+            w.applied ? 'SIM' : 'NÃO',
+            w.observation || '—',
+          ]),
+          styles: { fontSize: 8, cellPadding: 3 },
+          headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: blueLt },
+          margin: { left: margin, right: margin },
+        });
+        y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
+      }
+
+      // ─── 7. FEEDBACKS REGISTRADOS ───
+      const feedbacksList = employeeFeedbacks || [];
+      y = checkPageBreak(y, 40);
+      y = drawSectionHeadingLocal(`7. HISTÓRICO DE FEEDBACKS (${feedbacksList.length})`, y);
+
+      if (feedbacksList.length > 0) {
+        autoTable(doc, {
+          startY: y,
+          head: [['Data', 'Título do Feedback', 'Gestor / Responsável', 'Status']],
+          body: feedbacksList.slice(0, 15).map(f => [
+            f.criado_em ? new Date(f.criado_em).toLocaleDateString('pt-BR') : '—',
+            (f.titulo || '—').length > 45 ? (f.titulo || '').substring(0, 42) + '...' : (f.titulo || '—'),
+            f.gestor || '—',
+            statusLabels[f.status as FeedbackStatus] || f.status || '—'
+          ]),
+          styles: { fontSize: 8, cellPadding: 3 },
+          headStyles: { fillColor: blue, textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: blueLt },
+          margin: { left: margin, right: margin },
+        });
+        y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
+      } else {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Nenhum feedback registrado no período.', margin, y);
+        y += 10;
+      }
+
+      // ─── 8. ASSINATURAS INSTITUCIONAIS ───
+      y = checkPageBreak(y, 45);
+      y = y + 25;
+      doc.setDrawColor(180, 180, 180);
+      doc.line(margin + 10, y, 85, y);
+      doc.line(pageWidth / 2 + 10, y, pageWidth - margin - 10, y);
+
       doc.setFontSize(8);
-      doc.setFont('helvetica', 'italic');
-      doc.text('Nenhum feedback registrado no período.', margin, y);
-      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(50, 50, 50);
+      doc.text((func.nome || 'COLABORADOR').toUpperCase(), margin + 15, y + 5);
+      doc.text('DIREÇÃO DE RH / LIDERANÇA RESPONSÁVEL', pageWidth / 2 + 15, y + 5);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text('Assinatura do Colaborador', margin + 22, y + 9);
+      doc.text('Busato Contratos - Gestão de Pessoas', pageWidth / 2 + 22, y + 9);
+
+      // ─── FOOTER & HEADERS EM TODAS AS PÁGINAS ───
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        drawFooter(i, pageCount);
+        if (i > 1) drawHeader();
+      }
+
+      const safeFileName = (func.nome || 'Colaborador').replace(/[^a-zA-Z0-9_\-]/g, '_');
+      doc.save(`Dossie_Executivo_${safeFileName}.pdf`);
+      toast({ title: 'Dossiê Executivo Exportado!', description: 'O relatório em PDF de alto padrão foi gerado com sucesso.' });
+    } catch (err: unknown) {
+      console.error('Erro ao gerar PDF do Dossiê:', err);
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast({ title: 'Erro ao gerar PDF do Dossiê', description: msg, variant: 'destructive' });
     }
-
-    // ─── 8. ASSINATURAS INSTITUCIONAIS ───
-    y = checkPageBreak(y, 45);
-    y = y + 25;
-    doc.setDrawColor(180, 180, 180);
-    doc.line(margin + 10, y, 85, y);
-    doc.line(pageWidth / 2 + 10, y, pageWidth - margin - 10, y);
-
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(50, 50, 50);
-    doc.text(func.nome.toUpperCase(), margin + 15, y + 5);
-    doc.text('DIREÇÃO DE RH / LIDERANÇA RESPONSÁVEL', pageWidth / 2 + 15, y + 5);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
-    doc.text('Assinatura do Colaborador', margin + 22, y + 9);
-    doc.text('Busato Contratos - Gestão de Pessoas', pageWidth / 2 + 22, y + 9);
-
-    // ─── FOOTER & HEADERS EM TODAS AS PÁGINAS ───
-    const pageCount = doc.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      drawFooter(i, pageCount);
-      if (i > 1) drawHeader();
-    }
-
-    doc.save(`Dossie_Executivo_${func.nome.replace(/\s+/g, '_')}.pdf`);
-    toast({ title: 'Dossiê Executivo Exportado!', description: 'O relatório em PDF de alto padrão foi gerado com sucesso.' });
   }
 
   const { userDepartment, isDepartmentLocked } = useAuth();

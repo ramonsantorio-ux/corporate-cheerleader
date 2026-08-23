@@ -54,12 +54,25 @@ export async function getBusatoLogoBase64(): Promise<string | null> {
 export function drawBusatoHeader(
   doc: JsPDFDoc,
   logoBase64: string | null,
-  title: string,
-  subtitle: string,
+  title?: string | { pageWidth?: number; now?: string },
+  subtitle?: string,
   options?: { pageWidth?: number; now?: string }
 ) {
-  const pw = options?.pageWidth ?? doc.internal.pageSize.getWidth();
-  const now = options?.now ?? new Date().toLocaleDateString('pt-BR');
+  let displayTitle = 'RELATÓRIO INSTITUCIONAL';
+  let displaySubtitle = 'BUSATO CONTRATOS';
+  let opts = options;
+
+  if (typeof title === 'string') {
+    displayTitle = title;
+    if (typeof subtitle === 'string') {
+      displaySubtitle = subtitle;
+    }
+  } else if (typeof title === 'object' && title !== null) {
+    opts = title;
+  }
+
+  const pw = opts?.pageWidth ?? doc.internal.pageSize.getWidth();
+  const now = opts?.now ?? new Date().toLocaleDateString('pt-BR');
 
   // Header Logo and Date
   if (logoBase64) {
@@ -89,12 +102,12 @@ export function drawBusatoHeader(
   doc.setTextColor(40, 40, 40);
   doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text(title.toUpperCase(), 14, 45);
+  doc.text(displayTitle.toUpperCase(), 14, 45);
 
   // Subtitle
   doc.setTextColor(...PDF_COLORS.primary);
   doc.setFontSize(12);
-  doc.text(subtitle.toUpperCase(), 14, 53);
+  doc.text(displaySubtitle.toUpperCase(), 14, 53);
 
   // Short Blue Line below subtitle
   doc.setDrawColor(...PDF_COLORS.primary);
