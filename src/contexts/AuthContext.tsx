@@ -1,7 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { User, Session } from '@supabase/supabase-js';
+import { getHierarchyLevel, canViewOrApplyTargetAssessment } from '@/lib/hierarchy';
 
 interface AuthContextType {
   user: User | null;
@@ -12,8 +9,10 @@ interface AuthContextType {
   userDepartments: string[];
   effectiveDepartment: string | null;
   isDepartmentLocked: boolean;
+  userCargo: string | null;
   setEffectiveDepartment: (dept: string | null) => void;
   hasAccessToDept: (deptName?: string | null) => boolean;
+  canViewHierarchy: (targetCargo?: string | null) => boolean;
   permissions: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>;
   signOut: () => Promise<void>;
 }
@@ -21,8 +20,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null, session: null, loading: true, isAdmin: false,
   userDepartment: null, userDepartments: [], effectiveDepartment: null, isDepartmentLocked: false,
+  userCargo: null,
   setEffectiveDepartment: () => {},
   hasAccessToDept: () => true,
+  canViewHierarchy: () => true,
   permissions: {},
   signOut: async () => {},
 });
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userDepartment, setUserDepartment] = useState<string | null>(null);
   const [userDepartments, setUserDepartments] = useState<string[]>([]);
   const [effectiveDepartment, setEffectiveDepartment] = useState<string | null>(null);
+  const [userCargo, setUserCargo] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>>({});
 
   useEffect(() => {
@@ -85,7 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAdmin(isUserAdmin);
 
     // Identifica departamento do usuário
-    let dept: string | null = (authUser.user_metadata?.departamento as string) || null;
+    // Identifica o cargo do usuário logado
+    let cargo: string | null = (authUser.user_metadata?.cargo as string) || null;
+    if (!cargo && authUser.email) {
+      const { data: func } = await supabase.from('funcionarios').select('departamento, cargo').eq('email', authUser.email).maybeSingle();
+      if (func?.cargo) cargo = func.cargo;
+      if (func?.departamento && !dept) dept = func.departamento;
+    }
 
     if (!dept) {
       // Tenta buscar no perfil
@@ -96,14 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch {
         // ignora se coluna nao existir
-      }
-    }
-
-    if (!dept && authUser.email) {
-      // Tenta vincular com funcionário com mesmo email
-      const { data: func } = await supabase.from('funcionarios').select('departamento').eq('email', authUser.email).maybeSingle();
-      if (func?.departamento) {
-        dept = func.departamento;
       }
     }
 
@@ -121,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserDepartment(dept);
     setUserDepartments(deptsList);
     setEffectiveDepartment(deptsList[0] || dept || null);
+    setUserCargo(cargo);
 
     const profileId = rolesData?.[0]?.profile_id;
     const permsMap: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }> = {};
@@ -201,13 +202,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return userDepartments.includes(deptName);
   }
 
+  function canViewHierarchy(targetCargo?: string | null): boolean {
+    if (isAdmin) return true;
+    if (!userCargo || !targetCargo) return true;
+    return canViewOrApplyTargetAssessment(userCargo, targetCargo, isAdmin);
+  }
+
   const isDepartmentLocked = !isAdmin && !!userDepartment;
 
   return (
     <AuthContext.Provider value={{
       user, session, loading, isAdmin,
       userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked,
-      setEffectiveDepartment, hasAccessToDept,
+      userCargo,
+      setEffectiveDepartment, hasAccessToDept, canViewHierarchy,
       permissions, signOut
     }}>
       {children}

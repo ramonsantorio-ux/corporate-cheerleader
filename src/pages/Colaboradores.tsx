@@ -116,7 +116,9 @@ export default function Colaboradores() {
     }
 
     const matchTurno = turnoFilter === 'todos' || f.turno === turnoFilter;
-    return matchSearch && matchDept && matchTurno;
+    const matchHierarchy = canViewHierarchy(f.cargo);
+
+    return matchSearch && matchDept && matchTurno && matchHierarchy;
   });
 
   // Paginação: recalcula sempre que filtros mudam

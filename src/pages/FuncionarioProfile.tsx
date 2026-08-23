@@ -717,13 +717,28 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
     }
   }
 
-  const { userDepartment, isDepartmentLocked } = useAuth();
+  const { userDepartment, isDepartmentLocked, canViewHierarchy } = useAuth();
 
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
   if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
 
   if (isDepartmentLocked && userDepartment && func.departamento !== userDepartment) {
     return <AccessDenied />;
+  }
+
+  if (!canViewHierarchy(func.cargo)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6 space-y-4">
+        <div className="w-16 h-16 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center border border-amber-500/20">
+          <ShieldAlert className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-foreground">Acesso Restrito por Nível Hierárquico</h2>
+        <p className="text-sm text-muted-foreground max-w-md">
+          Seu cargo não possui permissão de governança para visualizar dados de colaboradores em níveis hierárquicos superiores ao seu (<strong>{func.cargo}</strong>).
+        </p>
+        <Button variant="outline" onClick={() => navigate(-1)}>Voltar</Button>
+      </div>
+    );
   }
 
   const turnoDisplay = func.turno ? (turnoLabels[func.turno] || func.turno) : null;
