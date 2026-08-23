@@ -9,6 +9,8 @@ export const DEPARTAMENTOS = [
   'Manutenção',
   'RH',
   'Financeiro',
+  'Suprimentos',
+  'Almoxarifado',
 ] as const;
 
 export type Departamento = typeof DEPARTAMENTOS[number];
