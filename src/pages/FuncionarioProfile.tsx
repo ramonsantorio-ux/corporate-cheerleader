@@ -22,7 +22,7 @@ import FitCulturalSection from '@/components/fit-cultural/FitCulturalSection';
 import PotencialSection from '@/components/potencial/PotencialSection';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter } from '@/lib/pdfLogo';
+import { getBusatoLogoBase64, drawBusatoHeader, drawBusatoFooter, drawPdfBarChart } from '@/lib/pdfLogo';
 import { DiscReport, MbtiReport, BigFiveReport } from '@/components/ExecutiveReports';
 import Organograma from './Organograma';
 import NineBoxSection from '@/components/nine-box/NineBoxSection';
@@ -519,9 +519,85 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
 
       y += cardHeight + 10;
 
-      // ─── 2. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL ───
+      // ─── GRÁFICOS VISUAIS DE PEOPLE ANALYTICS ───
+      y = checkPageBreak(y, 45);
+      y = drawSectionHeadingLocal('2. ANÁLISE GRÁFICA DE PERFORMANCE E DESENVOLVIMENTO', y);
+
+      // 1. Barras de Desempenho (Fit Cultural, Metas PDI, Assiduidade)
+      const fitScore = func.fit_cultural || 0;
+      
+      let totalPdiActions = 0;
+      let donePdiActions = 0;
+      pdisList.forEach(p => {
+        totalPdiActions += p.pdi_actions?.length || 0;
+        donePdiActions += p.pdi_actions?.filter(a => a.status === 'completed')?.length || 0;
+      });
+      const pdiScore = totalPdiActions > 0 ? Math.round((donePdiActions / totalPdiActions) * 100) : (pdisList.length > 0 ? 50 : 0);
+
+      const faltas = (attendanceRecords || []).filter(a => a.status === 'falta' || a.status === 'falta_injustificada').length;
+      const assiduidadeScore = Math.max(0, 100 - (faltas * 10));
+
+      const barW = (pageWidth - margin * 2 - 10) / 3;
+      drawPdfBarChart(doc, 'Aderência Fit Cultural', fitScore, y, { margin, width: barW, color: [59, 130, 187] });
+      drawPdfBarChart(doc, 'Conclusão Metas PDI', pdiScore, y, { margin: margin + barW + 5, width: barW, color: [42, 90, 140] });
+      drawPdfBarChart(doc, 'Índice de Assiduidade', assiduidadeScore, y, { margin: margin + (barW + 5) * 2, width: barW, color: assiduidadeScore < 80 ? [217, 83, 79] : [40, 167, 69] });
+
+      y += 20;
+
+      // 2. Desenho Visual da Matriz Nine Box 3x3 no PDF
+      if (func.nine_box_desempenho || func.nine_box_potencial) {
+        y = checkPageBreak(y, 50);
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(40, 40, 40);
+        doc.text('POSICIONAMENTO NA MATRIZ NINE BOX (DESEMPENHO X POTENCIAL):', margin, y);
+        y += 4;
+
+        const gridW = 120;
+        const cellW = gridW / 3;
+        const cellH = 10;
+        const startX = margin + (pageWidth - margin * 2 - gridW) / 2;
+
+        const matrix = [
+          [{ pot: 'Alto', des: 'Baixo', label: 'Enigma' }, { pot: 'Alto', des: 'Médio', label: 'Forte Desempenho' }, { pot: 'Alto', des: 'Alto', label: 'Estrela' }],
+          [{ pot: 'Médio', des: 'Baixo', label: 'Questionável' }, { pot: 'Médio', des: 'Médio', label: 'Mantenedor' }, { pot: 'Médio', des: 'Alto', label: 'Forte Desempenho' }],
+          [{ pot: 'Baixo', des: 'Baixo', label: 'Insuficiente' }, { pot: 'Baixo', des: 'Médio', label: 'Eficaz' }, { pot: 'Baixo', des: 'Alto', label: 'Especializado' }],
+        ];
+
+        matrix.forEach((row, rIdx) => {
+          row.forEach((cell, cIdx) => {
+            const xCell = startX + cIdx * cellW;
+            const yCell = y + rIdx * cellH;
+
+            const isCurrent = (func.nine_box_potencial || '').toLowerCase() === cell.pot.toLowerCase() && 
+                              (func.nine_box_desempenho || '').toLowerCase() === cell.des.toLowerCase();
+
+            if (isCurrent) {
+              doc.setFillColor(59, 130, 187);
+              doc.setDrawColor(30, 60, 110);
+              doc.rect(xCell, yCell, cellW, cellH, 'FD');
+              doc.setTextColor(255, 255, 255);
+              doc.setFontSize(7.5);
+              doc.setFont('helvetica', 'bold');
+              doc.text(`★ ${cell.label.toUpperCase()}`, xCell + cellW / 2, yCell + 6, { align: 'center' });
+            } else {
+              doc.setFillColor(245, 247, 250);
+              doc.setDrawColor(220, 225, 230);
+              doc.rect(xCell, yCell, cellW, cellH, 'FD');
+              doc.setTextColor(120, 130, 140);
+              doc.setFontSize(7);
+              doc.setFont('helvetica', 'normal');
+              doc.text(cell.label, xCell + cellW / 2, yCell + 6, { align: 'center' });
+            }
+          });
+        });
+
+        y += (cellH * 3) + 12;
+      }
+
+      // ─── 3. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL ───
       y = checkPageBreak(y, 35);
-      y = drawSectionHeadingLocal('2. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL', y);
+      y = drawSectionHeadingLocal('3. MAPEAMENTO PSICOMÉTRICO E COMPORTAMENTAL', y);
 
       const tests = [
         ['DISC (Perfil Comportamental)', discResult ? `Perfil Predominante: ${discResult.profile_name || 'Concluído'}` : 'Não realizado'],
@@ -540,9 +616,9 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
 
       y = (doc as unknown as DocWithAutoTable).lastAutoTable?.finalY + 6 || y + 25;
 
-      // ─── 3. PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI) E AÇÕES ───
+      // ─── 4. PLANO DE DESENVOLVIMENTO INDIVIDUAL (PDI) E AÇÕES ───
       y = checkPageBreak(y, 35);
-      y = drawSectionHeadingLocal(`3. PLANOS DE DESENVOLVIMENTO INDIVIDUAL - PDI E METAS (${pdisList.length})`, y);
+      y = drawSectionHeadingLocal(`4. PLANOS DE DESENVOLVIMENTO INDIVIDUAL - PDI E METAS (${pdisList.length})`, y);
 
       if (pdisList.length > 0) {
         const pdiRows: string[][] = [];
@@ -581,9 +657,9 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
         y += 10;
       }
 
-      // ─── 4. HISTÓRICO DE AVALIAÇÕES NINE BOX ───
+      // ─── 5. HISTÓRICO DE AVALIAÇÕES NINE BOX ───
       y = checkPageBreak(y, 35);
-      y = drawSectionHeadingLocal(`4. HISTÓRICO DE AVALIAÇÕES NINE BOX (${nineBoxHist.length})`, y);
+      y = drawSectionHeadingLocal(`5. HISTÓRICO DE AVALIAÇÕES NINE BOX (${nineBoxHist.length})`, y);
 
       if (nineBoxHist.length > 0) {
         autoTable(doc, {
