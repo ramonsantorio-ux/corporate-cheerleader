@@ -49,7 +49,6 @@ export const PAGE_GROUPS = [
       { key: 'feedbacks', label: 'Feedbacks' },
       { key: 'novo_feedback', label: 'Novo Feedback' },
       { key: 'relatorios', label: 'Relatórios' },
-      { key: 'reunioes', label: 'Reuniões 1:1' },
       { key: 'cco', label: 'CCO / Informações' },
     ]
   }
