@@ -187,7 +187,7 @@ export default function Desempenho() {
     { value: 'feedbacks', label: 'Feedback Contínuo', icon: List },
     { value: 'fit-cultural', label: 'Fit Cultural', icon: Target },
     { value: 'pdi', label: 'PDI', icon: ClipboardList },
-    { value: 'sucessao', label: 'Sucessão & 9Box', icon: TrendingUp },
+    { value: 'sucessao', label: 'Nine Box', icon: TrendingUp },
   ];
 
   return (

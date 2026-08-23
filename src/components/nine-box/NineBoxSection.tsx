@@ -363,10 +363,61 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
                   </div>
                 </div>
 
+                {/* PAINEL DE EVOLUÇÃO E TRAJETÓRIA DO COLABORADOR */}
+                {historico.length > 1 && (
+                  <div className="bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-indigo-500/30 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-500/20 pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                          <TrendingUp className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm text-foreground">Trajetória e Evolução no Nine Box</h4>
+                          <p className="text-xs text-muted-foreground">Progresso do colaborador ao longo dos ciclos de avaliação</p>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold rounded-full">
+                        <Sparkles className="w-3.5 h-3.5" /> {historico.length} Ciclos Registrados
+                      </span>
+                    </div>
+
+                    {/* Fluxo Horizontal de Linha do Tempo */}
+                    <div className="flex flex-col sm:flex-row items-stretch justify-between gap-3 pt-2">
+                      {historico.slice().reverse().map((item, idx) => {
+                        const isLatest = idx === historico.length - 1;
+                        return (
+                          <div key={item.id} className="flex-1 flex flex-col justify-between p-3.5 rounded-xl bg-background/80 backdrop-blur-sm border border-border/60 shadow-xs relative overflow-hidden">
+                            {isLatest && (
+                              <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[9px] font-bold px-2 py-0.5 rounded-bl-lg uppercase">
+                                Atual
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                                {item.cycle}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className={`w-2.5 h-2.5 rounded-full ${isLatest ? 'bg-emerald-500 ring-2 ring-emerald-500/30' : 'bg-blue-400'}`} />
+                                <span className="font-bold text-sm text-foreground">
+                                  {item.desempenho} / {item.potencial}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="mt-3 pt-2 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
+                              <span>{format(new Date(item.created_at), "dd/MM/yyyy")}</span>
+                              {isLatest && <span className="text-emerald-600 font-bold">★ Consolidado</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <h4 className="font-bold text-foreground mb-4 flex items-center gap-2">
                     <History className="w-5 h-5 text-muted-foreground" />
-                    Histórico Completo
+                    Histórico Completo de Avaliações
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {historico.map((av) => (

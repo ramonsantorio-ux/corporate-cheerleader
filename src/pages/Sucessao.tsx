@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { DEPARTAMENTOS } from "@/lib/departments";
-import { Building2 } from "lucide-react";
+import { Building2, TrendingUp, History, Sparkles, UserCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const matrixBoxes = [
@@ -22,8 +22,18 @@ const matrixBoxes = [
   { pot: 'Baixo', des: 'Alto', label: 'Especializado', desc: 'Excelente na função.', color: 'bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30', activeColor: 'bg-blue-500/30 border-blue-500 ring-2 ring-blue-500' },
 ];
 
+interface EmployeeNineBox {
+  id: string;
+  name: string;
+  role: string;
+  departamento: string;
+  perf: string;
+  pot: string;
+  history: { cycle: string; desempenho: string; potencial: string; created_at: string }[];
+}
+
 export default function Sucessao() {
-  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const { userDepartment, effectiveDepartment, isDepartmentLocked } = useAuth();
   const [deptFilter, setDeptFilter] = useState<string>('todos');
 
   useEffect(() => {
@@ -34,24 +44,31 @@ export default function Sucessao() {
     }
   }, [isDepartmentLocked, userDepartment, effectiveDepartment]);
 
-  const [employees, setEmployees] = useState<{ name: string, role: string, perf: string, pot: string, departamento: string }[]>([]);
-  const [selectedBox, setSelectedBox] = useState<{ box: typeof matrixBoxes[0], emps: typeof employees } | null>(null);
+  const [employees, setEmployees] = useState<EmployeeNineBox[]>([]);
+  const [selectedBox, setSelectedBox] = useState<{ box: typeof matrixBoxes[0], emps: EmployeeNineBox[] } | null>(null);
 
   const activeDept = (isDepartmentLocked && userDepartment) ? userDepartment : deptFilter;
 
   useEffect(() => {
     async function fetchData() {
-      const { data } = await supabase.from('funcionarios').select('nome, cargo, departamento, nine_box_desempenho, nine_box_potencial');
-      if (data) {
-        const raw = data
+      const { data: funcData } = await supabase.from('funcionarios').select('id, nome, cargo, departamento, nine_box_desempenho, nine_box_potencial');
+      const { data: histData } = await supabase.from('nine_box_historico').select('id, employee_id, cycle, desempenho, potencial, created_at').order('created_at', { ascending: false });
+
+      if (funcData) {
+        const raw = funcData
           .filter(e => e.nine_box_desempenho && e.nine_box_potencial)
-          .map(e => ({
-            name: e.nome,
-            role: e.cargo,
-            departamento: e.departamento,
-            perf: e.nine_box_desempenho as string,
-            pot: e.nine_box_potencial as string
-          }));
+          .map(e => {
+            const empHist = (histData || []).filter(h => h.employee_id === e.id);
+            return {
+              id: e.id,
+              name: e.nome,
+              role: e.cargo || '—',
+              departamento: e.departamento || '—',
+              perf: e.nine_box_desempenho as string,
+              pot: e.nine_box_potencial as string,
+              history: empHist
+            };
+          });
 
         const filtered = activeDept === 'todos' ? raw : raw.filter(e => e.departamento === activeDept);
         setEmployees(filtered);
@@ -60,17 +77,18 @@ export default function Sucessao() {
     fetchData();
   }, [deptFilter, isDepartmentLocked, userDepartment]);
 
-  const handleBoxClick = (box: typeof matrixBoxes[0], emps: typeof employees) => {
+  const handleBoxClick = (box: typeof matrixBoxes[0], emps: EmployeeNineBox[]) => {
     setSelectedBox({ box, emps });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Plano de Sucessão (Matriz 9-Box)</h1>
+          <h1 className="text-2xl font-bold text-foreground">Matriz Nine Box & Trajetória da Equipe</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Avaliação estratégica de talentos baseada em Desempenho e Potencial
+            Mapeamento estratégico de talentos e evolução contínua da equipe
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -95,7 +113,8 @@ export default function Sucessao() {
         </div>
       </div>
 
-      <div className="flex justify-center mt-12">
+      {/* Matriz Nine Box Grid */}
+      <div className="flex justify-center mt-6">
         <div className="bg-background rounded-xl p-8 border border-border/50 shadow-sm relative inline-block">
           <div className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-xs font-bold text-muted-foreground tracking-widest">
             POTENCIAL
@@ -128,8 +147,71 @@ export default function Sucessao() {
         </div>
       </div>
 
+      {/* 📈 SEÇÃO DE EVOLUÇÃO E TRAJETÓRIA DOS COLABORADORES */}
+      <div className="bg-card border border-border rounded-xl p-6 shadow-sm space-y-6">
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-foreground">Evolução & Histórico da Equipe no Nine Box</h3>
+              <p className="text-xs text-muted-foreground">Linha do tempo de movimentação e performance dos membros do time</p>
+            </div>
+          </div>
+          <Badge variant="outline" className="text-xs font-semibold">
+            {employees.length} Integrantes Avaliados
+          </Badge>
+        </div>
+
+        {employees.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground text-sm border border-dashed rounded-lg">
+            Nenhum colaborador com avaliação Nine Box encontrada para o filtro selecionado.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {employees.map((emp) => (
+              <div key={emp.id} className="p-4 rounded-xl border border-border/80 bg-muted/20 hover:border-primary/40 transition-all space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                      <UserCheck className="w-4 h-4 text-primary" />
+                      {emp.name}
+                    </h4>
+                    <p className="text-xs text-muted-foreground">{emp.role} • {emp.departamento}</p>
+                  </div>
+                  <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 text-xs">
+                    {emp.perf} / {emp.pot}
+                  </Badge>
+                </div>
+
+                {/* Histórico / Trajetória */}
+                <div className="pt-2 border-t border-border/50">
+                  <p className="text-[11px] font-semibold uppercase text-muted-foreground mb-2 flex items-center gap-1">
+                    <History className="w-3 h-3" /> Trajetória por Ciclo ({emp.history.length} registro(s)):
+                  </p>
+                  {emp.history.length === 0 ? (
+                    <span className="text-xs text-muted-foreground italic">Avaliação recente registrada.</span>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      {emp.history.map((h, i) => (
+                        <div key={h.created_at + i} className="flex items-center gap-1 text-xs bg-background px-2.5 py-1 rounded-md border border-border/60">
+                          <span className="font-semibold text-foreground">{h.cycle}:</span>
+                          <span className="text-muted-foreground">{h.desempenho}/{h.potencial}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modal de Detalhes dos Colaboradores por Quadro */}
       <Dialog open={!!selectedBox} onOpenChange={(open) => !open && setSelectedBox(null)}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[480px]">
           {selectedBox && (
             <>
               <DialogHeader>
@@ -152,9 +234,14 @@ export default function Sucessao() {
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
                     {selectedBox.emps.map(emp => (
-                      <div key={emp.name} className="flex flex-col bg-muted/50 p-3 rounded-lg border border-border/50">
-                        <span className="font-medium text-sm">{emp.name}</span>
-                        <span className="text-xs text-muted-foreground mt-1">{emp.role}</span>
+                      <div key={emp.id} className="flex flex-col bg-muted/50 p-3 rounded-lg border border-border/50 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm text-foreground">{emp.name}</span>
+                          <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded">
+                            {emp.history.length} ciclo(s)
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{emp.role} • {emp.departamento}</span>
                       </div>
                     ))}
                   </div>
