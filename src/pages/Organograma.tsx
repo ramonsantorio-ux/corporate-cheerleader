@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, User, ChevronDown, ChevronRight, Briefcase, Info, RefreshCw, X, GripHorizontal, Building2 } from 'lucide-react';
+import { Loader2, User, ChevronDown, ChevronRight, Briefcase, Info, RefreshCw, X, GripHorizontal, Building2, Crown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/contexts/AuthContext';
 import { DEPARTAMENTOS } from '@/lib/departments';
 import { HierarchyBadge } from '@/components/hierarchy/HierarchyBadge';
+import { HierarchyPanel } from '@/components/hierarchy/HierarchyPanel';
 import { DndContext, DragOverlay, useDraggable, useDroppable, pointerWithin, DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -268,6 +269,8 @@ export default function Organograma() {
     );
   };
 
+  const [showHierarchyPanel, setShowHierarchyPanel] = useState(false);
+
   const activeNodeData = funcionarios.find(f => f.id === activeId);
 
   if (loading) {
@@ -285,7 +288,17 @@ export default function Organograma() {
           <h1 className="text-3xl font-bold tracking-tight">Organograma Interativo</h1>
           <p className="text-muted-foreground mt-1">Visualize e edite a hierarquia da empresa. Use a alça lateral (6 pontinhos) de um funcionário para arrastá-lo sobre outro gestor.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowHierarchyPanel(!showHierarchyPanel)}
+            className="border-amber-500/30 text-amber-700 dark:text-amber-400 bg-amber-500/5 hover:bg-amber-500/10"
+          >
+            <Crown className="w-4 h-4 mr-2 text-amber-500" />
+            {showHierarchyPanel ? 'Ocultar Tabela de Níveis' : 'Matriz de Governança (Níveis 1-9)'}
+          </Button>
+
           {isDepartmentLocked && userDepartment ? (
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary font-semibold text-xs rounded-lg whitespace-nowrap">
               <Building2 className="w-4 h-4" />
@@ -307,6 +320,19 @@ export default function Organograma() {
           <Button variant="outline" size="sm" onClick={fetchFuncionarios}><RefreshCw className="mr-2 h-4 w-4" /> Atualizar</Button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showHierarchyPanel && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <HierarchyPanel />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         <Card className="flex-1 overflow-auto min-h-[600px] w-full bg-muted/30 border-dashed">
@@ -371,7 +397,10 @@ export default function Organograma() {
                     )}
                   </div>
                   <CardTitle className="text-center">{selectedNode.nome}</CardTitle>
-                  <div className="flex justify-center mt-2"><Badge variant="secondary">{selectedNode.cargo}</Badge></div>
+                  <div className="flex flex-col items-center gap-1.5 mt-2">
+                    <Badge variant="secondary">{selectedNode.cargo}</Badge>
+                    <HierarchyBadge cargo={selectedNode.cargo} />
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
