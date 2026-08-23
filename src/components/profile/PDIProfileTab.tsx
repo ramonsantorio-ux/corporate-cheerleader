@@ -4,12 +4,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Target, Plus, CheckCircle2, Clock, PlayCircle, Trash2, CalendarIcon,
   TrendingUp, ChevronDown, ChevronUp, MessageSquare, Sparkles, BookOpen,
-  Award, ArrowRight, BarChart2, AlertTriangle, Check
+  Award, ArrowRight, BarChart2, AlertTriangle, Check, Pencil
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { FastInput } from '@/components/ui/fast-input';
 import { FastTextarea } from '@/components/ui/fast-textarea';
@@ -71,6 +75,9 @@ export default function PDIProfileTab({ employeeName }: Props) {
 
   // Dialogs
   const [newPdiOpen, setNewPdiOpen] = useState(false);
+  const [editPdiOpen, setEditPdiOpen] = useState(false);
+  const [editingPdi, setEditingPdi] = useState<PDI | null>(null);
+  const [deletePdiId, setDeletePdiId] = useState<string | null>(null);
   const [actionDialogPdiId, setActionDialogPdiId] = useState<string | null>(null);
   const [checkinDialogPdiId, setCheckinDialogPdiId] = useState<string | null>(null);
   const [actionTab, setActionTab] = useState<'templates' | 'custom'>('templates');
@@ -78,6 +85,7 @@ export default function PDIProfileTab({ employeeName }: Props) {
 
   // Forms
   const [pdiForm, setPdiForm] = useState({ cycle_id: '', status: 'in_progress' });
+  const [editPdiForm, setEditPdiForm] = useState({ cycle_id: '', status: 'in_progress' });
   const [actionForm, setActionForm] = useState({ title: '', description: '', deadline: '', category: '70_experience' });
   const [checkinForm, setCheckinForm] = useState({ date: new Date().toISOString().split('T')[0], notes: '', next_steps: '', status: 'on_track' });
 
@@ -132,6 +140,35 @@ export default function PDIProfileTab({ employeeName }: Props) {
     toast({ title: 'PDI criado com sucesso!' });
     setNewPdiOpen(false);
     setPdiForm({ cycle_id: '', status: 'in_progress' });
+    fetchAll();
+  }
+
+  function openEditPdi(pdi: PDI) {
+    setEditingPdi(pdi);
+    setEditPdiForm({ cycle_id: pdi.cycle_id, status: pdi.status });
+    setEditPdiOpen(true);
+  }
+
+  async function saveEditPdi() {
+    if (!editingPdi || !editPdiForm.cycle_id) { toast({ title: 'Selecione um ciclo', variant: 'destructive' }); return; }
+    const { error } = await supabase.from('pdis').update({ cycle_id: editPdiForm.cycle_id, status: editPdiForm.status }).eq('id', editingPdi.id);
+    if (error) { toast({ title: 'Erro ao editar PDI', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'PDI atualizado com sucesso!' });
+    setEditPdiOpen(false);
+    setEditingPdi(null);
+    fetchAll();
+  }
+
+  async function confirmDeletePdi() {
+    if (!deletePdiId) return;
+    await Promise.all([
+      supabase.from('pdi_actions').delete().eq('pdi_id', deletePdiId),
+      supabase.from('pdi_checkins').delete().eq('pdi_id', deletePdiId),
+    ]);
+    const { error } = await supabase.from('pdis').delete().eq('id', deletePdiId);
+    if (error) { toast({ title: 'Erro ao excluir PDI', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'PDI excluído com sucesso!' });
+    setDeletePdiId(null);
     fetchAll();
   }
 
@@ -425,9 +462,12 @@ export default function PDIProfileTab({ employeeName }: Props) {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex gap-2 pt-1 border-t border-border">
+                        <div className="flex flex-wrap gap-2 pt-1 border-t border-border">
                           <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setCheckinDialogPdiId(pdi.id)}>
-                            <MessageSquare className="w-3.5 h-3.5" /> Check-in 1:1
+                            <MessageSquare className="w-3.5 h-3.5" /> Novo Check-in
+                          </Button>
+                          <Button size="sm" variant="outline" className="gap-1.5 text-xs text-blue-600 border-blue-300 hover:bg-blue-50" onClick={() => openEditPdi(pdi)}>
+                            <Pencil className="w-3.5 h-3.5" /> Editar PDI
                           </Button>
                           {pdi.status !== 'completed' ? (
                             <Button size="sm" variant="outline" className="gap-1.5 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-50" onClick={() => updatePdiStatus(pdi.id, 'completed')}>
@@ -438,6 +478,9 @@ export default function PDIProfileTab({ employeeName }: Props) {
                               <PlayCircle className="w-3.5 h-3.5" /> Reabrir
                             </Button>
                           )}
+                          <Button size="sm" variant="outline" className="gap-1.5 text-xs text-red-600 border-red-300 hover:bg-red-50 ml-auto" onClick={() => setDeletePdiId(pdi.id)}>
+                            <Trash2 className="w-3.5 h-3.5" /> Excluir PDI
+                          </Button>
                         </div>
                       </div>
                     </motion.div>
@@ -557,7 +600,7 @@ export default function PDIProfileTab({ employeeName }: Props) {
       <Dialog open={!!checkinDialogPdiId} onOpenChange={v => !v && setCheckinDialogPdiId(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" /> Registrar Check-in 1:1</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" /> Registrar Check-in</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="grid grid-cols-2 gap-3">
@@ -594,6 +637,63 @@ export default function PDIProfileTab({ employeeName }: Props) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog Editar PDI */}
+      <Dialog open={editPdiOpen} onOpenChange={setEditPdiOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-primary">
+              <Pencil className="w-5 h-5" /> Editar PDI
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label>Ciclo de Avaliação *</Label>
+              <Select value={editPdiForm.cycle_id} onValueChange={v => setEditPdiForm(p => ({ ...p, cycle_id: v }))}>
+                <SelectTrigger><SelectValue placeholder="Selecione o ciclo..." /></SelectTrigger>
+                <SelectContent>
+                  {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Status do PDI</Label>
+              <Select value={editPdiForm.status} onValueChange={v => setEditPdiForm(p => ({ ...p, status: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">⏳ Pendente</SelectItem>
+                  <SelectItem value="in_progress">🔵 Em andamento</SelectItem>
+                  <SelectItem value="completed">✅ Concluído</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setEditPdiOpen(false)}>Cancelar</Button>
+              <Button className="flex-1 gap-1.5" onClick={saveEditPdi}><Check className="w-4 h-4" /> Salvar Alterações</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AlertDialog Excluir PDI */}
+      <AlertDialog open={!!deletePdiId} onOpenChange={open => !open && setDeletePdiId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
+              <Trash2 className="w-5 h-5" /> Excluir este PDI?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação excluirá permanentemente este Plano de Desenvolvimento, incluindo todas as suas ações e histórico de check-ins. Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeletePdi} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              Excluir PDI
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
