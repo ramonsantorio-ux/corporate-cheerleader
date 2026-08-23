@@ -627,23 +627,26 @@ export default function FuncionarioProfile() {
       </motion.div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-6 h-auto p-1.5 bg-muted/50 rounded-xl">
           <TabsTrigger value="visao-geral" className="py-2.5 rounded-lg text-sm font-medium">Visão Geral</TabsTrigger>
-          <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Feedbacks</TabsTrigger>
           <TabsTrigger value="talentos" className="py-2.5 rounded-lg text-sm font-medium">Perfil Psicométrico</TabsTrigger>
           <TabsTrigger value="fit-cultural" className="py-2.5 rounded-lg text-sm font-medium">Fit Cultural</TabsTrigger>
-          <TabsTrigger value="potencial" className="py-2.5 rounded-lg text-sm font-medium border-indigo-500/30 text-indigo-600 dark:text-indigo-400 data-[state=active]:bg-indigo-500/10 data-[state=active]:text-indigo-600">Potencial</TabsTrigger>
           <TabsTrigger value="nine-box" className="py-2.5 rounded-lg text-sm font-medium">Nine Box</TabsTrigger>
+          <TabsTrigger value="desempenho" className="py-2.5 rounded-lg text-sm font-medium">Feedback</TabsTrigger>
           <TabsTrigger value="pdi" className="py-2.5 rounded-lg text-sm font-medium border-emerald-500/30 text-emerald-600 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-600">PDI</TabsTrigger>
         </TabsList>
 
+        {/* 1. VISÃO GERAL */}
         <TabsContent value="visao-geral" className="space-y-6 mt-4">
-          {/* Bento Grid Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {/* Grid Principal Bento */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            {/* Score Principal */}
-            <div className="kpi-card p-6 rounded-2xl md:col-span-1 flex flex-col justify-center items-center text-center space-y-4">
-              <h3 className="text-sm font-semibold text-muted-foreground w-full text-left">Score de Performance</h3>
+            {/* Card 1: Score & Desempenho */}
+            <div className="kpi-card p-6 rounded-2xl flex flex-col justify-between items-center text-center space-y-4 shadow-sm border border-border bg-card">
+              <div className="w-full flex items-center justify-between">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Score de Performance</h3>
+                <Award className="w-4 h-4 text-primary" />
+              </div>
               <div className="relative w-32 h-32 mx-auto">
                 <svg className="w-32 h-32 -rotate-90" viewBox="0 0 80 80">
                   <circle cx="40" cy="40" r="35" fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
@@ -651,82 +654,181 @@ export default function FuncionarioProfile() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-3xl font-black">{score}</span>
-                  <span className="text-[10px] text-muted-foreground">/ 100</span>
+                  <span className="text-[10px] text-muted-foreground font-semibold">/ 100</span>
                 </div>
               </div>
-              <div className="flex gap-4 w-full justify-center text-xs text-muted-foreground">
-                <div className="flex flex-col"><span className="font-bold text-foreground">{scoreFit}</span> Fit</div>
+              <div className="w-full pt-2 border-t border-border flex items-center justify-around text-xs">
+                <div>
+                  <span className="text-muted-foreground block text-[10px]">Fit Cultural</span>
+                  <span className="font-bold text-foreground">{func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente'}</span>
+                </div>
+                <div className="w-px h-6 bg-border" />
+                <div>
+                  <span className="text-muted-foreground block text-[10px]">Nine Box</span>
+                  <span className="font-bold text-foreground truncate max-w-[90px] block" title={`${func.nine_box_desempenho || '—'} / ${func.nine_box_potencial || '—'}`}>
+                    {func.nine_box_desempenho ? `${func.nine_box_desempenho}` : 'Pendente'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Informações Cadastrais do Perfil */}
+            <div className="kpi-card p-6 rounded-2xl md:col-span-1 lg:col-span-2 flex flex-col justify-between shadow-sm border border-border bg-card">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <User className="w-4 h-4 text-primary" /> Informações Cadastrais do Colaborador
+                </h3>
+                <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">
+                  ID: {func.id.slice(0, 8).toUpperCase()}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 text-sm">
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium">Nome Completo</span>
+                  <span className="font-bold text-foreground leading-tight">{func.nome}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium">Cargo</span>
+                  <span className="font-bold text-foreground leading-tight">{func.cargo}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium">Departamento</span>
+                  <span className="font-bold text-foreground leading-tight">{func.departamento}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium">Data de Admissão</span>
+                  <span className="font-bold text-foreground leading-tight">
+                    {new Date(func.data_admissao + 'T00:00:00').toLocaleDateString('pt-BR')}
+                    {(() => {
+                      const adm = new Date(func.data_admissao + 'T00:00:00');
+                      if (isNaN(adm.getTime())) return null;
+                      const now = new Date();
+                      let y = now.getFullYear() - adm.getFullYear();
+                      let m = now.getMonth() - adm.getMonth();
+                      if (m < 0) { y--; m += 12; }
+                      const str = y > 0 ? `${y} ano${y > 1 ? 's' : ''}` : `${m} mês${m > 1 ? 'es' : ''}`;
+                      return <span className="text-xs font-normal text-muted-foreground block">({str} na empresa)</span>;
+                    })()}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium">E-mail</span>
+                  <span className="font-semibold text-foreground truncate block" title={func.email || '—'}>{func.email || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-muted-foreground block font-medium">Escolaridade / Turno</span>
+                  <span className="font-semibold text-foreground">{func.escolaridade || '—'} {turnoDisplay ? `• ${turnoDisplay}` : ''}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Perfil Psicométrico Summary */}
+            <div className="kpi-card p-6 rounded-2xl flex flex-col justify-between shadow-sm border border-border bg-card">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                  <Brain className="w-4 h-4 text-purple-500" /> Perfil Psicométrico
+                </h3>
+                <span className="text-[10px] text-purple-600 bg-purple-500/10 font-bold px-2 py-0.5 rounded-full">Talentos</span>
+              </div>
+              <div className="space-y-3 py-2">
+                <div className="p-2.5 rounded-xl bg-muted/40 flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">DISC</span>
+                  <span className="text-xs font-bold text-foreground">
+                    {discResult ? (discResult.profile_name || 'Concluído') : 'Não realizado'}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-muted/40 flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">MBTI</span>
+                  <span className="text-xs font-bold text-foreground">
+                    {mbtiResult ? (mbtiResult.mbti_type || 'Concluído') : 'Não realizado'}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-muted/40 flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Big Five</span>
+                  <span className="text-xs font-bold text-foreground">
+                    {bigFiveResult ? 'Concluído' : 'Não realizado'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Segunda Linha Bento: Métricas Operacionais + Alertas */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Quick Stats Grid */}
+            <div className="md:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="kpi-card p-4 rounded-2xl flex flex-col justify-between border border-border bg-card shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-foreground">{employeeFeedbacks.length}</p>
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">Feedbacks</p>
+                </div>
+              </div>
+
+              <div className="kpi-card p-4 rounded-2xl flex flex-col justify-between border border-border bg-card shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-chart-4/10 flex items-center justify-center mb-2">
+                  <Calendar className="w-4 h-4 text-chart-4" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-foreground">{meetings.length}</p>
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">Reuniões 1:1</p>
+                </div>
+              </div>
+
+              <div className="kpi-card p-4 rounded-2xl flex flex-col justify-between border border-border bg-card shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center mb-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-foreground">{employeeEvents.length}</p>
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">Ocorrências</p>
+                </div>
+              </div>
+
+              <div className="kpi-card p-4 rounded-2xl flex flex-col justify-between border border-border bg-card shadow-sm">
+                <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center mb-2">
+                  <ShieldAlert className="w-4 h-4 text-red-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-black text-foreground">{employeeWarnings.length}</p>
+                  <p className="text-xs text-muted-foreground font-medium mt-0.5">Advertências</p>
+                </div>
               </div>
             </div>
 
             {/* Alertas e Pendências */}
-            <div className="kpi-card p-6 rounded-2xl md:col-span-2 flex flex-col">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Alertas e Pendências</h3>
+            <div className="kpi-card p-6 rounded-2xl flex flex-col justify-between border border-border bg-card shadow-sm">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-3">
+                <AlertTriangle className="w-4 h-4 text-warning" /> Alertas e Pendências
+              </h3>
               {pendencias.length > 0 ? (
-                <ul className="space-y-3 mt-auto mb-auto">
+                <ul className="space-y-2.5">
                   {pendencias.map((p, i) => (
-                    <li key={i} className="text-sm font-medium flex items-center gap-3 bg-warning/10 text-warning px-4 py-3 rounded-lg">
+                    <li key={i} className="text-xs font-semibold flex items-center gap-2.5 bg-warning/10 text-warning px-3 py-2.5 rounded-xl">
                       <span className="w-2 h-2 rounded-full bg-warning flex-shrink-0 animate-pulse" />
                       {p}
                     </li>
                   ))}
                 </ul>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center bg-success/5 rounded-xl border border-success/10 mt-auto mb-auto py-6">
-                  <CheckCircle2 className="w-8 h-8 text-success mb-2" />
-                  <p className="text-sm font-medium text-success">Tudo em dia!</p>
-                  <p className="text-xs text-success/70">Nenhuma pendência ou alerta.</p>
+                <div className="flex-1 flex flex-col items-center justify-center text-center bg-success/5 rounded-xl border border-success/10 py-6">
+                  <CheckCircle2 className="w-7 h-7 text-success mb-2" />
+                  <p className="text-sm font-bold text-success">Tudo em dia!</p>
+                  <p className="text-xs text-success/70">Nenhuma pendência para este colaborador.</p>
                 </div>
               )}
             </div>
 
-            {/* Quick Stats Grid */}
-            <div className="md:col-span-3 lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-4">
-              <div className="kpi-card p-4 rounded-xl flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0"><MessageSquare className="w-5 h-5 text-primary" /></div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Feedbacks Recebidos</p>
-                  <p className="text-xl font-bold">{func.feedbacks_recebidos}</p>
-                </div>
-              </div>
-
-              <div className="kpi-card p-4 rounded-xl flex items-center gap-4 col-span-2 lg:col-span-1">
-                <div className="w-10 h-10 rounded-full bg-chart-4/10 flex items-center justify-center shrink-0"><Calendar className="w-5 h-5 text-chart-4" /></div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Reuniões 1:1</p>
-                  <p className="text-xl font-bold">{meetings.length}</p>
-                </div>
-              </div>
-            </div>
-
           </div>
         </TabsContent>
 
-        <TabsContent value="desempenho" className="space-y-6 mt-4">
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
-            {employeeFeedbacks.length === 0 ? (
-              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum feedback encontrado.</div>
-            ) : (
-              <div className="space-y-3">{employeeFeedbacks.map(fb => {
-                const status = fb.status as FeedbackStatus; const priority = fb.prioridade as FeedbackPriority;
-                return (
-                  <div key={fb.id} className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/feedbacks/${fb.id}`)}>
-                    <div className="flex-1 min-w-0"><p className="font-semibold text-sm truncate">{fb.titulo}</p><p className="text-xs text-muted-foreground mt-1">{new Date(fb.criado_em).toLocaleDateString('pt-BR')} Â· Gestor: {fb.gestor || '—'}</p></div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || 'bg-muted text-muted-foreground'}`}>{statusLabels[status] || fb.status}</span>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[priority] || 'bg-muted text-muted-foreground'}`}>{priorityLabels[priority] || fb.prioridade}</span>
-                    </div>
-                  </div>
-                );
-              })}</div>
-            )}
-          </div>
-        </TabsContent>
-
+        {/* 2. PERFIL PSICOMÉTRICO */}
         <TabsContent value="talentos" className="space-y-6 mt-4">
           <div className="flex flex-col gap-6">
-            {/* â•â•â• ANÁLISES COMPORTAMENTAIS â•â•â• */}
             <div className="glass-card rounded-xl p-6 border-t-4 border-t-purple-500 shadow-sm flex flex-col min-h-[400px]">
               <Tabs defaultValue="disc" className="w-full flex flex-col h-full">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
@@ -738,7 +840,6 @@ export default function FuncionarioProfile() {
                   </TabsList>
                 </div>
 
-                {/* â”€â”€ DISC â”€â”€ */}
                 <TabsContent value="disc" className="flex-1 mt-0">
                   {discResult ? (
                     <div className="animate-in fade-in slide-in-from-bottom-2">
@@ -752,7 +853,6 @@ export default function FuncionarioProfile() {
                   )}
                 </TabsContent>
 
-                {/* â”€â”€ MBTI â”€â”€ */}
                 <TabsContent value="mbti" className="flex-1 mt-0">
                   {mbtiResult ? (
                     <div className="animate-in fade-in slide-in-from-bottom-2">
@@ -766,7 +866,6 @@ export default function FuncionarioProfile() {
                   )}
                 </TabsContent>
 
-                {/* â”€â”€ BIG FIVE â”€â”€ */}
                 <TabsContent value="bigfive" className="flex-1 mt-0">
                   {bigFiveResult ? (
                     <div className="animate-in fade-in slide-in-from-bottom-2">
@@ -781,22 +880,17 @@ export default function FuncionarioProfile() {
                 </TabsContent>
               </Tabs>
             </div>
-
           </div>
         </TabsContent>
 
+        {/* 3. FIT CULTURAL */}
         <TabsContent value="fit-cultural" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
           <div className="glass-card rounded-xl p-6 shadow-sm border-t-4 border-t-chart-2">
               <FitCulturalSection employeeId={func.id} employeeName={func.nome} onCloseTab={() => handleTabChange('nine-box')} />
           </div>
         </TabsContent>
 
-        <TabsContent value="potencial" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
-          <div className="glass-card rounded-xl p-6 shadow-sm border-t-4 border-t-indigo-500">
-              <PotencialSection employeeId={func.id} employeeName={func.nome} onCloseTab={() => handleTabChange('nine-box')} onUpdate={refreshFunc} />
-          </div>
-        </TabsContent>
-
+        {/* 4. NINE BOX */}
         <TabsContent value="nine-box" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
           <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
             <NineBoxSection 
@@ -809,7 +903,30 @@ export default function FuncionarioProfile() {
           </div>
         </TabsContent>
 
-        {/* ═══ PDI TAB ═══ */}
+        {/* 5. FEEDBACK */}
+        <TabsContent value="desempenho" className="space-y-6 mt-4">
+          <div className="space-y-4">
+            <h3 className="text-lg font-bold flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" />Feedbacks ({employeeFeedbacks.length})</h3>
+            {employeeFeedbacks.length === 0 ? (
+              <div className="glass-card rounded-xl p-8 text-center text-muted-foreground">Nenhum feedback encontrado.</div>
+            ) : (
+              <div className="space-y-3">{employeeFeedbacks.map(fb => {
+                const status = fb.status as FeedbackStatus; const priority = fb.prioridade as FeedbackPriority;
+                return (
+                  <div key={fb.id} className="glass-card rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3 cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate(`/feedbacks/${fb.id}`)}>
+                    <div className="flex-1 min-w-0"><p className="font-semibold text-sm truncate">{fb.titulo}</p><p className="text-xs text-muted-foreground mt-1">{new Date(fb.criado_em).toLocaleDateString('pt-BR')} • Gestor: {fb.gestor || '—'}</p></div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[status] || 'bg-muted text-muted-foreground'}`}>{statusLabels[status] || fb.status}</span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[priority] || 'bg-muted text-muted-foreground'}`}>{priorityLabels[priority] || fb.prioridade}</span>
+                    </div>
+                  </div>
+                );
+              })}</div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* 6. PDI */}
         <TabsContent value="pdi" className="mt-4">
           {func && (
             <PDIProfileTab employeeName={func.nome} employeeId={func.id} />
