@@ -59,7 +59,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 
 export default function Desempenho() {
   const { canCreate, canEdit, canDelete } = usePermissions();
-  const { userDepartment, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
+  const { user, userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked, isAdmin } = useAuth();
   const [deptFilter, setDeptFilter] = useState<string>('todos');
 
   useEffect(() => {
@@ -96,19 +96,34 @@ export default function Desempenho() {
   useEffect(() => {
     Promise.all([
       supabase.from('evaluation_cycles').select('*').order('created_at', { ascending: false }),
-      supabase.from('funcionarios').select('id, nome, cargo, departamento, nine_box_desempenho, nine_box_potencial'),
+      supabase.from('funcionarios').select('id, nome, cargo, departamento, encarregado_id, email, nine_box_desempenho, nine_box_potencial'),
       supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at'),
     ]).then(([cyclesRes, funcRes, evalRes]) => {
       if (cyclesRes.data) setCycles(cyclesRes.data as EvaluationCycle[]);
       if (funcRes.data) {
         const raw = funcRes.data as Funcionario[];
-        const filtered = activeDept === 'todos' ? raw : raw.filter(f => f.departamento === activeDept);
+        const loggedFunc = user?.email ? raw.find(f => f.email?.toLowerCase() === user.email?.toLowerCase()) : null;
+        
+        let filtered = raw;
+        if (!isAdmin && loggedFunc) {
+          // Se for gestor logado, traz colaboradores do setor OU vinculados a ele diretamente como encarregado_id
+          filtered = raw.filter(f => {
+            const isDirectManaged = f.encarregado_id === loggedFunc.id;
+            const isInDept = isDepartmentLocked && userDepartments.length > 0
+              ? userDepartments.includes(f.departamento)
+              : activeDept === 'todos' || f.departamento === activeDept;
+            return isDirectManaged || isInDept;
+          });
+        } else if (activeDept !== 'todos') {
+          filtered = raw.filter(f => f.departamento === activeDept);
+        }
+
         setFuncionarios(filtered);
       }
       if (evalRes.data) setEvaluations(evalRes.data as Evaluation[]);
       setLoading(false);
     });
-  }, [deptFilter, isDepartmentLocked, userDepartment]);
+  }, [deptFilter, isDepartmentLocked, userDepartment, userDepartments, user, isAdmin, activeDept]);
 
   async function createCycle() {
     if (!newCycle.name || !newCycle.start_date || !newCycle.end_date) {

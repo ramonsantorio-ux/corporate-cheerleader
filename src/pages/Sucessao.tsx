@@ -33,7 +33,7 @@ interface EmployeeNineBox {
 }
 
 export default function Sucessao() {
-  const { userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked, canViewHierarchy } = useAuth();
+  const { user, userDepartment, userDepartments, effectiveDepartment, isDepartmentLocked, isAdmin, canViewHierarchy } = useAuth();
   const [deptFilter, setDeptFilter] = useState<string>('todos');
 
   useEffect(() => {
@@ -51,10 +51,12 @@ export default function Sucessao() {
 
   useEffect(() => {
     async function fetchData() {
-      const { data: funcData } = await supabase.from('funcionarios').select('id, nome, cargo, departamento, nine_box_desempenho, nine_box_potencial');
+      const { data: funcData } = await supabase.from('funcionarios').select('id, nome, cargo, departamento, encarregado_id, email, nine_box_desempenho, nine_box_potencial');
       const { data: histData } = await supabase.from('nine_box_historico').select('id, employee_id, cycle, desempenho, potencial, created_at').order('created_at', { ascending: false });
 
       if (funcData) {
+        const loggedFunc = user?.email ? funcData.find(f => f.email?.toLowerCase() === user.email?.toLowerCase()) : null;
+
         const raw = funcData
           .filter(e => e.nine_box_desempenho && e.nine_box_potencial)
           .filter(e => canViewHierarchy(e.cargo)) // Restrição por hierarquia
@@ -65,6 +67,7 @@ export default function Sucessao() {
               name: e.nome,
               role: e.cargo || '—',
               departamento: e.departamento || '—',
+              encarregado_id: e.encarregado_id,
               perf: e.nine_box_desempenho as string,
               pot: e.nine_box_potencial as string,
               history: empHist
@@ -72,7 +75,15 @@ export default function Sucessao() {
           });
 
         let filtered = raw;
-        if (isDepartmentLocked && userDepartments.length > 0) {
+        if (!isAdmin && loggedFunc) {
+          filtered = raw.filter(e => {
+            const isDirectManaged = e.encarregado_id === loggedFunc.id;
+            const isInDept = isDepartmentLocked && userDepartments.length > 0
+              ? userDepartments.includes(e.departamento)
+              : activeDept === 'todos' || e.departamento === activeDept;
+            return isDirectManaged || isInDept;
+          });
+        } else if (isDepartmentLocked && userDepartments.length > 0) {
           filtered = raw.filter(e => userDepartments.includes(e.departamento));
         } else if (activeDept !== 'todos') {
           filtered = raw.filter(e => e.departamento === activeDept);
@@ -82,7 +93,7 @@ export default function Sucessao() {
       }
     }
     fetchData();
-  }, [deptFilter, isDepartmentLocked, userDepartment, userDepartments, canViewHierarchy]);
+  }, [deptFilter, isDepartmentLocked, userDepartment, userDepartments, user, isAdmin, canViewHierarchy, activeDept]);
 
   const handleBoxClick = (box: typeof matrixBoxes[0], emps: EmployeeNineBox[]) => {
     setSelectedBox({ box, emps });

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Users, Eye, Plus, Edit, Trash2, Loader2, Camera, X, FileUp, FileText, Download, Upload, CheckSquare } from 'lucide-react';
+import { Search, Users, Eye, Plus, Edit, Trash2, Loader2, Camera, X, FileUp, FileText, Download, Upload, CheckSquare, UserCheck } from 'lucide-react';
 import { readExcelRows, parseExcelDate } from '@/lib/excel';
 import { Input } from '@/components/ui/input';
 import { FastInput } from '@/components/ui/fast-input';
@@ -409,6 +409,26 @@ export default function Colaboradores() {
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">
                 Utilize se o colaborador pertence a uma área (ex: Medição), mas está vinculado a outro contrato (ex: Contrato Porto).
+              </p>
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2 bg-primary/5 p-3 rounded-xl border border-primary/20">
+              <Label className="text-xs font-semibold flex items-center gap-1.5 text-primary">
+                <UserCheck className="w-4 h-4 text-primary" /> Gestor Imediato / Avaliador Responsável (Opcional)
+              </Label>
+              <Select value={data.encarregado_id || 'none'} onValueChange={v => setData({ ...data, encarregado_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione o gestor responsável por avaliar este colaborador" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Nenhum (Sem gestor direto / Topo)</SelectItem>
+                  {funcionarios.filter(f => f.id !== (data as any).id).map(f => (
+                    <SelectItem key={f.id} value={f.id}>
+                      👤 {f.nome} — {f.cargo} ({f.departamento})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Define o gestor direto responsável por avaliar este colaborador nas avaliações e no Nine Box, independente do setor ou contrato em que atue.
               </p>
             </div>
           </div>
