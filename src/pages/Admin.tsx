@@ -81,23 +81,43 @@ export default function Admin() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      // Usa edge function para obter status real de ban do Supabase Auth
+      const { data: dbProfiles } = await supabase.from('profiles').select('*');
+      const { data: allRoles } = await supabase.from('user_roles').select('user_id, role, profile_id');
+      const { data: bannedRows } = await supabase.from('user_permissions').select('user_id').eq('page', 'banned');
+      const bannedUserIds = new Set(bannedRows?.map((r: { user_id: string }) => r.user_id) || []);
+
       const response = await adminAuthRequest('manage', { action: 'list_users' });
-      const usersData: UserWithRole[] = (response.users || [])
-        .filter((u: { full_name?: string }) => u.full_name !== '__DELETED__');
+      const authUsers = response.users || [];
+
+      const usersData: UserWithRole[] = authUsers
+        .filter((u: { full_name?: string }) => u.full_name !== '__DELETED__')
+        .map((u: any) => {
+          const prof = dbProfiles?.find(p => p.id === u.id);
+          const roleRow = allRoles?.find(r => r.user_id === u.id);
+          const savedDept = localStorage.getItem(`user_dept_${u.id}`);
+          const finalDept = u.departamento ?? (prof as any)?.departamento ?? savedDept ?? null;
+
+          return {
+            id: u.id,
+            email: u.email,
+            full_name: u.full_name || prof?.full_name || '',
+            role: roleRow?.role || u.role || 'user',
+            banned: u.banned ?? bannedUserIds.has(u.id),
+            profile_id: u.profile_id || roleRow?.profile_id || null,
+            departamento: finalDept,
+          };
+        });
       setUsers(usersData);
     } catch {
       // Fallback: leitura direta do banco sem N+1 queries
       const { data: profiles } = await supabase.from('profiles').select('*');
       if (!profiles) { setLoading(false); return; }
 
-      // Uma só query para todos os roles (evita N+1)
       const { data: allRoles } = await supabase
         .from('user_roles')
         .select('user_id, role, profile_id')
         .in('user_id', profiles.map(p => p.id));
 
-      // Uma só query para os usuários banidos localmente
       const { data: bannedRows } = await supabase
         .from('user_permissions')
         .select('user_id')
@@ -285,7 +305,8 @@ export default function Admin() {
     setEditName(user.full_name);
     setEditEmail(user.email);
     setEditProfileId(user.profile_id || '');
-    setEditDepartamento(user.departamento || '');
+    const saved = localStorage.getItem(`user_dept_${user.id}`);
+    setEditDepartamento(user.departamento ?? saved ?? '');
   }
 
   async function saveEditUser() {
@@ -293,19 +314,27 @@ export default function Admin() {
     setSavingEdit(true);
     try {
       const oldData = { email: editUserDialog.email, full_name: editUserDialog.full_name, profile_id: editUserDialog.profile_id, departamento: editUserDialog.departamento };
+      const finalDeptToSave = editDepartamento ? editDepartamento : 'all';
 
       await adminAuthRequest('manage', {
         action: 'update',
         user_id: editUserDialog.id,
         email: editEmail,
         full_name: editName,
-        departamento: editDepartamento || null,
+        departamento: finalDeptToSave,
       });
 
-      if (editDepartamento) {
-        localStorage.setItem(`user_dept_${editUserDialog.id}`, editDepartamento);
-        try { await supabase.from('profiles').update({ departamento: editDepartamento }).eq('id', editUserDialog.id); } catch (_) {}
+      localStorage.setItem(`user_dept_${editUserDialog.id}`, finalDeptToSave);
+      try {
+        await supabase.from('profiles').upsert({
+          id: editUserDialog.id,
+          email: editEmail,
+          full_name: editName,
+          departamento: finalDeptToSave
+        });
+      } catch (_) {}
 
+      if (editDepartamento && editDepartamento !== 'all') {
         // Atualiza permissões padrão do usuário para o conjunto do departamento
         const deptAllowedKeys = [
           'colaboradores', 'organograma', 'ausencias',
@@ -323,9 +352,6 @@ export default function Admin() {
         }));
         await supabase.from('user_permissions').delete().eq('user_id', editUserDialog.id).neq('page', 'banned');
         await supabase.from('user_permissions').insert(updatedPerms);
-      } else {
-        localStorage.removeItem(`user_dept_${editUserDialog.id}`);
-        try { await supabase.from('profiles').update({ departamento: null }).eq('id', editUserDialog.id); } catch (_) {}
       }
 
       const { data: roleData } = await supabase.from('user_roles').select('*').eq('user_id', editUserDialog.id).maybeSingle();
