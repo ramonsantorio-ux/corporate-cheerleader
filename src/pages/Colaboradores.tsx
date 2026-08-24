@@ -388,17 +388,10 @@ export default function Colaboradores() {
 
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Departamento Principal *</Label>
-              {isDepartmentLocked && userDepartment ? (
-                <div className="flex items-center gap-2 p-2 bg-muted/60 border border-border rounded-lg text-xs font-medium">
-                  <Building2 className="w-4 h-4 text-primary" />
-                  <span>{userDepartment}</span>
-                </div>
-              ) : (
-                <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}>
-                  <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
-                  <SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
-                </Select>
-              )}
+              <Select value={data.departamento} onValueChange={v => setData({ ...data, departamento: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecione o setor" /></SelectTrigger>
+                <SelectContent>{departamentos.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5 sm:col-span-2 bg-muted/30 p-3 rounded-xl border border-border/60">
