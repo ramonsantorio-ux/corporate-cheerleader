@@ -1,4 +1,5 @@
 export const DEPARTAMENTOS = [
+  'Todos os Setores (Acesso Geral)',
   'Contrato Porto',
   'Contrato Usina',
   'Frotas',

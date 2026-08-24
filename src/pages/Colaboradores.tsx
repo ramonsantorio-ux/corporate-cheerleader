@@ -109,7 +109,10 @@ export default function Colaboradores() {
     
     // Filtragem por departamento travado ou selecionado
     let matchDept = true;
-    if (isDepartmentLocked && userDepartments.length > 0) {
+    const isGlobalEmpDept = f.departamento?.includes('Todos') || f.departamento === 'all' || f.departamento === 'todos';
+    if (isGlobalEmpDept) {
+      matchDept = true;
+    } else if (isDepartmentLocked && userDepartments.length > 0) {
       matchDept = userDepartments.includes(f.departamento) || (!!f.contrato_vinculado && userDepartments.includes(f.contrato_vinculado));
     } else if (deptFilter !== 'todos') {
       matchDept = f.departamento === deptFilter || f.contrato_vinculado === deptFilter;
