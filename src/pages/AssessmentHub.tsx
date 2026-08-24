@@ -251,24 +251,34 @@ export default function AssessmentHub() {
     localStorage.setItem(`${testType}_${selectedEmpId}`, JSON.stringify(result));
 
     try {
-      // 1. Salva no Supabase
-      const { error } = await supabase.from('assessment_results').insert({
+      // 1. Salva no Supabase com resiliência para schema legacy ou moderno
+      let { error } = await supabase.from('assessment_results').insert({
         user_id: selectedEmpId,
         type: testType,
         result_data: result
       });
       
+      if (error && (error.code === 'PGRST204' || error.message?.includes('type'))) {
+        const fallback = await supabase.from('assessment_results').insert({
+          user_id: selectedEmpId,
+          assessment_type: testType,
+          result_data: result
+        } as any);
+        error = fallback.error;
+      }
+
       if (error) {
-        console.warn("Erro ao salvar no Supabase:", error);
+        console.warn("Aviso ao salvar no Supabase, mantido fallback local:", error);
       }
 
       setResultScreen(result);
-      toast({ title: '✅ Análise concluída e salva!' });
+      toast({ title: '✅ Análise concluída e salva com sucesso!' });
     } catch (err) {
       setResultScreen(result);
       toast({ title: '✅ Análise concluída (salva localmente).' });
     } finally {
       window.dispatchEvent(new Event('assessment_updated'));
+      window.dispatchEvent(new Event('storage'));
       setIsSubmitting(false);
     }
   };

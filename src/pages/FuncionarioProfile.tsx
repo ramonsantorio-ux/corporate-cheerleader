@@ -142,7 +142,7 @@ export default function FuncionarioProfile() {
     if (data) setFunc(data as unknown as Funcionario);
   };
 
-  useEffect(() => {
+  const loadProfileData = useCallback(() => {
     if (!id) return;
     Promise.all([
       supabase.from('funcionarios').select('*').eq('id', id).single(),
@@ -181,6 +181,17 @@ export default function FuncionarioProfile() {
       setLoading(false);
     });
   }, [id]);
+
+  useEffect(() => {
+    loadProfileData();
+    const handleUpdate = () => loadProfileData();
+    window.addEventListener('assessment_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('assessment_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, [loadProfileData]);
 
   const fetchGoals = useCallback(async () => {
     if (!func) return;
