@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2, Eye, EyeOff, MoreHorizontal } from 'lucide-react';
+import { Plus, Shield, Users, Edit, Lock, Ban, KeyRound, Check, Trash2, Eye, EyeOff, MoreHorizontal, UserCheck, Building2, Crown, Briefcase } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PerfisDeAcesso } from '@/components/admin/PerfisDeAcesso';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -457,21 +457,64 @@ export default function Admin() {
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="usuarios" className="space-y-6">
-      <div className="flex items-center justify-between">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Administração</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerenciar usuários e permissões</p>
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Shield className="w-6 h-6 text-primary" /> Central de Gestão de Contas & Governança
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">Gestão centralizada de credenciais, matriz de permissões e governança por setor da empresa.</p>
         </div>
-        <TabsList>
-          <TabsTrigger value="usuarios">Usuários</TabsTrigger>
-          <TabsTrigger value="perfis">Perfis de Acesso</TabsTrigger>
-        </TabsList>
+      </motion.div>
+
+      {/* KPI Cards Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="glass-card rounded-xl p-4 border-l-4 border-l-primary flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total de Contas</p>
+            <h3 className="text-2xl font-black text-foreground mt-1">{users.length}</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Usuários ativos cadastrados</p>
+          </div>
+          <Users className="w-8 h-8 text-primary opacity-80" />
+        </div>
+
+        <div className="glass-card rounded-xl p-4 border-l-4 border-l-amber-500 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Acesso Global / Executivo</p>
+            <h3 className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
+              {users.filter(u => !u.departamento || u.departamento === 'all' || u.departamento.includes('Todos')).length}
+            </h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Diretoria, Admin & Gerente Geral</p>
+          </div>
+          <Crown className="w-8 h-8 text-amber-500 opacity-80" />
+        </div>
+
+        <div className="glass-card rounded-xl p-4 border-l-4 border-l-blue-500 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gestores de Setor</p>
+            <h3 className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
+              {users.filter(u => u.departamento && u.departamento !== 'all' && !u.departamento.includes('Todos')).length}
+            </h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Vinculados a contratos específicos</p>
+          </div>
+          <Building2 className="w-8 h-8 text-blue-500 opacity-80" />
+        </div>
       </div>
 
-      <TabsContent value="perfis">
-        <PerfisDeAcesso />
-      </TabsContent>
+      <Tabs defaultValue="usuarios" className="space-y-6">
+        <div className="flex items-center justify-between border-b border-border/60 pb-3">
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="usuarios" className="flex items-center gap-2 px-4 py-2 text-xs font-semibold">
+              <Users className="w-4 h-4" /> Usuários & Credenciais
+            </TabsTrigger>
+            <TabsTrigger value="perfis" className="flex items-center gap-2 px-4 py-2 text-xs font-semibold">
+              <Shield className="w-4 h-4" /> Perfis de Acesso (Matriz de Permissões)
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="perfis">
+          <PerfisDeAcesso />
+        </TabsContent>
 
       <TabsContent value="usuarios" className="space-y-6">
         <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between">
