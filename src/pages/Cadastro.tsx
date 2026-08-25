@@ -34,10 +34,9 @@ interface Funcionario {
   encarregado_id: string | null;
 }
 
-const departamentos = [
-  'Contrato Porto', 'Contrato Usina', 'Frotas', 'Medição',
-  'Segurança', 'CCO', 'CCM', 'Manutenção', 'RH', 'Financeiro',
-];
+import { DEPARTAMENTOS } from '@/lib/departments';
+
+const departamentos = DEPARTAMENTOS;
 
 const escolaridades = [
   'Ensino Fundamental',

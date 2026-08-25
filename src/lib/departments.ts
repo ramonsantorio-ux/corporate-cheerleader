@@ -13,7 +13,7 @@ export const DEPARTAMENTOS = [
   'Medição',
   'Qualidade',
   'RH',
-  'Segurança',
+  'SSMA',
   'Suprimentos',
 ] as const;
 
