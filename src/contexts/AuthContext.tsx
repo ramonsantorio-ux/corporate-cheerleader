@@ -95,9 +95,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cargo: string | null = (authUser.user_metadata?.cargo as string) || null;
 
     if (authUser.email) {
-      const { data: func } = await supabase.from('funcionarios').select('departamento, cargo').eq('email', authUser.email).maybeSingle();
+      const { data: func } = await supabase.from('funcionarios').select('departamento, cargo').ilike('email', authUser.email.trim()).maybeSingle();
       if (func?.cargo && !cargo) cargo = func.cargo;
       if (func?.departamento && !dept) dept = func.departamento;
+    }
+
+    if (!cargo && authUser.user_metadata?.full_name) {
+      const { data: funcName } = await supabase.from('funcionarios').select('cargo').ilike('nome', (authUser.user_metadata.full_name as string).trim()).maybeSingle();
+      if (funcName?.cargo) cargo = funcName.cargo;
     }
 
     if (!dept) {
@@ -209,8 +214,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function canViewHierarchy(targetCargo?: string | null): boolean {
     if (isAdmin) return true;
-    if (!userCargo || !targetCargo) return true;
-    return canViewOrApplyTargetAssessment(userCargo, targetCargo, isAdmin);
+    if (!targetCargo) return true;
+
+    const activeUserCargo = userCargo || (user?.user_metadata?.cargo as string) || null;
+    if (!activeUserCargo) {
+      // Se não há cargo localizado e não é admin, por segurança proíbe visualizar cargos superiores (Níveis 1 a 4)
+      const targetLevel = getHierarchyLevel(targetCargo);
+      return targetLevel >= 5;
+    }
+
+    return canViewOrApplyTargetAssessment(activeUserCargo, targetCargo, isAdmin);
   }
 
   const isDepartmentLocked = !isAdmin && !!userDepartment;
