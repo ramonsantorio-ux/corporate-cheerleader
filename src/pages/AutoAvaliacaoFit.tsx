@@ -230,11 +230,12 @@ export default function AutoAvaliacaoFit() {
   const [selectedCycle, setSelectedCycle] = useState('');
   
   const SCORE_COLUMNS = [
-    { value: 1, label: 'Muito abaixo do esperado', short: '(1)' },
-    { value: 2, label: 'Abaixo do esperado', short: '(2)' },
-    { value: 3, label: 'Dentro do esperado', short: '(3)' },
-    { value: 4, label: 'Acima do esperado', short: '(4)' },
-    { value: 5, label: 'Muito acima do esperado', short: '(5)' },
+    { value: 1, label: 'Crítico', short: 'Nota 1' },
+    { value: 2, label: 'Abaixo do esperado', short: 'Nota 2' },
+    { value: 3, label: 'Dentro do esperado', short: 'Nota 3' },
+    { value: 4, label: 'Acima do esperado', short: 'Nota 4' },
+    { value: 5, label: 'Excepcional', short: 'Nota 5' },
+    { value: 0, label: 'Não Aplicável', short: 'N/A' },
   ];
 
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -287,6 +288,14 @@ export default function AutoAvaliacaoFit() {
         score: scores[comp.label],
         cycle_id: selectedCycle
       }));
+
+      // Remove respostas anteriores da mesma autoavaliação para o ciclo atual se existirem
+      await supabase
+        .from('fit_cultural')
+        .delete()
+        .eq('employee_id', selectedFunc)
+        .eq('cycle_id', selectedCycle)
+        .eq('stage', 'autoavaliacao');
 
       const { error } = await supabase.from('fit_cultural').insert(inserts);
       
@@ -569,22 +578,30 @@ export default function AutoAvaliacaoFit() {
                             <span className="font-medium text-slate-800">{c.label}</span>
                             {c.desc && <p className="text-xs text-slate-500 mt-0.5">{c.desc}</p>}
                           </td>
-                          {SCORE_COLUMNS.map(col => (
-                            <td key={col.value} className="p-2 text-center">
-                              <button
-                                type="button"
-                                onClick={() => setScores(prev => ({ ...prev, [c.label]: col.value }))}
-                                className={`w-7 h-7 rounded-full border-2 mx-auto flex items-center justify-center transition-all ${
-                                  scores[c.label] === col.value
-                                    ? 'border-primary bg-primary text-white shadow-md scale-110'
-                                    : 'border-slate-300 hover:border-primary/60 hover:bg-primary/10'
-                                }`}
-                                title={`${col.label} ${col.short}`}
-                              >
-                                {scores[c.label] === col.value && <div className="w-2.5 h-2.5 bg-white rounded-full"></div>}
-                              </button>
-                            </td>
-                          ))}
+                          {SCORE_COLUMNS.map(col => {
+                            const isNA = col.value === 0;
+                            const isSelected = scores[c.label] === col.value;
+                            return (
+                              <td key={col.value} className="p-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => setScores(prev => ({ ...prev, [c.label]: col.value }))}
+                                  className={`w-7 h-7 rounded-full border-2 mx-auto flex items-center justify-center transition-all ${
+                                    isSelected
+                                      ? isNA
+                                        ? 'border-amber-500 bg-amber-600 text-white shadow-md scale-110 font-bold'
+                                        : 'border-primary bg-primary text-white shadow-md scale-110 font-bold'
+                                      : 'border-slate-300 hover:border-primary/60 hover:bg-primary/10'
+                                  }`}
+                                  title={isNA ? 'Não Aplicável (Desconsidera da Média)' : `${col.label} ${col.short}`}
+                                >
+                                  {isSelected && (
+                                    <span className="text-[10px]">{isNA ? 'N/A' : col.value}</span>
+                                  )}
+                                </button>
+                              </td>
+                            );
+                          })}
                         </tr>
                       ))}
                     </tbody>
