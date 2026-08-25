@@ -119,7 +119,11 @@ export default function Colaboradores() {
     }
 
     const matchTurno = turnoFilter === 'todos' || f.turno === turnoFilter;
-    const matchHierarchy = canViewHierarchy(f.cargo);
+    const isSelf = !!user?.email && f.email?.toLowerCase().trim() === user.email.toLowerCase().trim();
+    const loggedFuncId = user?.email ? funcionarios.find(fn => fn.email?.toLowerCase().trim() === user.email.toLowerCase().trim())?.id : null;
+    const isDirectSubordinate = !!loggedFuncId && f.encarregado_id === loggedFuncId;
+
+    const matchHierarchy = isSelf || isDirectSubordinate || canViewHierarchy(f.cargo, isSelf, isDirectSubordinate);
 
     return matchSearch && matchDept && matchTurno && matchHierarchy;
   });

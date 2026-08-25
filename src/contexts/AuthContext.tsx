@@ -16,7 +16,7 @@ interface AuthContextType {
   userCargo: string | null;
   setEffectiveDepartment: (dept: string | null) => void;
   hasAccessToDept: (deptName?: string | null) => boolean;
-  canViewHierarchy: (targetCargo?: string | null) => boolean;
+  canViewHierarchy: (targetCargo?: string | null, isSelf?: boolean, isDirectSubordinate?: boolean) => boolean;
   permissions: Record<string, { can_view: boolean; can_create: boolean; can_edit: boolean; can_delete: boolean }>;
   signOut: () => Promise<void>;
 }
@@ -212,18 +212,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return userDepartments.includes(deptName);
   }
 
-  function canViewHierarchy(targetCargo?: string | null): boolean {
-    if (isAdmin) return true;
+  function canViewHierarchy(targetCargo?: string | null, isSelf = false, isDirectSubordinate = false): boolean {
+    if (isAdmin || isSelf || isDirectSubordinate) return true;
     if (!targetCargo) return true;
 
     const activeUserCargo = userCargo || (user?.user_metadata?.cargo as string) || null;
     if (!activeUserCargo) {
-      // Se não há cargo localizado e não é admin, por segurança proíbe visualizar cargos superiores (Níveis 1 a 4)
+      // Se não há cargo localizado e não é admin, por segurança proíbe visualizar pares e cargos superiores (Níveis 1 a 5)
       const targetLevel = getHierarchyLevel(targetCargo);
-      return targetLevel >= 5;
+      return targetLevel > 5;
     }
 
-    return canViewOrApplyTargetAssessment(activeUserCargo, targetCargo, isAdmin);
+    return canViewOrApplyTargetAssessment(activeUserCargo, targetCargo, isAdmin, isSelf, isDirectSubordinate);
   }
 
   const isDepartmentLocked = !isAdmin && !!userDepartment;

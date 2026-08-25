@@ -59,7 +59,11 @@ export default function Sucessao() {
 
         const raw = funcData
           .filter(e => e.nine_box_desempenho && e.nine_box_potencial)
-          .filter(e => canViewHierarchy(e.cargo)) // Restrição por hierarquia
+          .filter(e => {
+            const isSelf = !!user?.email && e.email?.toLowerCase().trim() === user.email.toLowerCase().trim();
+            const isDirectSub = !!loggedFunc && e.encarregado_id === loggedFunc.id;
+            return isSelf || isDirectSub || canViewHierarchy(e.cargo, isSelf, isDirectSub);
+          })
           .map(e => {
             const empHist = (histData || []).filter(h => h.employee_id === e.id);
             return {

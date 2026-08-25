@@ -58,11 +58,27 @@ export function canApplyAssessments(cargo?: string | null, isAdminOrRh = false):
 /**
  * Verifica se o usuário logado (com seu cargo/nível) pode visualizar ou aplicar testes em outro colaborador (targetCargo).
  * Níveis numéricos menores = hierarquia superior.
+ * Para Supervisores (Nível 5) e inferiores, a regra restringe a visualização de pares do mesmo nível.
  */
-export function canViewOrApplyTargetAssessment(userCargo?: string | null, targetCargo?: string | null, isAdminOrRh = false): boolean {
-  if (isAdminOrRh) return true;
+export function canViewOrApplyTargetAssessment(
+  userCargo?: string | null,
+  targetCargo?: string | null,
+  isAdminOrRh = false,
+  isSelf = false,
+  isDirectSubordinate = false
+): boolean {
+  if (isAdminOrRh || isSelf || isDirectSubordinate) return true;
+
   const userLevel = getHierarchyLevel(userCargo);
   const targetLevel = getHierarchyLevel(targetCargo);
-  // Gestor pode visualizar e aplicar para si mesmo e para qualquer nível igual ou abaixo dele
-  return userLevel <= targetLevel;
+
+  // Cargos executivos/gerenciais (Níveis 1 a 4: Diretoria, Gerente Geral, Gerente, Coordenador)
+  // possuem visão gerencial ampla do setor sob sua gestão.
+  if (userLevel <= 4) {
+    return userLevel <= targetLevel;
+  }
+
+  // Supervisores (Nível 5), Encarregados (Nível 6) e demais cargos operacionais (7 a 9)
+  // visualizam EXCLUSIVAMENTE sua equipe (cargos hierarquicamente inferiores a eles: targetLevel > userLevel)
+  return userLevel < targetLevel;
 }
