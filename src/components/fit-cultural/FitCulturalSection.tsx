@@ -237,6 +237,15 @@ const STAGES = [
   { key: 'validacao', label: 'Validação', icon: Shield, description: 'Comitê define a nota final' },
 ];
 
+const SCORE_COLUMNS = [
+  { value: 1, label: 'Crítico', short: 'Nota 1' },
+  { value: 2, label: 'Abaixo do Esperado', short: 'Nota 2' },
+  { value: 3, label: 'Dentro do Esperado', short: 'Nota 3' },
+  { value: 4, label: 'Acima do Esperado', short: 'Nota 4' },
+  { value: 5, label: 'Excepcional', short: 'Nota 5' },
+  { value: 0, label: 'Não Aplicável', short: 'N/A' },
+];
+
 interface Props {
   employeeId: string;
   employeeName: string;
@@ -322,6 +331,12 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     }
     const existing = currentCycleScores.find(s => s.criteria === criteria && s.stage === stage);
 
+    // Se a mesma nota ou N/A for clicado novamente, desmarca o item
+    if (existing && existing.score === score) {
+      await clearScore(criteria, stage);
+      return;
+    }
+
     let result;
     if (existing) {
       result = await supabase
@@ -340,7 +355,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
       return;
     }
 
-    toast({ title: 'Nota salva!' });
+    toast({ title: score === 0 ? 'Marcado como N/A (Desconsiderado da média)' : 'Nota salva!' });
     fetchData();
   }
 
@@ -364,13 +379,14 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
   }
 
   // Média de um tópico específico em uma etapa (retorna number | null)
+  // Filtra APENAS notas válidas > 0, re-normalizando itens marcados como N/A (score = 0)
   function getTopicAvgNum(topic: CriteriaTopic, stage: string): number | null {
     const labels = topic.items.map(i => i.label);
-    const topicScores = currentCycleScores.filter(
-      s => s.stage === stage && s.score != null && labels.includes(s.criteria)
+    const validScores = currentCycleScores.filter(
+      s => s.stage === stage && s.score != null && s.score > 0 && labels.includes(s.criteria)
     );
-    if (topicScores.length === 0) return null;
-    return topicScores.reduce((sum, s) => sum + (s.score ?? 0), 0) / topicScores.length;
+    if (validScores.length === 0) return null;
+    return validScores.reduce((sum, s) => sum + (s.score ?? 0), 0) / validScores.length;
   }
 
   // Média por tópico formatada para exibir no header
@@ -417,7 +433,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     
     if (chartPeriod === 'semestral') {
       return cycles.map(cycle => {
-        const cycleScores = allScores.filter(s => s.cycle_id === cycle.id && s.score != null);
+        const cycleScores = allScores.filter(s => s.cycle_id === cycle.id && s.score != null && s.score > 0);
         let avg = 0;
         if (cycleScores.length > 0) {
            avg = cycleScores.reduce((sum, s) => sum + (s.score || 0), 0) / cycleScores.length;
@@ -432,7 +448,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
       const scoresByYear: Record<string, number[]> = {};
       
       allScores.forEach(score => {
-         if (score.score == null || !score.cycle_id) return;
+         if (score.score == null || score.score <= 0 || !score.cycle_id) return;
          const cycle = cycles.find(c => c.id === score.cycle_id);
          if (!cycle || !cycle.start_date) return;
          const year = new Date(cycle.start_date).getFullYear().toString();
@@ -646,24 +662,30 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                                   <span className="font-medium text-foreground">{criteria.label}</span>
                                   <p className="text-xs text-muted-foreground mt-0.5">{criteria.desc}</p>
                                 </td>
-                                {SCORE_COLUMNS.map(col => (
-                                  <td key={col.value} className="p-2 text-center">
-                                    <button
-                                      disabled={stage.key === 'autoavaliacao' || isClosed}
-                                      onClick={() => setScore(criteria.label, stage.key, col.value)}
-                                      className={`w-8 h-8 rounded-full border-2 transition-all mx-auto flex items-center justify-center ${
-                                        currentScore === col.value
-                                          ? 'border-primary bg-primary text-primary-foreground scale-110 shadow-md'
-                                          : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
-                                      } ${stage.key === 'autoavaliacao' || isClosed ? 'opacity-70 cursor-not-allowed hover:bg-transparent hover:border-muted-foreground/30' : ''}`}
-                                      title={`${col.label} ${col.short}`}
-                                    >
-                                      {currentScore === col.value && (
-                                        <span className="text-xs font-bold">{col.value}</span>
-                                      )}
-                                    </button>
-                                  </td>
-                                ))}
+                                {SCORE_COLUMNS.map(col => {
+                                  const isNA = col.value === 0;
+                                  const isSelected = currentScore === col.value;
+                                  return (
+                                    <td key={col.value} className="p-2 text-center">
+                                      <button
+                                        disabled={stage.key === 'autoavaliacao' || isClosed}
+                                        onClick={() => setScore(criteria.label, stage.key, col.value)}
+                                        className={`w-8 h-8 rounded-full border-2 transition-all mx-auto flex items-center justify-center ${
+                                          isSelected
+                                            ? isNA 
+                                              ? 'border-amber-500 bg-amber-600 text-white scale-110 shadow-md font-bold'
+                                              : 'border-primary bg-primary text-primary-foreground scale-110 shadow-md'
+                                            : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
+                                        } ${stage.key === 'autoavaliacao' || isClosed ? 'opacity-70 cursor-not-allowed hover:bg-transparent hover:border-muted-foreground/30' : ''}`}
+                                        title={isNA ? 'Não Aplicável (Desconsidera da Média)' : `${col.label} ${col.short}`}
+                                      >
+                                        {isSelected && (
+                                          <span className="text-[10px] font-bold">{isNA ? 'N/A' : col.value}</span>
+                                        )}
+                                      </button>
+                                    </td>
+                                  );
+                                })}
                                 <td className="p-2 text-center">
                                   {currentScore != null && stage.key !== 'autoavaliacao' && !isClosed && (
                                     <button
