@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight } from 'lucide-react';
+import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -241,10 +241,11 @@ interface Props {
   employeeId: string;
   employeeName: string;
   cycleId?: string;
+  canViewValidation?: boolean;
   onCloseTab?: () => void;
 }
 
-export default function FitCulturalSection({ employeeId, employeeName, cycleId: initialCycleId, onCloseTab }: Props) {
+export default function FitCulturalSection({ employeeId, employeeName, cycleId: initialCycleId, canViewValidation = true, onCloseTab }: Props) {
   const { isAdmin, permissions, user } = useAuth();
   
   // States
@@ -547,12 +548,36 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
         )}
 
         <Accordion type="single" collapsible className="w-full space-y-4">
-          {STAGES.map((stage, si) => (
-            <AccordionItem
-              key={stage.key}
-              value={stage.key}
-              className="glass-card rounded-xl border-none overflow-hidden"
-            >
+          {STAGES.map((stage, si) => {
+            if (stage.key === 'validacao' && !canViewValidation) {
+              return (
+                <AccordionItem key={stage.key} value={stage.key} className="glass-card rounded-xl border-none overflow-hidden opacity-95">
+                  <div className="p-4 flex items-center justify-between bg-muted/20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-foreground text-sm flex items-center gap-2">
+                          4. Validação
+                        </h4>
+                        <p className="text-xs text-muted-foreground font-normal">A nota final de Validação é acessível exclusivamente ao seu Gestor Imediato e Comitê de Avaliação.</p>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 px-3 py-1 rounded-full border border-amber-500/20 flex items-center gap-1.5 shrink-0">
+                      <Lock className="w-3.5 h-3.5" /> Restrito ao Gestor
+                    </span>
+                  </div>
+                </AccordionItem>
+              );
+            }
+
+            return (
+              <AccordionItem
+                key={stage.key}
+                value={stage.key}
+                className="glass-card rounded-xl border-none overflow-hidden"
+              >
               <AccordionTrigger className="p-4 hover:no-underline hover:bg-primary/5 transition-colors">
                 <div className="flex items-center justify-between w-full pr-4 text-left">
                   <div className="flex items-center gap-3">
@@ -660,7 +685,8 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                 ))}
               </AccordionContent>
             </AccordionItem>
-          ))}
+            );
+          })}
         </Accordion>
 
         {canClose && !isClosed && activeCycleId && (

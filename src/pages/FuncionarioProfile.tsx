@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays, ShieldAlert, Award, Crown, ShieldCheck, Lightbulb, Wrench, Brain, Zap, BarChart2, CheckCircle2, User } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Target, TrendingUp, AlertTriangle, Calendar, Users, Star, Pencil, Trash2, Plus, GraduationCap, FileText, Briefcase, ExternalLink, Camera, Loader2, Clock, Sun, Shield, CalendarDays, ShieldAlert, Award, Crown, ShieldCheck, Lightbulb, Wrench, Brain, Zap, BarChart2, CheckCircle2, User, Lock } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { ExpandableChart } from '@/components/ui/ExpandableChart';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -732,7 +732,27 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
     }
   }
 
-  const { userDepartment, isDepartmentLocked, canViewHierarchy } = useAuth();
+  const { user, userDepartment, isDepartmentLocked, isAdmin, canViewHierarchy } = useAuth();
+  const [loggedFuncId, setLoggedFuncId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchLoggedFuncId() {
+      if (user?.email) {
+        const { data } = await supabase.from('funcionarios').select('id').ilike('email', user.email.trim()).maybeSingle();
+        if (data) setLoggedFuncId(data.id);
+      }
+    }
+    fetchLoggedFuncId();
+  }, [user?.email]);
+
+  const isSelf = !!user?.email && !!func?.email && user.email.toLowerCase().trim() === func.email.toLowerCase().trim();
+  const isDirectManager = !!loggedFuncId && !!func?.encarregado_id && loggedFuncId === func.encarregado_id;
+
+  // Validação do Fit Cultural: Apenas Gestor Imediato, hierarquia gerencial com permissão ou Admin/RH (NÃO o próprio colaborador)
+  const canViewFitValidation = isAdmin || isDirectManager || (!isSelf);
+
+  // Nine Box: Apenas Gestor Imediato, hierarquia gerencial com permissão ou Admin/RH (NÃO o próprio colaborador)
+  const canViewNineBox = isAdmin || isDirectManager || (!isSelf);
 
   if (loading) return <div className="flex justify-center py-12 text-muted-foreground">Carregando...</div>;
   if (!func) return <div className="text-center py-12 text-muted-foreground">Funcionário não encontrado</div>;
@@ -848,8 +868,8 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
                 <div className="w-px h-6 bg-border" />
                 <div>
                   <span className="text-muted-foreground block text-[10px]">Nine Box</span>
-                  <span className="font-bold text-foreground truncate max-w-[90px] block" title={`${func.nine_box_desempenho || '—'} / ${func.nine_box_potencial || '—'}`}>
-                    {func.nine_box_desempenho ? `${func.nine_box_desempenho}` : 'Pendente'}
+                  <span className="font-bold text-foreground truncate max-w-[90px] block" title={canViewNineBox ? `${func.nine_box_desempenho || '—'} / ${func.nine_box_potencial || '—'}` : 'Restrito ao Gestor'}>
+                    {canViewNineBox ? (func.nine_box_desempenho ? `${func.nine_box_desempenho}` : 'Pendente') : 'Restrito'}
                   </span>
                 </div>
               </div>
@@ -1071,21 +1091,38 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
         {/* 3. FIT CULTURAL */}
         <TabsContent value="fit-cultural" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
           <div className="glass-card rounded-xl p-6 shadow-sm border-t-4 border-t-chart-2">
-              <FitCulturalSection employeeId={func.id} employeeName={func.nome} onCloseTab={() => handleTabChange('nine-box')} />
+            <FitCulturalSection 
+              employeeId={func.id} 
+              employeeName={func.nome} 
+              canViewValidation={canViewFitValidation} 
+              onCloseTab={() => handleTabChange('nine-box')} 
+            />
           </div>
         </TabsContent>
 
         {/* 4. NINE BOX */}
         <TabsContent value="nine-box" className="space-y-6 mt-4 animate-in fade-in slide-in-from-bottom-2">
-          <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
-            <NineBoxSection 
-              employeeId={func.id} 
-              initialDesempenho={func.nine_box_desempenho} 
-              initialPotencial={func.nine_box_potencial} 
-              cargo={func.cargo} 
-              onUpdate={refreshFunc} 
-            />
-          </div>
+          {canViewNineBox ? (
+            <div className="glass-card rounded-xl p-6 border-t-4 border-t-blue-500 shadow-sm flex flex-col">
+              <NineBoxSection 
+                employeeId={func.id} 
+                initialDesempenho={func.nine_box_desempenho} 
+                initialPotencial={func.nine_box_potencial} 
+                cargo={func.cargo} 
+                onUpdate={refreshFunc} 
+              />
+            </div>
+          ) : (
+            <div className="glass-card rounded-2xl p-8 border border-border/80 text-center space-y-4 max-w-xl mx-auto my-8 shadow-sm">
+              <div className="w-14 h-14 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto border border-blue-500/20">
+                <Lock className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground">Informação Confidencial de Gestão & Sucessão</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                A matriz Nine Box é acessível exclusivamente ao seu <strong>Gestor Imediato / Avaliador Responsável</strong> e Comitê Executivo de Talentos para garantir o sigilo estratégico das avaliações de potencial e sucessão.
+              </p>
+            </div>
+          )}
         </TabsContent>
 
         {/* 5. FEEDBACK */}
