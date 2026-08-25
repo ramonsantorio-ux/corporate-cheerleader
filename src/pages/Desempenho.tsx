@@ -80,10 +80,25 @@ export default function Desempenho() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const [allDbRoles, setAllDbRoles] = useState<string[]>([]);
+
+  const DEFAULT_ROLES = useMemo(() => [
+    'Diretoria',
+    'Gerente Geral',
+    'Gerente',
+    'Coordenador',
+    'Supervisor',
+    'Encarregado Operacional',
+    'Encarregado',
+    'Analista',
+    'Assistente',
+    'Auxiliar',
+  ], []);
+
   const uniqueRoles = useMemo(() => {
-    const roles = funcionarios.map(f => f.cargo?.trim()).filter(Boolean);
-    return Array.from(new Set(roles)).sort();
-  }, [funcionarios]);
+    const combined = [...DEFAULT_ROLES, ...allDbRoles];
+    return Array.from(new Set(combined.map(r => r.trim()).filter(Boolean))).sort();
+  }, [allDbRoles, DEFAULT_ROLES]);
 
   const activeTab = searchParams.get('tab') || 'visao-geral';
 
@@ -102,6 +117,8 @@ export default function Desempenho() {
       if (cyclesRes.data) setCycles(cyclesRes.data as EvaluationCycle[]);
       if (funcRes.data) {
         const raw = funcRes.data as Funcionario[];
+        const dbRoles = raw.map(f => f.cargo?.trim()).filter(Boolean) as string[];
+        setAllDbRoles(dbRoles);
         const loggedFunc = user?.email ? raw.find(f => f.email?.toLowerCase() === user.email?.toLowerCase()) : null;
         
         let filtered = raw;
@@ -371,13 +388,33 @@ export default function Desempenho() {
                       <div><Label>Fim</Label><Input type="date" value={newCycle.end_date} onChange={e => setNewCycle({ ...newCycle, end_date: e.target.value })} /></div>
                     </div>
                     <div>
-                      <Label className="mb-3 block">Cargos Elegíveis para 9-Box</Label>
-                      <div className="flex flex-wrap gap-2 max-h-[150px] overflow-y-auto p-1">
-                        {uniqueRoles.length > 0 ? uniqueRoles.map(role => {
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="block font-semibold">Cargos Elegíveis para 9-Box</Label>
+                        <div className="flex gap-2 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => setNewCycle(prev => ({ ...prev, eligible_roles: [...uniqueRoles] }))}
+                            className="text-primary hover:underline font-bold"
+                          >
+                            Selecionar Todos
+                          </button>
+                          <span className="text-muted-foreground">•</span>
+                          <button
+                            type="button"
+                            onClick={() => setNewCycle(prev => ({ ...prev, eligible_roles: [] }))}
+                            className="text-muted-foreground hover:underline font-medium"
+                          >
+                            Limpar
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 max-h-[180px] overflow-y-auto p-2 border border-border/80 rounded-xl bg-muted/20">
+                        {uniqueRoles.map(role => {
                           const isSelected = newCycle.eligible_roles.includes(role);
                           return (
                             <button
                               key={role}
+                              type="button"
                               onClick={() => {
                                 setNewCycle(prev => ({
                                   ...prev,
@@ -388,18 +425,16 @@ export default function Desempenho() {
                               }}
                               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
                                 isSelected 
-                                  ? 'bg-primary text-primary-foreground border-primary' 
+                                  ? 'bg-primary text-primary-foreground border-primary shadow-xs font-semibold' 
                                   : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
                               }`}
                             >
                               {role}
                             </button>
                           );
-                        }) : (
-                          <p className="text-xs text-muted-foreground">Nenhum cargo encontrado na base de colaboradores.</p>
-                        )}
+                        })}
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-2">Clique nos cargos para selecionar quais participarão do 9-Box neste ciclo.</p>
+                      <p className="text-[10px] text-muted-foreground mt-2">Clique nos cargos para selecionar quais participarão do 9-Box neste ciclo ({newCycle.eligible_roles.length} selecionado(s)).</p>
                     </div>
                     <p className="text-xs text-muted-foreground">Tipos: Trimestral (2x ao semestre) e Anual</p>
                     <Button onClick={createCycle} className="w-full">Criar Ciclo</Button>
