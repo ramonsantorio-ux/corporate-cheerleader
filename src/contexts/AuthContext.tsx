@@ -85,14 +85,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function fetchRoleAndPermissions(authUser: User) {
     const userId = authUser.id;
+    const isMasterEmail = authUser.email?.toLowerCase().trim() === 'ramon.leonard@busato.com.br';
     const { data: rolesData } = await supabase.from('user_roles').select('role, profile_id').eq('user_id', userId);
     const roles = rolesData?.map((r: { role: string; profile_id?: string }) => r.role) ?? [];
-    const isUserAdmin = roles.includes('admin');
+    const isUserAdmin = roles.includes('admin') || isMasterEmail;
     setIsAdmin(isUserAdmin);
 
     // Identifica departamento e cargo do usuário
-    let dept: string | null = (authUser.user_metadata?.departamento as string) || null;
-    let cargo: string | null = (authUser.user_metadata?.cargo as string) || null;
+    let dept: string | null = isMasterEmail ? null : ((authUser.user_metadata?.departamento as string) || null);
+    let cargo: string | null = isMasterEmail ? 'Diretoria' : ((authUser.user_metadata?.cargo as string) || null);
 
     if (authUser.email) {
       const { data: func } = await supabase.from('funcionarios').select('departamento, cargo').ilike('email', authUser.email.trim()).maybeSingle();
