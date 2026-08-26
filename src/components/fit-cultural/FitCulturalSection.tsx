@@ -238,11 +238,11 @@ const STAGES = [
 ];
 
 const SCORE_COLUMNS = [
-  { value: 1, label: 'Crítico', short: 'Nota 1' },
-  { value: 2, label: 'Abaixo do Esperado', short: 'Nota 2' },
-  { value: 3, label: 'Dentro do Esperado', short: 'Nota 3' },
-  { value: 4, label: 'Acima do Esperado', short: 'Nota 4' },
-  { value: 5, label: 'Excepcional', short: 'Nota 5' },
+  { value: 1, label: 'Muito abaixo do esperado', short: 'Nota 1' },
+  { value: 2, label: 'Abaixo do esperado', short: 'Nota 2' },
+  { value: 3, label: 'Dentro do esperado', short: 'Nota 3' },
+  { value: 4, label: 'Acima do esperado', short: 'Nota 4' },
+  { value: 5, label: 'Muito acima do esperado', short: 'Nota 5' },
   { value: 0, label: 'Não Aplicável', short: 'N/A' },
 ];
 
