@@ -221,7 +221,7 @@ export const CRITERIA_TOPICS: CriteriaTopic[] = [
 export const CRITERIA = CRITERIA_TOPICS.flatMap(t => t.items);
 
 export default function AutoAvaliacaoFit() {
-  type Func = { id: string; nome: string; cargo: string };
+  type Func = { id: string; nome: string; cargo: string; departamento?: string; foto_url?: string };
   type Cycle = { id: string; name: string };
   const [funcionarios, setFuncionarios] = useState<Func[]>([]);
   const [cycles, setCycles] = useState<Cycle[]>([]);
@@ -260,14 +260,17 @@ export default function AutoAvaliacaoFit() {
 
   useEffect(() => {
     Promise.all([
-      supabase.from('funcionarios').select('id, nome, cargo').order('nome'),
+      supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url').order('nome'),
       supabase.from('evaluation_cycles').select('id, name').order('start_date', { ascending: false })
     ]).then(([fRes, cRes]) => {
-      if (fRes.data) setFuncionarios(fRes.data);
-      if (cRes.data) setCycles(cRes.data);
+      if (fRes.data) setFuncionarios(fRes.data as Func[]);
+      if (cRes.data) setCycles(cRes.data as Cycle[]);
       setLoading(false);
     });
   }, []);
+
+  const currentFunc = funcionarios.find(f => f.id === selectedFunc);
+  const currentCycleObj = cycles.find(c => c.id === selectedCycle);
 
   const handleSubmit = async () => {
     if (!selectedFunc || !selectedCycle) {
@@ -484,35 +487,79 @@ export default function AutoAvaliacaoFit() {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
-              <div className="text-center mb-8">
-                <h1 className="text-3xl font-black tracking-tight text-primary bg-white/80 backdrop-blur inline-block px-6 py-2 rounded-full shadow-sm">Autoavaliação Fit Cultural</h1>
+              <div className="text-center mb-6">
+                <h1 className="text-3xl font-black tracking-tight text-primary bg-white/90 backdrop-blur inline-block px-8 py-2.5 rounded-full shadow-md border border-primary/10">
+                  Autoavaliação Fit Cultural
+                </h1>
               </div>
 
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-border/50 space-y-4">
-                {!uidParam && (
+              {/* ═══ CARD DE IDENTIFICAÇÃO DO COLABORADOR NO TOPO ═══ */}
+              {currentFunc ? (
+                <div className="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-border/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center font-bold text-xl shadow-md shrink-0 overflow-hidden">
+                      {currentFunc.foto_url ? (
+                        <img src={currentFunc.foto_url} alt={currentFunc.nome} className="w-full h-full object-cover" />
+                      ) : (
+                        currentFunc.nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                          Colaborador em Avaliação
+                        </span>
+                      </div>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight mt-0.5">
+                        {currentFunc.nome}
+                      </h2>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1">
+                        <span className="font-semibold bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full">
+                          {currentFunc.cargo}
+                        </span>
+                        {currentFunc.departamento && (
+                          <span className="font-semibold bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-full">
+                            {currentFunc.departamento}
+                          </span>
+                        )}
+                        {currentCycleObj && (
+                          <span className="font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+                            {currentCycleObj.name}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {!uidParam && (
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedFunc('')} className="text-xs text-slate-400 hover:text-slate-700">
+                      Trocar nome
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-border/50 space-y-4">
                   <div>
                     <Label className="text-base font-semibold">Quem é você?</Label>
-            <Select value={selectedFunc} onValueChange={setSelectedFunc}>
-              <SelectTrigger className="mt-1.5 h-12 bg-white text-slate-900 border-slate-200"><SelectValue placeholder="Selecione seu nome na lista..." /></SelectTrigger>
-              <SelectContent className="bg-white text-slate-900 border-slate-200">
-                {funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} - {f.cargo}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-          
-          {!cycleParam && (
-            <div>
-              <Label className="text-base font-semibold">Qual ciclo você está avaliando?</Label>
-              <Select value={selectedCycle} onValueChange={setSelectedCycle}>
-                <SelectTrigger className="mt-1.5 h-12 bg-white text-slate-900 border-slate-200"><SelectValue placeholder="Selecione o semestre/ciclo..." /></SelectTrigger>
-                <SelectContent className="bg-white text-slate-900 border-slate-200">
-                  {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-        </div>
+                    <Select value={selectedFunc} onValueChange={setSelectedFunc}>
+                      <SelectTrigger className="mt-1.5 h-12 bg-white text-slate-900 border-slate-200"><SelectValue placeholder="Selecione seu nome na lista..." /></SelectTrigger>
+                      <SelectContent className="bg-white text-slate-900 border-slate-200">
+                        {funcionarios.map(f => <SelectItem key={f.id} value={f.id}>{f.nome} - {f.cargo}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {!cycleParam && (
+                    <div>
+                      <Label className="text-base font-semibold">Qual ciclo você está avaliando?</Label>
+                      <Select value={selectedCycle} onValueChange={setSelectedCycle}>
+                        <SelectTrigger className="mt-1.5 h-12 bg-white text-slate-900 border-slate-200"><SelectValue placeholder="Selecione o semestre/ciclo..." /></SelectTrigger>
+                        <SelectContent className="bg-white text-slate-900 border-slate-200">
+                          {cycles.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+              )}
 
         {selectedFunc && selectedCycle && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
