@@ -249,12 +249,18 @@ export default function AutoAvaliacaoFit() {
   const uidParam = searchParams.get('uid');
   const cycleParam = searchParams.get('cycle');
 
+  function isValidUUID(id?: string | null): boolean {
+    if (!id) return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id.trim());
+  }
+
   useEffect(() => {
-    if (uidParam) {
-      setSelectedFunc(uidParam);
+    if (uidParam && isValidUUID(uidParam)) {
+      setSelectedFunc(uidParam.trim());
     }
-    if (cycleParam) {
-      setSelectedCycle(cycleParam);
+    if (cycleParam && isValidUUID(cycleParam)) {
+      setSelectedCycle(cycleParam.trim());
     }
   }, [uidParam, cycleParam]);
 
@@ -263,8 +269,17 @@ export default function AutoAvaliacaoFit() {
       supabase.from('funcionarios').select('id, nome, cargo, departamento, foto_url').order('nome'),
       supabase.from('evaluation_cycles').select('id, name').order('start_date', { ascending: false })
     ]).then(([fRes, cRes]) => {
-      if (fRes.data) setFuncionarios(fRes.data as Func[]);
-      if (cRes.data) setCycles(cRes.data as Cycle[]);
+      if (fRes.data) {
+        setFuncionarios(fRes.data as Func[]);
+      }
+      if (cRes.data) {
+        const cycleList = cRes.data as Cycle[];
+        setCycles(cycleList);
+        // Fallback automatico para o primeiro ciclo valido se nao houver ou se for invalido
+        if (cycleList.length > 0) {
+          setSelectedCycle(prev => (isValidUUID(prev) ? prev : cycleList[0].id));
+        }
+      }
       setLoading(false);
     });
   }, []);
@@ -273,12 +288,16 @@ export default function AutoAvaliacaoFit() {
   const currentCycleObj = cycles.find(c => c.id === selectedCycle);
 
   const handleSubmit = async () => {
-    if (!selectedFunc || !selectedCycle) {
-      toast({ title: 'Preencha seus dados', description: 'Selecione seu nome e o ciclo.', variant: 'destructive' });
+    if (!selectedFunc || !isValidUUID(selectedFunc)) {
+      toast({ title: 'Selecione seu nome', description: 'Por favor, selecione seu nome na lista para identificar a avaliação.', variant: 'destructive' });
+      return;
+    }
+    if (!selectedCycle || !isValidUUID(selectedCycle)) {
+      toast({ title: 'Ciclo de avaliação não identificado', description: 'Selecione o ciclo de avaliação correspondente.', variant: 'destructive' });
       return;
     }
     if (Object.keys(scores).length < CRITERIA.length) {
-      toast({ title: 'Responda todas as perguntas', variant: 'destructive' });
+      toast({ title: 'Responda todas as perguntas', description: `Você respondeu ${Object.keys(scores).length} de ${CRITERIA.length} perguntas.`, variant: 'destructive' });
       return;
     }
 

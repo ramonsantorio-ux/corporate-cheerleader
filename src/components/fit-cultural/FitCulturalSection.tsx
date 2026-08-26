@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight, Lock } from 'lucide-react';
+import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight, Lock, Link2, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -467,15 +467,17 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     }
   }, [cycles, allScores, chartPeriod]);
 
-  const SCORE_COLUMNS = [
-    { value: 1, label: 'Muito abaixo do esperado', short: '(1)' },
-    { value: 2, label: 'Abaixo do esperado', short: '(2)' },
-    { value: 3, label: 'Dentro do esperado', short: '(3)' },
-    { value: 4, label: 'Acima do esperado', short: '(4)' },
-    { value: 5, label: 'Muito acima do esperado', short: '(5)' },
-  ];
-
   if (loading) return <p className="text-sm text-muted-foreground">Carregando FIT Cultural...</p>;
+
+  function copyAutoAvaliacaoLink() {
+    if (!activeCycleId) {
+      toast({ title: 'Selecione um ciclo primeiro', variant: 'destructive' });
+      return;
+    }
+    const link = `${window.location.origin}/autoavaliacao-fit-cultural?uid=${employeeId}&cycle=${activeCycleId}`;
+    navigator.clipboard.writeText(link);
+    toast({ title: 'Link de Autoavaliação Copiado!', description: 'Envie este link direto para o colaborador no WhatsApp.' });
+  }
 
   return (
     <div className="space-y-6">
@@ -487,19 +489,32 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
           <p className="text-sm text-muted-foreground mt-1">Avaliação de competências comportamentais em 4 etapas</p>
         </div>
         
-        <div className="w-full md:w-64">
-          <Select value={activeCycleId} onValueChange={setActiveCycleId}>
-            <SelectTrigger className="w-full bg-white border-border/50">
-              <SelectValue placeholder="Selecione o período..." />
-            </SelectTrigger>
-            <SelectContent>
-              {cycles.map(c => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name} {c.is_active ? '(Atual)' : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={copyAutoAvaliacaoLink}
+            className="bg-white hover:bg-primary/5 text-primary border-primary/30 shadow-2xs text-xs font-semibold flex items-center gap-1.5"
+            title="Copiar link individual para o colaborador responder no celular"
+          >
+            <Link2 className="w-3.5 h-3.5" />
+            <span>Copiar Link de Autoavaliação</span>
+          </Button>
+
+          <div className="w-full sm:w-56">
+            <Select value={activeCycleId} onValueChange={setActiveCycleId}>
+              <SelectTrigger className="w-full bg-white border-border/50">
+                <SelectValue placeholder="Selecione o período..." />
+              </SelectTrigger>
+              <SelectContent>
+                {cycles.map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
