@@ -96,64 +96,92 @@ export default function Medicao() {
   const { isAdmin } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Estados dos Dados
+  // Estados dos Dados com Sanitização Estrita
   const [items, setItems] = useState<MedicaoItem[]>(() => {
     const saved = localStorage.getItem('busato_medicao_items');
     if (saved) {
-      try { return JSON.parse(saved); } catch { return MOCK_MEDICAO_ITEMS; }
+      try {
+        const raw = JSON.parse(saved);
+        if (Array.isArray(raw)) {
+          return raw.map((it: any, i: number) => ({
+            id: String(it.id || `item_${i}`),
+            data_programacao: String(it.data_programacao || ''),
+            tag_programada: String(it.tag_programada || 'BUSATO_LOCAÇÕES'),
+            os: String(it.os || `OS-${i + 1}`),
+            hora_inicio_prog: String(it.hora_inicio_prog || '07:00:00'),
+            hora_fim_prog: String(it.hora_fim_prog || '17:30:00'),
+            hora_inicio_real: String(it.hora_inicio_real || '07:00:00'),
+            hora_fim_real: String(it.hora_fim_real || '17:30:00'),
+            horas_programadas_str: String(it.horas_programadas_str || '10:30'),
+            horas_realizadas_str: String(it.horas_realizadas_str || '10:30'),
+            horas_programadas_dec: Number(it.horas_programadas_dec) || 0,
+            horas_realizadas_dec: Number(it.horas_realizadas_dec) || 0,
+            aderencia_pct: Number(it.aderencia_pct) || 100,
+            justificativa: String(it.justificativa || '')
+          }));
+        }
+      } catch {
+        return MOCK_MEDICAO_ITEMS;
+      }
     }
     return MOCK_MEDICAO_ITEMS;
   });
 
-  const [startDate, setStartDate] = useState<string>('2026-07-21');
-  const [endDate, setEndDate] = useState<string>('2026-08-20');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('todas');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [importDialogOpen, setImportDialogOpen] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-
-  // Modal de edição / inserção manual
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<MedicaoItem | null>(null);
 
   // Salva no localStorage para persistência imediata
   useEffect(() => {
     localStorage.setItem('busato_medicao_items', JSON.stringify(items));
   }, [items]);
 
-  // Lista única de TAGs
+  // Lista única de TAGs com sanitização
   const availableTags = useMemo(() => {
     const set = new Set<string>();
-    items.forEach(it => { if (it.tag_programada) set.add(it.tag_programada.trim()); });
+    items.forEach(it => {
+      const tag = String(it.tag_programada || '').trim();
+      if (tag) set.add(tag);
+    });
     return Array.from(set).sort();
   }, [items]);
 
-  // Filtragem dos itens
+  // Filtragem dos itens com blindagem contra null/undefined
   const filteredItems = useMemo(() => {
     return items.filter(item => {
+      const itemTag = String(item.tag_programada || '').trim();
+      const itemOs = String(item.os || '').trim();
+      const itemJust = String(item.justificativa || '').trim();
+      const itemDate = String(item.data_programacao || '').trim();
+
       // Filtro de TAG
-      if (selectedTag !== 'todas' && item.tag_programada !== selectedTag) {
+      if (selectedTag !== 'todas' && itemTag !== selectedTag) {
         return false;
       }
 
-      // Filtro de Busca (OS ou Justificativa)
+      // Filtro de Busca (OS ou Justificativa ou TAG)
       if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        const matchOs = item.os?.toLowerCase().includes(term);
-        const matchTag = item.tag_programada?.toLowerCase().includes(term);
-        const matchJust = item.justificativa?.toLowerCase().includes(term);
+        const term = searchTerm.toLowerCase().trim();
+        const matchOs = itemOs.toLowerCase().includes(term);
+        const matchTag = itemTag.toLowerCase().includes(term);
+        const matchJust = itemJust.toLowerCase().includes(term);
         if (!matchOs && !matchTag && !matchJust) return false;
       }
 
       // Filtro de Data (se preenchido)
-      if (startDate && endDate && item.data_programacao) {
-        // Normaliza data de DD/MM/YYYY para YYYY-MM-DD para comparação
-        let itemIso = item.data_programacao;
-        if (item.data_programacao.includes('/')) {
-          const [d, m, y] = item.data_programacao.split('/');
-          itemIso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+      if (startDate && endDate && itemDate) {
+        let itemIso = itemDate;
+        if (itemDate.includes('/')) {
+          const parts = itemDate.split('/');
+          if (parts.length === 3) {
+            const [d, m, y] = parts;
+            itemIso = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+          }
         }
-        if (itemIso < startDate || itemIso > endDate) {
+        if (itemIso.length === 10 && (itemIso < startDate || itemIso > endDate)) {
           return false;
         }
       }
@@ -168,8 +196,8 @@ export default function Medicao() {
     let totalRealDec = 0;
 
     filteredItems.forEach(it => {
-      totalProgDec += it.horas_programadas_dec || 0;
-      totalRealDec += it.horas_realizadas_dec || 0;
+      totalProgDec += Number(it.horas_programadas_dec) || 0;
+      totalRealDec += Number(it.horas_realizadas_dec) || 0;
     });
 
     const aderenciaGeralPct = totalProgDec > 0 ? (totalRealDec / totalProgDec) * 100 : 100;
@@ -184,7 +212,7 @@ export default function Medicao() {
     };
   }, [filteredItems]);
 
-  // Parser do Excel importado
+  // Parser do Excel importado com sanitização completa
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -209,19 +237,42 @@ export default function Medicao() {
         const parsedItems: MedicaoItem[] = [];
 
         rawData.forEach((row, idx) => {
-          // Mapeamento flexível de cabeçalhos
-          const dataProg = row['Data Programação'] || row['Data Programacao'] || row['Data'] || row['DATA'] || '';
-          const tagProg = row['TAG Programada'] || row['TAG Programacao'] || row['TAG'] || row['Equipamento'] || row['TAG / Equipamento'] || '';
-          const os = String(row['OS'] || row['Ordem de Serviço'] || row['Ordem de Servico'] || row['Num OS'] || '').trim();
+          // Busca case-insensitive em todas as chaves da linha
+          const rowKeys = Object.keys(row);
+          const findVal = (possibleNames: string[]): any => {
+            for (const name of possibleNames) {
+              const exactKey = rowKeys.find(k => k.trim().toLowerCase() === name.toLowerCase());
+              if (exactKey && row[exactKey] !== undefined && row[exactKey] !== '') {
+                return row[exactKey];
+              }
+            }
+            return '';
+          };
+
+          const rawDataProg = findVal(['Data Programação', 'Data Programacao', 'Data', 'DATA', 'Data Prog']);
+          const rawTagProg = findVal(['TAG Programada', 'TAG Programacao', 'TAG', 'tag', 'Equipamento', 'TAG / Equipamento', 'Veículo', 'Veiculo']);
+          const rawOs = findVal(['OS', 'os', 'Ordem de Serviço', 'Ordem de Servico', 'Num OS', 'Ordem']);
           
-          const horaIniProg = String(row['Hora Início Prog'] || row['Hora Inicio Prog'] || row['Inicio Prog'] || row['Hora Inicial Prog'] || '07:00:00').trim();
-          const horaFimProg = String(row['Hora Fim Prog'] || row['Fim Prog'] || row['Hora Final Prog'] || '17:30:00').trim();
-          const horaIniReal = String(row['Hora Início Real'] || row['Hora Inicio Real'] || row['Inicio Real'] || row['Hora Inicial Real'] || horaIniProg).trim();
-          const horaFimReal = String(row['Hora Fim Real'] || row['Fim Real'] || row['Hora Final Real'] || horaFimProg).trim();
+          const rawHoraIniProg = findVal(['Hora Início Prog', 'Hora Inicio Prog', 'Inicio Prog', 'Hora Inicial Prog', 'Início Prog']);
+          const rawHoraFimProg = findVal(['Hora Fim Prog', 'Fim Prog', 'Hora Final Prog', 'Fim Programado']);
+          const rawHoraIniReal = findVal(['Hora Início Real', 'Hora Inicio Real', 'Inicio Real', 'Hora Inicial Real', 'Início Real']);
+          const rawHoraFimReal = findVal(['Hora Fim Real', 'Fim Real', 'Hora Final Real', 'Fim Realizado']);
           
-          let horasProgStr = String(row['Horas Programadas'] || row['Horas Prog'] || '').trim();
-          let horasRealStr = String(row['Horas Realizadas'] || row['Horas Real'] || '').trim();
-          const justificativa = String(row['Justificativa'] || row['Motivo'] || row['Observação'] || '').trim();
+          const rawHorasProg = findVal(['Horas Programadas', 'Horas Prog', 'H. Prog', 'Qtd Horas Prog']);
+          const rawHorasReal = findVal(['Horas Realizadas', 'Horas Real', 'H. Real', 'Qtd Horas Real']);
+          const rawJust = findVal(['Justificativa', 'Motivo', 'Observação', 'Observacao', 'Obs']);
+
+          const tagProg = String(rawTagProg || 'BUSATO_LOCAÇÕES').trim();
+          const os = String(rawOs || `OS-${idx + 1}`).trim();
+          
+          const horaIniProg = String(rawHoraIniProg || '07:00:00').trim();
+          const horaFimProg = String(rawHoraFimProg || '17:30:00').trim();
+          const horaIniReal = String(rawHoraIniReal || horaIniProg).trim();
+          const horaFimReal = String(rawHoraFimReal || horaFimProg).trim();
+
+          let horasProgStr = String(rawHorasProg || '').trim();
+          let horasRealStr = String(rawHorasReal || '').trim();
+          const justificativa = String(rawJust || '').trim();
 
           // Calcula decimais
           let progDec = timeStrToDecimal(horasProgStr);
@@ -239,20 +290,23 @@ export default function Medicao() {
           const aderencia = progDec > 0 ? (realDec / progDec) * 100 : 100;
 
           // Normaliza Data
-          let formattedDate = dataProg;
-          if (dataProg instanceof Date) {
-            const d = dataProg.getDate().toString().padStart(2, '0');
-            const m = (dataProg.getMonth() + 1).toString().padStart(2, '0');
-            const y = dataProg.getFullYear();
+          let formattedDate = String(rawDataProg || '').trim();
+          if (rawDataProg instanceof Date) {
+            const d = rawDataProg.getDate().toString().padStart(2, '0');
+            const m = (rawDataProg.getMonth() + 1).toString().padStart(2, '0');
+            const y = rawDataProg.getFullYear();
             formattedDate = `${d}/${m}/${y}`;
+          } else if (!isNaN(Number(rawDataProg)) && Number(rawDataProg) > 30000 && Number(rawDataProg) < 60000) {
+            const excelDate = new Date((Number(rawDataProg) - (25567 + 2)) * 86400 * 1000);
+            formattedDate = `${excelDate.getDate().toString().padStart(2, '0')}/${(excelDate.getMonth() + 1).toString().padStart(2, '0')}/${excelDate.getFullYear()}`;
           }
 
-          if (tagProg || os || dataProg) {
+          if (tagProg || os || formattedDate) {
             parsedItems.push({
               id: `imp_${Date.now()}_${idx}`,
               data_programacao: formattedDate || '21/07/2026',
-              tag_programada: tagProg || 'BUSATO_LOCAÇÕES',
-              os: os || `OS-${idx + 1}`,
+              tag_programada: tagProg,
+              os: os,
               hora_inicio_prog: horaIniProg,
               hora_fim_prog: horaFimProg,
               hora_inicio_real: horaIniReal,
@@ -269,6 +323,8 @@ export default function Medicao() {
 
         if (parsedItems.length > 0) {
           setItems(parsedItems);
+          setSelectedTag('todas');
+          setSearchTerm('');
           setImportDialogOpen(false);
           toast({
             title: 'Importação Concluída com Sucesso!',
