@@ -19,13 +19,10 @@ import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import FuncionarioProfile from "./pages/FuncionarioProfile";
-import Eventos from "./pages/Eventos";
 import Ausencias from "./pages/Ausencias";
 import Colaboradores from "./pages/Colaboradores";
 import Organograma from "./pages/Organograma";
 import Sucessao from "./pages/Sucessao";
-import EvolucaoContrato from "./pages/EvolucaoContrato";
-import GestaoNotificacoes from "./pages/GestaoNotificacoes";
 import DiscTest from "./pages/DiscTest";
 import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
@@ -125,13 +122,13 @@ function ProtectedRoutes() {
           <Route path="/desempenho/competencias" element={<Navigate to="/desempenho?tab=fit-cultural" replace />} />
           <Route path="/desempenho/pdi" element={<Navigate to="/desempenho?tab=pdi" replace />} />
           <Route path="/funcionario/:id" element={<PageGuard pageKey="colaboradores"><FuncionarioProfile /></PageGuard>} />
-          <Route path="/eventos" element={<PageGuard pageKey="eventos"><Eventos /></PageGuard>} />
+          <Route path="/eventos" element={<Navigate to="/" replace />} />
           <Route path="/ausencias" element={<PageGuard pageKey="ausencias"><Ausencias /></PageGuard>} />
           <Route path="/organograma" element={<PageGuard pageKey="organograma"><Organograma /></PageGuard>} />
           <Route path="/sucessao" element={<Navigate to="/desempenho?tab=sucessao" replace />} />
-          <Route path="/evolucao" element={<PageGuard pageKey="evolucao"><EvolucaoContrato /></PageGuard>} />
+          <Route path="/evolucao" element={<Navigate to="/" replace />} />
           <Route path="/cadastro-metas" element={<PageGuard pageKey="desempenho"><CadastroMetas /></PageGuard>} />
-          <Route path="/notificacoes" element={<PageGuard pageKey="notificacoes"><GestaoNotificacoes /></PageGuard>} />
+          <Route path="/notificacoes" element={<Navigate to="/" replace />} />
           <Route path="/treinamentos" element={<PageGuard pageKey="treinamentos"><Treinamentos /></PageGuard>} />
           <Route path="/assessments" element={<PageGuard pageKey="treinamentos"><AssessmentHub /></PageGuard>} />
           {/* Legacy compat */}

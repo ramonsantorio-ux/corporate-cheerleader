@@ -46,14 +46,6 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: 'Operações',
-    items: [
-      { to: '/eventos', icon: AlertTriangle, label: 'SSMA', key: 'eventos' },
-      { to: '/evolucao', icon: Briefcase, label: 'Contratos', key: 'evolucao' },
-      { to: '/notificacoes', icon: FileWarning, label: 'Notificações/Multas', key: 'notificacoes' },
-    ],
-  },
-  {
     label: 'Sistema',
     items: [
       { to: '/configuracoes', icon: Settings, label: 'Configurações', key: 'configuracoes' },
@@ -81,8 +73,8 @@ export default function AppSidebar() {
     : navGroups;
 
   if (isDepartmentLocked) {
-    // Para contas de departamento, remove o módulo Operações e Visão Geral
-    baseGroups = baseGroups.filter(g => g.label !== 'Operações' && g.label !== 'Visão Geral');
+    // Para contas de departamento, remove o módulo Visão Geral
+    baseGroups = baseGroups.filter(g => g.label !== 'Visão Geral');
   }
 
   const allGroups = baseGroups.map(group => ({
