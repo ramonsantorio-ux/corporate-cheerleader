@@ -3,12 +3,13 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BarChart3, Settings, ChevronLeft, ChevronRight,
   Users, Target, Shield, LogOut, Calendar, AlertTriangle, CalendarDays,
-  Briefcase, Brain, ClipboardList, GitMerge, TrendingUp, FileText, FileWarning, MessageSquare, BrainCircuit, Activity
+  Briefcase, Brain, ClipboardList, GitMerge, TrendingUp, FileText, FileWarning, MessageSquare, BrainCircuit, Activity, HelpCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { SystemGuideModal } from '@/components/guide/SystemGuideModal';
 const busatoGlobo = '/logo.png';
 import busatoLogoFull from '@/assets/busato-logo-full.png';
 
@@ -62,6 +63,7 @@ const navGroups: NavGroup[] = [
 
 export default function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   const location = useLocation();
   const { isAdmin, isDepartmentLocked, permissions, signOut } = useAuth();
 
@@ -213,9 +215,26 @@ export default function AppSidebar() {
 
       {/* ── Footer ── */}
       <div className="border-t border-sidebar-border flex-shrink-0">
+        {/* Botão Guia Passo a Passo dos Módulos */}
+        <button
+          onClick={() => setGuideOpen(true)}
+          className="flex items-center gap-3 px-4 py-2.5 w-full text-[12.5px] text-primary hover:bg-primary/10 transition-colors font-semibold group"
+          title="Guia Passo a Passo dos Módulos e Botões"
+        >
+          <HelpCircle className="w-4 h-4 flex-shrink-0 text-primary group-hover:scale-110 transition-transform" />
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="whitespace-nowrap font-medium text-xs">
+                Passo a Passo dos Módulos
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
+
         <button
           onClick={signOut}
-          className="flex items-center gap-3 px-4 py-3 w-full text-[12.5px] text-sidebar-foreground/50 hover:text-destructive transition-colors"
+          className="flex items-center gap-3 px-4 py-2.5 w-full text-[12.5px] text-sidebar-foreground/50 hover:text-destructive transition-colors border-t border-sidebar-border/40"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
           <AnimatePresence>
@@ -234,6 +253,8 @@ export default function AppSidebar() {
           {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
         </button>
       </div>
+
+      <SystemGuideModal open={guideOpen} onOpenChange={setGuideOpen} />
     </motion.aside>
   );
 }

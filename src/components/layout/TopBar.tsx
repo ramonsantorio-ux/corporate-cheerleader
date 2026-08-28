@@ -1,8 +1,9 @@
-import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock, Moon, Sun, LogOut, User, Settings, Building2 } from 'lucide-react';
+import { Bell, Search, AlertTriangle, ShieldAlert, MessageSquare, Calendar, Clock, Moon, Sun, LogOut, User, Settings, Building2, HelpCircle } from 'lucide-react';
 import busatoGlobo from '@/assets/busato-globo.png';
 import { useTheme } from '@/components/ThemeProvider';
 import { DEPARTAMENTOS } from '@/lib/departments';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SystemGuideModal } from '@/components/guide/SystemGuideModal';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +28,7 @@ interface AlertItem {
 
 export default function TopBar() {
   const navigate = useNavigate();
+  const [guideOpen, setGuideOpen] = useState(false);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState<Set<string>>(() => {
@@ -202,6 +204,16 @@ export default function TopBar() {
           </div>
         ) : null}
 
+        {/* Botão Como Usar / Passo a Passo dos Módulos */}
+        <button
+          onClick={() => setGuideOpen(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-all text-xs font-semibold border border-primary/20 shadow-2xs group"
+          title="Guia Passo a Passo dos Módulos e Botões"
+        >
+          <HelpCircle className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+          <span className="hidden sm:inline">Como Usar</span>
+        </button>
+
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           className="p-2 rounded-lg hover:bg-muted transition-colors"
@@ -285,6 +297,10 @@ export default function TopBar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setGuideOpen(true)} className="cursor-pointer">
+              <HelpCircle className="w-4 h-4 mr-2 text-primary" />
+              Como Usar os Módulos
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/configuracoes')} className="cursor-pointer">
               <Settings className="w-4 h-4 mr-2" />
               Configurações
@@ -300,6 +316,9 @@ export default function TopBar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Modal Interativo do Guia de Módulos */}
+      <SystemGuideModal open={guideOpen} onOpenChange={setGuideOpen} />
     </header>
   );
 }
