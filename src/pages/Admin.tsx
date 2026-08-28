@@ -171,10 +171,22 @@ export default function Admin() {
 
   async function confirmDeleteUser() {
     if (!deleteUser) return;
+    if (deleteUser.id === user?.id) {
+      toast.error('Você não pode excluir a sua própria conta de administrador.');
+      return;
+    }
     setSavingDelete(true);
     try {
-      await adminAuthRequest('manage', { action: 'update', user_id: deleteUser.id, full_name: '__DELETED__', email: deleteUser.email });
-      await adminAuthRequest('manage', { action: 'ban', user_id: deleteUser.id });
+      try {
+        await adminAuthRequest('manage', { action: 'delete', user_id: deleteUser.id });
+      } catch {
+        await adminAuthRequest('manage', { action: 'update', user_id: deleteUser.id, full_name: '__DELETED__', email: deleteUser.email });
+        await adminAuthRequest('manage', { action: 'ban', user_id: deleteUser.id });
+      }
+
+      await supabase.from('user_permissions').delete().eq('user_id', deleteUser.id);
+      await supabase.from('user_roles').delete().eq('user_id', deleteUser.id);
+      await supabase.from('profiles').delete().eq('id', deleteUser.id);
 
       await logAudit({
         action: 'user_deleted',

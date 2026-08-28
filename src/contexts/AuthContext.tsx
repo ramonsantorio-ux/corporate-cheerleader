@@ -95,37 +95,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const isUserAdmin = roles.includes('admin') || isMasterEmail;
     setIsAdmin(isUserAdmin);
 
+    // Se for conta Master e ainda não tiver role admin no banco, insere
+    if (isMasterEmail && !roles.includes('admin')) {
+      supabase.from('user_roles').upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id,role' }).then(() => {});
+    }
+
     // Identifica departamento e cargo do usuário
-    let dept: string | null = isMasterEmail ? null : ((authUser.user_metadata?.departamento as string) || null);
-    let cargo: string | null = isMasterEmail ? 'Diretoria / Criador Admin' : ((authUser.user_metadata?.cargo as string) || null);
+    let dept: string | null = null;
+    let cargo: string | null = null;
 
-    if (authUser.email) {
-      const { data: func } = await supabase.from('funcionarios').select('departamento, cargo').ilike('email', authUser.email.trim()).maybeSingle();
-      if (func?.cargo && !cargo) cargo = func.cargo;
-      if (func?.departamento && !dept) dept = func.departamento;
-    }
+    if (isMasterEmail) {
+      dept = null; // Acesso Global Irrestrito a todos os setores
+      cargo = 'Diretoria / Criador Admin';
+    } else {
+      dept = (authUser.user_metadata?.departamento as string) || null;
+      cargo = (authUser.user_metadata?.cargo as string) || null;
 
-    if (!cargo && authUser.user_metadata?.full_name) {
-      const { data: funcName } = await supabase.from('funcionarios').select('cargo').ilike('nome', (authUser.user_metadata.full_name as string).trim()).maybeSingle();
-      if (funcName?.cargo) cargo = funcName.cargo;
-    }
-
-    if (!dept) {
-      // Tenta buscar no perfil
-      try {
-        const { data: prof } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
-        if (prof && (prof as Record<string, unknown>).departamento) {
-          dept = (prof as Record<string, unknown>).departamento as string;
-        }
-      } catch {
-        // ignora se coluna nao existir
+      if (authUser.email) {
+        const { data: func } = await supabase.from('funcionarios').select('departamento, cargo').ilike('email', authUser.email.trim()).maybeSingle();
+        if (func?.cargo && !cargo) cargo = func.cargo;
+        if (func?.departamento && !dept) dept = func.departamento;
       }
-    }
 
-    // Se ainda assim não encontrou e houver no localStorage
-    if (!dept) {
-      const saved = localStorage.getItem(`user_dept_${userId}`);
-      if (saved) dept = saved;
+      if (!cargo && authUser.user_metadata?.full_name) {
+        const { data: funcName } = await supabase.from('funcionarios').select('cargo').ilike('nome', (authUser.user_metadata.full_name as string).trim()).maybeSingle();
+        if (funcName?.cargo) cargo = funcName.cargo;
+      }
+
+      if (!dept) {
+        // Tenta buscar no perfil
+        try {
+          const { data: prof } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+          if (prof && (prof as Record<string, unknown>).departamento) {
+            dept = (prof as Record<string, unknown>).departamento as string;
+          }
+        } catch {
+          // ignora se coluna nao existir
+        }
+      }
+
+      // Se ainda assim não encontrou e houver no localStorage
+      if (!dept) {
+        const saved = localStorage.getItem(`user_dept_${userId}`);
+        if (saved) dept = saved;
+      }
     }
 
     let deptsList: string[] = [];
@@ -135,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUserDepartment(dept);
     setUserDepartments(deptsList);
-    setEffectiveDepartment(deptsList[0] || dept || null);
+    setEffectiveDepartment(isMasterEmail ? null : (deptsList[0] || dept || null));
     setUserCargo(cargo);
 
     const profileId = rolesData?.[0]?.profile_id;

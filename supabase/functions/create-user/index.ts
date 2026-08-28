@@ -29,6 +29,12 @@ serve(async (req) => {
       });
     }
 
+    const MASTER_ADMIN_EMAILS = [
+      'ramon.leonard@busato.com.br',
+      'dioquenio.ribeiro@busato.com.br'
+    ];
+    const isCallerMaster = caller.email ? MASTER_ADMIN_EMAILS.includes(caller.email.toLowerCase().trim()) : false;
+
     // Check admin role
     const { data: roles } = await supabaseAdmin
       .from('user_roles')
@@ -36,7 +42,7 @@ serve(async (req) => {
       .eq('user_id', caller.id)
       .eq('role', 'admin');
 
-    if (!roles || roles.length === 0) {
+    if (!isCallerMaster && (!roles || roles.length === 0)) {
       return new Response(JSON.stringify({ error: 'Apenas administradores podem criar usuários' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

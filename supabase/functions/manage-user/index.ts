@@ -29,13 +29,29 @@ serve(async (req) => {
       });
     }
 
+    const MASTER_ADMIN_EMAILS = [
+      'ramon.leonard@busato.com.br',
+      'dioquenio.ribeiro@busato.com.br'
+    ];
+    const isCallerMaster = caller.email ? MASTER_ADMIN_EMAILS.includes(caller.email.toLowerCase().trim()) : false;
+
+    // Se for conta Master, garante que existe a role admin no banco
+    if (isCallerMaster) {
+      try {
+        await supabaseAdmin.from('user_roles').upsert(
+          { user_id: caller.id, role: 'admin' },
+          { onConflict: 'user_id,role' }
+        );
+      } catch (_) {}
+    }
+
     const { data: roles } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', caller.id)
       .eq('role', 'admin');
 
-    if (!roles || roles.length === 0) {
+    if (!isCallerMaster && (!roles || roles.length === 0)) {
       return new Response(JSON.stringify({ error: 'Apenas administradores' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
