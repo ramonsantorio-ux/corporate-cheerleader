@@ -29,14 +29,6 @@ export const PAGE_GROUPS = [
     ]
   },
   {
-    module: 'Operações',
-    pages: [
-      { key: 'eventos', label: 'SSMA' },
-      { key: 'evolucao', label: 'Contratos' },
-      { key: 'notificacoes', label: 'Notificações/Multas' },
-    ]
-  },
-  {
     module: 'Sistema',
     pages: [
       { key: 'configuracoes', label: 'Configurações' },

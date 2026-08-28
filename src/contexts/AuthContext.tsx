@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
-import { canViewOrApplyTargetAssessment } from '@/lib/hierarchy';
+import { canViewOrApplyTargetAssessment, getHierarchyLevel } from '@/lib/hierarchy';
 
 interface AuthContextType {
   user: User | null;
@@ -218,15 +218,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     }
 
-    // Se o usuário pertencer a um departamento específico (não-admin)
-    if (dept && !isUserAdmin) {
+    // Se o usuário pertencer a um departamento específico (não-admin) e NÃO tiver perfil atribuído
+    // (perfil tem prioridade sobre a lógica de departamento genérica)
+    if (dept && !isUserAdmin && !profileId) {
       const deptPagesAllowed = [
         'colaboradores', 'organograma', 'ausencias',
         'desempenho', 'feedbacks', 'novo_feedback',
         'treinamentos', 'disc', 'mbti', 'bigfive',
         'configuracoes'
       ];
-      const deptPagesBlocked = ['dashboard', 'eventos', 'evolucao', 'notificacoes', 'admin'];
+      const deptPagesBlocked = ['dashboard', 'admin'];
 
       deptPagesAllowed.forEach(page => {
         permsMap[page] = { can_view: true, can_create: true, can_edit: true, can_delete: true };

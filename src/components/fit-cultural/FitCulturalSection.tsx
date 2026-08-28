@@ -303,7 +303,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
       
     if (sData) setAllScores(sData as unknown as FitScore[]);
     setLoading(false);
-  }, [employeeId, activeCycleId]);
+  }, [employeeId]);
 
   useEffect(() => {
     fetchData();

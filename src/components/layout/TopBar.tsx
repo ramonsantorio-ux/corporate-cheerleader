@@ -118,7 +118,7 @@ export default function TopBar() {
         type: 'feedback',
         title: `Feedback ${f.status === 'novo' ? 'novo' : 'em análise'}`,
         description: `${f.titulo} — ${f.autor}`,
-        date: f.criado_em?.slice(0, 10),
+        date: f.criado_em?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
         link: `/feedbacks/${f.id}`,
         icon: MessageSquare,
         color: 'text-primary',

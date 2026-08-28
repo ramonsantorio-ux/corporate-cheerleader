@@ -187,6 +187,8 @@ export default function Admin() {
       await supabase.from('user_permissions').delete().eq('user_id', deleteUser.id);
       await supabase.from('user_roles').delete().eq('user_id', deleteUser.id);
       await supabase.from('profiles').delete().eq('id', deleteUser.id);
+      // Limpa dados do localStorage para evitar acumulo de registros mortos
+      localStorage.removeItem(`user_dept_${deleteUser.id}`);
 
       await logAudit({
         action: 'user_deleted',
@@ -226,6 +228,16 @@ export default function Admin() {
       toast.success('Usuário criado com sucesso!');
       const userId = user.user_id;
       if (userId) {
+          // Garante que o perfil existe na tabela profiles (essencial para o fallback de listagem)
+          try {
+            await supabase.from('profiles').upsert({
+              id: userId,
+              full_name: newUser.full_name,
+              email: newUser.email,
+              departamento: newUser.departamento || null,
+            }, { onConflict: 'id' });
+          } catch (_) {}
+
           if (newUser.departamento) {
             localStorage.setItem(`user_dept_${userId}`, newUser.departamento);
             try { await supabase.from('profiles').update({ departamento: newUser.departamento }).eq('id', userId); } catch (_) {}

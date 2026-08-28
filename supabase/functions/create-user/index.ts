@@ -64,6 +64,16 @@ serve(async (req) => {
       });
     }
 
+    // Garante que o perfil é criado na tabela profiles para que o fallback de listagem funcione
+    try {
+      await supabaseAdmin.from('profiles').upsert({
+        id: data.user.id,
+        full_name,
+        email,
+        departamento: departamento || null,
+      }, { onConflict: 'id' });
+    } catch (_) {}
+
     return new Response(JSON.stringify({ user_id: data.user.id }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

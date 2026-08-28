@@ -64,12 +64,12 @@ serve(async (req) => {
       if (error) throw error;
       
       const { data: profiles } = await supabaseAdmin.from('profiles').select('*');
-      const { data: roles } = await supabaseAdmin.from('user_roles').select('*');
+      const { data: allRoles } = await supabaseAdmin.from('user_roles').select('*');
 
       const now = new Date();
       const result = profiles?.map(p => {
         const authUser = users.find(u => u.id === p.id);
-        const userRoles = roles?.filter(r => r.user_id === p.id);
+        const userRoles = allRoles?.filter(r => r.user_id === p.id);
         // banned_until pode ser null, undefined ou uma data passada (após unban)
         // Só considera banido se a data for futura
         const bannedUntil = authUser?.banned_until ? new Date(authUser.banned_until) : null;
