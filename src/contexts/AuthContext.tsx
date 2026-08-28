@@ -100,6 +100,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from('user_roles').upsert({ user_id: userId, role: 'admin' }, { onConflict: 'user_id,role' }).then(() => {});
     }
 
+    // Se o usuário logado tiver a role admin no banco (ex: Ramon Leonard), propaga a role admin para todas as contas Master no banco:
+    if (roles.includes('admin') || authUser.email?.toLowerCase().trim() === 'ramon.leonard@busato.com.br') {
+      for (const mEmail of masterAdminEmails) {
+        if (mEmail !== authUser.email?.toLowerCase().trim()) {
+          supabase
+            .from('profiles')
+            .select('id')
+            .ilike('email', mEmail)
+            .maybeSingle()
+            .then(async ({ data: targetProf }) => {
+              if (targetProf?.id) {
+                await supabase
+                  .from('user_roles')
+                  .upsert({ user_id: targetProf.id, role: 'admin' }, { onConflict: 'user_id,role' });
+              }
+            });
+        }
+      }
+    }
+
     // Identifica departamento e cargo do usuário
     let dept: string | null = null;
     let cargo: string | null = null;
