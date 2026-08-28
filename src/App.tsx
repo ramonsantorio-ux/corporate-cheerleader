@@ -29,7 +29,6 @@ import GestaoNotificacoes from "./pages/GestaoNotificacoes";
 import DiscTest from "./pages/DiscTest";
 import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
-import Medicao from "./pages/Medicao";
 import { InstallPWA } from './components/InstallPWA';
 import { PWAUpdateHandler } from './components/PWAUpdateHandler';
 import { PageGuard } from "./components/auth/PageGuard";
@@ -131,7 +130,6 @@ function ProtectedRoutes() {
           <Route path="/organograma" element={<PageGuard pageKey="organograma"><Organograma /></PageGuard>} />
           <Route path="/sucessao" element={<Navigate to="/desempenho?tab=sucessao" replace />} />
           <Route path="/evolucao" element={<PageGuard pageKey="evolucao"><EvolucaoContrato /></PageGuard>} />
-          <Route path="/medicao" element={<PageGuard pageKey="evolucao"><Medicao /></PageGuard>} />
           <Route path="/cadastro-metas" element={<PageGuard pageKey="desempenho"><CadastroMetas /></PageGuard>} />
           <Route path="/notificacoes" element={<PageGuard pageKey="notificacoes"><GestaoNotificacoes /></PageGuard>} />
           <Route path="/treinamentos" element={<PageGuard pageKey="treinamentos"><Treinamentos /></PageGuard>} />
