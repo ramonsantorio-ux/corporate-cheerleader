@@ -506,8 +506,9 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
       const cardWidth = (pageWidth - margin * 2 - 9) / 4;
       const cardHeight = 16;
       
+      const displayFitScore = scoreFit > 0 ? `${scoreFit}%` : (func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente');
       const kpis = [
-        { label: 'SCORE FIT CULTURAL', value: func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente', color: [59, 130, 187] as [number, number, number] },
+        { label: 'SCORE FIT CULTURAL', value: displayFitScore, color: [59, 130, 187] as [number, number, number] },
         { label: 'NINE BOX ATUAL', value: func.nine_box_desempenho ? `${func.nine_box_desempenho} / ${func.nine_box_potencial || ''}` : 'Não Avaliado', color: [42, 90, 140] as [number, number, number] },
         { label: 'STATUS DO PDI', value: pdisList.length > 0 ? `${pdisList.length} Plano(s)` : 'Sem PDI', color: [58, 79, 122] as [number, number, number] },
         { label: 'PRONTUÁRIO / DESVIOS', value: `${(employeeWarnings || []).filter(w => w.applied).length} Adv. Aplicadas`, color: (employeeWarnings || []).filter(w => w.applied).length > 0 ? [217, 83, 79] as [number, number, number] : [40, 167, 69] as [number, number, number] },
@@ -863,7 +864,9 @@ function getTempoEmpresa(dataAdmissao: string | null | undefined): string {
               <div className="w-full pt-2 border-t border-border flex items-center justify-around text-xs">
                 <div>
                   <span className="text-muted-foreground block text-[10px]">Fit Cultural</span>
-                  <span className="font-bold text-foreground">{func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente'}</span>
+                  <span className="font-bold text-foreground">
+                    {scoreFit > 0 ? `${scoreFit}%` : (func.fit_cultural ? `${func.fit_cultural}%` : 'Pendente')}
+                  </span>
                 </div>
                 <div className="w-px h-6 bg-border" />
                 <div>

@@ -326,6 +326,13 @@ export default function AutoAvaliacaoFit() {
         throw error;
       }
       
+      const validScores = Object.values(scores).filter(s => s > 0);
+      if (validScores.length > 0) {
+        const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
+        const pct = Math.round((avg / 5) * 100);
+        await supabase.from('funcionarios').update({ fit_cultural: pct }).eq('id', selectedFunc);
+      }
+
       setSubmitted(true);
       toast({ title: 'Avaliação enviada com sucesso!' });
     } catch (e: unknown) {

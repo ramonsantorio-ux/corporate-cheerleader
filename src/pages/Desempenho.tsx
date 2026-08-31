@@ -163,7 +163,7 @@ export default function Desempenho() {
     if (!canDelete('desempenho')) { toast({ title: 'Sem permissão para excluir ciclo', variant: 'destructive' }); return; }
     if (!confirm('Tem certeza que deseja excluir este ciclo? Todas as avaliações de Fit Cultural, Succession 9Box e PDIs vinculadas a ele serão apagadas permanentemente.')) return;
     
-    await supabase.from('fit_cultural').delete().eq('stage', cycleId);
+    await supabase.from('fit_cultural').delete().or(`cycle_id.eq.${cycleId},stage.eq.${cycleId}`);
     await supabase.from('nine_box_historico').delete().eq('cycle', cycleId);
     await supabase.from('evaluations').delete().eq('cycle_id', cycleId);
     await supabase.from('pdis').delete().eq('cycle_id', cycleId);

@@ -88,7 +88,7 @@ export default function Competencias() {
   const [evalForm, setEvalForm] = useState({ employee_id: '', cycle_id: '' });
   const [evalScores, setEvalScores] = useState<Record<string, number>>({});
   const [filterCycle, setFilterCycle] = useState('all');
-  const [fitCulturalAnswers, setFitCulturalAnswers] = useState<{employee_id: string, stage: string}[]>([]);
+  const [fitCulturalAnswers, setFitCulturalAnswers] = useState<{ employee_id: string; stage: string; cycle_id: string | null }[]>([]);
   
   // States para a avaliação inline de 4 etapas
   const [selectedEvalEmployee, setSelectedEvalEmployee] = useState<string | null>(null);
@@ -105,9 +105,9 @@ export default function Competencias() {
   const [selectedLinkCycle, setSelectedLinkCycle] = useState('');
 
   useEffect(() => {
-    Promise.all([
-      fetchCompetencies(),
-      fetchCycles(),
+    const loadAll = () => {
+      fetchCompetencies();
+      fetchCycles();
       supabase.from('funcionarios').select('id, nome, cargo, departamento').then(({ data }) => {
         if (data) {
           const raw = data as Funcionario[];
@@ -115,12 +115,37 @@ export default function Competencias() {
           const filtered = activeDept === 'todos' ? raw : raw.filter(f => f.departamento === activeDept);
           setFuncionarios(filtered);
         }
-      }),
-      supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at').then(({ data }) => { if (data) setEvaluations(data as Evaluation[]); }),
-      supabase.from('evaluation_cycles').select('id, end_date').then(({ data }) => { if (data) setEvalCycles(data as EvaluationCycle[]); }),
-      supabase.from('fit_cultural').select('employee_id, stage').then(({ data }) => { if (data) setFitCulturalAnswers(data as { employee_id: string; stage: string }[]); }),
-    ]);
+      });
+      supabase.from('evaluations').select('id, cycle_id, evaluated_name, status, completed_at').then(({ data }) => { if (data) setEvaluations(data as Evaluation[]); });
+      supabase.from('evaluation_cycles').select('id, end_date').then(({ data }) => { if (data) setEvalCycles(data as EvaluationCycle[]); });
+      fetchFitCulturalAnswers();
+    };
+
+    loadAll();
+    window.addEventListener('focus', loadAll);
+    return () => window.removeEventListener('focus', loadAll);
   }, [deptFilter, isDepartmentLocked, userDepartment]);
+
+  async function fetchFitCulturalAnswers() {
+    try {
+      const all: { employee_id: string; stage: string; cycle_id: string | null }[] = [];
+      let from = 0;
+      const batchSize = 1000;
+      while (true) {
+        const { data, error } = await supabase
+          .from('fit_cultural')
+          .select('employee_id, stage, cycle_id')
+          .range(from, from + batchSize - 1);
+        if (error || !data || data.length === 0) break;
+        all.push(...(data as { employee_id: string; stage: string; cycle_id: string | null }[]));
+        if (data.length < batchSize) break;
+        from += batchSize;
+      }
+      setFitCulturalAnswers(all);
+    } catch (err) {
+      console.error('Erro ao buscar fit cultural:', err);
+    }
+  }
 
   async function fetchCompetencies() {
     const { data } = await supabase.from('competencies').select('*').order('created_at', { ascending: false });
@@ -146,13 +171,19 @@ export default function Competencias() {
       if (!cargos[cargoKey]) cargos[cargoKey] = { cargo: cargoKey, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [], realizadoNomes: [] };
       cargos[cargoKey].total++;
       
-      const empAnswers = fitCulturalAnswers.filter(fc => fc.employee_id === f.id && (filterCycle === 'all' || fc.stage === filterCycle));
+      const empAnswers = fitCulturalAnswers.filter(fc => {
+        if (fc.employee_id !== f.id) return false;
+        if (filterCycle === 'all') return true;
+        return fc.cycle_id === filterCycle || fc.stage === filterCycle;
+      });
       
       if (empAnswers.length === 0) {
         cargos[cargoKey].pendentes++;
         cargos[cargoKey].pendenteNomes.push({ id: f.id, nome: f.nome });
       } else {
-        const answeredCycles = Array.from(new Set(empAnswers.map(a => a.stage)));
+        const answeredCycles = Array.from(new Set(
+          empAnswers.map(a => a.cycle_id || (cycles.some(c => c.id === a.stage) ? a.stage : cycles[0]?.id || 'geral'))
+        ));
         answeredCycles.forEach(cycleId => {
           cargos[cargoKey].realizados++;
           cargos[cargoKey].realizadoNomes.push({ 
@@ -203,13 +234,16 @@ export default function Competencias() {
 
   async function deleteFitCulturalEmployee(employeeId: string, cycleId: string) {
     if (!canDelete('desempenho')) { toast({ title: 'Sem permissão para excluir', variant: 'destructive' }); return; }
-    const { error } = await supabase.from('fit_cultural').delete().eq('employee_id', employeeId).eq('stage', cycleId);
+    const { error } = await supabase
+      .from('fit_cultural')
+      .delete()
+      .eq('employee_id', employeeId)
+      .or(`cycle_id.eq.${cycleId},stage.eq.${cycleId}`);
     if (error) {
       toast({ title: 'Erro ao excluir', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Avaliação excluída com sucesso!' });
-      const { data } = await supabase.from('fit_cultural').select('employee_id, stage');
-      if (data) setFitCulturalAnswers(data as { employee_id: string; stage: string }[]);
+      fetchFitCulturalAnswers();
     }
   }
 
@@ -231,7 +265,8 @@ export default function Competencias() {
       employee_id: evalForm.employee_id,
       criteria: c.name,
       score: evalScores[c.id],
-      stage: evalForm.cycle_id
+      stage: 'gestor',
+      cycle_id: evalForm.cycle_id
     }));
 
     const { error } = await supabase.from('fit_cultural').insert(inserts);
@@ -239,13 +274,15 @@ export default function Competencias() {
       toast({ title: 'Erro', description: error.message, variant: 'destructive' });
     } else {
       const avg = Math.round(Object.values(evalScores).reduce((a,b)=>a+b,0) / competencies.length);
-      await supabase.from('funcionarios').update({ fit_cultural: avg }).eq('id', evalForm.employee_id);
+      const pct = Math.round((avg / 5) * 100);
+      await supabase.from('funcionarios').update({ fit_cultural: pct }).eq('id', evalForm.employee_id);
       
       toast({ title: 'Avaliação de Fit Cultural concluída com sucesso!' });
       setEvalDialogOpen(false);
       setEvalStep(1);
       setEvalForm({ employee_id: '', cycle_id: '' });
       setEvalScores({});
+      fetchFitCulturalAnswers();
     }
   }
 
