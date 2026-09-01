@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight, Lock, Link2, Copy } from 'lucide-react';
+import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight, Lock, Link2, Copy, CheckCircle2, AlertCircle, Unlock, Check, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,17 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { useAuth } from '@/contexts/AuthContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Badge } from '@/components/ui/badge';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface FitScore {
   id: string;
@@ -319,6 +330,145 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     return allScores.filter(s => s.cycle_id === activeCycleId);
   }, [allScores, activeCycleId]);
 
+  // Status de conclusão e bloqueio por etapa
+  const isGestorCompleted = useMemo(() => {
+    return currentCycleScores.some(s => s.criteria === '__STAGE_COMPLETED__' && s.stage === 'gestor' && s.score === 1);
+  }, [currentCycleScores]);
+
+  const gestorCompletedAt = useMemo(() => {
+    return currentCycleScores.find(s => s.criteria === '__STAGE_COMPLETED__' && s.stage === 'gestor' && s.score === 1)?.updated_at;
+  }, [currentCycleScores]);
+
+  const isCalibracaoCompleted = useMemo(() => {
+    return currentCycleScores.some(s => s.criteria === '__STAGE_COMPLETED__' && s.stage === 'calibracao' && s.score === 1);
+  }, [currentCycleScores]);
+
+  const calibracaoCompletedAt = useMemo(() => {
+    return currentCycleScores.find(s => s.criteria === '__STAGE_COMPLETED__' && s.stage === 'calibracao' && s.score === 1)?.updated_at;
+  }, [currentCycleScores]);
+
+  const totalCriteriaCount = CRITERIA.length;
+
+  const answeredAutoCount = useMemo(() => {
+    return CRITERIA.filter(c => getScore(c.label, 'autoavaliacao') !== null).length;
+  }, [currentCycleScores]);
+
+  const answeredGestorCount = useMemo(() => {
+    return CRITERIA.filter(c => getScore(c.label, 'gestor') !== null).length;
+  }, [currentCycleScores]);
+
+  const answeredCalibracaoCount = useMemo(() => {
+    return CRITERIA.filter(c => getScore(c.label, 'calibracao') !== null).length;
+  }, [currentCycleScores]);
+
+  const [submittingStage, setSubmittingStage] = useState<'gestor' | 'calibracao' | null>(null);
+  const [confirmLockDialog, setConfirmLockDialog] = useState<{ open: boolean; stage: 'gestor' | 'calibracao' | null }>({
+    open: false,
+    stage: null,
+  });
+  const [reopenDialog, setReopenDialog] = useState<{ open: boolean; stage: 'gestor' | 'calibracao' | null }>({
+    open: false,
+    stage: null,
+  });
+
+  const canReopen = isAdmin || permissions['colaboradores']?.can_edit;
+
+  function isStageEditable(stageKey: string): boolean {
+    if (isClosed) return false;
+    if (stageKey === 'autoavaliacao') return false;
+    if (stageKey === 'gestor') return !isGestorCompleted;
+    if (stageKey === 'calibracao') return isGestorCompleted && !isCalibracaoCompleted;
+    if (stageKey === 'validacao') return isCalibracaoCompleted;
+    return false;
+  }
+
+  function formatDate(dateStr?: string) {
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  async function handleLockStage(stage: 'gestor' | 'calibracao') {
+    if (!activeCycleId) {
+      toast({ title: 'Selecione um ciclo primeiro', variant: 'destructive' });
+      return;
+    }
+    setSubmittingStage(stage);
+
+    const existing = currentCycleScores.find(s => s.criteria === '__STAGE_COMPLETED__' && s.stage === stage);
+    let error;
+    if (existing) {
+      const res = await supabase
+        .from('fit_cultural')
+        .update({ score: 1, updated_at: new Date().toISOString() })
+        .eq('id', existing.id);
+      error = res.error;
+    } else {
+      const res = await supabase
+        .from('fit_cultural')
+        .insert([{
+          employee_id: employeeId,
+          cycle_id: activeCycleId,
+          stage: stage,
+          criteria: '__STAGE_COMPLETED__',
+          score: 1,
+        }]);
+      error = res.error;
+    }
+
+    setSubmittingStage(null);
+    setConfirmLockDialog({ open: false, stage: null });
+
+    if (error) {
+      toast({ title: 'Erro ao bloquear etapa', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    toast({
+      title: stage === 'gestor' ? 'Avaliação do Gestor lançada e bloqueada!' : 'Calibração finalizada e bloqueada!',
+      description: stage === 'gestor'
+        ? 'As notas foram salvas com segurança. A etapa de Calibração foi liberada.'
+        : 'As notas calibradas foram consolidadas e a Validação Final foi liberada.'
+    });
+    await fetchData();
+  }
+
+  async function handleReopenStage(stage: 'gestor' | 'calibracao') {
+    if (!activeCycleId) return;
+    setSubmittingStage(stage);
+
+    const existing = currentCycleScores.find(s => s.criteria === '__STAGE_COMPLETED__' && s.stage === stage);
+    if (existing) {
+      const { error } = await supabase
+        .from('fit_cultural')
+        .delete()
+        .eq('id', existing.id);
+
+      if (error) {
+        toast({ title: 'Erro ao reabrir etapa', description: error.message, variant: 'destructive' });
+        setSubmittingStage(null);
+        return;
+      }
+    }
+
+    setSubmittingStage(null);
+    setReopenDialog({ open: false, stage: null });
+    toast({
+      title: stage === 'gestor' ? 'Avaliação do Gestor reaberta' : 'Calibração reaberta',
+      description: 'A etapa agora pode ser editada novamente pelo responsável.'
+    });
+    await fetchData();
+  }
+
   function getScore(criteria: string, stage: string): number | null {
     const found = currentCycleScores.find(s => s.criteria === criteria && s.stage === stage);
     return found?.score ?? null;
@@ -433,7 +583,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     
     if (chartPeriod === 'semestral') {
       return cycles.map(cycle => {
-        const cycleScores = allScores.filter(s => s.cycle_id === cycle.id && s.score != null && s.score > 0);
+        const cycleScores = allScores.filter(s => s.cycle_id === cycle.id && s.criteria !== '__STAGE_COMPLETED__' && s.score != null && s.score > 0);
         let avg = 0;
         if (cycleScores.length > 0) {
            avg = cycleScores.reduce((sum, s) => sum + (s.score || 0), 0) / cycleScores.length;
@@ -448,7 +598,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
       const scoresByYear: Record<string, number[]> = {};
       
       allScores.forEach(score => {
-         if (score.score == null || score.score <= 0 || !score.cycle_id) return;
+         if (score.score == null || score.score <= 0 || !score.cycle_id || score.criteria === '__STAGE_COMPLETED__') return;
          const cycle = cycles.find(c => c.id === score.cycle_id);
          if (!cycle || !cycle.start_date) return;
          const year = new Date(cycle.start_date).getFullYear().toString();
@@ -603,6 +753,8 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
               );
             }
 
+            const isEditable = isStageEditable(stage.key);
+
             return (
               <AccordionItem
                 key={stage.key}
@@ -614,8 +766,63 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                   <div className="flex items-center gap-3">
                     <stage.icon className="w-5 h-5 text-primary shrink-0" />
                     <div>
-                      <h4 className="font-semibold text-foreground text-sm">{stage.label}</h4>
-                      <p className="text-xs text-muted-foreground font-normal">{stage.description}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="font-semibold text-foreground text-sm">{stage.label}</h4>
+                        {/* Status Badges no Cabeçalho */}
+                        {stage.key === 'autoavaliacao' && (
+                          answeredAutoCount > 0 ? (
+                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] py-0 px-2 flex items-center gap-1 font-medium">
+                              <CheckCircle2 className="w-3 h-3" /> Respondida ({answeredAutoCount}/{totalCriteriaCount})
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 text-[10px] py-0 px-2 font-medium">
+                              Pendente de Resposta
+                            </Badge>
+                          )
+                        )}
+                        {stage.key === 'gestor' && (
+                          isGestorCompleted ? (
+                            <Badge variant="outline" className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] py-0 px-2 flex items-center gap-1 font-medium">
+                              <Lock className="w-3 h-3" /> Lançada & Bloqueada
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30 text-[10px] py-0 px-2 font-medium">
+                              Em Andamento ({answeredGestorCount}/{totalCriteriaCount})
+                            </Badge>
+                          )
+                        )}
+                        {stage.key === 'calibracao' && (
+                          isCalibracaoCompleted ? (
+                            <Badge variant="outline" className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] py-0 px-2 flex items-center gap-1 font-medium">
+                              <Lock className="w-3 h-3" /> Calibração Bloqueada
+                            </Badge>
+                          ) : !isGestorCompleted ? (
+                            <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[10px] py-0 px-2 flex items-center gap-1 font-medium">
+                              <Lock className="w-3 h-3" /> Aguardando Gestor
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30 text-[10px] py-0 px-2 font-medium">
+                              Em Calibração ({answeredCalibracaoCount}/{totalCriteriaCount})
+                            </Badge>
+                          )
+                        )}
+                        {stage.key === 'validacao' && (
+                          isClosed ? (
+                            <Badge variant="outline" className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] py-0 px-2 flex items-center gap-1 font-medium">
+                              <Shield className="w-3 h-3" /> Validada & Encerrada
+                            </Badge>
+                          ) : !isCalibracaoCompleted ? (
+                            <Badge variant="outline" className="bg-muted text-muted-foreground border-border text-[10px] py-0 px-2 flex items-center gap-1 font-medium">
+                              <Lock className="w-3 h-3" /> Aguardando Calibração
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 text-[10px] py-0 px-2 font-medium">
+                              Liberada para Validação
+                            </Badge>
+                          )
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground font-normal mt-0.5">{stage.description}</p>
                     </div>
                   </div>
                   <div className="text-right flex flex-col items-end">
@@ -625,6 +832,114 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                 </div>
               </AccordionTrigger>
               <AccordionContent className="p-4 border-t border-border space-y-6">
+                {/* Banners Informativos e de Controle por Etapa */}
+                {stage.key === 'gestor' && (
+                  isGestorCompleted ? (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                          <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-sm">Avaliação do Gestor Lançada e Bloqueada</h5>
+                          <p className="text-xs text-emerald-700/80 dark:text-emerald-400 mt-0.5">
+                            Lançada {gestorCompletedAt ? `em ${formatDate(gestorCompletedAt)}` : ''}. As notas foram travadas e a etapa de Calibração foi liberada.
+                          </p>
+                        </div>
+                      </div>
+                      {canReopen && !isClosed && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReopenDialog({ open: true, stage: 'gestor' })}
+                          className="border-emerald-600/30 text-emerald-700 hover:bg-emerald-500/20 text-xs shrink-0"
+                          title="Permite que administradores reabram a avaliação para ajustes"
+                        >
+                          <Unlock className="w-3.5 h-3.5 mr-1.5" /> Reabrir Avaliação
+                        </Button>
+                      )}
+                    </div>
+                  ) : !isClosed ? (
+                    <div className="bg-blue-500/10 border border-blue-500/20 p-3.5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <UserCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                        <p className="text-xs text-blue-900 dark:text-blue-200">
+                          Atribua as notas de 1 a 5 (ou N/A) para cada critério. Ao terminar, clique em <strong>Lançar e Bloquear Avaliação do Gestor</strong> abaixo para travar as notas e liberar a Calibração.
+                        </p>
+                      </div>
+                      <div className="text-xs font-semibold text-blue-700 dark:text-blue-300 shrink-0">
+                        {answeredGestorCount} de {totalCriteriaCount} avaliados
+                      </div>
+                    </div>
+                  ) : null
+                )}
+
+                {stage.key === 'calibracao' && (
+                  !isGestorCompleted ? (
+                    <div className="bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 p-4 rounded-xl flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                        <Lock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h5 className="font-semibold text-sm">Etapa Bloqueada — Aguardando Avaliação do Gestor</h5>
+                        <p className="text-xs text-amber-700/80 dark:text-amber-400 mt-0.5">
+                          A Calibração só pode ser preenchida após o Gestor Imediato concluir e lançar a avaliação dele.
+                        </p>
+                      </div>
+                    </div>
+                  ) : isCalibracaoCompleted ? (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-300 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                          <CheckCircle2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h5 className="font-semibold text-sm">Calibração Concluída e Bloqueada</h5>
+                          <p className="text-xs text-emerald-700/80 dark:text-emerald-400 mt-0.5">
+                            Finalizada {calibracaoCompletedAt ? `em ${formatDate(calibracaoCompletedAt)}` : ''}. As notas alinhadas foram travadas e a Validação Final está liberada.
+                          </p>
+                        </div>
+                      </div>
+                      {canReopen && !isClosed && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setReopenDialog({ open: true, stage: 'calibracao' })}
+                          className="border-emerald-600/30 text-emerald-700 hover:bg-emerald-500/20 text-xs shrink-0"
+                        >
+                          <Unlock className="w-3.5 h-3.5 mr-1.5" /> Reabrir Calibração
+                        </Button>
+                      )}
+                    </div>
+                  ) : !isClosed ? (
+                    <div className="bg-purple-500/10 border border-purple-500/20 p-3.5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                        <p className="text-xs text-purple-900 dark:text-purple-200">
+                          Realize o alinhamento de notas com feedback. Ao finalizar, clique em <strong>Finalizar e Bloquear Calibração</strong> abaixo para liberar a Validação Final.
+                        </p>
+                      </div>
+                      <div className="text-xs font-semibold text-purple-700 dark:text-purple-300 shrink-0">
+                        {answeredCalibracaoCount} de {totalCriteriaCount} calibrados
+                      </div>
+                    </div>
+                  ) : null
+                )}
+
+                {stage.key === 'validacao' && !isCalibracaoCompleted && !isClosed && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 p-4 rounded-xl flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-sm">Etapa Bloqueada — Aguardando Conclusão da Calibração</h5>
+                      <p className="text-xs text-amber-700/80 dark:text-amber-400 mt-0.5">
+                        A Validação Final do Comitê só poderá ser lançada e encerrada após a etapa de Calibração ser finalizada e bloqueada.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {CRITERIA_TOPICS.map((topic) => (
                   <div key={topic.number} className="glass-card rounded-xl border border-border/60 overflow-hidden">
                     {/* Header do Tópico */}
@@ -683,7 +998,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                                   return (
                                     <td key={col.value} className="p-2 text-center">
                                       <button
-                                        disabled={stage.key === 'autoavaliacao' || isClosed}
+                                        disabled={!isEditable}
                                         onClick={() => setScore(criteria.label, stage.key, col.value)}
                                         className={`w-8 h-8 rounded-full border-2 transition-all mx-auto flex items-center justify-center ${
                                           isSelected
@@ -691,8 +1006,8 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                                               ? 'border-amber-500 bg-amber-600 text-white scale-110 shadow-md font-bold'
                                               : 'border-primary bg-primary text-primary-foreground scale-110 shadow-md'
                                             : 'border-muted-foreground/30 hover:border-primary/50 hover:bg-primary/10'
-                                        } ${stage.key === 'autoavaliacao' || isClosed ? 'opacity-70 cursor-not-allowed hover:bg-transparent hover:border-muted-foreground/30' : ''}`}
-                                        title={isNA ? 'Não Aplicável (Desconsidera da Média)' : `${col.label} ${col.short}`}
+                                        } ${!isEditable ? 'opacity-70 cursor-not-allowed hover:bg-transparent hover:border-muted-foreground/30' : ''}`}
+                                        title={!isEditable ? (isClosed ? 'Avaliação encerrada' : 'Etapa bloqueada para edição') : (isNA ? 'Não Aplicável (Desconsidera da Média)' : `${col.label} ${col.short}`)}
                                       >
                                         {isSelected && (
                                           <span className="text-[10px] font-bold">{isNA ? 'N/A' : col.value}</span>
@@ -702,7 +1017,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                                   );
                                 })}
                                 <td className="p-2 text-center">
-                                  {currentScore != null && stage.key !== 'autoavaliacao' && !isClosed && (
+                                  {currentScore != null && isEditable && (
                                     <button
                                       onClick={() => clearScore(criteria.label, stage.key)}
                                       className="p-1 rounded hover:bg-muted transition-colors"
@@ -720,11 +1035,160 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
                     </div>
                   </div>
                 ))}
+
+                {/* Barra de Ação para Lançar/Bloquear Etapa do Gestor */}
+                {stage.key === 'gestor' && !isGestorCompleted && !isClosed && (
+                  <div className="p-4 bg-muted/40 border border-primary/20 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 shadow-xs">
+                    <div>
+                      <h5 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-primary" /> Finalizar e Travar Avaliação do Gestor
+                      </h5>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Critérios preenchidos: <strong className="text-foreground">{answeredGestorCount}</strong> de {totalCriteriaCount}.
+                        {answeredGestorCount < totalCriteriaCount && (
+                          <span className="text-amber-600 dark:text-amber-400 ml-1 font-medium">
+                            (Restam {totalCriteriaCount - answeredGestorCount} critérios sem nota)
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => setConfirmLockDialog({ open: true, stage: 'gestor' })}
+                      disabled={answeredGestorCount === 0 || submittingStage === 'gestor'}
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm font-semibold shadow-sm w-full sm:w-auto"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Lançar e Bloquear Avaliação do Gestor
+                    </Button>
+                  </div>
+                )}
+
+                {/* Barra de Ação para Lançar/Bloquear Etapa de Calibração */}
+                {stage.key === 'calibracao' && isGestorCompleted && !isCalibracaoCompleted && !isClosed && (
+                  <div className="p-4 bg-muted/40 border border-purple-500/20 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 shadow-xs">
+                    <div>
+                      <h5 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <Lock className="w-4 h-4 text-purple-600" /> Finalizar e Travar Calibração
+                      </h5>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Critérios calibrados: <strong className="text-foreground">{answeredCalibracaoCount}</strong> de {totalCriteriaCount}.
+                        {answeredCalibracaoCount < totalCriteriaCount && (
+                          <span className="text-amber-600 dark:text-amber-400 ml-1 font-medium">
+                            (Restam {totalCriteriaCount - answeredCalibracaoCount} critérios)
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => setConfirmLockDialog({ open: true, stage: 'calibracao' })}
+                      disabled={answeredCalibracaoCount === 0 || submittingStage === 'calibracao'}
+                      className="bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-semibold shadow-sm w-full sm:w-auto"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Finalizar e Bloquear Calibração
+                    </Button>
+                  </div>
+                )}
               </AccordionContent>
             </AccordionItem>
             );
           })}
         </Accordion>
+
+        {/* Modal de Confirmação de Lançamento / Bloqueio */}
+        <AlertDialog open={confirmLockDialog.open} onOpenChange={(open) => !open && setConfirmLockDialog({ open: false, stage: null })}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Lock className="w-5 h-5 text-primary" />
+                {confirmLockDialog.stage === 'gestor'
+                  ? 'Confirmar Lançamento da Avaliação do Gestor'
+                  : 'Confirmar Conclusão da Calibração'}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3 pt-2 text-left">
+                {confirmLockDialog.stage === 'gestor' ? (
+                  <>
+                    <p>
+                      Tem certeza que deseja lançar e travar a Avaliação do Gestor de <strong>{employeeName}</strong>?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Após o lançamento, você <strong>não poderá mais alterar as notas</strong> atribuídas. Essa ação garante a integridade dos dados e liberará a etapa de <strong>Calibração</strong> para o alinhamento com feedback.
+                    </p>
+                    {answeredGestorCount < totalCriteriaCount && (
+                      <div className="bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 p-3 rounded-lg text-xs flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>Atenção: ainda existem {totalCriteriaCount - answeredGestorCount} critérios sem nota atribuída.</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      Tem certeza que deseja finalizar a Calibração de <strong>{employeeName}</strong>?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      As notas alinhadas com feedback serão consolidadas e bloqueadas. Essa ação liberará a etapa de <strong>Validação Final</strong> pelo comitê.
+                    </p>
+                    {answeredCalibracaoCount < totalCriteriaCount && (
+                      <div className="bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 p-3 rounded-lg text-xs flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0" />
+                        <span>Atenção: ainda existem {totalCriteriaCount - answeredCalibracaoCount} critérios sem nota calibrada.</span>
+                      </div>
+                    )}
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={submittingStage !== null}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (confirmLockDialog.stage) {
+                    handleLockStage(confirmLockDialog.stage);
+                  }
+                }}
+                disabled={submittingStage !== null}
+                className={confirmLockDialog.stage === 'calibracao' ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}
+              >
+                {submittingStage ? 'Gravando...' : 'Confirmar e Bloquear'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Modal de Confirmação para Reabrir Etapa (Admin) */}
+        <AlertDialog open={reopenDialog.open} onOpenChange={(open) => !open && setReopenDialog({ open: false, stage: null })}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Unlock className="w-5 h-5 text-amber-600" />
+                Reabrir Etapa para Edição
+              </AlertDialogTitle>
+              <AlertDialogDescription className="pt-2 text-left space-y-2">
+                <p>
+                  Tem certeza que deseja reabrir a {reopenDialog.stage === 'gestor' ? 'Avaliação do Gestor' : 'Calibração'} de <strong>{employeeName}</strong>?
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Os campos serão destravados para permitir novas alterações nas notas.
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={submittingStage !== null}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (reopenDialog.stage) {
+                    handleReopenStage(reopenDialog.stage);
+                  }
+                }}
+                disabled={submittingStage !== null}
+                className="bg-amber-600 hover:bg-amber-700 text-white"
+              >
+                {submittingStage ? 'Reabrindo...' : 'Reabrir para Edição'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {canClose && !isClosed && activeCycleId && (
           <div className="mt-6 flex justify-end">

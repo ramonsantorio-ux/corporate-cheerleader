@@ -134,7 +134,8 @@ export default function Competencias() {
       while (true) {
         const { data, error } = await supabase
           .from('fit_cultural')
-          .select('employee_id, stage, cycle_id')
+          .select('employee_id, stage, cycle_id, criteria')
+          .neq('criteria', '__STAGE_COMPLETED__')
           .range(from, from + batchSize - 1);
         if (error || !data || data.length === 0) break;
         all.push(...(data as { employee_id: string; stage: string; cycle_id: string | null }[]));

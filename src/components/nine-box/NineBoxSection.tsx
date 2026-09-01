@@ -80,16 +80,16 @@ export default function NineBoxSection({ employeeId, initialDesempenho, initialP
     if (!employeeId) return;
     const { data } = await supabase.from('fit_cultural').select('criteria, stage, score').eq('employee_id', employeeId);
     if (data && data.length > 0) {
-      // 1. Desempenho (Fit Cultural) - stages not starting with potencial_
-      const fitScores = data.filter(d => !d.stage?.startsWith('potencial_') && d.score != null);
+      // 1. Desempenho (Fit Cultural) - stages not starting with potencial_ and not stage flags
+      const fitScores = data.filter(d => !d.stage?.startsWith('potencial_') && d.criteria !== '__STAGE_COMPLETED__' && d.score != null && d.score > 0);
       if (fitScores.length > 0) {
         const avg = fitScores.reduce((a, b) => a + (b.score || 0), 0) / fitScores.length;
         setDesScoreAvg(avg.toFixed(2));
         setSuggestedDes(avg >= 3.8 ? 'Alto' : avg >= 2.8 ? 'Médio' : 'Baixo');
       }
 
-      // 2. Potencial - stages starting with potencial_
-      const potScores = data.filter(d => d.stage?.startsWith('potencial_') && d.score != null);
+      // 2. Potencial - stages starting with potencial_ and not stage flags
+      const potScores = data.filter(d => d.stage?.startsWith('potencial_') && d.criteria !== '__STAGE_COMPLETED__' && d.score != null && d.score > 0);
       if (potScores.length > 0) {
         const avg = potScores.reduce((a, b) => a + (b.score || 0), 0) / potScores.length;
         setPotScoreAvg(avg.toFixed(2));
