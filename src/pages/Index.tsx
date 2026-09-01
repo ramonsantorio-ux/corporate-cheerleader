@@ -96,7 +96,7 @@ export default function Index() {
 
   const filteredEmployees = useMemo(() => {
     if (!employeeSearch.trim()) return [];
-    return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
+    return funcionarios.filter(f => (f.nome || '').toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
   }, [employeeSearch, funcionarios]);
 
   const sel = selectedEmployee;
@@ -106,7 +106,7 @@ export default function Index() {
       const d = new Date(f.criado_em).toISOString().split('T')[0];
       return d >= period.start && d <= period.end;
     });
-    if (sel) fbs = fbs.filter(f => f.autor.trim().toLowerCase() === sel.nome.trim().toLowerCase());
+    if (sel) fbs = fbs.filter(f => (f.autor || '').trim().toLowerCase() === (sel.nome || '').trim().toLowerCase());
     return fbs;
   }, [feedbacks, period, sel]);
 
@@ -120,10 +120,10 @@ export default function Index() {
     return warnings.filter(w => w.employee_id === sel.id);
   }, [warnings, sel]);
 
-  const registeredNames = useMemo(() => new Set(funcionarios.map(f => f.nome.trim().toLowerCase())), [funcionarios]);
+  const registeredNames = useMemo(() => new Set(funcionarios.map(f => (f.nome || '').trim().toLowerCase())), [funcionarios]);
   const filteredEvents = useMemo(() => {
-    let evts = events.filter(e => registeredNames.has(e.involved_name.trim().toLowerCase()));
-    if (sel) evts = evts.filter(e => e.involved_name.trim().toLowerCase() === sel.nome.trim().toLowerCase());
+    let evts = events.filter(e => registeredNames.has((e.involved_name || '').trim().toLowerCase()));
+    if (sel) evts = evts.filter(e => (e.involved_name || '').trim().toLowerCase() === (sel.nome || '').trim().toLowerCase());
     return evts;
   }, [events, registeredNames, sel]);
 

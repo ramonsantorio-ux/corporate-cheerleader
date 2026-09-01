@@ -328,9 +328,13 @@ export default function AutoAvaliacaoFit() {
       
       const validScores = Object.values(scores).filter(s => s > 0);
       if (validScores.length > 0) {
-        const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
-        const pct = Math.round((avg / 5) * 100);
-        await supabase.from('funcionarios').update({ fit_cultural: pct }).eq('id', selectedFunc);
+        try {
+          const avg = validScores.reduce((a, b) => a + b, 0) / validScores.length;
+          const pct = Math.round((avg / 5) * 100);
+          await supabase.from('funcionarios').update({ fit_cultural: pct }).eq('id', selectedFunc);
+        } catch (updateErr) {
+          console.warn("Aviso ao atualizar percentual resumido:", updateErr);
+        }
       }
 
       setSubmitted(true);

@@ -264,7 +264,7 @@ export default function Treinamentos() {
   const totalRealizados = cargoStats.reduce((a, c) => a + c.realizados, 0);
   const totalPendentes = cargoStats.reduce((a, c) => a + c.pendentes, 0);
 
-  const filtered = employees.filter(f => f.nome.toLowerCase().includes(search.toLowerCase()));
+  const filtered = employees.filter(f => (f.nome || '').toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-6">

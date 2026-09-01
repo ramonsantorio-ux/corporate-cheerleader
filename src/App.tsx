@@ -145,29 +145,31 @@ function ProtectedRoutes() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <InstallPWA />
-      <PWAUpdateHandler />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/autoavaliacao-fit-cultural" element={<AutoAvaliacaoFit />} />
-            <Route path="/autoavaliacao-potencial" element={<AutoAvaliacaoPotencial />} />
-            <Route path="/assessment/:type" element={<AssessmentHub />} />
-            <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
-            <Route path="/manual" element={<ManualProcedimentos />} />
-            <Route path="/MOP-RH-001_Manual_Procedimentos.html" element={<ManualProcedimentos />} />
-            <Route path="/*" element={<ProtectedRoutes />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <InstallPWA />
+        <PWAUpdateHandler />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/autoavaliacao-fit-cultural" element={<AutoAvaliacaoFit />} />
+              <Route path="/autoavaliacao-potencial" element={<AutoAvaliacaoPotencial />} />
+              <Route path="/assessment/:type" element={<AssessmentHub />} />
+              <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
+              <Route path="/manual" element={<ManualProcedimentos />} />
+              <Route path="/MOP-RH-001_Manual_Procedimentos.html" element={<ManualProcedimentos />} />
+              <Route path="/*" element={<ProtectedRoutes />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

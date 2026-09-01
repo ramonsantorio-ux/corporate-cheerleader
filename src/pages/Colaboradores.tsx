@@ -38,7 +38,7 @@ const TURNOS = [
   { value: 'adm', label: 'ADM' },
 ];
 const CARGOS_COM_DOCUMENTOS = ['motorista', 'operador de equipamentos', 'operador de mini'];
-function cargoNeedsDocs(cargo: string) { return CARGOS_COM_DOCUMENTOS.some(c => cargo.toLowerCase().includes(c)); }
+function cargoNeedsDocs(cargo?: string | null) { return CARGOS_COM_DOCUMENTOS.some(c => (cargo || '').toLowerCase().includes(c)); }
 function letraFromTurno(turno: string): string {
   if (turno.endsWith('_a')) return 'A';
   if (turno.endsWith('_b')) return 'B';
@@ -105,7 +105,7 @@ export default function Colaboradores() {
   }
 
   const filtered = funcionarios.filter((f) => {
-    const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = (f.nome || '').toLowerCase().includes(search.toLowerCase()) || (f.cargo || '').toLowerCase().includes(search.toLowerCase());
     
     // Filtragem por departamento travado ou selecionado
     let matchDept = true;

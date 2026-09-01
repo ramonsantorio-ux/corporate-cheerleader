@@ -58,8 +58,8 @@ const TURNOS = [
 
 const CARGOS_COM_DOCUMENTOS = ['motorista', 'operador de equipamentos', 'operador de mini'];
 
-function cargoNeedsDocs(cargo: string) {
-  return CARGOS_COM_DOCUMENTOS.some(c => cargo.toLowerCase().includes(c));
+function cargoNeedsDocs(cargo?: string | null) {
+  return CARGOS_COM_DOCUMENTOS.some(c => (cargo || '').toLowerCase().includes(c));
 }
 
 function letraFromTurno(turno: string): string {
@@ -103,7 +103,7 @@ export default function Cadastro() {
   const importFileRef = useRef<HTMLInputElement>(null);
 
   // Encarregados list for dropdown
-  const encarregados = funcionarios.filter(f => f.cargo.toLowerCase().includes('encarregado'));
+  const encarregados = funcionarios.filter(f => (f.cargo || '').toLowerCase().includes('encarregado'));
 
 
   function parseTurno(raw: string): string {
@@ -201,7 +201,7 @@ export default function Cadastro() {
   }
 
   const filtered = funcionarios.filter((f) => {
-    const matchSearch = f.nome.toLowerCase().includes(search.toLowerCase()) || f.cargo.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = (f.nome || '').toLowerCase().includes(search.toLowerCase()) || (f.cargo || '').toLowerCase().includes(search.toLowerCase());
     const matchDept = deptFilter === 'todos' || f.departamento === deptFilter;
     return matchSearch && matchDept;
   });

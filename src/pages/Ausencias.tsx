@@ -126,7 +126,7 @@ export default function PontoFerias() {
 
   const filteredSearchEmps = useMemo(() => {
     if (!employeeSearch.trim()) return [];
-    return funcionarios.filter(f => f.nome.toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
+    return funcionarios.filter(f => (f.nome || '').toLowerCase().includes(employeeSearch.toLowerCase())).slice(0, 8);
   }, [employeeSearch, funcionarios]);
 
   const [form, setForm] = useState({ employee_id: '', date: '', status: 'falta_injustificada', observation: '', cid: '', crm: '', dias_afastamento: '1' });

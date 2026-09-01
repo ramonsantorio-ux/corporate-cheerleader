@@ -72,6 +72,22 @@ export default function Login() {
       toast.error('Senha deve ter no mínimo 6 caracteres');
       return;
     }
+
+    const masterAdminEmails = ['ramon.leonard@busato.com.br', 'dioquenio.ribeiro@busato.com.br'];
+    const isMaster = masterAdminEmails.includes(email.toLowerCase().trim());
+
+    // Trava de segurança: impede criação livre de admin caso o sistema já tenha sido inicializado
+    const { count } = await supabase
+      .from('user_roles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'admin');
+
+    if ((count || 0) > 0 && !isMaster) {
+      toast.error('O sistema já possui administradores ativos. Novos acessos devem ser liberados pelo RH em Gestão de Acessos.');
+      setIsFirstSetup(false);
+      return;
+    }
+
     setLoading(true);
 
     const { data, error } = await supabase.auth.signUp({
@@ -88,7 +104,7 @@ export default function Login() {
 
     if (data.user) {
       await supabase.from('user_roles').insert({ user_id: data.user.id, role: 'admin' });
-      toast.success('Conta administrador criada! Entrando...');
+      toast.success('Conta administrador criada com sucesso! Entrando...');
       await supabase.auth.signInWithPassword({ email, password });
     }
     setLoading(false);

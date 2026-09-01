@@ -241,7 +241,7 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
       const filteredPdis = (activeDept === 'todos' || funcionarios.length === 0)
         ? allPdis
         : allPdis.filter(p => {
-            const f = funcionarios.find(emp => emp.nome.toLowerCase() === p.employee_name.toLowerCase());
+            const f = funcionarios.find(emp => (emp.nome || '').toLowerCase() === (p.employee_name || '').toLowerCase());
             return f ? f.departamento === activeDept : true;
           });
 
@@ -463,7 +463,7 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
   // Lista filtrada de PDIs
   const filteredPdis = useMemo(() => {
     return pdis.filter(p => {
-      const matchesSearch = p.employee_name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (p.employee_name || '').toLowerCase().includes(searchTerm.toLowerCase());
       if (!matchesSearch) return false;
       if (statusFilter === 'all') return true;
       if (statusFilter === 'completed') return p.status === 'completed';
@@ -697,14 +697,14 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
                 const pdiCheckins = checkins[pdi.id] || [];
                 const progress = getPdiProgress(pdi.id);
                 const balance = getPdiBalance(pdiActions);
-                const func = funcionarios.find(f => f.nome.toLowerCase() === pdi.employee_name.toLowerCase());
+                const func = funcionarios.find(f => (f.nome || '').toLowerCase() === (pdi.employee_name || '').toLowerCase());
 
                 return (
                   <Card key={pdi.id} className="overflow-hidden border border-border/70 shadow-sm transition-all hover:border-primary/40">
                     <div className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card">
                       <div className="flex items-start gap-3.5 flex-1 min-w-0">
                         <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 text-primary font-bold flex items-center justify-center text-sm shrink-0">
-                          {pdi.employee_name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                          {(pdi.employee_name || 'PD').split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('')}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
@@ -1249,7 +1249,7 @@ export default function PDIPage({ initialEmployeeName, autoOpenDialog, onDialogC
             const pdiCheckins = checkins[printPdi.id] || [];
             const progress = getPdiProgress(printPdi.id);
             const balance = getPdiBalance(pdiActions);
-            const func = funcionarios.find(f => f.nome.toLowerCase() === printPdi.employee_name.toLowerCase());
+            const func = funcionarios.find(f => (f.nome || '').toLowerCase() === (printPdi.employee_name || '').toLowerCase());
 
             return (
               <div className="space-y-6 text-foreground print:text-black">

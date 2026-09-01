@@ -180,7 +180,7 @@ export default function Feedbacks() {
   }
 
   const filtered = feedbacks.filter((fb) => {
-    const matchSearch = fb.titulo.toLowerCase().includes(search.toLowerCase()) || fb.descricao.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = (fb.titulo || '').toLowerCase().includes(search.toLowerCase()) || (fb.descricao || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'todos' || fb.status === statusFilter;
     const matchPriority = priorityFilter === 'todos' || fb.prioridade === priorityFilter;
     const matchPeriod = fb.criadoEm >= period.start && fb.criadoEm <= period.end;
@@ -285,14 +285,15 @@ export default function Feedbacks() {
   const feedbackCargoStats = useMemo(() => {
     const cargos: Record<string, { cargo: string; total: number; comFeedback: number; pendentes: number; pendenteNomes: { id: string; nome: string }[] }> = {};
     funcionariosFull.forEach(f => {
-      if (!cargos[f.cargo]) cargos[f.cargo] = { cargo: f.cargo, total: 0, comFeedback: 0, pendentes: 0, pendenteNomes: [] };
-      cargos[f.cargo].total++;
-      const hasFb = feedbacks.some(fb => fb.autor.toLowerCase() === f.nome.toLowerCase());
+      const cKey = f.cargo || 'Outros';
+      if (!cargos[cKey]) cargos[cKey] = { cargo: cKey, total: 0, comFeedback: 0, pendentes: 0, pendenteNomes: [] };
+      cargos[cKey].total++;
+      const hasFb = feedbacks.some(fb => (fb.autor || '').toLowerCase() === (f.nome || '').toLowerCase());
       if (hasFb) {
-        cargos[f.cargo].comFeedback++;
+        cargos[cKey].comFeedback++;
       } else {
-        cargos[f.cargo].pendentes++;
-        cargos[f.cargo].pendenteNomes.push({ id: f.id, nome: f.nome });
+        cargos[cKey].pendentes++;
+        cargos[cKey].pendenteNomes.push({ id: f.id, nome: f.nome || 'Sem Nome' });
       }
     });
     return Object.values(cargos).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
