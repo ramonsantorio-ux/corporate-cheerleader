@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manual Interativo com Prints — Guia Visual de Módulos & Botões | Busato</title>
+<title>Manual Passo a Passo dos Módulos & Botões | Busato</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════
@@ -471,7 +471,7 @@ body {
     </div>
   </div>
 
-  <h1 class="cover-title">Guia Visual de Módulos & Botões</h1>
+  <h1 class="cover-title">Passo a Passo dos Módulos & Botões</h1>
   <p class="cover-subtitle">
     Manual Operacional Padronizado com reprodução fiel de telas reais, mapeamento interativo de pontos (hotspots), passo a passo de execução e diretrizes de qualidade baseadas na <strong>ISO 9001:2015</strong>.
   </p>
@@ -2001,24 +2001,30 @@ body {
         <span>📋</span>
         <span>Passo a Passo Recomendado para Líderes & Gestores</span>
       </div>
-      <div class="steps-cards-row">
+      <div class="steps-cards-row" style="grid-template-columns: repeat(4, 1fr);">
         
           <div class="step-box">
             <div class="step-num-top">1</div>
-            <div class="step-title">Disponibilizar Autoavaliação</div>
-            <div class="step-desc">Copie o link individual e envie pelo WhatsApp para o colaborador responder no smartphone.</div>
+            <div class="step-title">1. Autoavaliação (WhatsApp)</div>
+            <div class="step-desc">Copie o link individual e envie via WhatsApp para o colaborador responder suas notas de 1 a 5 (ou N/A) no celular.</div>
           </div>
         
           <div class="step-box">
             <div class="step-num-top">2</div>
-            <div class="step-title">Preencher a Avaliação do Gestor</div>
-            <div class="step-desc">Após a resposta do colaborador, clique em "Avaliar", analise as notas atribuídas e registre sua avaliação com evidências.</div>
+            <div class="step-title">2. Avaliação do Gestor</div>
+            <div class="step-desc">No perfil do colaborador, compare com a autoavaliação e preencha as notas. Ao terminar, clique em "Lançar e Bloquear Avaliação do Gestor".</div>
           </div>
         
           <div class="step-box">
             <div class="step-num-top">3</div>
-            <div class="step-title">Reunião de Calibração e Feedback</div>
-            <div class="step-desc">Com o RH, calibre eventuais distorções e realize a reunião individual de feedback com o colaborador.</div>
+            <div class="step-title">3. Calibração com Feedback</div>
+            <div class="step-desc">Liberada após o gestor travar as notas. O comitê alinha divergências e clica em "Finalizar e Bloquear Calibração".</div>
+          </div>
+
+          <div class="step-box">
+            <div class="step-num-top">4</div>
+            <div class="step-title">4. Validação Final & Nine Box</div>
+            <div class="step-desc">A Diretoria/Comitê valida as notas finais e clica em "Encerrar Fit Cultural (Bloquear)", fechando o ciclo com chave de ouro.</div>
           </div>
         
       </div>
@@ -2042,21 +2048,33 @@ body {
           <tbody>
             
               <tr>
-                <td><span class="btn-name-badge">Copiar Link WhatsApp</span></td>
-                <td>Gera token seguro e copia mensagem formatada para envio direto no WhatsApp.</td>
-                <td class="btn-tip">Acompanhe se o colaborador abriu e respondeu no mesmo turno.</td>
+                <td><span class="btn-name-badge">Copiar Link de Autoavaliação</span></td>
+                <td>Gera token seguro e copia o link para resposta do colaborador no celular.</td>
+                <td class="btn-tip">Envie no WhatsApp e acompanhe se o colaborador respondeu no mesmo dia.</td>
               </tr>
             
               <tr>
-                <td><span class="btn-name-badge">Avaliar Colaborador</span></td>
-                <td>Abre a matriz de perguntas comportamentais com pontuação de 1 a 5 e N/A.</td>
-                <td class="btn-tip">Sempre insira um comentário justificando notas 1, 2 ou 5.</td>
+                <td><span class="btn-name-badge">Lançar e Bloquear Avaliação do Gestor</span></td>
+                <td>Salva e bloqueia as notas atribuídas pelo gestor imediato contra edições posteriores.</td>
+                <td class="btn-tip">Garante integridade total dos dados e destrava a etapa de Calibração.</td>
               </tr>
             
               <tr>
-                <td><span class="btn-name-badge">Salvar e Validar Avaliação</span></td>
-                <td>Consolida a nota final ponderada do colaborador no banco de dados.</td>
-                <td class="btn-tip">Uma vez validada pelo RH, a nota compõe o eixo do Nine Box.</td>
+                <td><span class="btn-name-badge">Finalizar e Bloquear Calibração</span></td>
+                <td>Consolida e bloqueia as notas alinhadas no feedback de consenso.</td>
+                <td class="btn-tip">Destrava a Validação Final pelo comitê e formaliza o alinhamento.</td>
+              </tr>
+
+              <tr>
+                <td><span class="btn-name-badge">Encerrar Fit Cultural (Bloquear)</span></td>
+                <td>Fecha o ciclo semestral do colaborador definitivamente.</td>
+                <td class="btn-tip">Trava permanentemente todas as 4 etapas e alimenta a Matriz Nine Box.</td>
+              </tr>
+
+              <tr>
+                <td><span class="btn-name-badge">Reabrir Etapa (Admin/RH)</span></td>
+                <td>Permite que administradores destravem uma etapa lançada caso haja autorização.</td>
+                <td class="btn-tip">Visível apenas para usuários com permissão de RH / Diretoria.</td>
               </tr>
             
           </tbody>
@@ -2069,7 +2087,7 @@ body {
       <div class="manager-tip-icon">🌟</div>
       <div>
         <div class="manager-tip-title">Dica Prática do Gestor de Qualidade</div>
-        <div class="manager-tip-body">Na régua Busato, a NOTA 3 significa "Dentro do Esperado" — ou seja, uma entrega sólida e em total conformidade! Guarde as notas 4 e 5 para quando o liderado realmente foi além da obrigação contratual.</div>
+        <div class="manager-tip-body">Fluxo Seguro em 4 Etapas: 1) Autoavaliação ➔ 2) Avaliação do Gestor (Lançar e Bloquear) ➔ 3) Calibração com Feedback (Finalizar e Bloquear) ➔ 4) Validação Final pelo Comitê. Cada etapa só é liberada após a conclusão segura da anterior! Lembre-se: nota 3 significa "Dentro do Esperado" (entrega sólida e em conformidade).</div>
       </div>
     </div>
 

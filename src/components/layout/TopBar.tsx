@@ -211,7 +211,7 @@ export default function TopBar() {
           title="Guia Passo a Passo dos Módulos e Botões"
         >
           <HelpCircle className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-          <span className="hidden sm:inline">Como Usar</span>
+          <span className="hidden sm:inline">Passo a Passo</span>
         </button>
 
         <button
@@ -299,7 +299,7 @@ export default function TopBar() {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setGuideOpen(true)} className="cursor-pointer">
               <HelpCircle className="w-4 h-4 mr-2 text-primary" />
-              Como Usar os Módulos
+              Passo a Passo do Sistema
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/configuracoes')} className="cursor-pointer">
               <Settings className="w-4 h-4 mr-2" />

@@ -308,34 +308,55 @@ export const GUIDE_MODULES: GuideModule[] = [
     steps: [
       {
         number: 1,
-        title: 'Selecione a Aba de Ação',
-        description: 'Navegue entre: "Metas", "Fit Cultural", "Nine Box", "PDI" e "Feedbacks". Cada aba cumpre uma etapa do ciclo de gestão de gente.',
+        title: 'Selecione a Aba e o Colaborador',
+        description: 'No menu Painel do Gestor ou Competências, acesse a aba "Fit Cultural" para acompanhar quem está pendente ou realizado no ciclo ativo.',
         hotspotRef: 1
       },
       {
         number: 2,
-        title: 'Ciclo e Link de Autoavaliação do Fit Cultural',
-        description: 'Clique em "Criar Novo Ciclo" para iniciar um período semestral. Em seguida, use o botão "Gerar Link de Autoavaliação" e envie no WhatsApp do colaborador.',
+        title: 'Etapa 1: Envie o Link de Autoavaliação',
+        description: 'Copie o "Link de Autoavaliação" e envie no WhatsApp do colaborador. Ele responde com notas de 1 a 5 (ou N/A) diretamente pelo celular sem precisar de login.',
         hotspotRef: 2
       },
       {
         number: 3,
-        title: 'Avaliação do Gestor e Calibração',
-        description: 'Após o colaborador responder, o gestor avalia as competências de 1 a 5 (ou N/A). Em seguida, o comitê realiza a Calibração e a Validação final.',
+        title: 'Etapa 2: Avaliação do Gestor (Lançar e Bloquear)',
+        description: 'O gestor acessa o perfil do colaborador, compara as notas com a autoavaliação e preenche suas notas. Ao terminar, clica em "Lançar e Bloquear Avaliação do Gestor" para travar as respostas e liberar a Calibração.',
         hotspotRef: 4
       },
       {
         number: 4,
-        title: 'Matriz Nine Box e PDI',
-        description: 'Cruze os resultados de Desempenho e Potencial na matriz 9-Box para identificar Promotores, Futuros Líderes ou pontos de atenção, criando o PDI em seguida.',
+        title: 'Etapa 3: Calibração com Feedback (Finalizar e Bloquear)',
+        description: 'Liberada apenas após o gestor lançar suas notas. Comitê e líder realizam o alinhamento de feedback e notas de consenso. Ao concluir, clicam em "Finalizar e Bloquear Calibração", destravando a Validação Final.',
+        hotspotRef: 3
+      },
+      {
+        number: 5,
+        title: 'Etapa 4: Validação Final e Nine Box / PDI',
+        description: 'A Diretoria/Comitê valida as notas finais e clica em "Encerrar Fit Cultural (Bloquear)". Com o ciclo fechado, os dados consolidam a Matriz Nine Box e guiam a criação do PDI.',
         hotspotRef: 3
       }
     ],
     buttons: [
       {
-        name: 'Gerar Link de Autoavaliação',
-        action: 'Cria o link exclusivo para o colaborador responder no celular sem login.',
-        tip: 'O colaborador visualiza o card de identificação e opção N/A nas perguntas.'
+        name: 'Copiar Link de Autoavaliação',
+        action: 'Gera link individual seguro para o colaborador responder no smartphone.',
+        tip: 'Compartilhe pelo WhatsApp e acompanhe o preenchimento no mesmo dia.'
+      },
+      {
+        name: 'Lançar e Bloquear Avaliação do Gestor',
+        action: 'Salva e trava as notas do líder, liberando formalmente a Calibração.',
+        tip: 'Garante que o gestor não altere notas após o início da calibração.'
+      },
+      {
+        name: 'Finalizar e Bloquear Calibração',
+        action: 'Trava as notas alinhadas com feedback e libera a Validação Final.',
+        tip: 'Consolida as notas de consenso antes da decisão final do comitê.'
+      },
+      {
+        name: 'Encerrar Fit Cultural (Bloquear)',
+        action: 'Encerra definitivamente a avaliação do colaborador no ciclo semestral.',
+        tip: 'Bloqueia todas as etapas contra alterações e atualiza a Nine Box.'
       },
       {
         name: 'Criar Ciclo de Avaliação',
@@ -348,7 +369,7 @@ export const GUIDE_MODULES: GuideModule[] = [
         tip: 'Mantenha o colaborador ciente e acompanhe o status de evolução.'
       }
     ],
-    managerTip: 'Lembre-se: no Fit Cultural a nota 3 representa "Dentro do Esperado", o que significa excelente desempenho na rotina! Use 4 e 5 para entregas que superam o contratado.'
+    managerTip: 'Fluxo Seguro em 4 Etapas: 1) Autoavaliação ➔ 2) Avaliação do Gestor (Lançar e Bloquear) ➔ 3) Calibração com Feedback (Finalizar e Bloquear) ➔ 4) Validação Final pelo Comitê. Cada etapa só é liberada após a conclusão segura da anterior!'
   },
   {
     id: 'treinamentos',
@@ -607,7 +628,7 @@ function ScreenMockup({
         )}
 
         {type === 'desempenho' && (
-          <div className="space-y-3 pointer-events-none opacity-90">
+          <div className="space-y-2.5 pointer-events-none opacity-90">
             {/* Abas */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-2">
               <div className="flex gap-1 bg-slate-800 p-0.5 rounded-md text-[9px]">
@@ -620,17 +641,36 @@ function ScreenMockup({
                 Copiar Link WhatsApp
               </div>
             </div>
+            {/* 4 Etapas do Fit Cultural com Travas */}
+            <div className="grid grid-cols-4 gap-1.5">
+              <div className="bg-slate-800/80 border border-emerald-500/40 p-1.5 rounded-md text-center">
+                <div className="text-[7px] text-slate-400 font-bold uppercase">1. Autoavaliação</div>
+                <div className="text-[8px] text-emerald-300 font-bold mt-0.5">✅ Respondida</div>
+              </div>
+              <div className="bg-slate-800/80 border border-emerald-500/40 p-1.5 rounded-md text-center">
+                <div className="text-[7px] text-slate-400 font-bold uppercase">2. Gestor</div>
+                <div className="text-[8px] text-emerald-300 font-bold mt-0.5">🔒 Lançada & Travada</div>
+              </div>
+              <div className="bg-slate-800/80 border border-purple-500/40 p-1.5 rounded-md text-center">
+                <div className="text-[7px] text-slate-400 font-bold uppercase">3. Calibração</div>
+                <div className="text-[8px] text-purple-300 font-bold mt-0.5">🟣 Em Calibração</div>
+              </div>
+              <div className="bg-slate-800/80 border border-slate-700 p-1.5 rounded-md text-center">
+                <div className="text-[7px] text-slate-400 font-bold uppercase">4. Validação</div>
+                <div className="text-[8px] text-slate-400 font-bold mt-0.5">🔒 Bloqueada</div>
+              </div>
+            </div>
             {/* Matriz Nine Box Miniatura */}
             <div className="grid grid-cols-3 gap-1 bg-slate-800/40 p-2 rounded-lg border border-slate-700/60">
-              <div className="bg-amber-500/20 border border-amber-500/30 p-1.5 rounded text-[8px] text-amber-200">Profissional Enigma</div>
-              <div className="bg-emerald-500/20 border border-emerald-500/30 p-1.5 rounded text-[8px] text-emerald-200">Forte Desempenho</div>
-              <div className="bg-cyan-500/30 border border-cyan-400/50 p-1.5 rounded text-[8px] text-cyan-200 font-bold">⭐ Top Talent</div>
-              <div className="bg-slate-700/40 border border-slate-600/40 p-1.5 rounded text-[8px] text-slate-300">Eficaz</div>
-              <div className="bg-emerald-500/20 border border-emerald-500/30 p-1.5 rounded text-[8px] text-emerald-200">Mantenedor</div>
-              <div className="bg-emerald-500/20 border border-emerald-500/30 p-1.5 rounded text-[8px] text-emerald-200">Forte Desempenho</div>
-              <div className="bg-rose-500/20 border border-rose-500/30 p-1.5 rounded text-[8px] text-rose-200">Risco</div>
-              <div className="bg-slate-700/40 border border-slate-600/40 p-1.5 rounded text-[8px] text-slate-300">Eficaz</div>
-              <div className="bg-amber-500/20 border border-amber-500/30 p-1.5 rounded text-[8px] text-amber-200">Especialista</div>
+              <div className="bg-amber-500/20 border border-amber-500/30 p-1 rounded text-[7.5px] text-amber-200">Profissional Enigma</div>
+              <div className="bg-emerald-500/20 border border-emerald-500/30 p-1 rounded text-[7.5px] text-emerald-200">Forte Desempenho</div>
+              <div className="bg-cyan-500/30 border border-cyan-400/50 p-1 rounded text-[7.5px] text-cyan-200 font-bold">⭐ Top Talent</div>
+              <div className="bg-slate-700/40 border border-slate-600/40 p-1 rounded text-[7.5px] text-slate-300">Eficaz</div>
+              <div className="bg-emerald-500/20 border border-emerald-500/30 p-1 rounded text-[7.5px] text-emerald-200">Mantenedor</div>
+              <div className="bg-emerald-500/20 border border-emerald-500/30 p-1 rounded text-[7.5px] text-emerald-200">Forte Desempenho</div>
+              <div className="bg-rose-500/20 border border-rose-500/30 p-1 rounded text-[7.5px] text-rose-200">Risco</div>
+              <div className="bg-slate-700/40 border border-slate-600/40 p-1 rounded text-[7.5px] text-slate-300">Eficaz</div>
+              <div className="bg-amber-500/20 border border-amber-500/30 p-1 rounded text-[7.5px] text-amber-200">Especialista</div>
             </div>
           </div>
         )}
@@ -783,13 +823,13 @@ export function SystemGuideModal({ open, onOpenChange }: { open: boolean; onOpen
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-400/20">
-                    Manual Interativo com Prints
+                    Manual Passo a Passo
                   </span>
                   <span className="text-xs text-slate-400">•</span>
                   <span className="text-xs text-slate-300">Gestão & Operações Busato</span>
                 </div>
                 <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2 mt-0.5">
-                  Guia Visual de Módulos & Botões
+                  Passo a Passo dos Módulos & Botões
                 </h2>
               </div>
             </div>
