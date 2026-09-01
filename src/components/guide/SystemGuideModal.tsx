@@ -799,7 +799,7 @@ export function SystemGuideModal({ open, onOpenChange }: { open: boolean; onOpen
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => window.open('/MOP-RH-001_Manual_Procedimentos.html', '_blank')}
+                onClick={() => window.open('/manual', '_blank')}
                 className="h-8 text-xs font-bold gap-1.5 bg-teal-500/20 text-teal-300 border-teal-400/40 hover:bg-teal-500/30 hover:text-white"
                 title="Abrir o Manual Operacional Completo em PDF para impressão ou download"
               >
@@ -1122,7 +1122,7 @@ export function SystemGuideModal({ open, onOpenChange }: { open: boolean; onOpen
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.open('/MOP-RH-001_Manual_Procedimentos.html', '_blank')}
+                  onClick={() => window.open('/manual', '_blank')}
                   className="text-xs font-semibold gap-1.5 text-teal-400 border-teal-500/30 hover:bg-teal-500/10"
                 >
                   <Printer className="w-3.5 h-3.5" />

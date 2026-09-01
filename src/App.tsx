@@ -26,6 +26,7 @@ import Sucessao from "./pages/Sucessao";
 import DiscTest from "./pages/DiscTest";
 import Treinamentos from "./pages/Treinamentos";
 import AssessmentHub from "./pages/AssessmentHub";
+import ManualProcedimentos from "./pages/ManualProcedimentos";
 import { InstallPWA } from './components/InstallPWA';
 import { PWAUpdateHandler } from './components/PWAUpdateHandler';
 import { PageGuard } from "./components/auth/PageGuard";
@@ -159,6 +160,8 @@ const App = () => (
             <Route path="/autoavaliacao-potencial" element={<AutoAvaliacaoPotencial />} />
             <Route path="/assessment/:type" element={<AssessmentHub />} />
             <Route path="/assessment/:type/:id" element={<AssessmentHub />} />
+            <Route path="/manual" element={<ManualProcedimentos />} />
+            <Route path="/MOP-RH-001_Manual_Procedimentos.html" element={<ManualProcedimentos />} />
             <Route path="/*" element={<ProtectedRoutes />} />
           </Routes>
         </AuthProvider>

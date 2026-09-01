@@ -1,7 +1,11 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/MOP-RH-001_Manual_Procedimentos.html",
+      "destination": "/MOP-RH-001_Manual_Procedimentos.html"
+    },
+    {
+      "source": "/((?!assets/|images/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
