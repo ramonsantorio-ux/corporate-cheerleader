@@ -6,7 +6,7 @@ import {
   CalendarDays, BrainCircuit, ClipboardList, CheckCircle2,
   ArrowRight, Search, Sparkles, Lightbulb, MousePointerClick,
   ExternalLink, Maximize2, Minimize2, ZoomIn, Eye,
-  Clock, ShieldCheck, ChevronRight, Layers, Layout, Info
+  Clock, ShieldCheck, ChevronRight, Layers, Layout, Info, Printer, FileText
 } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -794,8 +794,19 @@ export function SystemGuideModal({ open, onOpenChange }: { open: boolean; onOpen
               </div>
             </div>
 
-            {/* Controles de Janela (Maximizar / Tela Cheia) */}
+            {/* Controles de Janela & Exportar PDF */}
             <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.open('/MOP-RH-001_Manual_Procedimentos.html', '_blank')}
+                className="h-8 text-xs font-bold gap-1.5 bg-teal-500/20 text-teal-300 border-teal-400/40 hover:bg-teal-500/30 hover:text-white"
+                title="Abrir o Manual Operacional Completo em PDF para impressão ou download"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Exportar Manual em PDF</span>
+              </Button>
+
               <button
                 onClick={() => setIsFullScreen(!isFullScreen)}
                 className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
@@ -1108,6 +1119,15 @@ export function SystemGuideModal({ open, onOpenChange }: { open: boolean; onOpen
                 Precisa de ajuda adicional? Consulte a equipe de RH & Governança Busato.
               </span>
               <div className="flex items-center gap-2 ml-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open('/MOP-RH-001_Manual_Procedimentos.html', '_blank')}
+                  className="text-xs font-semibold gap-1.5 text-teal-400 border-teal-500/30 hover:bg-teal-500/10"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Manual Completo em PDF</span>
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="text-xs">
                   Fechar
                 </Button>
