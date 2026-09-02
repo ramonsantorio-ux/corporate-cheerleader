@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight, Lock, Link2, Copy, CheckCircle2, AlertCircle, Unlock, Check, Send } from 'lucide-react';
+import { Star, User, UserCheck, MessageSquare, Shield, RotateCcw, ArrowRight, Lock, Link2, Copy, CheckCircle2, AlertCircle, Unlock, Check, Send, UserX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -278,6 +281,10 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
   const [isClosed, setIsClosed] = useState(false);
   const [closing, setClosing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [dispensarModalOpen, setDispensarModalOpen] = useState(false);
+  const [dispensarMotivo, setDispensarMotivo] = useState('Recém-admitido / Período de Experiência');
+  const [dispensarCustomMotivo, setDispensarCustomMotivo] = useState('');
+  const [dispensando, setDispensando] = useState(false);
   const { toast } = useToast();
 
   const checkIfClosed = useCallback(async (cid: string) => {
@@ -345,6 +352,17 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
 
   const calibracaoCompletedAt = useMemo(() => {
     return currentCycleScores.find(s => s.criteria === '__STAGE_COMPLETED__' && s.stage === 'calibracao' && s.score === 1)?.updated_at;
+  }, [currentCycleScores]);
+
+  const isDispensado = useMemo(() => {
+    return currentCycleScores.some(s => s.stage === 'dispensado' || s.criteria?.startsWith('__DISPENSADO__'));
+  }, [currentCycleScores]);
+
+  const dispensaInfo = useMemo(() => {
+    const rec = currentCycleScores.find(s => s.stage === 'dispensado' || s.criteria?.startsWith('__DISPENSADO__'));
+    if (!rec) return null;
+    const motivo = rec.criteria?.replace('__DISPENSADO__:', '').trim() || 'Dispensado pelo Gestor/RH';
+    return { motivo, data: rec.created_at };
   }, [currentCycleScores]);
 
   const totalCriteriaCount = CRITERIA.length;
@@ -576,6 +594,71 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
     setClosing(false);
   }
 
+  async function handleConfirmDispensar() {
+    if (!activeCycleId) return;
+    setDispensando(true);
+    try {
+      const finalMotivo = dispensarMotivo === 'outro'
+        ? (dispensarCustomMotivo.trim() || 'Motivo operacional não especificado')
+        : dispensarMotivo;
+
+      // Limpa registros anteriores de dispensa
+      await supabase
+        .from('fit_cultural')
+        .delete()
+        .eq('employee_id', employeeId)
+        .or('stage.eq.dispensado,criteria.ilike.__DISPENSADO__%');
+
+      // Insere dispensa oficial
+      const { error } = await supabase.from('fit_cultural').insert([{
+        employee_id: employeeId,
+        stage: 'dispensado',
+        criteria: `__DISPENSADO__: ${finalMotivo}`,
+        score: 0,
+        cycle_id: activeCycleId
+      }]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Colaborador Dispensado!',
+        description: `${employeeName} foi isento da avaliação deste ciclo. Motivo: ${finalMotivo}`
+      });
+
+      setDispensarModalOpen(false);
+      setDispensarCustomMotivo('');
+      setDispensarMotivo('Recém-admitido / Período de Experiência');
+      fetchData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
+      toast({ title: 'Erro ao dispensar', description: msg, variant: 'destructive' });
+    } finally {
+      setDispensando(false);
+    }
+  }
+
+  async function handleReativar() {
+    try {
+      const { error } = await supabase
+        .from('fit_cultural')
+        .delete()
+        .eq('employee_id', employeeId)
+        .or('stage.eq.dispensado,criteria.ilike.__DISPENSADO__%');
+
+      if (error) throw error;
+
+      toast({
+        title: 'Colaborador Reativado!',
+        description: `${employeeName} agora pode participar normalmente do ciclo de avaliação.`
+      });
+
+      fetchData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
+      toast({ title: 'Erro ao reativar', description: msg, variant: 'destructive' });
+    }
+  }
+
   const canClose = isAdmin || permissions['colaboradores']?.can_edit;
 
   const chartData = useMemo(() => {
@@ -651,6 +734,19 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
             <span>Copiar Link de Autoavaliação</span>
           </Button>
 
+          {!isClosed && !isDispensado && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDispensarModalOpen(true)}
+              className="bg-white hover:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 shadow-2xs text-xs font-semibold flex items-center gap-1.5"
+              title="Dispensar/Isentar este colaborador da avaliação deste ciclo"
+            >
+              <UserX className="w-3.5 h-3.5 text-amber-600" />
+              <span>Dispensar do Ciclo</span>
+            </Button>
+          )}
+
           <div className="w-full sm:w-56">
             <Select value={activeCycleId} onValueChange={setActiveCycleId}>
               <SelectTrigger className="w-full bg-white border-border/50">
@@ -704,6 +800,35 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
       )}
 
       <div className="grid grid-cols-1 gap-6">
+        {isDispensado && (
+          <div className="bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <UserX className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <div>
+                <h4 className="font-bold text-sm text-foreground flex items-center gap-2">
+                  Colaborador Isento / Dispensado deste Ciclo
+                  <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px]">Isento</Badge>
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Motivo: <strong className="text-foreground">{dispensaInfo?.motivo}</strong>
+                </p>
+                <p className="text-[11px] text-muted-foreground/80 mt-1">
+                  Este colaborador não entra na contagem de pendências do gestor e não afeta as métricas de acompanhamento.
+                </p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleReativar}
+              className="h-8 text-xs font-semibold gap-1.5 shrink-0 bg-white dark:bg-card hover:bg-muted"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Reativar Avaliação
+            </Button>
+          </div>
+        )}
+
         {isClosed && (
           <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -753,7 +878,7 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
               );
             }
 
-            const isEditable = isStageEditable(stage.key);
+            const isEditable = !isDispensado && isStageEditable(stage.key);
 
             return (
               <AccordionItem
@@ -1203,6 +1328,72 @@ export default function FitCulturalSection({ employeeId, employeeName, cycleId: 
             </Button>
           </div>
         )}
+
+        {/* Modal de Dispensa / Isenção no Perfil do Colaborador */}
+        <Dialog open={dispensarModalOpen} onOpenChange={setDispensarModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                <UserX className="w-5 h-5" />
+                Dispensar Colaborador da Avaliação
+              </DialogTitle>
+              <DialogDescription>
+                Isente <strong>{employeeName}</strong> de realizar o Fit Cultural no ciclo selecionado. Ele sairá imediatamente da contagem de pendências e do gráfico do gestor.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Motivo da Dispensa / Isenção</Label>
+                <Select value={dispensarMotivo} onValueChange={setDispensarMotivo}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o motivo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Recém-admitido / Período de Experiência">👶 Recém-admitido / Período de Experiência</SelectItem>
+                    <SelectItem value="Afastamento Médico / Licença INSS">🏥 Afastamento Médico / Licença INSS</SelectItem>
+                    <SelectItem value="Transferência Recente de Setor">🔄 Transferência Recente de Setor</SelectItem>
+                    <SelectItem value="Cargo não elegível para este ciclo">🚫 Cargo não elegível para este ciclo</SelectItem>
+                    <SelectItem value="outro">📝 Outro motivo (especificar)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {dispensarMotivo === 'outro' && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Descreva o motivo da isenção</Label>
+                  <Textarea 
+                    placeholder="Ex: Em processo de transição, férias prolongadas..."
+                    value={dispensarCustomMotivo}
+                    onChange={(e) => setDispensarCustomMotivo(e.target.value)}
+                    className="text-xs min-h-[70px]"
+                  />
+                </div>
+              )}
+
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+                <p className="font-semibold flex items-center gap-1.5">
+                  <span>ℹ️</span> O que acontece ao dispensar?
+                </p>
+                <p>• O colaborador não será cobrado e a pendência vermelha será removida do gráfico do gestor.</p>
+                <p>• Você poderá reativar a avaliação a qualquer momento pelo painel se necessário.</p>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setDispensarModalOpen(false)} disabled={dispensando}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleConfirmDispensar} 
+                disabled={dispensando || (dispensarMotivo === 'outro' && !dispensarCustomMotivo.trim())}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold gap-1.5"
+              >
+                {dispensando ? 'Dispensando...' : 'Confirmar Dispensa'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

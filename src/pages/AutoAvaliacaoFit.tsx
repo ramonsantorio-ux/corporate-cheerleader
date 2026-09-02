@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { CheckCircle2, Loader2, User, ChevronRight, Check } from 'lucide-react';
+import { CheckCircle2, Loader2, User, ChevronRight, Check, UserX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useSearchParams } from 'react-router-dom';
@@ -244,6 +244,8 @@ export default function AutoAvaliacaoFit() {
   const [submitted, setSubmitted] = useState(false);
   const [acceptedGuide, setAcceptedGuide] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [isDispensado, setIsDispensado] = useState(false);
+  const [dispensaMotivo, setDispensaMotivo] = useState('');
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const uidParam = searchParams.get('uid');
@@ -263,6 +265,25 @@ export default function AutoAvaliacaoFit() {
       setSelectedCycle(cycleParam.trim());
     }
   }, [uidParam, cycleParam]);
+
+  useEffect(() => {
+    if (!selectedFunc || !selectedCycle) return;
+    supabase
+      .from('fit_cultural')
+      .select('stage, criteria')
+      .eq('employee_id', selectedFunc)
+      .eq('cycle_id', selectedCycle)
+      .or('stage.eq.dispensado,criteria.ilike.__DISPENSADO__%')
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setIsDispensado(true);
+          const motivo = data[0].criteria?.replace('__DISPENSADO__:', '').trim() || 'Recém-admitido / Período de Experiência';
+          setDispensaMotivo(motivo);
+        } else {
+          setIsDispensado(false);
+        }
+      });
+  }, [selectedFunc, selectedCycle]);
 
   useEffect(() => {
     Promise.all([
@@ -362,6 +383,28 @@ export default function AutoAvaliacaoFit() {
           <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs text-slate-500 font-medium">
             Você já pode fechar esta aba ou janela.
           </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (isDispensado) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white p-8 rounded-2xl shadow-xl border border-amber-200 max-w-md w-full">
+          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <UserX className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 mb-2">Colaborador Isento</h2>
+          <p className="text-slate-600 text-sm mb-3">
+            Olá, <strong>{currentFunc?.nome || 'colaborador'}</strong>! Você foi isento de realizar a autoavaliação deste ciclo.
+          </p>
+          <div className="bg-amber-50 border border-amber-200/60 rounded-xl p-3 text-xs text-amber-900 font-semibold mb-4">
+            Motivo: {dispensaMotivo}
+          </div>
+          <p className="text-xs text-slate-500">
+            Você não precisa preencher este formulário. Em caso de dúvidas, consulte seu gestor ou o RH da Busato.
+          </p>
         </motion.div>
       </div>
     );

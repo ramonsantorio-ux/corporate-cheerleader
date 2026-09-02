@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Target, Trash2, TrendingUp, ChevronDown } from 'lucide-react';
+import { Plus, Target, Trash2, TrendingUp, ChevronDown, UserX, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -88,7 +88,7 @@ export default function Competencias() {
   const [evalForm, setEvalForm] = useState({ employee_id: '', cycle_id: '' });
   const [evalScores, setEvalScores] = useState<Record<string, number>>({});
   const [filterCycle, setFilterCycle] = useState('all');
-  const [fitCulturalAnswers, setFitCulturalAnswers] = useState<{ employee_id: string; stage: string; cycle_id: string | null }[]>([]);
+  const [fitCulturalAnswers, setFitCulturalAnswers] = useState<{ employee_id: string; stage: string; cycle_id: string | null; criteria?: string }[]>([]);
   
   // States para a avaliação inline de 4 etapas
   const [selectedEvalEmployee, setSelectedEvalEmployee] = useState<string | null>(null);
@@ -96,6 +96,14 @@ export default function Competencias() {
   const [form, setForm] = useState({ name: '', description: '', cycle_id: '' });
   const [expandedCargo, setExpandedCargo] = useState<string | null>(null);
   const [expandedCargoRealizados, setExpandedCargoRealizados] = useState<string | null>(null);
+  const [expandedCargoDispensados, setExpandedCargoDispensados] = useState<string | null>(null);
+
+  // States para Modal de Dispensa / Isenção
+  const [dispensarDialogOpen, setDispensarDialogOpen] = useState(false);
+  const [dispensarEmp, setDispensarEmp] = useState<{ id: string; nome: string } | null>(null);
+  const [dispensarMotivo, setDispensarMotivo] = useState('Recém-admitido / Período de Experiência');
+  const [dispensarCustomMotivo, setDispensarCustomMotivo] = useState('');
+  const [dispensando, setDispensando] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -138,7 +146,7 @@ export default function Competencias() {
           .neq('criteria', '__STAGE_COMPLETED__')
           .range(from, from + batchSize - 1);
         if (error || !data || data.length === 0) break;
-        all.push(...(data as { employee_id: string; stage: string; cycle_id: string | null }[]));
+        all.push(...(data as { employee_id: string; stage: string; cycle_id: string | null; criteria?: string }[]));
         if (data.length < batchSize) break;
         from += batchSize;
       }
@@ -166,14 +174,61 @@ export default function Competencias() {
       return normalized;
     };
 
-    const cargos: Record<string, { cargo: string; total: number; realizados: number; noPrazo: number; pendentes: number; pendenteNomes: { id: string; nome: string }[]; realizadoNomes: { id: string; nome: string; cycleId: string; cycleName: string }[] }> = {};
+    const cargos: Record<string, { 
+      cargo: string; 
+      total: number; 
+      realizados: number; 
+      noPrazo: number; 
+      pendentes: number; 
+      dispensados: number;
+      pendenteNomes: { id: string; nome: string }[]; 
+      realizadoNomes: { id: string; nome: string; cycleId: string; cycleName: string }[];
+      dispensadoNomes: { id: string; nome: string; motivo: string; cycleId: string; cycleName: string }[];
+    }> = {};
+
     funcionarios.forEach(f => {
       const cargoKey = normalizeCargo(f.cargo);
-      if (!cargos[cargoKey]) cargos[cargoKey] = { cargo: cargoKey, total: 0, realizados: 0, noPrazo: 0, pendentes: 0, pendenteNomes: [], realizadoNomes: [] };
+      if (!cargos[cargoKey]) {
+        cargos[cargoKey] = { 
+          cargo: cargoKey, 
+          total: 0, 
+          realizados: 0, 
+          noPrazo: 0, 
+          pendentes: 0, 
+          dispensados: 0,
+          pendenteNomes: [], 
+          realizadoNomes: [],
+          dispensadoNomes: []
+        };
+      }
       cargos[cargoKey].total++;
       
+      // 1. Verifica se o colaborador foi formalmente dispensado/isento deste ciclo
+      const dispensaAnswer = fitCulturalAnswers.find(fc => {
+        if (fc.employee_id !== f.id) return false;
+        const isDisp = fc.stage === 'dispensado' || fc.criteria?.startsWith('__DISPENSADO__');
+        if (!isDisp) return false;
+        if (filterCycle === 'all') return true;
+        return fc.cycle_id === filterCycle || fc.stage === filterCycle;
+      });
+
+      if (dispensaAnswer) {
+        cargos[cargoKey].dispensados++;
+        const motivo = dispensaAnswer.criteria?.replace('__DISPENSADO__:', '').trim() || 'Dispensado pelo Gestor/RH';
+        cargos[cargoKey].dispensadoNomes.push({
+          id: f.id,
+          nome: f.nome,
+          motivo,
+          cycleId: dispensaAnswer.cycle_id || (cycles[0]?.id ?? 'geral'),
+          cycleName: cycles.find(c => c.id === dispensaAnswer.cycle_id)?.name || 'Ciclo Geral'
+        });
+        return; // Isento do cálculo de pendências e de realizados!
+      }
+
+      // 2. Colaboradores avaliados ou pendentes
       const empAnswers = fitCulturalAnswers.filter(fc => {
         if (fc.employee_id !== f.id) return false;
+        if (fc.stage === 'dispensado' || fc.criteria?.startsWith('__DISPENSADO__')) return false;
         if (filterCycle === 'all') return true;
         return fc.cycle_id === filterCycle || fc.stage === filterCycle;
       });
@@ -206,6 +261,74 @@ export default function Competencias() {
     'No Prazo': c.noPrazo,
     Pendentes: c.pendentes,
   }));
+
+  async function handleConfirmDispensar() {
+    if (!dispensarEmp) return;
+    setDispensando(true);
+    try {
+      const finalMotivo = dispensarMotivo === 'outro'
+        ? (dispensarCustomMotivo.trim() || 'Motivo operacional não especificado')
+        : dispensarMotivo;
+      
+      const targetCycleId = filterCycle !== 'all' ? filterCycle : (cycles[0]?.id || null);
+
+      // Remove registros prévios de dispensa para evitar duplicidade
+      await supabase
+        .from('fit_cultural')
+        .delete()
+        .eq('employee_id', dispensarEmp.id)
+        .or('stage.eq.dispensado,criteria.ilike.__DISPENSADO__%');
+
+      // Insere registro oficial de dispensa
+      const { error } = await supabase.from('fit_cultural').insert([{
+        employee_id: dispensarEmp.id,
+        stage: 'dispensado',
+        criteria: `__DISPENSADO__: ${finalMotivo}`,
+        score: 0,
+        cycle_id: targetCycleId
+      }]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Colaborador Dispensado!',
+        description: `${dispensarEmp.nome} foi isento da avaliação deste ciclo. Motivo: ${finalMotivo}`
+      });
+
+      setDispensarDialogOpen(false);
+      setDispensarEmp(null);
+      setDispensarCustomMotivo('');
+      setDispensarMotivo('Recém-admitido / Período de Experiência');
+      await fetchFitCulturalAnswers();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
+      toast({ title: 'Erro ao dispensar', description: msg, variant: 'destructive' });
+    } finally {
+      setDispensando(false);
+    }
+  }
+
+  async function handleReativar(empId: string, empNome: string) {
+    try {
+      const { error } = await supabase
+        .from('fit_cultural')
+        .delete()
+        .eq('employee_id', empId)
+        .or('stage.eq.dispensado,criteria.ilike.__DISPENSADO__%');
+
+      if (error) throw error;
+
+      toast({
+        title: 'Colaborador Reativado!',
+        description: `${empNome} agora pode participar normalmente do ciclo de avaliação.`
+      });
+
+      await fetchFitCulturalAnswers();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
+      toast({ title: 'Erro ao reativar', description: msg, variant: 'destructive' });
+    }
+  }
 
   async function createCompetency() {
     if (!form.name) {
@@ -545,10 +668,26 @@ export default function Competencias() {
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
                           className="border-t border-border bg-muted/20 px-4 py-2 space-y-1">
                           {c.pendenteNomes.map(emp => (
-                            <button key={emp.id} onClick={() => navigate(`/funcionario/${emp.id}?tab=fit-cultural`)}
-                              className="block text-sm text-primary hover:underline cursor-pointer py-0.5 text-left">
-                              • {emp.nome}
-                            </button>
+                            <div key={emp.id} className="flex items-center justify-between py-1 px-1 rounded-md hover:bg-muted/40 transition-colors">
+                              <button onClick={() => navigate(`/funcionario/${emp.id}?tab=fit-cultural`)}
+                                className="text-sm text-primary hover:underline cursor-pointer py-0.5 text-left font-medium">
+                                • {emp.nome}
+                              </button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDispensarEmp(emp);
+                                  setDispensarDialogOpen(true);
+                                }}
+                                className="h-6 text-xs px-2 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 rounded gap-1"
+                                title="Dispensar/Isentar este colaborador da avaliação deste ciclo"
+                              >
+                                <UserX className="w-3.5 h-3.5 text-amber-500" />
+                                <span>Dispensar</span>
+                              </Button>
+                            </div>
                           ))}
                         </motion.div>
                       )}
@@ -592,6 +731,63 @@ export default function Competencias() {
                                     <Trash2 className="w-4 h-4" />
                                   </button>
                                 )}
+                              </div>
+                            ))}
+                          </motion.div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Dispensados / Isentos expandable list */}
+              {cargoStats.some(c => (c.dispensados || 0) > 0) && (
+                <div className="mt-6 border-t border-border pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Colaboradores Isentos / Dispensados</p>
+                    <span className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-full border border-amber-500/20">
+                      Não cobrados no ciclo
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    {cargoStats.filter(c => (c.dispensados || 0) > 0).map(c => (
+                      <div key={`dispensados-${c.cargo}`} className="rounded-lg border border-amber-500/20 bg-amber-500/5 overflow-hidden">
+                        <button onClick={() => setExpandedCargoDispensados(expandedCargoDispensados === c.cargo ? null : c.cargo)}
+                          className="w-full flex items-center justify-between text-left px-4 py-2.5 hover:bg-amber-500/10 transition-colors">
+                          <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                            <UserX className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                            {c.cargo}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="corporate-badge bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold">{c.dispensados}</span>
+                            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${expandedCargoDispensados === c.cargo ? 'rotate-180' : ''}`} />
+                          </div>
+                        </button>
+                        {expandedCargoDispensados === c.cargo && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+                            className="border-t border-amber-500/20 bg-card/60 px-4 py-2 space-y-1.5">
+                            {c.dispensadoNomes.map((emp, idx) => (
+                              <div key={`${emp.id}-${emp.cycleId}-${idx}`} className="flex items-center justify-between py-1.5 hover:bg-muted/40 px-2 rounded-md transition-colors">
+                                <div className="flex flex-col">
+                                  <button onClick={() => navigate(`/funcionario/${emp.id}?tab=fit-cultural`)}
+                                    className="text-sm font-medium text-foreground hover:text-primary hover:underline cursor-pointer text-left">
+                                    • {emp.nome}
+                                  </button>
+                                  <span className="text-xs text-amber-600 dark:text-amber-400 font-medium ml-3 flex items-center gap-1 mt-0.5">
+                                    Motivo: {emp.motivo}
+                                  </span>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleReativar(emp.id, emp.nome)}
+                                  className="h-7 text-xs px-2.5 text-slate-700 dark:text-slate-200 border-border hover:bg-muted gap-1"
+                                  title="Reativar colaborador para que participe do ciclo de avaliação"
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                  <span>Reativar</span>
+                                </Button>
                               </div>
                             ))}
                           </motion.div>
@@ -645,6 +841,72 @@ export default function Competencias() {
       )}
       </>
       )}
+
+      {/* Modal de Dispensa / Isenção de Colaborador */}
+      <Dialog open={dispensarDialogOpen} onOpenChange={setDispensarDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+              <UserX className="w-5 h-5" />
+              Dispensar Colaborador da Avaliação
+            </DialogTitle>
+            <DialogDescription>
+              Isente <strong>{dispensarEmp?.nome}</strong> de realizar o Fit Cultural neste ciclo. Ele sairá imediatamente da contagem de pendências e do gráfico do gestor.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Motivo da Dispensa / Isenção</Label>
+              <Select value={dispensarMotivo} onValueChange={setDispensarMotivo}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o motivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Recém-admitido / Período de Experiência">👶 Recém-admitido / Período de Experiência</SelectItem>
+                  <SelectItem value="Afastamento Médico / Licença INSS">🏥 Afastamento Médico / Licença INSS</SelectItem>
+                  <SelectItem value="Transferência Recente de Setor">🔄 Transferência Recente de Setor</SelectItem>
+                  <SelectItem value="Cargo não elegível para este ciclo">🚫 Cargo não elegível para este ciclo</SelectItem>
+                  <SelectItem value="outro">📝 Outro motivo (especificar)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {dispensarMotivo === 'outro' && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Descreva o motivo da isenção</Label>
+                <Textarea 
+                  placeholder="Ex: Em processo de transição, férias prolongadas..."
+                  value={dispensarCustomMotivo}
+                  onChange={(e) => setDispensarCustomMotivo(e.target.value)}
+                  className="text-xs min-h-[70px]"
+                />
+              </div>
+            )}
+
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-900 dark:text-amber-200 space-y-1">
+              <p className="font-semibold flex items-center gap-1.5">
+                <span>ℹ️</span> O que acontece ao dispensar?
+              </p>
+              <p>• O colaborador não será cobrado e a pendência vermelha será removida do gráfico do gestor.</p>
+              <p>• Você poderá reativar a avaliação a qualquer momento pelo painel se necessário.</p>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDispensarDialogOpen(false)} disabled={dispensando}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleConfirmDispensar} 
+              disabled={dispensando || (dispensarMotivo === 'outro' && !dispensarCustomMotivo.trim())}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-semibold gap-1.5"
+            >
+              {dispensando ? 'Dispensando...' : 'Confirmar Dispensa'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
